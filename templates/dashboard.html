@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAlly - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-logo">EduAlly</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'account:dashboard' %}" class="nav-item active">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="{% url 'aihelper:helper' %}" class="nav-item">
+                    <i class="fas fa-brain nav-icon"></i>
+                    <span class="nav-label">AI Helper</span>
+                </a>
+                <a href="{% url 'forum:feed' %}" class="nav-item">
+                    <i class="fas fa-comments nav-icon"></i>
+                    <span class="nav-label">Forum</span>
+                </a>
+                <a href="{% url 'slm:slmlists' %}" class="nav-item">
+                    <i class="fas fa-book nav-icon"></i>
+                    <span class="nav-label">Modules</span>
+                </a>
+                <a href="{% url 'account:profile' %}" class="nav-item">
+                    <i class="fas fa-user-circle nav-icon"></i>
+                    <span class="nav-label">Profile</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <form method="post" action="{% url 'account:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-item logout">
+                        <i class="fas fa-sign-out-alt nav-icon"></i>
+                        <span class="nav-label">Logout</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div class="header-left">
+                    <h1>Welcome back, {{ user.username }}! <i class="fas fa-wave"></i></h1>
+                </div>
+                <div class="header-right">
+                    <span class="user-info">{{ user.email }}</span>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Welcome Section -->
+                <section class="welcome-section">
+                    <div class="welcome-card">
+                        <h2>Ready to learn?</h2>
+                        <p>Start your learning journey today with AI-powered support and collaborative learning tools.</p>
+                    </div>
+                </section>
+
+                <!-- Quick Access Buttons -->
+                <section class="quick-access">
+                    <h3>Quick Access</h3>
+                    <div class="quick-buttons">
+                        <a href="{% url 'aihelper:helper' %}" class="quick-btn ai-helper-btn">
+                            <i class="fas fa-brain btn-icon"></i>
+                            <span class="btn-title">AI Helper</span>
+                            <span class="btn-desc">Get instant explanations</span>
+                        </a>
+                        <a href="{% url 'forum:feed' %}" class="quick-btn forum-btn">
+                            <i class="fas fa-comments btn-icon"></i>
+                            <span class="btn-title">Forum</span>
+                            <span class="btn-desc">Ask the community</span>
+                        </a>
+                        <a href="{% url 'slm:slmlists' %}" class="quick-btn modules-btn">
+                            <i class="fas fa-book btn-icon"></i>
+                            <span class="btn-title">Modules</span>
+                            <span class="btn-desc">Access your SLMs</span>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Recent Activity -->
+                <section class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-clipboard"></i></div>
+                            <div class="activity-details">
+                                <h4>Started Module: Introduction to SLMs</h4>
+                                <p class="activity-meta">2 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-comment"></i></div>
+                            <div class="activity-details">
+                                <h4>Posted a question in Forum</h4>
+                                <p class="activity-meta">5 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="activity-details">
+                                <h4>Completed a module assessment</h4>
+                                <p class="activity-meta">1 day ago</p>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-robot"></i></div>
+                            <div class="activity-details">
+                                <h4>Used AI Helper for concept explanation</h4>
+                                <p class="activity-meta">2 days ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Learning Stats -->
+                <section class="learning-stats">
+                    <h3>Your Progress</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-number">3</span>
+                            <span class="stat-label">Modules Started</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">12</span>
+                            <span class="stat-label">Forum Posts</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">28</span>
+                            <span class="stat-label">AI Helper Queries</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">85%</span>
+                            <span class="stat-label">Completion Rate</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

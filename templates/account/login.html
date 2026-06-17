@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EduAlly – Login</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+<header class="page-header">
+    <div class="header-inner">
+        <a href="{% url 'landing' %}" class="logo">EduAlly</a>
+        <nav class="main-nav">
+            <a href="{% url 'landing' %}">Home</a>
+            <a href="{% url 'account:register' %}">Register</a>
+        </nav>
+    </div>
+</header>
+
+<main class="auth-page">
+    <section class="auth-card">
+        <h1>Log in</h1>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="errorlist nonfield">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <label for="{{ form.username.id_for_label }}">Email or username</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div class="errorlist">{{ form.username.errors }}</div>
+            {% endif %}
+
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+                <div class="errorlist">{{ form.password.errors }}</div>
+            {% endif %}
+
+            <button type="submit">Log in</button>
+        </form>
+
+        <p class="auth-footer">
+            No account yet? <a href="{% url 'account:register' %}">Register</a>
+        </p>
+    </section>
+</main>
+</body>
+</html>

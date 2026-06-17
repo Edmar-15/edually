@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAlly - Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-logo">EduAlly</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'account:dashboard' %}" class="nav-item">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="{% url 'aihelper:helper' %}" class="nav-item">
+                    <i class="fas fa-brain nav-icon"></i>
+                    <span class="nav-label">AI Helper</span>
+                </a>
+                <a href="{% url 'forum:feed' %}" class="nav-item">
+                    <i class="fas fa-comments nav-icon"></i>
+                    <span class="nav-label">Forum</span>
+                </a>
+                <a href="{% url 'slm:slmlists' %}" class="nav-item">
+                    <i class="fas fa-book nav-icon"></i>
+                    <span class="nav-label">Modules</span>
+                </a>
+                <a href="{% url 'account:profile' %}" class="nav-item active">
+                    <i class="fas fa-user-circle nav-icon"></i>
+                    <span class="nav-label">Profile</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <form method="post" action="{% url 'account:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-item logout">
+                        <i class="fas fa-sign-out-alt nav-icon"></i>
+                        <span class="nav-label">Logout</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <section class="profile-page profile-section">
+                <div class="content-header">
+                    <div class="header-left">
+                        <h1>Student Profile</h1>
+                        <p class="user-info">Review and update your profile details with confidence.</p>
+                    </div>
+                </div>
+
+                <div class="profile-grid">
+                    <aside class="profile-overview-card">
+                        <div class="profile-top">
+                            <div class="profile-avatar">CD</div>
+                            <div>
+                                <h2>Cardo Dalisay</h2>
+                                <p class="muted-text">Information Technology</p>
+                            </div>
+                        </div>
+
+                        <div class="profile-badge">Active Student</div>
+
+                        <div class="profile-summary">
+                            <p><strong>Student ID</strong></p>
+                            <p>0323-4526</p>
+                        </div>
+                        <div class="profile-summary">
+                            <p><strong>Program</strong></p>
+                            <p>WMAD</p>
+                        </div>
+                        <div class="profile-summary">
+                            <p><strong>Email</strong></p>
+                            <p>0323-4526@lspu.edu.ph</p>
+                        </div>
+
+                        <div class="profile-actions">
+                            <button class="button primary-button">Edit Profile</button>
+                            <button class="button secondary-button">View History</button>
+                        </div>
+                    </aside>
+
+                    <section class="profile-details-card">
+                        <div class="details-header">
+                            <h2>Personal Information</h2>
+                            <p>Update your details and confirm changes in one place.</p>
+                        </div>
+
+                        <div class="detail-row">
+                            <span>Full Name</span>
+                            <span>Cardo Dalisay</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Student ID</span>
+                            <span>0323-4526</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Institutional Email</span>
+                            <span>0323-4526@lspu.edu.ph</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Course</span>
+                            <span>Information Technology</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Program</span>
+                            <span>WMAD</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Status</span>
+                            <span>Active</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Year Level</span>
+                            <span>3rd Year</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Section</span>
+                            <span>Batch A</span>
+                        </div>
+
+                        <div class="detail-note">
+                            <p><strong>Update process:</strong> Access Personal Information, make edits if needed, confirm changes, then save your profile. If no changes are required, your current record will remain unchanged.</p>
+                        </div>
+
+                        <div class="profile-actions profile-actions-inline">
+                            <button class="button primary-button">Edit Personal Information</button>
+                            <button class="button outline-button">Confirm Changes</button>
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

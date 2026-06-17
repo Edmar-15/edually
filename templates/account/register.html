@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EduAlly – Register</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+<header class="page-header">
+    <div class="header-inner">
+        <a href="{% url 'landing' %}" class="logo">EduAlly</a>
+        <nav class="main-nav">
+            <a href="{% url 'landing' %}">Home</a>
+            <a href="{% url 'account:login' %}">Login</a>
+        </nav>
+    </div>
+</header>
+
+<main class="auth-page">
+    <section class="auth-card">
+        <h1>Create your account</h1>
+        <p class="auth-subtitle">Join EduAlly and start learning with confidence.</p>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="errorlist nonfield">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% if form.username %}
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="errorlist">{{ form.username.errors }}</div>
+                {% endif %}
+            {% endif %}
+
+
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div class="errorlist">{{ form.email.errors }}</div>
+            {% endif %}
+
+            <label for="{{ form.password1.id_for_label }}">Password</label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}
+                <div class="errorlist">{{ form.password1.errors }}</div>
+            {% endif %}
+
+            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}
+                <div class="errorlist">{{ form.password2.errors }}</div>
+            {% endif %}
+
+            <button type="submit">Register</button>
+        </form>
+
+        <p class="auth-footer">
+            Already have an account? <a href="{% url 'account:login' %}">Login</a>
+        </p>
+    </section>
+</main>
+</body>
+</html>

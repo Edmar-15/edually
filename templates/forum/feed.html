@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAlly - Peer Discussion Forum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
+    <link rel="stylesheet" href="{% static "css/feed.css" %}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-logo">EduAlly</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'account:dashboard' %}" class="nav-item">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="{% url 'aihelper:helper' %}" class="nav-item">
+                    <i class="fas fa-brain nav-icon"></i>
+                    <span class="nav-label">AI Helper</span>
+                </a>
+                <a href="{% url 'forum:feed' %}" class="nav-item active">
+                    <i class="fas fa-comments nav-icon"></i>
+                    <span class="nav-label">Forum</span>
+                </a>
+                <a href="{% url 'slm:slmlists' %}" class="nav-item">
+                    <i class="fas fa-book nav-icon"></i>
+                    <span class="nav-label">Modules</span>
+                </a>
+                <a href="{% url 'account:profile' %}" class="nav-item">
+                    <i class="fas fa-user-circle nav-icon"></i>
+                    <span class="nav-label">Profile</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <form method="post" action="{% url 'account:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-item logout">
+                        <i class="fas fa-sign-out-alt nav-icon"></i>
+                        <span class="nav-label">Logout</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="forum-page">
+                <header class="forum-header">
+                    <div>
+                        <p class="eyebrow">Peer Discussion Forum</p>
+                        <h1>Ask questions and learn from classmates.</h1>
+                        <p class="intro-text">Browse recent posts, filter by subject or keyword, and get help from your peers and teachers.</p>
+                    </div>
+                    <a href="#new-question" class="button primary-button">Post a Question</a>
+                </header>
+
+                <section class="forum-search">
+                    <label class="search-label" for="search-input">Search posts</label>
+                    <div class="search-box">
+                        <input id="search-input" type="search" placeholder="Search by subject, title, or keyword">
+                        <button type="button" class="button search-button">Search</button>
+                    </div>
+                </section>
+
+                <section class="post-list">
+                    <div class="post-item verified">
+                        <div class="post-main">
+                            <div class="post-meta">
+                                <span class="tag">ITEC 306</span>
+                                <span class="post-time">5 minutes ago</span>
+                            </div>
+                            <h2 class="post-title">How can I structure the app development workflow for our applications assignment?</h2>
+                            <p class="post-author">by Maria Santos</p>
+                        </div>
+                        <div class="post-stats">
+                            <span class="badge verified-badge">Teacher Verified</span>
+                            <div class="stats-row">
+                                <span class="stat">12 upvotes</span>
+                                <span class="stat">8 replies</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="post-item">
+                        <div class="post-main">
+                            <div class="post-meta">
+                                <span class="tag">ITEP 312</span>
+                                <span class="post-time">18 minutes ago</span>
+                            </div>
+                            <h2 class="post-title">What should I include in the capstone project proposal to meet the rubric?</h2>
+                            <p class="post-author">by Juan Dela Cruz</p>
+                        </div>
+                        <div class="post-stats">
+                            <div class="stats-row">
+                                <span class="stat">9 upvotes</span>
+                                <span class="stat">5 replies</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="post-item verified">
+                        <div class="post-main">
+                            <div class="post-meta">
+                                <span class="tag">ITEP 311</span>
+                                <span class="post-time">1 hour ago</span>
+                            </div>
+                            <h2 class="post-title">How can I make the authentication flow more secure for our security assignment?</h2>
+                            <p class="post-author">by Angela Reyes</p>
+                        </div>
+                        <div class="post-stats">
+                            <span class="badge verified-badge">Teacher Verified</span>
+                            <div class="stats-row">
+                                <span class="stat">17 upvotes</span>
+                                <span class="stat">11 replies</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="post-item">
+                        <div class="post-main">
+                            <div class="post-meta">
+                                <span class="tag">ITEL 305</span>
+                                <span class="post-time">2 hours ago</span>
+                            </div>
+                            <h2 class="post-title">What is the best way to document middleware connections for system integration?</h2>
+                            <p class="post-author">by Mark Villanueva</p>
+                        </div>
+                        <div class="post-stats">
+                            <div class="stats-row">
+                                <span class="stat">7 upvotes</span>
+                                <span class="stat">3 replies</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

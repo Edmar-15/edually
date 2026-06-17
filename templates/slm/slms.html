@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAlly - Modules</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
+    <link rel="stylesheet" href="{% static "css/slm.css" %}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-logo">EduAlly</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{% url 'account:dashboard' %}" class="nav-item">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="{% url 'aihelper:helper' %}" class="nav-item">
+                    <i class="fas fa-brain nav-icon"></i>
+                    <span class="nav-label">AI Helper</span>
+                </a>
+                <a href="{% url 'forum:feed' %}" class="nav-item">
+                    <i class="fas fa-comments nav-icon"></i>
+                    <span class="nav-label">Forum</span>
+                </a>
+                <a href="{% url 'slm:slmlists' %}" class="nav-item active">
+                    <i class="fas fa-book nav-icon"></i>
+                    <span class="nav-label">Modules</span>
+                </a>
+                <a href="{% url 'account:profile' %}" class="nav-item">
+                    <i class="fas fa-user-circle nav-icon"></i>
+                    <span class="nav-label">Profile</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <form method="post" action="{% url 'account:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-item logout">
+                        <i class="fas fa-sign-out-alt nav-icon"></i>
+                        <span class="nav-label">Logout</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <section class="slm-page">
+                <header class="slm-header">
+                    <div>
+                        <p class="eyebrow">Self-Learning Modules</p>
+                        <h1>Continue your learning journey with structured modules.</h1>
+                        <p class="intro-text">Track your progress, review active lessons, and access the next module in your personalized pathway.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="button secondary-button">Resume last module</button>
+                        <button class="button primary-button">Browse module library</button>
+                    </div>
+                </header>
+
+                <section class="slm-summary-grid">
+                    <article class="summary-card progress-card">
+                        <p class="card-label">Current Module</p>
+                        <h2>Introduction to SLMs</h2>
+                        <p class="card-copy">Chapter 2: Learning strategies and self-paced review.</p>
+                        <div class="progress-pill">
+                            <span>42% complete</span>
+                        </div>
+                    </article>
+
+                    <article class="summary-card stats-card">
+                        <p class="card-label">Modules Completed</p>
+                        <h2>3 of 8</h2>
+                        <p class="card-copy">You’re gaining strong momentum in your course plan.</p>
+                    </article>
+
+                    <article class="summary-card goal-card">
+                        <p class="card-label">Today’s Goal</p>
+                        <h2>Finish Module 3 quiz</h2>
+                        <p class="card-copy">Review lesson notes and complete the quiz to unlock the next topic.</p>
+                    </article>
+                </section>
+
+                <section class="module-list-section">
+                    <div class="module-list-header">
+                        <div>
+                            <p class="eyebrow">Available Modules</p>
+                            <h2>Your next learning steps</h2>
+                        </div>
+                        <button class="button outline-button">Filter by subject</button>
+                    </div>
+
+                    <div class="module-grid">
+                        <article class="module-card featured-card">
+                            <div class="module-card-top">
+                                <span class="module-tag">In Progress</span>
+                                <h3>ITEP 312: Capstone Project 1</h3>
+                            </div>
+                            <p class="module-copy">Develop your capstone proposal, document core requirements, and refine the project plan for implementation.</p>
+                            <div class="module-footer">
+                                <span>Next lesson: Defining the project scope</span>
+                                <span class="module-status ready">Continue</span>
+                            </div>
+                        </article>
+
+                        <article class="module-card">
+                            <div class="module-card-top">
+                                <span class="module-tag">Upcoming</span>
+                                <h3>ITEP 311: Information Assurance and Security 1</h3>
+                            </div>
+                            <p class="module-copy">Explore security fundamentals, access control, and risk management techniques for protecting systems and data.</p>
+                            <div class="module-footer">
+                                <span>Estimated time: 35 min</span>
+                                <span class="module-status upcoming">Start</span>
+                            </div>
+                        </article>
+
+                        <article class="module-card">
+                            <div class="module-card-top">
+                                <span class="module-tag">Upcoming</span>
+                                <h3>ITEL 305: System Integration and Architecture 2</h3>
+                            </div>
+                            <p class="module-copy">Study system architecture patterns, integration techniques, and how components communicate in enterprise environments.</p>
+                            <div class="module-footer">
+                                <span>Estimated time: 28 min</span>
+                                <span class="module-status upcoming">Start</span>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

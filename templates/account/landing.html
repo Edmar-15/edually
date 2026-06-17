@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAlly - Landing</title>
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-inner">
+            <a href="{% url 'landing' %}" class="logo">EduAlly</a>
+            <nav class="main-nav">
+                <a href="#features">Home</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+                <a class="button button-outline" href="{% url 'account:login' %}">Login</a>
+                <a class="button" href="{% url 'account:register' %}">Register</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="landing-container">
+        <section class="hero">
+            <div class="hero-copy">
+                <span class="eyebrow">Welcome to EduAlly</span>
+                <h1>AI-powered learning support for Self-Learning Modules.</h1>
+                <p>EduAlly is an AI-powered e-learning ecosystem with collaborative forums designed to improve SLM comprehension, reduce question-asking anxiety, and help learners progress confidently.</p>
+                <div class="button-group">
+                    <a class="button" href="{% url 'account:register' %}">Get Started</a>
+                    <a class="button button-outline" href="{% url 'account:login' %}">Sign In</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-card">
+                    <h2>Ready to elevate your learning?</h2>
+                    <p>Join EduAlly and access tailored support, progress tracking, and smarter collaboration.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="project-overview">
+            <h2>Helping students overcome modular learning challenges</h2>
+            <p>Modular and asynchronous learning often leaves students studying independently with limited support. EduAlly bridges that gap with a Socratic AI helper that provides guided explanations and step-by-step scaffolding instead of just answers.</p>
+            <p>The platform also includes a safe, collaborative forum where learners can ask questions, share ideas, and get support without the pressure of public judgment.</p>
+        </section>
+
+        <section id="features" class="home-grid">
+            <article class="home-item">
+                <h3>Smart Dashboard</h3>
+                <p>Track progress, manage classes, and stay on top of deadlines.</p>
+            </article>
+            <article class="home-item">
+                <h3>Collaborative Learning</h3>
+                <p>Connect with peers and mentors to solve problems together.</p>
+            </article>
+            <article class="home-item">
+                <h3>Secure Access</h3>
+                <p>Login safely and keep your data protected across devices.</p>
+            </article>
+        </section>
+
+        <section class="benefits-grid">
+            <article class="benefit-item">
+                <h3>Students</h3>
+                <p>Access 24/7 low-pressure support for SLMs, reduce question anxiety, and get guided breakdowns of difficult concepts.</p>
+            </article>
+            <article class="benefit-item">
+                <h3>Teachers</h3>
+                <p>Let EduAlly provide foundational academic help so classroom and consultation time can focus on advanced mentoring.</p>
+            </article>
+            <article class="benefit-item">
+                <h3>Researchers</h3>
+                <p>Use the platform as a model for AI-supported pedagogy and the study of self-paced learning and student motivation.</p>
+            </article>
+        </section>
+
+        <section id="about" class="info-section">
+            <h2>Why EduAlly?</h2>
+            <p>Designed for students who want structure, clarity, and motivation, EduAlly gives you simple tools to stay engaged and achieve more.</p>
+        </section>
+    </main>
+
+    <footer class="page-footer" id="contact">
+        <div class="footer-inner">
+            <div>
+                <p class="footer-brand">EduAlly</p>
+                <p>Helping learners succeed with smart tools, clear guidance, and a friendly learning experience.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#features">Home</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+                <a href="{% url 'account:login' %}">Login</a>
+                <a href="{% url 'account:register' %}">Register</a>
+            </div>
+        </div>
+        <p class="footer-note">EduAlly © 2026 • Built for learners</p>
+    </footer>
+</body>
+</html>
