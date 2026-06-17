@@ -4,6 +4,7 @@ from __future__ import annotations
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 from .managers import UserManager
 
@@ -60,3 +61,27 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def get_short_name(self) -> str:
         return self.first_name or self.email
+
+
+class UserConsent(models.Model):
+    """
+    Records each time a user accepts the latest Terms & Conditions & Privacy Notice.
+    """
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='consent',
+        primary_key=True,
+    )
+    version = models.CharField(
+        max_length=10,
+        help_text="Policy version the user accepted (e.g., '1.0').",
+    )
+    accepted_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "User Consent"
+        verbose_name_plural = "User Consents"
+
+    def __str__(self) -> str:
+        return f"{self.user.email} – v{self.version} ({self.accepted_at:%Y-%m-%d})"

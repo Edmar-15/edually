@@ -7,6 +7,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User
 from .forms import UserCreationForm, UserChangeForm
 
+from .models import UserConsent
+
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -32,3 +34,11 @@ class UserAdmin(BaseUserAdmin):
             "fields": ("email", "username", "password1", "password2", "is_staff", "is_active"),
         }),
     )
+
+
+@admin.register(UserConsent)
+class UserConsentAdmin(admin.ModelAdmin):
+    list_display = ("user", "version", "accepted_at")
+    list_filter = ("version",)
+    search_fields = ("user__email", "user__username")
+    ordering = ("-accepted_at",)

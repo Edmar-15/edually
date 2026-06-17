@@ -3,95 +3,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>EduAlly – Register</title>
+    <title>Consent Required – EduAlly</title>
 
-    <!-- Normal page styling (your login/register CSS) -->
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <!-- Regular policy stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/policy.css' %}">
 
-    <!-- Modal CSS – either load the static file or embed the <style> block above -->
+    <!-- Modal CSS (static file or embed the <style> block from above) -->
     <link rel="stylesheet" href="{% static 'css/policy_modal.css' %}">
 </head>
 <body>
 <header class="page-header">
     <div class="header-inner">
         <a href="{% url 'landing' %}" class="logo">EduAlly</a>
-        <nav class="main-nav">
-            <a href="{% url 'landing' %}">Home</a>
-            <a href="{% url 'account:login' %}">Login</a>
-        </nav>
     </div>
 </header>
 
-<main class="auth-page">
-    <section class="auth-card">
-        <h1>Create your account</h1>
-        <p class="auth-subtitle">Join EduAlly and start learning with confidence.</p>
+<main class="policy-page">
+    <h1>Update Required – Terms &amp; Privacy</h1>
 
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+    <p>
+        Our Terms &amp; Conditions and Privacy Notice have been updated (Version {{ policy_version }},
+        effective {{ effective_date|date:"F j, Y" }}). To continue using EduAlly you must review
+        and accept the updated policies.
+    </p>
 
-        <form method="POST" enctype="multipart/form-data" novalidate>
-            {% csrf_token %}
+    <div class="policy-links">
+        <a href="#" class="button" data-modal="terms">View Terms &amp; Conditions</a>
+        <a href="#" class="button" data-modal="privacy">View Privacy Notice</a>
+    </div>
 
-            {% if form.non_field_errors %}
-                <div class="errorlist nonfield">{{ form.non_field_errors }}</div>
-            {% endif %}
-
-            {# USERNAME (optional) #}
-            {% if form.username %}
-                <label for="{{ form.username.id_for_label }}">Username</label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                    <div class="errorlist">{{ form.username.errors }}</div>
-                {% endif %}
-            {% endif %}
-
-            {# EMAIL #}
-            <label for="{{ form.email.id_for_label }}">Email</label>
-            {{ form.email }}
-            {% if form.email.errors %}
-                <div class="errorlist">{{ form.email.errors }}</div>
-            {% endif %}
-
-            {# PASSWORD #}
-            <label for="{{ form.password1.id_for_label }}">Password</label>
-            {{ form.password1 }}
-            {% if form.password1.errors %}
-                <div class="errorlist">{{ form.password1.errors }}</div>
-            {% endif %}
-
-            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
-            {{ form.password2 }}
-            {% if form.password2.errors %}
-                <div class="errorlist">{{ form.password2.errors }}</div>
-            {% endif %}
-
-            {# ---- MODAL LINKS (now just data‑modal attributes) ---- #}
-            <div class="form-group terms-group">
-                <label class="checkbox-label">
-                    {{ form.accept_terms }}
-                    I have read and agree to the
-                    <a href="#" data-modal="terms">Terms &amp; Conditions</a>
-                    and the
-                    <a href="#" data-modal="privacy">Privacy Notice</a>.
-                </label>
-                {% if form.accept_terms.errors %}
-                    <div class="errorlist">{{ form.accept_terms.errors }}</div>
-                {% endif %}
-            </div>
-
-            <button type="submit">Register</button>
-        </form>
-
-        <p class="auth-footer">
-            Already have an account? <a href="{% url 'account:login' %}">Login</a>
-        </p>
-    </section>
+    <form method="post" style="margin-top: 2rem;">
+        {% csrf_token %}
+        <button type="submit" class="button primary-button">I Have Read and Agree</button>
+    </form>
 </main>
 
 <div id="terms-modal" class="policy-modal hidden" role="dialog"
@@ -103,7 +47,7 @@
             <button type="button" class="policy-modal__close" aria-label="Close">&times;</button>
         </header>
         <section class="policy-modal__body">
-            <!--  paste the whole content of _terms_content.html here  -->
+            <!-- paste the whole _terms_content.html here -->
             <h1>Terms &amp; Conditions (Version {{ policy_version }})</h1>
 
             <section>
@@ -183,7 +127,7 @@
             <button type="button" class="policy-modal__close" aria-label="Close">&times;</button>
         </header>
         <section class="policy-modal__body">
-            <!--  paste the whole content of _privacy_content.html here  -->
+            <!-- paste the whole _privacy_content.html here -->
             <h1>Privacy Notice (Version {{ policy_version }})</h1>
 
             <section>
@@ -251,7 +195,7 @@
     </div>
 </div>
 
-<!--  JavaScript (opens / closes)  -->
+<!--  JavaScript (open / close)  -->
 <script src="{% static 'js/policy_modal.js' %}"></script>
 </body>
 </html>

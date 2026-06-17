@@ -1,0 +1,40 @@
+/* ---------- tiny modal stylesheet ---------- */
+.policy-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    font-family: system-ui, sans-serif;
+}
+.policy-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+}
+.policy-modal__content {
+    position: relative;
+    background: #fff;
+    max-width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+.policy-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
+}
+.policy-modal__header h2 {margin:0;font-size:1.4rem;}
+.policy-modal__close {
+    background:transparent;
+    border:none;
+    font-size:1.6rem;
+    cursor:pointer;
+}
+.policy-modal__footer {margin-top:1.5rem;text-align:right;}
+.hidden {display:none;}

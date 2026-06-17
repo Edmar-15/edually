@@ -49,6 +49,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    "account.middleware.RequireLatestConsentMiddleware",
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -138,3 +139,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 # myproject/settings.py
 LOGIN_REDIRECT_URL = 'account:dashboard' 
 LOGOUT_REDIRECT_URL = 'account:landing'
+
+# --- Policy versioning -------------------------------------------------
+POLICY_VERSION = "1.0"
+POLICY_EFFECTIVE_DATE = "2026-04-01"      # YYYY‑MM‑DD format

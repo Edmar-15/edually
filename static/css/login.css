@@ -208,3 +208,13 @@ button:hover {
         padding: 28px 22px;
     }
 }
+
+.terms-group .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.terms-group input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+}

@@ -4,6 +4,9 @@ from __future__ import annotations
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm as DjangoUserCreationForm, UserChangeForm as DjangoUserChangeForm
+from django.utils import timezone
+from django.conf import settings
+from .models import UserConsent
 
 User = get_user_model()
 
@@ -39,6 +42,15 @@ class PublicRegisterForm(forms.ModelForm):
         strip=False,
         widget=forms.PasswordInput(attrs={"placeholder": "Confirm your password"}),
     )
+    
+    accept_terms = forms.BooleanField(
+        label=(
+            "I have read and agree to the "
+            "<a href=\"{% url 'account:terms' %}\" target=\"_blank\">Terms & Conditions</a> "
+            "and the <a href=\"{% url 'account:privacy' %}\" target=\"_blank\">Privacy Notice</a>."
+        ),
+        required=True,
+    )
 
     class Meta:
         model = User
@@ -71,9 +83,17 @@ class PublicRegisterForm(forms.ModelForm):
         return cleaned
 
     def save(self, commit=True):
-
+        """
+        Save the user and also create a UserConsent record with the current policy version.
+        """
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
         if commit:
             user.save()
+            # Record consent
+            UserConsent.objects.create(
+                user=user,
+                version=settings.POLICY_VERSION,
+                accepted_at=timezone.now(),
+            )
         return user
