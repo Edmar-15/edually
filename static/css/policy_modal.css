@@ -1,4 +1,4 @@
-/* ---------- tiny modal stylesheet ---------- */
+/* Modal */
 .policy-modal {
     position: fixed;
     inset: 0;
@@ -8,11 +8,13 @@
     z-index: 1050;
     font-family: system-ui, sans-serif;
 }
+/* Backdrop */
 .policy-modal__backdrop {
     position: absolute;
     inset: 0;
     background: rgba(0,0,0,.5);
 }
+/* Content */
 .policy-modal__content {
     position: relative;
     background: #fff;
@@ -23,6 +25,7 @@
     padding: 1.5rem;
     box-shadow: 0 4px 16px rgba(0,0,0,.2);
 }
+/* Header */
 .policy-modal__header {
     display: flex;
     justify-content: space-between;

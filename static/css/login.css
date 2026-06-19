@@ -1,7 +1,9 @@
+/* Reset */
 * {
     box-sizing: border-box;
 }
 
+/* Base */
 body {
     margin: 0;
     min-height: 100vh;
@@ -10,6 +12,7 @@ body {
     color: var(--text);
 }
 
+/* Header */
 .page-header {
     width: 100%;
     padding: 22px 28px;
@@ -50,6 +53,7 @@ body {
     font-size: 0.95rem;
 }
 
+/* Page */
 .auth-page {
     min-height: calc(100vh - 84px);
     display: flex;
@@ -58,6 +62,7 @@ body {
     padding: 32px 18px 48px;
 }
 
+/* Card */
 .auth-card {
     width: min(460px, 100%);
     background: var(--card);
@@ -80,6 +85,7 @@ body {
     line-height: 1.75;
 }
 
+/* Labels */
 label {
     display: block;
     margin-bottom: 10px;
@@ -87,6 +93,7 @@ label {
     color: #334155;
 }
 
+/* Inputs */
 input {
     width: 100%;
     padding: 14px 16px;
@@ -105,6 +112,7 @@ input:focus {
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
 }
 
+/* Buttons */
 button {
     width: 100%;
     padding: 14px 16px;
@@ -123,6 +131,7 @@ button:hover {
     box-shadow: 0 16px 40px rgba(79, 70, 229, 0.18);
 }
 
+/* OAuth */
 .oauth-button {
     width: 100%;
     display: inline-flex;
@@ -151,6 +160,7 @@ button:hover {
     border-color: rgba(79, 70, 229, 0.32);
 }
 
+/* Divider */
 .oauth-divider {
     margin: 18px 0;
     display: flex;
@@ -168,6 +178,7 @@ button:hover {
     background: rgba(148, 163, 184, 0.28);
 }
 
+/* Footer */
 .auth-footer {
     margin-top: 24px;
     font-size: 0.96rem;
@@ -186,6 +197,7 @@ button:hover {
     color: rgba(100, 116, 139, 0.9);
 }
 
+/* Responsive */
 @media (max-width: 640px) {
     .header-inner {
         flex-direction: column;
@@ -193,11 +205,13 @@ button:hover {
         gap: 12px;
     }
 
+/* Card */
     .auth-card {
         padding: 28px 22px;
     }
 }
 
+/* Terms */
 .terms-group .checkbox-label {
     display: flex;
     align-items: center;

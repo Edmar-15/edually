@@ -1,3 +1,4 @@
+/* Base */
 body {
     margin: 0;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -5,12 +6,14 @@ body {
     background: #f6f8fc;
 }
 
+/* Page */
 .slm-page {
     display: flex;
     flex-direction: column;
     gap: 32px;
 }
 
+/* Header */
 .slm-header,
 .module-list-header {
     display: flex;
@@ -37,12 +40,14 @@ body {
     color: var(--muted);
 }
 
+/* Actions */
 .header-actions {
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
 }
 
+/* Summary */
 .slm-summary-grid {
     max-width: 1100px;
     margin: 0 auto;
@@ -52,6 +57,7 @@ body {
     gap: 20px;
 }
 
+/* Cards */
 .summary-card {
     padding: 20px;
     border-radius: 28px;
@@ -60,6 +66,7 @@ body {
     border: 1px solid var(--border);
 }
 
+/* Progress */
 .progress-card {
     background: linear-gradient(180deg, #eef4ff 0%, #f7f9ff 100%);
 }
@@ -95,18 +102,21 @@ body {
     font-weight: 700;
 }
 
+/* Modules */
 .module-list-section {
     display: flex;
     flex-direction: column;
     gap: 22px;
 }
 
+/* Modules */
 .module-list-section {
     max-width: 1100px;
     margin: 0 auto;
     padding: 0 16px;
 }
 
+/* Grid */
 .module-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -115,6 +125,7 @@ body {
     justify-items: stretch;
 }
 
+/* Card */
 .module-card {
     background: var(--surface);
     border-radius: 28px;
@@ -160,6 +171,7 @@ body {
     flex: 1;
 }
 
+/* Footer */
 .module-footer {
     display: flex;
     justify-content: space-between;
@@ -168,6 +180,7 @@ body {
     flex-wrap: wrap;
 }
 
+/* Status */
 .module-status {
     display: inline-flex;
     padding: 10px 16px;
@@ -194,6 +207,7 @@ body {
     font-weight: 700;
 }
 
+/* Buttons */
 .button {
     border: none;
     border-radius: 18px;
@@ -218,7 +232,9 @@ body {
     background: transparent;
 }
 
+/* Responsive */
 @media (max-width: 1080px) {
+/* Summary */
     .slm-summary-grid {
         max-width: 1100px;
         margin: 0 auto;
@@ -238,12 +254,14 @@ body {
         padding: 24px;
     }
 
+/* Header */
     .slm-header,
     .module-list-header {
         flex-direction: column;
         align-items: stretch;
     }
 
+/* Grid */
     .module-grid {
         grid-template-columns: 1fr;
     }
@@ -254,6 +272,7 @@ body {
         font-size: 1.75rem;
     }
 
+/* Actions */
     .header-actions {
         flex-direction: column;
         align-items: stretch;
