@@ -1,14 +1,3 @@
-/* Base auth page styles */
-:root {
-    --bg: #f6f8ff;
-    --card: #ffffff;
-    --text: #1f2a47;
-    --muted: #667085;
-    --blue: #4f46e5;
-    --blue-soft: #eef2ff;
-    --shadow: 0 20px 60px rgba(31, 42, 71, 0.08);
-}
-
 * {
     box-sizing: border-box;
 }

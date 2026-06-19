@@ -1,0 +1,145 @@
+/* ==============================================================
+   base.css – Global Design Tokens (Unified & Updated Palette)
+   ============================================================== */
+
+/* --------------------------------------------------------------
+   1️⃣  Core Palette – Brand Colours (your new palette)
+   -------------------------------------------------------------- */
+:root {
+  /* Primary – Teal (used for headers, primary buttons, AI chat bubbles) */
+  --primary:           #0E9AA7;               /* rgb(14,154,167) */
+  --primary-dark:     #0B7B80;               /* a slightly darker teal for hover/focus */
+
+  /* Accent – Coral (CTA buttons, success notifications, badge highlights) */
+  --accent:           #FF6B6B;               /* rgb(255,107,107) */
+
+  /* Neutral – Dark Charcoal (body text, icons, footers) */
+  --text:              #333333;               /* rgb(51,51,51) */
+
+  /* Neutral – Light Gray (page backgrounds, cards, modal overlays) */
+  --bg:                #F5F5F5;               /* rgb(245,245,245) */
+  --surface:           #F5F5F5;               /* cards & modal surfaces */
+
+  /* Highlight – Bright Yellow (progress animation, “new” badge) */
+  --highlight:        #FFC947;               /* rgb(255,201,71) */
+
+  /* Support – Soft Lavender (optional for mental‑health / mindfulness) */
+  --support:          #C6A1FF;               /* rgb(198,161,255) */
+
+  /* ------------------------------------------------------------
+     2️⃣  Supporting UI Tokens (unchanged semantics)
+     ------------------------------------------------------------ */
+  /* Muted / secondary copy (still a medium‑gray for subtitles, etc.) */
+  --muted:            #667085;               /* keep the existing muted tone */
+
+  /* Borders – used on cards, inputs, dividers */
+  --border:           rgba(148, 163, 184, 0.16);
+
+  /* Shadows – common drop‑shadows */
+  --shadow:           0 20px 60px rgba(31, 42, 71, 0.08);
+  --shadow-lg:        0 30px 70px rgba(51, 78, 234, 0.12);
+
+  /* Layout helpers */
+  --sidebar-width:    200px;
+}
+
+/* --------------------------------------------------------------
+   3️⃣  Compatibility aliases (old names kept for existing CSS)
+   -------------------------------------------------------------- */
+:root {
+  /* The old “blue” token from the login page now points to the new primary teal */
+  --blue:               var(--primary);
+  --blue-soft:          var(--primary-soft, var(--accent)); /* fallback to accent */
+
+  /* Legacy colour names that appear in the original files */
+  --primary-soft:       var(--accent);          /* used for soft tag backgrounds */
+  --background:         var(--bg);
+  --surface-soft:        var(--surface);        /* helper chat bubble background */
+
+  /* Accent & highlight aliases used in a few components */
+  --accent-color:       var(--accent);
+  --highlight-color:    var(--highlight);
+  --support-color:      var(--support);
+}
+
+/* --------------------------------------------------------------
+   4️⃣  Additional tokens that were present in the original sheets
+       (kept unchanged – they are not colour‑specific)
+   -------------------------------------------------------------- */
+:root {
+  /* Dashboard‑specific */
+  --primary-dark-dashboard:   #334eea;           /* retained for backward compatibility */
+  --bg-dashboard:             #f8fbff;
+  --surface-dashboard:        #ffffff;
+  --text-dashboard:          #1f2a47;
+
+  /* Feed‑specific */
+  --background-feed:         #f8fbff;
+  --surface-feed:            #ffffff;
+  --text-feed:               #102a43;
+  --muted-feed:              #64748b;
+  --primary-feed:            var(--primary);
+  --primary-soft-feed:       #eef2ff;
+  --border-feed:             rgba(148, 163, 184, 0.24);
+  --shadow-feed:             var(--shadow);
+
+  /* Helper‑chat specific */
+  --bg-helper:               #eef2ff;
+  --surface-helper:          #ffffff;
+  --surface-soft-helper:     #f5f8ff;
+  --text-helper:             #102a43;
+  --muted-helper:           #64748b;
+  --primary-helper:         var(--primary);
+  --primary-dark-helper:    #3730a3;
+  --border-helper:          rgba(148, 163, 184, 0.22);
+  --shadow-helper:          0 24px 64px rgba(31, 42, 71, 0.12);
+
+  /* Landing‑page specific */
+  --primary-landing:        var(--primary);
+  --accent-landing:         var(--accent);
+  --bg-landing:             var(--bg);
+  --surface-landing:        var(--surface);
+  --text-landing:           #333333;
+  --muted-landing:          #52667A;
+  --shadow-landing:         0 30px 70px rgba(14,154,167,0.12);
+
+  /* Login‑page specific */
+  --bg-login:               #f6f8ff;
+  --card:                   #ffffff;
+  --text-login:             #1f2a47;
+  --muted-login:           #667085;
+  --blue-login:             var(--primary);
+  --blue-soft-login:       #eef2ff;
+  --shadow-login:          var(--shadow);
+
+  /* SLM‑page specific */
+  --primary-slm:           #3755b8;   /* keep original but you can map to teal if desired */
+  --primary-soft-slm:      #eef2ff;
+  --surface-slm:           #ffffff;
+  --text-slm:              #1b2340;
+  --muted-slm:             #6b7280;
+  --border-slm:            #d9e2ef;
+  --shadow-slm:            0 18px 40px rgba(24, 38, 69, 0.08);
+}
+
+/* --------------------------------------------------------------
+   5️⃣  Global reset / box‑sizing (kept from the originals)
+   -------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------
+   6️⃣  Utility helpers (optional, can be used throughout the UI)
+   -------------------------------------------------------------- */
+:root {
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* ----------------------------------------------------------------
+   End of base.css – import this file before any component stylesheet
+   ---------------------------------------------------------------- */

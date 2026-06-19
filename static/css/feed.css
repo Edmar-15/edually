@@ -1,15 +1,3 @@
-/* EduAlly Forum Feed Styles */
-:root {
-    --background: #f8fbff;
-    --surface: #ffffff;
-    --text: #102a43;
-    --muted: #64748b;
-    --primary: #4f46e5;
-    --primary-soft: #eef2ff;
-    --border: rgba(148, 163, 184, 0.24);
-    --shadow: 0 20px 60px rgba(31, 42, 71, 0.08);
-}
-
 * {
     box-sizing: border-box;
 }

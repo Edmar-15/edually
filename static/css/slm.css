@@ -1,13 +1,3 @@
-:root {
-    --primary: #3755b8;
-    --primary-soft: #eef2ff;
-    --surface: #ffffff;
-    --text: #1b2340;
-    --muted: #6b7280;
-    --border: #d9e2ef;
-    --shadow: 0 18px 40px rgba(24, 38, 69, 0.08);
-}
-
 body {
     margin: 0;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
