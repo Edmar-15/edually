@@ -151,3 +151,6 @@ build/
 # Logs produced at runtime
 log/
 *.log
+
+# Local settings – keep secrets out of VCS
+/config/settings_local.py

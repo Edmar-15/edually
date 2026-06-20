@@ -52,6 +52,16 @@
             <button type="submit">Log in</button>
         </form>
 
+        <div class="social-login">
+            <p class="auth-footer">or log in with</p>
+            <a href="{% url 'account:google_login' %}"
+            class="button google-button">
+                <img src="{% static 'img/google_logo.svg' %}"
+                    alt="" class="google-logo">
+                Sign in with Google
+            </a>
+        </div>
+
         <p class="auth-footer">
             No account yet? <a href="{% url 'account:register' %}">Register</a>
         </p>

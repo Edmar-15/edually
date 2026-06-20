@@ -143,3 +143,25 @@ LOGOUT_REDIRECT_URL = 'account:landing'
 # --- Policy versioning -------------------------------------------------
 POLICY_VERSION = "1.0"
 POLICY_EFFECTIVE_DATE = "2026-04-01"      # YYYY‑MM‑DD format
+
+# --------------------------------------------------------------
+# Google OAuth2 configuration
+# --------------------------------------------------------------
+# You must create a Google OAuth client at https://console.cloud.google.com/apis/credentials
+#   – Set "Authorized redirect URIs" to:  http://<your‑domain>/account/login/google/callback/
+#   – For local development: http://127.0.0.1:8000/account/login/google/callback/
+#
+# Then copy the generated client ID / secret here.
+#
+GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"
+GOOGLE_CLIENT_SECRET = "YOUR_GOOGLE_CLIENT_SECRET"
+
+# Build the absolute URL that Google will redirect back to.
+# If you use `django.contrib.sites` you could build it dynamically,
+# but a simple literal works fine for most projects.
+GOOGLE_OAUTH_REDIRECT_URI = "http://127.0.0.1:8000/account/login/google/callback/"
+
+try:          # pragma: no‑cover   (makes test coverage ignore the try/except)
+    from .settings_local import *   # noqa: F403,F401
+except ImportError:               # No local file → keep defaults
+    pass
