@@ -6,8 +6,8 @@
   --primary-dark: #0B7B80;
   --accent: #FF6B6B;
   --text: #333333;
-  --bg: #F5F5F5;
-  --surface: #F5F5F5;
+  --bg: #f6f7fa;
+  --surface: #ffffff;
   --highlight: #FFC947;
   --support: #C6A1FF;
   --muted: #667085;
@@ -76,6 +76,8 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
+  --bp-sm: 640px;
+  --bp-md: 900px;
 }
 
 /* Reset */
@@ -83,4 +85,85 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Global body background to provide a muted canvas across the site */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Navbar logo image sizing and alignment */
+.logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo .nav-logo { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; box-shadow: 0 8px 20px rgba(16,42,67,0.06); }
+.logo .logo-text { font-weight: 800; font-size: 1.15rem; color: var(--primary); }
+
+@media (max-width: 540px) {
+  .logo .nav-logo { display: none; }
+  .logo .logo-text { font-size: 1rem; }
+}
+
+/* Consistent container used across pages */
+.container, .header-inner, .landing-container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* Global header and nav responsiveness */
+.page-header {
+  width: 100%;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+}
+.page-header .header-inner {
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.main-nav { display:flex; gap:16px; align-items:center; }
+.main-nav a { color:var(--text); text-decoration:none; }
+
+@media (max-width: var(--bp-sm)) {
+  .main-nav { width:100%; display:flex; flex-wrap:wrap; gap:10px; }
+  .page-header .header-inner { flex-direction:column; align-items:flex-start; gap:8px; }
+}
+
+/* Subtle page texture and soft accents */
+body {
+  background-image:
+    radial-gradient(circle at 10% 10%, rgba(198,161,255,0.03) 0px, transparent 80px),
+    radial-gradient(circle at 90% 80%, rgba(14,154,167,0.03) 0px, transparent 120px),
+    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Buttons: gentle gradient for primary calls */
+.button {
+  background: linear-gradient(90deg, var(--teal), var(--coral));
+  box-shadow: 0 12px 30px rgba(14,154,167,0.08);
+}
+
+/* Card elevation and interactive lift */
+.card,
+.home-item,
+.benefit-item,
+.test-card,
+.hero-card {
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+.card:hover,
+.home-item:hover,
+.benefit-item:hover,
+.test-card:hover,
+.hero-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 80px rgba(16,42,67,0.12);
+}
+
+/* Simple fade-up animation */
+.animate-fade-up { opacity: 0; transform: translateY(14px); animation: fadeUp 700ms cubic-bezier(.2,.9,.3,1) both; }
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
 }

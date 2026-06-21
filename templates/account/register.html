@@ -15,7 +15,9 @@
 <body>
 <header class="page-header">
     <div class="header-inner">
-        <a href="{% url 'landing' %}" class="logo">EduAlly</a>
+        <a href="{% url 'landing' %}" class="logo">
+            <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
+        </a>
         <nav class="main-nav">
             <a href="{% url 'landing' %}">Home</a>
             <a href="{% url 'account:login' %}">Login</a>
@@ -76,10 +78,11 @@
             <div class="form-group terms-group">
                 <label class="checkbox-label">
                     {{ form.accept_terms }}
-                    I have read and agree to the
-                    <a href="#" data-modal="terms">Terms &amp; Conditions</a>
-                    and the
-                    <a href="#" data-modal="privacy">Privacy Notice</a>.
+                    <span class="terms-text">I have read and agree to the
+                        <a href="#" data-modal="terms" class="policy-link">Terms &amp; Conditions</a>
+                        and the
+                        <a href="#" data-modal="privacy" class="policy-link">Privacy Notice</a>.
+                    </span>
                 </label>
                 {% if form.accept_terms.errors %}
                     <div class="errorlist">{{ form.accept_terms.errors }}</div>

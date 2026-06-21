@@ -149,6 +149,32 @@ button:hover {
     margin-bottom: 20px;
 }
 
+/* Google CTA specific */
+.google-cta {
+    padding: 12px 18px;
+    gap: 14px;
+    border-radius: 14px;
+    font-size: 1rem;
+}
+
+.oauth-text {
+    display: inline-block;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.social-note {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #64748b;
+    text-align: center;
+}
+
+.google-cta:focus-visible {
+    outline: 3px solid rgba(14,154,167,0.18);
+    outline-offset: 3px;
+}
+
 .oauth-button img {
     width: 20px;
     height: 20px;
@@ -211,6 +237,15 @@ button:hover {
     }
 }
 
+@media (max-width: 540px) {
+    .main-nav { width:100%; display:flex; justify-content:flex-start; gap:10px; }
+    .auth-card { width: calc(100% - 32px); margin: 12px auto; padding: 20px; border-radius: 18px; }
+    .button, .oauth-button { width: 100%; }
+    .oauth-divider::before, .oauth-divider::after { display:none; }
+    .auth-page { padding:18px 12px 36px; }
+    input { padding:12px 10px; }
+}
+
 /* Terms */
 .terms-group .checkbox-label {
     display: flex;
@@ -221,3 +256,21 @@ button:hover {
     width: 1rem;
     height: 1rem;
 }
+
+/* Terms checkbox row */
+.terms-group .checkbox-label {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.4;
+    font-size: 0.95rem;
+    color: var(--muted);
+}
+.terms-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+}
+.terms-text { display: inline-block; }
+.policy-link { color: var(--primary); text-decoration: underline; margin: 0 4px; }
+.policy-link:hover { color: var(--primary-dark); }

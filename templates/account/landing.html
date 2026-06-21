@@ -12,7 +12,9 @@
 <body>
     <header class="page-header">
         <div class="header-inner">
-            <a href="{% url 'landing' %}" class="logo">EduAlly</a>
+            <a href="{% url 'landing' %}" class="logo">
+                <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
+            </a>
             <nav class="main-nav">
                 <a href="#features">Home</a>
                 <a href="#about">About</a>
@@ -25,7 +27,7 @@
 
     <main class="landing-container">
         <section class="hero">
-            <div class="hero-copy">
+            <div class="hero-copy animate-fade-up">
                 <span class="eyebrow">Welcome to EduAlly</span>
                 <h1>AI-powered learning support for Self-Learning Modules.</h1>
                 <p>EduAlly is an AI-powered e-learning ecosystem with collaborative forums designed to improve SLM comprehension, reduce question-asking anxiety, and help learners progress confidently.</p>
@@ -35,10 +37,23 @@
                 </div>
             </div>
             <div class="hero-visual">
-                <div class="hero-card">
+                <div class="hero-card animate-fade-up">
                     <h2>Ready to elevate your learning?</h2>
                     <p>Join EduAlly and access tailored support, progress tracking, and smarter collaboration.</p>
+                    <div class="trust-row">
+                        <span class="trust-pill">For Modular Courses</span>
+                        <span class="trust-pill">Secure • Private</span>
+                    </div>
                 </div>
+                <svg class="hero-blob" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="g1" x1="0%" x2="100%" y1="0%" y2="100%">
+                            <stop offset="0%" stop-color="#0E9AA7" stop-opacity="0.18"/>
+                            <stop offset="100%" stop-color="#FF6B6B" stop-opacity="0.08"/>
+                        </linearGradient>
+                    </defs>
+                    <path fill="url(#g1)" d="M421.5,330.3Q396,410,324,427.5Q252,445,192.5,402.5Q133,360,96.5,303Q60,246,95,183.5Q130,121,190.5,90.5Q251,60,318.5,76Q386,92,426,147Q466,202,421.5,330.3Z"/>
+                </svg>
             </div>
         </section>
 
@@ -46,6 +61,20 @@
             <h2>Helping students overcome modular learning challenges</h2>
             <p>Modular and asynchronous learning often leaves students studying independently with limited support. EduAlly bridges that gap with a Socratic AI helper that provides guided explanations and step-by-step scaffolding instead of just answers.</p>
             <p>The platform also includes a safe, collaborative forum where learners can ask questions, share ideas, and get support without the pressure of public judgment.</p>
+            <div class="overview-grid">
+                <div class="overview-item">
+                    <strong>Adaptive Assistance</strong>
+                    <p>Personalized hints and guided practice tailored to each module.</p>
+                </div>
+                <div class="overview-item">
+                    <strong>Progress Insights</strong>
+                    <p>Visualize growth and focus on concepts that need reinforcement.</p>
+                </div>
+                <div class="overview-item">
+                    <strong>Community Support</strong>
+                    <p>Private discussion spaces to ask questions and collaborate safely.</p>
+                </div>
+            </div>
         </section>
 
         <section id="features" class="home-grid">
@@ -82,23 +111,29 @@
             <h2>Why EduAlly?</h2>
             <p>Designed for students who want structure, clarity, and motivation, EduAlly gives you simple tools to stay engaged and achieve more.</p>
         </section>
+
+        <!-- Testimonials removed per request -->
     </main>
 
     <footer class="page-footer" id="contact">
-        <div class="footer-inner">
-            <div>
-                <p class="footer-brand">EduAlly</p>
-                <p>Helping learners succeed with smart tools, clear guidance, and a friendly learning experience.</p>
+        <div class="footer-inner simple-footer">
+            <div class="footer-left">
+                <a href="{% url 'landing' %}" class="footer-brand">EduAlly</a>
+                <p>Helping learners succeed with smart tools and clear guidance.</p>
             </div>
-            <div class="footer-links">
-                <a href="#features">Home</a>
-                <a href="#about">About</a>
-                <a href="#contact">Contact</a>
-                <a href="{% url 'account:login' %}">Login</a>
-                <a href="{% url 'account:register' %}">Register</a>
+
+            <div class="footer-center">
+                <p class="footer-center-text">© 2026 EduAlly • <a href="#">Terms</a> • <a href="#">Privacy</a></p>
+            </div>
+
+            <div class="footer-right">
+                <div class="footer-links">
+                    <a href="{% url 'landing' %}">Home</a>
+                    <a href="#about">About</a>
+                    <a href="#contact">Contact</a>
+                </div>
             </div>
         </div>
-        <p class="footer-note">EduAlly © 2026 • Built for learners</p>
     </footer>
 </body>
 </html>
