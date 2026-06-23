@@ -248,29 +248,68 @@ button:hover {
 
 /* Terms */
 .terms-group .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.terms-group input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
-}
-
-/* Terms checkbox row */
-.terms-group .checkbox-label {
     display: inline-flex;
     align-items: flex-start;
     gap: 10px;
     line-height: 1.4;
     font-size: 0.95rem;
     color: var(--muted);
+    cursor: pointer;
 }
 .terms-group input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    margin-top: 3px;
+    margin: 3px 0 0 0;
+    align-self: flex-start;
 }
 .terms-text { display: inline-block; }
 .policy-link { color: var(--primary); text-decoration: underline; margin: 0 4px; }
 .policy-link:hover { color: var(--primary-dark); }
+
+/* Password toggle */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-wrapper input {
+    width: 100%;
+    padding-right: 52px;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 38%;
+    right: 12px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+    width: 28px;
+    height: 28px;
+    font-size: 0;
+    line-height: 1;
+}
+
+.toggle-password:hover,
+.toggle-password:active {
+    color: #64748b;
+    transform: translateY(-50%);
+    box-shadow: none;
+}
+
+.toggle-password:focus-visible {
+    outline: 2px solid rgba(79, 70, 229, 0.5);
+    outline-offset: 2px;
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
