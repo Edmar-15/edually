@@ -18,7 +18,8 @@
 .policy-modal__content {
     position: relative;
     background: #fff;
-    max-width: 90%;
+    width: 90%;
+    max-width: 700px;
     max-height: 85vh;
     overflow-y: auto;
     border-radius: 8px;
@@ -38,6 +39,32 @@
     border:none;
     font-size:1.6rem;
     cursor:pointer;
+}
+.policy-modal__body {
+    text-align: justify;
+    line-height: 1.6;
+}
+.policy-modal__body h1 {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+.policy-modal__body h2 {
+    text-align: left;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+.policy-modal__body p {
+    text-align: justify;
+    margin-bottom: 1rem;
+}
+.policy-modal__body ul,
+.policy-modal__body ol {
+    text-align: justify;
+    margin-bottom: 1rem;
+}
+.policy-modal__body li {
+    text-align: justify;
+    margin-bottom: 0.5rem;
 }
 .policy-modal__footer {margin-top:1.5rem;text-align:right;}
 .hidden {display:none;}

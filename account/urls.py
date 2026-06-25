@@ -5,6 +5,7 @@ from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
 
 from . import views
+from .forms import LoginForm
 from .views import ConsentRequiredView
 
 app_name = "account"
@@ -17,6 +18,7 @@ urlpatterns = [
         "login/",
         auth_views.LoginView.as_view(
             template_name="account/login.html",
+            form_class=LoginForm,
             redirect_authenticated_user=True,
         ),
         name="login",

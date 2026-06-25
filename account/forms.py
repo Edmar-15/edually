@@ -3,12 +3,29 @@ from __future__ import annotations
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm as DjangoUserCreationForm, UserChangeForm as DjangoUserChangeForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    UserCreationForm as DjangoUserCreationForm,
+    UserChangeForm as DjangoUserChangeForm,
+)
 from django.utils import timezone
 from django.conf import settings
 from .models import UserConsent
 
 User = get_user_model()
+
+
+class LoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'placeholder': 'Email Address',
+            'autocomplete': 'username',
+        })
+        self.fields['password'].widget.attrs.update({
+            'placeholder': 'Password',
+            'autocomplete': 'current-password',
+        })
 
 class UserCreationForm(DjangoUserCreationForm):
     class Meta(DjangoUserCreationForm.Meta):

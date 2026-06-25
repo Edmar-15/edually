@@ -7,6 +7,7 @@
     <title>EduAlly - Landing</title>
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+    <link rel="stylesheet" href="{% static 'css/policy_modal.css' %}">
     <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
 </head>
 <body>
@@ -123,7 +124,7 @@
             </div>
 
             <div class="footer-center">
-                <p class="footer-center-text">© 2026 EduAlly • <a href="#">Terms</a> • <a href="#">Privacy</a></p>
+                <p class="footer-center-text">© 2026 EduAlly • <a href="#" data-modal="terms" class="policy-link">Terms</a> • <a href="#" data-modal="privacy" class="policy-link">Privacy</a></p>
             </div>
 
             <div class="footer-right">
@@ -135,5 +136,159 @@
             </div>
         </div>
     </footer>
+
+    <div id="terms-modal" class="policy-modal hidden" role="dialog"
+         aria-modal="true" aria-labelledby="terms-modal-title">
+        <div class="policy-modal__backdrop"></div>
+        <div class="policy-modal__content">
+            <header class="policy-modal__header">
+                <h2 id="terms-modal-title">Terms &amp; Conditions (Version {{ policy_version }})</h2>
+                <button type="button" class="policy-modal__close" aria-label="Close">&times;</button>
+            </header>
+            <section class="policy-modal__body">
+                <h1>Terms &amp; Conditions (Version {{ policy_version }})</h1>
+
+                <section>
+                    <p>Effective Date: {{ effective_date|date:"F j, Y" }}</p>
+
+                    <h2>1. Acceptance</h2>
+                    <p>
+                        By creating an account, accessing or using EduAlly, you acknowledge that you have read,
+                        understood, and agree to be bound by these Terms &amp; Conditions.
+                    </p>
+
+                    <h2>2. Description of Services</h2>
+                    <p>
+                        EduAlly provides an AI‑assisted learning platform for self‑learning modules,
+                        collaborative forums and progress‑tracking tools.
+                    </p>
+
+                    <h2>3. User Obligations</h2>
+                    <ul>
+                        <li>Provide accurate personal information during registration.</li>
+                        <li>Respect other learners and avoid posting abusive content.</li>
+                        <li>Comply with all applicable laws and the platform's community guidelines.</li>
+                    </ul>
+
+                    <h2>4. Intellectual Property</h2>
+                    <p>
+                        All content created by EduAlly (including AI‑generated responses, UI designs,
+                        and documentation) remains the intellectual property of EduAlly unless explicitly
+                        licensed otherwise. Users retain ownership of the material they upload, but grant
+                        EduAlly a worldwide, royalty‑free license to display, distribute, and process it
+                        for the purpose of providing the service.
+                    </p>
+
+                    <h2>5. Termination</h2>
+                    <p>
+                        EduAlly may suspend or terminate your account at any time for breach of these
+                        terms, illegal activity, or for any reason that threatens the safety of the
+                        community.
+                    </p>
+
+                    <h2>6. Limitation of Liability</h2>
+                    <p>
+                        To the fullest extent permitted by law, EduAlly shall not be liable for any indirect,
+                        incidental, special, consequential or punitive damages arising out of or related
+                        to the use of the platform.
+                    </p>
+
+                    <h2>7. Governing Law</h2>
+                    <p>
+                        These Terms shall be governed by the laws of the Philippines, without regard to
+                        conflict‑of‑law principles.
+                    </p>
+
+                    <h2>8. Changes to these Terms</h2>
+                    <p>
+                        EduAlly may amend these Terms at any time. When a change is made, the
+                        <strong>policy version</strong> is incremented and users will be required to accept the
+                        updated version before further use of the service.
+                    </p>
+                </section>
+            </section>
+            <footer class="policy-modal__footer">
+                <button type="button" class="policy-modal__close button primary-button">Close</button>
+            </footer>
+        </div>
+    </div>
+
+    <div id="privacy-modal" class="policy-modal hidden" role="dialog"
+         aria-modal="true" aria-labelledby="privacy-modal-title">
+        <div class="policy-modal__backdrop"></div>
+        <div class="policy-modal__content">
+            <header class="policy-modal__header">
+                <h2 id="privacy-modal-title">Privacy Notice (Version {{ policy_version }})</h2>
+                <button type="button" class="policy-modal__close" aria-label="Close">&times;</button>
+            </header>
+            <section class="policy-modal__body">
+                <h1>Privacy Notice (Version {{ policy_version }})</h1>
+
+                <section>
+                    <p>Effective Date: {{ effective_date|date:"F j, Y" }}</p>
+
+                    <h2>1. Purpose</h2>
+                    <p>
+                        This Privacy Notice explains how EduAlly collects, uses, retains, and protects
+                        personal data in accordance with the <strong>Philippines Data Privacy Act (RA 10173)</strong>.
+                    </p>
+
+                    <h2>2. Types of Personal Data Collected</h2>
+                    <ul>
+                        <li>Identifying information – name, email, avatar, birth date.</li>
+                        <li>Contact details – phone number.</li>
+                        <li>Usage data – login timestamps, IP address, activity logs.</li>
+                        <li>Content generated by the user – forum posts, module notes, AI‑helper interactions.</li>
+                    </ul>
+
+                    <h2>3. Purpose of Processing</h2>
+                    <p>The data is processed for the following legitimate purposes:</p>
+                    <ol>
+                        <li>Providing and personalising the EduAlly learning experience.</li>
+                        <li>Authenticating users and securing the platform.</li>
+                        <li>Communicating with users (e.g., password resets, announcements).</li>
+                        <li>Analytics and improvement of AI‑helper services.</li>
+                        <li>Legal compliance and lawful requests.</li>
+                    </ol>
+
+                    <h2>4. Rights of Data Subjects (Users)</h2>
+                    <p>Under RA 10173 you have the right to:</p>
+                    <ul>
+                        <li>Be informed of the processing activities.</li>
+                        <li>Object to processing (where applicable).</li>
+                        <li>Access and obtain a copy of your data.</li>
+                        <li>Rectify inaccurate data.</li>
+                        <li>Erase, block or suspend processing of your data.</li>
+                        <li>Data portability.</li>
+                        <li>Lodge a complaint with the National Privacy Commission (NPC).</li>
+                    </ul>
+
+                    <h2>5. Data Retention</h2>
+                    <p>
+                        Personal data will be retained only as long as necessary for the purposes described
+                        above or as required by law (e.g., tax records for 7 years).
+                    </p>
+
+                    <h2>6. Security Measures</h2>
+                    <p>
+                        EduAlly employs industry‑standard security measures (encrypted passwords,
+                        TLS for data in transit, regular backups, role‑based access control, etc.).
+                    </p>
+
+                    <h2>7. Contact Information</h2>
+                    <p>
+                        Data Protection Officer: <strong>privacy@edually.com</strong><br>
+                        Address: 123 Learning Avenue, Quezon City, Philippines<br>
+                        Phone: +63‑2‑123‑4567
+                    </p>
+                </section>
+            </section>
+            <footer class="policy-modal__footer">
+                <button type="button" class="policy-modal__close button primary-button">Close</button>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{% static 'js/policy_modal.js' %}"></script>
 </body>
 </html>

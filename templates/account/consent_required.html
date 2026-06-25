@@ -4,38 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <title>Consent Required – EduAlly</title>
-
-    <!-- Regular policy stylesheet -->
-    <link rel="stylesheet" href="{% static 'css/policy.css' %}">
-
-    <!-- Modal CSS (static file or embed the <style> block from above) -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
     <link rel="stylesheet" href="{% static 'css/policy_modal.css' %}">
 </head>
 <body>
 <header class="page-header">
     <div class="header-inner">
-        <a href="{% url 'landing' %}" class="logo">EduAlly</a>
+        <a href="{% url 'landing' %}" class="logo">
+            <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
+        </a>
+        <nav class="main-nav">
+            <form method="post" action="{% url 'account:logout' %}" style="display: inline; margin: 0;">
+                {% csrf_token %}
+                <button type="submit" style="background: none; border: none; color: var(--text); cursor: pointer; text-decoration: none; font-size: 0.95rem; padding: 0;">Log out</button>
+            </form>
+        </nav>
     </div>
 </header>
 
-<main class="policy-page">
-    <h1>Update Required – Terms &amp; Privacy</h1>
+<main class="auth-page">
+    <section class="auth-card">
+        <h1>Update Required</h1>
+        <p class="auth-subtitle">Our policies have been updated. Please review and accept to continue.</p>
 
-    <p>
-        Our Terms &amp; Conditions and Privacy Notice have been updated (Version {{ policy_version }},
-        effective {{ effective_date|date:"F j, Y" }}). To continue using EduAlly you must review
-        and accept the updated policies.
-    </p>
+        <div class="policy-update-info">
+            <p>
+                Our <strong>Terms &amp; Conditions</strong> and <strong>Privacy Notice</strong> have been updated 
+                (Version {{ policy_version }}, effective {{ effective_date|date:"F j, Y" }}). 
+                To continue using EduAlly, you must review and accept the updated policies.
+            </p>
+        </div>
 
-    <div class="policy-links">
-        <a href="#" class="button" data-modal="terms">View Terms &amp; Conditions</a>
-        <a href="#" class="button" data-modal="privacy">View Privacy Notice</a>
-    </div>
+        <div class="policy-links">
+            <a href="#" class="button" data-modal="terms">View Terms &amp; Conditions</a>
+            <a href="#" class="button" data-modal="privacy">View Privacy Notice</a>
+        </div>
 
-    <form method="post" style="margin-top: 2rem;">
-        {% csrf_token %}
-        <button type="submit" class="button primary-button">I Have Read and Agree</button>
-    </form>
+        <form method="post" style="margin-top: 2rem;">
+            {% csrf_token %}
+            <button type="submit" class="button" style="background: var(--blue); color: white;">I Have Read and Agree</button>
+        </form>
+    </section>
 </main>
 
 <div id="terms-modal" class="policy-modal hidden" role="dialog"
@@ -197,5 +207,4 @@
 
 <!--  JavaScript (open / close)  -->
 <script src="{% static 'js/policy_modal.js' %}"></script>
-</body>
-</html>
+    <script src="{% static 'js/form_validation.js' %}"></script>

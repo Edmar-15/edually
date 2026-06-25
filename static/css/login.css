@@ -67,13 +67,13 @@ body {
     width: min(460px, 100%);
     background: var(--card);
     border-radius: 28px;
-    padding: 38px 36px;
+    padding: 24px 36px 38px;
     box-shadow: var(--shadow);
     border: 1px solid rgba(100, 116, 139, 0.12);
 }
 
 .auth-card h1 {
-    margin: 0;
+    margin: 0 0 10px;
     font-size: 2rem;
     line-height: 1.1;
 }
@@ -93,6 +93,66 @@ label {
     color: #334155;
 }
 
+/* Floating Label Group */
+.floating-label-group,
+.input-group {
+    position: relative;
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.floating-label-group label,
+.input-group label {
+    position: absolute;
+    top: 50%;
+    left: 18px;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    color: #67727f;
+    background: transparent;
+    margin: 0;
+    transition: top 0.25s ease, transform 0.25s ease, color 0.25s ease, font-size 0.25s ease, opacity 0.2s ease;
+    transform-origin: left center;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 2;
+}
+
+.input-group:hover label,
+.input-group input:focus + label,
+.input-group input:valid + label,
+.input-group:focus-within label,
+.input-group.focused label,
+.input-group.has-value label {
+    opacity: 1;
+    top: 4px;
+    left: 14px;
+    transform: translateY(0) scale(0.86);
+    font-size: 0.88rem;
+    color: var(--blue);
+    background: #f8fafc;
+    padding: 0 6px;
+    font-weight: 600;
+}
+
+.floating-label-group input,
+.input-group input {
+    position: relative;
+    z-index: 1;
+}
+
+.floating-label-group input::placeholder,
+.input-group input::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+    transition: color 0.25s ease;
+}
+
+.input-group:hover input::placeholder,
+.input-group:focus-within input::placeholder {
+    color: transparent;
+}
+
 /* Inputs */
 input {
     width: 100%;
@@ -103,8 +163,9 @@ input {
     font-size: 1rem;
     color: var(--text);
     margin-bottom: 18px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.2s ease;
 }
+
 
 input:focus {
     outline: none;
@@ -223,6 +284,58 @@ button:hover {
     color: rgba(100, 116, 139, 0.9);
 }
 
+/* Policy Update Section */
+.policy-update-info {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.policy-update-info p {
+    margin: 0;
+}
+
+.policy-update-info strong {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.policy-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.policy-links .button {
+    flex: 1;
+    min-width: 200px;
+    background: transparent;
+    border: 2px solid var(--blue);
+    color: var(--blue);
+    font-weight: 600;
+    padding: 12px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.policy-links .button:hover {
+    background: var(--blue);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(79, 70, 229, 0.15);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
     .header-inner {
@@ -231,9 +344,16 @@ button:hover {
         gap: 12px;
     }
 
-/* Card */
     .auth-card {
         padding: 28px 22px;
+    }
+
+    .policy-links {
+        flex-direction: column;
+    }
+
+    .policy-links .button {
+        min-width: 100%;
     }
 }
 
@@ -270,16 +390,24 @@ button:hover {
 .password-input-wrapper {
     position: relative;
     width: 100%;
+    margin-bottom: 18px;
+}
+
+.floating-label-group .password-input-wrapper {
+    margin-bottom: 0;
 }
 
 .password-input-wrapper input {
     width: 100%;
-    padding-right: 52px;
+    padding-right: 56px;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .toggle-password {
     position: absolute;
-    top: 38%;
+    top: 53%;
     right: 12px;
     transform: translateY(-50%);
     background: transparent;
@@ -290,9 +418,10 @@ button:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s ease;
-    width: 28px;
-    height: 28px;
+    transition: color 0.2s ease, transform 0.2s ease;
+    width: 34px;
+    height: 34px;
+    z-index: 2;
     font-size: 0;
     line-height: 1;
 }
@@ -312,4 +441,49 @@ button:hover {
 .toggle-password svg {
     width: 20px;
     height: 20px;
+}
+
+/* Input Validation */
+.input-error input,
+.input-error textarea {
+    border-color: #ef4444 !important;
+    background-color: rgba(239, 68, 68, 0.04);
+}
+
+.input-error input:focus,
+.input-error textarea:focus {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+}
+
+.input-valid input,
+.input-valid textarea {
+    border-color: #10b981 !important;
+    background-color: rgba(16, 185, 129, 0.04);
+}
+
+.input-valid input:focus,
+.input-valid textarea:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12) !important;
+}
+
+.validation-error {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #ef4444;
+    font-weight: 500;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
