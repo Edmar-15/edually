@@ -11,44 +11,7 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2 class="sidebar-logo">EduAlly</h2>
-            </div>
-
-            <nav class="sidebar-nav">
-                <a href="{% url 'account:dashboard' %}" class="nav-item">
-                    <i class="fas fa-home nav-icon"></i>
-                    <span class="nav-label">Dashboard</span>
-                </a>
-                <a href="{% url 'aihelper:helper' %}" class="nav-item">
-                    <i class="fas fa-brain nav-icon"></i>
-                    <span class="nav-label">AI Helper</span>
-                </a>
-                <a href="{% url 'forum:feed' %}" class="nav-item">
-                    <i class="fas fa-comments nav-icon"></i>
-                    <span class="nav-label">Forum</span>
-                </a>
-                <a href="{% url 'slm:slmlists' %}" class="nav-item">
-                    <i class="fas fa-book nav-icon"></i>
-                    <span class="nav-label">Modules</span>
-                </a>
-                <a href="{% url 'account:profile' %}" class="nav-item active">
-                    <i class="fas fa-user-circle nav-icon"></i>
-                    <span class="nav-label">Profile</span>
-                </a>
-            </nav>
-
-            <div class="sidebar-footer">
-                <form method="post" action="{% url 'account:logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="nav-item logout">
-                        <i class="fas fa-sign-out-alt nav-icon"></i>
-                        <span class="nav-label">Logout</span>
-                    </button>
-                </form>
-            </div>
-        </aside>
+        {% include "components/navigations.html" %}
 
         <main class="main-content">
             <section class="profile-page profile-section">
