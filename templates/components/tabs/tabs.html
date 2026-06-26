@@ -1,0 +1,102 @@
+{% comment %} {# --------------------------------------------------------------
+   Tab component – title **plus** description that appears
+   only on the *active* tab.
+   --------------------------------------------------------------
+   Expected `tabs` list (in the view):
+   tabs = [
+       {
+          "title": "Self Learning Modules",
+          "description": "All public modules you can enrol in",
+          "content": render_to_string("components/tab_self.html")
+       },
+       …
+   ]
+   -------------------------------------------------------------- #} {% endcomment %}
+
+<div class="tabs">
+    {# ---------- TAB LIST --------------------------------------- #}
+    <div role="tablist" class="tablist">
+        {% for tab in tabs %}
+        <button role="tab"
+                id="tab-{{ forloop.counter0 }}"
+                aria-controls="panel-{{ forloop.counter0 }}"
+                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                tabindex="{% if forloop.first %}0{% else %}-1{% endif %}"
+                class="tab-card {% if forloop.first %}active{% endif %}">
+            <span class="tab-title">{{ tab.title }}</span>
+
+            {# Description – hidden unless this button is .active #}
+            <span class="tab-desc"
+                  aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
+                {{ tab.description }}
+            </span>
+        </button>
+        {% endfor %}
+    </div>
+
+    {# ---------- TAB PANELS -------------------------------------- #}
+    {% for tab in tabs %}
+    <section id="panel-{{ forloop.counter0 }}"
+             role="tabpanel"
+             aria-labelledby="tab-{{ forloop.counter0 }}"
+             class="tab-panel"
+             {% if not forloop.first %}hidden{% endif %}>
+        {{ tab.content|safe }}
+    </section>
+    {% endfor %}
+</div>
+
+{% comment %} {# ------------------------------------------------------------------
+   Tiny vanilla‑JS – now also toggles `aria-hidden` on the description.
+   ------------------------------------------------------------------ #} {% endcomment %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // One handler per .tabs container (you can have many on a page)
+  document.querySelectorAll('.tabs').forEach(container => {
+    const tabs   = container.querySelectorAll('[role="tab"]');
+    const panels = container.querySelectorAll('[role="tabpanel"]');
+
+    // Helper – set the UI for a given index
+    const activate = (newIdx) => {
+      tabs.forEach((t, i) => {
+        const isActive = i === newIdx;
+        // 1️⃣ ARIA selected + focusability
+        t.setAttribute('aria-selected', isActive);
+        t.setAttribute('tabindex', isActive ? '0' : '-1');
+        // 2️⃣ Visual active class
+        t.classList.toggle('active', isActive);
+        // 3️⃣ Description visibility for AT
+        const desc = t.querySelector('.tab-desc');
+        if (desc) desc.setAttribute('aria-hidden', !isActive);
+      });
+
+      panels.forEach((p, i) => {
+        const show = i === newIdx;
+        p.hidden = !show;
+        p.setAttribute('aria-hidden', !show);
+      });
+
+      // Move keyboard focus to the newly‑selected tab
+      tabs[newIdx].focus();
+    };
+
+    // Click → activate
+    tabs.forEach((tab, idx) => tab.addEventListener('click', () => activate(idx)));
+
+    // Keyboard navigation (← → Home End)
+    container.addEventListener('keydown', e => {
+      const curIdx = Array.from(tabs).findIndex(t => t.getAttribute('aria-selected') === 'true');
+      let nextIdx = null;
+      switch (e.key) {
+        case 'ArrowRight': nextIdx = (curIdx + 1) % tabs.length; break;
+        case 'ArrowLeft':  nextIdx = (curIdx - 1 + tabs.length) % tabs.length; break;
+        case 'Home':       nextIdx = 0; break;
+        case 'End':        nextIdx = tabs.length - 1; break;
+        default: return;   // not a navigation key
+      }
+      e.preventDefault();
+      activate(nextIdx);
+    });
+  });
+});
+</script>

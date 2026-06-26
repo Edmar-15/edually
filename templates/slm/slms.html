@@ -9,14 +9,19 @@
     <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
+    <link rel="stylesheet" href="{% static "css/tabs.css" %}">
 </head>
 <body>
     <div class="dashboard-container">
         {% include "components/navigations.html" %}
 
         <main class="main-content">
-            
-        </main>
+            <header class="content-header">
+                <div class="header-left">
+                    <h1>SLM</h1>
+                </div>
+            </header>                    
+            {% include "components/tabs/tabs.html" with tabs=tabs %}
     </div>
 </body>
 </html>

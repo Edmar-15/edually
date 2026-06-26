@@ -1,0 +1,82 @@
+/* --------------------------------------------------------------
+   TAB COMPONENT – title + description (description hidden
+   unless the tab is active)
+   -------------------------------------------------------------- */
+
+/* Tab bar – flex layout (unchanged) */
+.tabs .tablist {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+
+/* Base button styling – keep whatever you already have */
+.tab-card {
+    background: #f5f5f5;
+    border: none;
+    cursor: pointer;
+    padding: .75rem 1rem;
+    text-align: left;
+    line-height: 1.3;
+}
+
+/* Active visual cue – you probably already have this */
+.tab-card.active {
+    background: #0066aa;
+    color: #fff;
+    transition: ease-in 0.2s;
+}
+
+/* Focus ring for keyboard users */
+.tab-card:focus-visible {
+    outline: 2px solid #ffbf47;
+    outline-offset: 2px;
+}
+
+/* ---- Title (big) ---- */
+.tab-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* ---- Description (small) ----
+   * Initially hidden (collapsed) unless parent button has .active
+   * We give it a fixed line‑height so the tab row height does not jump
+   * when it becomes visible. */
+.tab-desc {
+    display: block;
+    font-size: .85rem;
+    color: rgba(0,0,0,.6);
+    line-height: 1.2;               /* keeps height stable */
+    margin-top: .25rem;             /* a little space under the title */
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    transition: opacity .15s ease-in-out, visibility .15s ease-in-out;
+}
+
+/* When the button is active, reveal the description */
+.tab-card.active .tab-desc {
+    opacity: 1;
+    visibility: visible;
+    height: auto;   /* let it expand */
+}
+
+/* ---- Tab panels (content sections) ---- */
+.tab-panel {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    background: #fff;
+}
+
+/* Optional fade when panels appear/disappear */
+.tab-panel[hidden] {
+    opacity: 0;
+    transition: opacity .2s ease-out;
+}
+.tab-panel:not([hidden]) {
+    opacity: 1;
+    transition: opacity .2s ease-out;
+}
