@@ -1,0 +1,145 @@
+/* --------------------------------------------------------------
+   Static Paginator – visual only
+   --------------------------------------------------------------
+   *   CSS Custom Properties (variables) let you theme in one place.
+   *   Dark‑mode support via prefers‑color‑scheme.
+   *   Flexible layout: flex on small screens → inline‑block on larger.
+   *   Accessible focus ring for keyboard navigation.
+   -------------------------------------------------------------- */
+
+/* ---- Root variables ------------------------------------------------ */
+:root {
+  /* Colours */
+  --pgn-bg:           #ffffff;
+  --pgn-bg-dark:      #1e1e1e;
+  --pgn-fg:           #1a1a1a;
+  --pgn-fg-dark:      #e5e5e5;
+  --pgn-primary:     #0066ff;
+  --pgn-primary-dark:#4d9aff;
+  --pgn-muted:        #777777;
+  --pgn-muted-dark:   #b3b3b3;
+  --pgn-border:       #e2e8f0;
+  --pgn-border-dark:  #333333;
+
+  /* Sizing */
+  --pgn-radius:      .45rem;
+  --pgn-px:           .75rem;   /* horizontal padding */
+  --pgn-py:           .45rem;   /* vertical padding */
+  --pgn-gap:          .35rem;   /* space between items */
+}
+
+/* Dark‑mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pgn-bg:        var(--pgn-bg-dark);
+    --pgn-fg:        var(--pgn-fg-dark);
+    --pgn-muted:     var(--pgn-muted-dark);
+    --pgn-border:   var(--pgn-border-dark);
+    --pgn-primary:  var(--pgn-primary-dark);
+  }
+}
+
+/* --------------------------------------------------------------
+   Main container
+   -------------------------------------------------------------- */
+.paginator {
+  display: flex;
+  justify-content: center;           /* centre on the page */
+  align-items: center;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* --------------------------------------------------------------
+   List wrapper (flex on mobile, inline‑block on larger screens)
+   -------------------------------------------------------------- */
+.paginator__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pgn-gap);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* --------------------------------------------------------------
+   Individual items
+   -------------------------------------------------------------- */
+.paginator__item {
+  display: block;
+}
+
+/* --------------------------------------------------------------
+   Links – the visual “button” style
+   -------------------------------------------------------------- */
+.paginator__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  padding: var(--pgn-py) var(--pgn-px);
+  background: var(--pgn-bg);
+  color: var(--pgn-fg);
+  border: 1px solid var(--pgn-border);
+  border-radius: var(--pgn-radius);
+  font-size: .94rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .12s ease;
+}
+
+/* Hover / focus (keyboard) */
+.paginator__link:hover,
+.paginator__link:focus-visible {
+  background: var(--pgn-primary);
+  color: #fff;
+  border-color: var(--pgn-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,102,255,.22);
+}
+
+/* --------------------------------------------------------------
+   Current page (non‑link)
+   -------------------------------------------------------------- */
+.paginator__item--current .paginator__link {
+  background: var(--pgn-primary);
+  color: #fff;
+  border-color: var(--pgn-primary);
+  cursor: default;
+}
+
+/* --------------------------------------------------------------
+   Disabled items (Prev/Next when you can’t go further)
+   -------------------------------------------------------------- */
+.paginator__item--disabled .paginator__link {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------
+   Ellipsis – tiny visual only
+   -------------------------------------------------------------- */
+.paginator__item--ellipsis .paginator__link {
+  pointer-events: none;          /* not focusable */
+  cursor: default;
+}
+
+/* --------------------------------------------------------------
+   Responsive adjustments (optional)
+   -------------------------------------------------------------- */
+@media (max-width: 380px) {
+  .paginator__link {
+    min-width: 1.8rem;
+    padding: .35rem .45rem;
+    font-size: .85rem;
+  }
+}
+
+/* --------------------------------------------------------------
+   Reduced‑motion – make transitions instant for users who request it
+   -------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

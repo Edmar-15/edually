@@ -7,4 +7,8 @@ app_name = 'slm'
 
 urlpatterns = [
     path('slm-lists/', views.slmlists, name='slmlists'),
+    path('api/subjects/',               views.api_subject_list,   name='subject-list'),
+    path('api/subjects/create/',        views.api_subject_create, name='subject-create'),
+    path('api/subjects/<int:pk>/',      views.api_subject_update, name='subject-update'),
+    path('api/subjects/<int:pk>/delete/', views.api_subject_delete, name='subject-delete'),
 ]
