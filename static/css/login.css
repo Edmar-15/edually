@@ -125,10 +125,10 @@ label {
 .input-group.focused label,
 .input-group.has-value label {
     opacity: 1;
-    top: 4px;
+    top: -9px;
     left: 14px;
     transform: translateY(0) scale(0.86);
-    font-size: 0.88rem;
+    font-size: 1.2rem;
     color: var(--blue);
     background: #f8fafc;
     padding: 0 6px;

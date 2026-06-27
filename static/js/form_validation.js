@@ -54,7 +54,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!input.value.trim()) {
                 isValid = false;
                 errorText = 'Password is required';
-            } else if (input.value.length < 8) {
+            } else if (input.name !== 'password' && input.value.length < 8) {
+                // Only show the minimum-length warning for register / password creation fields.
                 isValid = false;
                 errorText = 'Password must be at least 8 characters';
             }

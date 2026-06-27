@@ -30,56 +30,61 @@ export function initSubjectWidget(rootEl) {
 // Helper – render a *single* subject card (now clickable)
 // -----------------------------------------------------------------
 function renderCard(subject) {
-    // ---- 1️⃣  Create the <a> that wraps the whole card -----------------
-    const link = document.createElement('a');
-    link.href = subject.detail_url;               // <-- the URL we added in the JSON
-    link.className = 'subject-card-link';         // optional class for styling
-    link.style.textDecoration = 'none';           // remove underline (you can style in CSS)
-
-    // ---- 2️⃣  Build the inner card (same markup as before) ----------
     const card = document.createElement('div');
     card.className = 'subject-card';
-    card.dataset.id = subject.id;                 // keep the data‑id for edit/delete
+    card.dataset.id = subject.id;
+
+    const contentLink = document.createElement('a');
+    contentLink.href = subject.detail_url;
+    contentLink.className = 'subject-card-link';
+    contentLink.setAttribute('aria-label', `Open ${subject.subject_code}`);
 
     const h1 = document.createElement('h1');
     h1.textContent = subject.subject_code;
-    card.appendChild(h1);
+    contentLink.appendChild(h1);
 
     const p = document.createElement('p');
     p.textContent = subject.subject_name;
-    card.appendChild(p);
+    contentLink.appendChild(p);
 
     const i = document.createElement('i');
     i.textContent = `By ${subject.author_name}`;
-    card.appendChild(i);
+    contentLink.appendChild(i);
 
-    // ---- 3️⃣  Edit / Delete buttons (owner only) --------------------
+    card.appendChild(contentLink);
+
     if (subject.is_owner) {
+        const actionBar = document.createElement('div');
+        actionBar.className = 'subject-card__actions';
+
         const editBtn = document.createElement('button');
-        editBtn.textContent = '✏️';
+        editBtn.type = 'button';
+        editBtn.className = 'subject-card__action';
         editBtn.title = 'Edit';
-        editBtn.style.marginLeft = '0.5rem';
+        editBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
         editBtn.addEventListener('click', e => {
-            // Prevent the click from bubbling up to the <a> (so we stay on the list)
+            e.preventDefault();
             e.stopPropagation();
             editSubject(subject);
         });
-        card.appendChild(editBtn);
+        actionBar.appendChild(editBtn);
 
         const delBtn = document.createElement('button');
-        delBtn.textContent = '🗑️';
+        delBtn.type = 'button';
+        delBtn.className = 'subject-card__action subject-card__action--delete';
         delBtn.title = 'Delete';
-        delBtn.style.marginLeft = '0.3rem';
+        delBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
         delBtn.addEventListener('click', e => {
+            e.preventDefault();
             e.stopPropagation();
             deleteSubject(subject.id);
         });
-        card.appendChild(delBtn);
+        actionBar.appendChild(delBtn);
+
+        card.appendChild(actionBar);
     }
 
-    // ---- 4️⃣  Assemble ----
-    link.appendChild(card);
-    return link;          // note: we now return the <a> element, NOT just the card div
+    return card;
 }
 
   // ---------------------------------------------------------------

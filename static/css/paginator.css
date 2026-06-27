@@ -14,15 +14,15 @@
   --pgn-bg-dark:      #1e1e1e;
   --pgn-fg:           #1a1a1a;
   --pgn-fg-dark:      #e5e5e5;
-  --pgn-primary:     #0066ff;
+  --pgn-primary:     #0E9AA7;
   --pgn-primary-dark:#4d9aff;
   --pgn-muted:        #777777;
   --pgn-muted-dark:   #b3b3b3;
-  --pgn-border:       #e2e8f0;
+  --pgn-border:       #dfe7ef;
   --pgn-border-dark:  #333333;
 
   /* Sizing */
-  --pgn-radius:      .45rem;
+  --pgn-radius:      999px;
   --pgn-px:           .75rem;   /* horizontal padding */
   --pgn-py:           .45rem;   /* vertical padding */
   --pgn-gap:          .35rem;   /* space between items */
@@ -84,27 +84,29 @@
   font-size: .94rem;
   text-decoration: none;
   cursor: pointer;
-  transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .12s ease;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
 }
 
 /* Hover / focus (keyboard) */
 .paginator__link:hover,
 .paginator__link:focus-visible {
-  background: var(--pgn-primary);
-  color: #fff;
-  border-color: var(--pgn-primary);
+  background: rgba(14, 154, 167, 0.12);
+  color: #0e9aa7;
+  border-color: #0e9aa7;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0,102,255,.22);
+  box-shadow: 0 0 0 3px rgba(14, 154, 167, 0.16);
 }
 
 /* --------------------------------------------------------------
    Current page (non‑link)
    -------------------------------------------------------------- */
 .paginator__item--current .paginator__link {
-  background: var(--pgn-primary);
+  background: #0e9aa7;
   color: #fff;
-  border-color: var(--pgn-primary);
+  border-color: transparent;
   cursor: default;
+  box-shadow: 0 8px 16px rgba(14, 154, 167, 0.18);
 }
 
 /* --------------------------------------------------------------
