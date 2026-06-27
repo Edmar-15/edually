@@ -101,3 +101,13 @@
     transition: all 0.3s ease;
     box-shadow: var(--shadow);
 }
+
+/* Make the whole card clickable – style the <a> wrapper */
+.subject-card-link {
+    display: block;               /* ensure the <a> fills the card area */
+    color: inherit;               /* keep text colour */
+}
+.subject-card-link:hover .subject-card {
+    background: #f0f8ff;        /* light highlight on hover */
+    cursor: pointer;
+}

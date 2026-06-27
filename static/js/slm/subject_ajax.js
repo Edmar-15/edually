@@ -27,49 +27,60 @@ export function initSubjectWidget(rootEl) {
   const $addBtn = rootEl.querySelector("#add-btn");
 
   // -----------------------------------------------------------------
-  // Helper – render a single card (unchanged)
-  // -----------------------------------------------------------------
-  function renderCard(subject) {
-    const card = document.createElement("a");
-    card.className = "subject-card";
-    card.dataset.id = subject.id;
+// Helper – render a *single* subject card (now clickable)
+// -----------------------------------------------------------------
+function renderCard(subject) {
+    // ---- 1️⃣  Create the <a> that wraps the whole card -----------------
+    const link = document.createElement('a');
+    link.href = subject.detail_url;               // <-- the URL we added in the JSON
+    link.className = 'subject-card-link';         // optional class for styling
+    link.style.textDecoration = 'none';           // remove underline (you can style in CSS)
 
-    const h1 = document.createElement("h1");
+    // ---- 2️⃣  Build the inner card (same markup as before) ----------
+    const card = document.createElement('div');
+    card.className = 'subject-card';
+    card.dataset.id = subject.id;                 // keep the data‑id for edit/delete
+
+    const h1 = document.createElement('h1');
     h1.textContent = subject.subject_code;
     card.appendChild(h1);
 
-    const p = document.createElement("p");
+    const p = document.createElement('p');
     p.textContent = subject.subject_name;
     card.appendChild(p);
 
-    const i = document.createElement("i");
+    const i = document.createElement('i');
     i.textContent = `By ${subject.author_name}`;
     card.appendChild(i);
 
-    // Edit / Delete only for the owner
+    // ---- 3️⃣  Edit / Delete buttons (owner only) --------------------
     if (subject.is_owner) {
-      const editBtn = document.createElement("button");
-      editBtn.title = "Edit";
-      editBtn.style.marginLeft = "0.5rem";
-      editBtn.addEventListener("click", () => editSubject(subject));
+        const editBtn = document.createElement('button');
+        editBtn.textContent = '✏️';
+        editBtn.title = 'Edit';
+        editBtn.style.marginLeft = '0.5rem';
+        editBtn.addEventListener('click', e => {
+            // Prevent the click from bubbling up to the <a> (so we stay on the list)
+            e.stopPropagation();
+            editSubject(subject);
+        });
+        card.appendChild(editBtn);
 
-      const editIcon = document.createElement("i");
-      editIcon.classList.add("fa-regular", "fa-pen-to-square");
-      editBtn.appendChild(editIcon);
-      card.appendChild(editBtn);
-
-      const delBtn = document.createElement("button");
-      delBtn.title = "Delete";
-      delBtn.style.marginLeft = "0.3rem";
-      delBtn.addEventListener("click", () => deleteSubject(subject.id));
-
-      const delIcon = document.createElement('i');
-      delIcon.classList.add("fa-solid", "fa-trash");
-      delBtn.appendChild(delIcon);
-      card.appendChild(delBtn);
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '🗑️';
+        delBtn.title = 'Delete';
+        delBtn.style.marginLeft = '0.3rem';
+        delBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            deleteSubject(subject.id);
+        });
+        card.appendChild(delBtn);
     }
-    return card;
-  }
+
+    // ---- 4️⃣  Assemble ----
+    link.appendChild(card);
+    return link;          // note: we now return the <a> element, NOT just the card div
+}
 
   // ---------------------------------------------------------------
   // Helper – build the paginator UI from the meta object received

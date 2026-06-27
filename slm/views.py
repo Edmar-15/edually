@@ -3,9 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.shortcuts import render
 from django.template.loader import render_to_string
-from .models import Subject
+from django.shortcuts import get_object_or_404, render
+from .models import Subject, Module
 
 
 # Create your views here.
@@ -56,6 +56,7 @@ def subject_to_dict(subject, request_user=None):
         "is_owner": request_user is not None and subject.author_id == request_user.id,
         "created_at": subject.created_at.isoformat(),
         "updated_at": subject.updated_at.isoformat(),
+        "detail_url": f"/slm/subjects/{subject.id}/modules/",
     }
 
 # -------------------------------------------------
@@ -63,7 +64,7 @@ def subject_to_dict(subject, request_user=None):
 # -------------------------------------------------
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-PAGE_SIZE = 6                     # 3 cards per row × 2 rows = 6 cards (matches your static layout)
+PAGE_SIZE = 9                     # 3 cards per row × 2 rows = 6 cards (matches your static layout)
 
 @require_GET
 @ensure_csrf_cookie               # sets csrftoken for later POSTs
@@ -177,3 +178,22 @@ def api_subject_delete(request, pk):
 
     subject.delete()
     return JsonResponse({}, status=204)   # empty body
+
+
+def subject_modules(request, subject_id):
+    """
+    Renders a normal HTML page that shows **all modules belonging to
+    the given subject**.
+    """
+    subject = get_object_or_404(Subject, pk=subject_id)
+
+    # If your `Module` model has a FK called `subject` use:
+    modules = Module.objects.filter(subject=subject).select_related('subject')
+    # If you used a related_name on the FK you could also do:
+    # modules = subject.modules.all()
+
+    context = {
+        "subject": subject,
+        "modules": modules,
+    }
+    return render(request, "slm/subject_modules.html", context)

@@ -11,4 +11,5 @@ urlpatterns = [
     path('api/subjects/create/',        views.api_subject_create, name='subject-create'),
     path('api/subjects/<int:pk>/',      views.api_subject_update, name='subject-update'),
     path('api/subjects/<int:pk>/delete/', views.api_subject_delete, name='subject-delete'),
+    path('subjects/<int:subject_id>/modules/', views.subject_modules, name='subject-modules'),
 ]
