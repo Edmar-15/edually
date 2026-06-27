@@ -12,8 +12,7 @@
 
     <main class="main-content">
         <header class="content-header">
-            <h1><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> > {{ subject.subject_code }} – {{ subject.subject_name }}</h1>
-            <p>Created by {{ subject.author }} on {{ subject.created_at|date:"M d, Y" }}</p>
+            <p><i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> > {{ subject.subject_code }} – {{ subject.subject_name }}</i></p>
         </header>
 
         <section class="module-list">
