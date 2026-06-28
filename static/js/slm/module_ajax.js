@@ -222,7 +222,21 @@ export function initModuleWidget(rootEl) {
     const form = new FormData();
     form.append("module_number", $numInput.value.trim());
     form.append("module_name", $nameInput.value.trim());
-    if ($fileInput.files[0]) form.append("file", $fileInput.files[0]);
+    // -----------------------------------------------------------------
+    //  📎  Validate file type before we ever send it to the server
+    // -----------------------------------------------------------------
+    const file = $fileInput.files[0];
+    if (file) {
+      const ALLOWED_EXT = [".pdf", ".doc", ".docx", ".ppt", ".pptx"];
+      const name = file.name.toLowerCase();
+      const hasAllowedExt = ALLOWED_EXT.some((ext) => name.endsWith(ext));
+      if (!hasAllowedExt) {
+        $status.textContent =
+          "❌ Only PDF, Word (.doc/.docx) and PowerPoint (.ppt/.pptx) files are allowed.";
+        return;
+      }
+      form.append("file", file);
+    }
 
     try {
       const resp = await fetch(createUrl, {

@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
 from .models import Subject, Module
+import os
 
 
 # Create your views here.
@@ -272,6 +273,27 @@ def module_to_dict(module, request_user=None):
     }
 
 
+# -----------------------------------------------------------------
+# Helper – ensure an uploaded file is one of the three allowed types
+# -----------------------------------------------------------------
+def validate_module_file(file_obj):
+    """
+    Raises ``ValidationError`` if ``file_obj`` does not have an allowed
+    extension (pdf, doc, docx, ppt, pptx).  The check is based on the
+    filename – Django’s ``FileField`` already stores the original name.
+    """
+    if not file_obj:
+        raise ValidationError("No file provided")
+
+    allowed = {".pdf", ".doc", ".docx", ".ppt", ".pptx"}
+    ext = os.path.splitext(file_obj.name)[1].lower()
+    if ext not in allowed:
+        raise ValidationError(
+            f"Unsupported file type “{ext}”. Allowed types: pdf, doc, docx, ppt, pptx."
+        )
+    return True
+
+
 @require_GET
 @ensure_csrf_cookie
 def api_module_list(request, subject_id):
@@ -333,6 +355,14 @@ def api_module_create(request, subject_id):
     if not module_name:
         return JsonResponse({"error": "module_name is required"}, status=400)
 
+    # -------------------------------------------------------------
+    #  📎  Validate uploaded file type
+    # -------------------------------------------------------------
+    try:
+        validate_module_file(file_obj)
+    except ValidationError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
     # `unique_together` on (subject, module_number) will raise IntegrityError
     try:
         module = Module.objects.create(
@@ -341,7 +371,7 @@ def api_module_create(request, subject_id):
             module_name=module_name,
             file=file_obj,
         )
-    except Exception as exc:          # catch IntegrityError, etc.
+    except Exception as exc:  # includes IntegrityError for duplicate numbers
         return JsonResponse({"error": str(exc)}, status=400)
 
     return JsonResponse(module_to_dict(module, request_user=request.user), status=201)
@@ -420,6 +450,14 @@ def api_module_file_replace(request, pk):
     file_obj = request.FILES.get("file")
     if not file_obj:
         return JsonResponse({"error": "File missing"}, status=400)
+
+    # -------------------------------------------------------------
+    #  📎  Validate file type (same whitelist as upload)
+    # -------------------------------------------------------------
+    try:
+        validate_module_file(file_obj)
+    except ValidationError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
 
     module.file = file_obj
     module.save()
