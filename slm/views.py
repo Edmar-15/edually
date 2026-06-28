@@ -5,6 +5,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
+from django.core.exceptions import ValidationError
 from .models import Subject, Module
 
 
@@ -16,11 +17,6 @@ def slmlists(request):
             "title": "Self Learning Modules",
             "description":'All public modules you can enrol in',
             "content": render_to_string("components/tabs/tab_self.html"),
-        },
-        {
-            "title": "My SLMs",
-            "description":'Your own created modules',
-            "content": render_to_string("components/tabs/tab_my_slms.html"),
         },
         {
             "title": "My Learning Materials",
@@ -53,11 +49,29 @@ def subject_to_dict(subject, request_user=None):
         "subject_name": subject.subject_name,
         "author_id": subject.author_id,
         "author_name": str(subject.author),
+        "year": subject.year,
+        "year_display": subject.get_year_display(),
         "is_owner": request_user is not None and subject.author_id == request_user.id,
         "created_at": subject.created_at.isoformat(),
         "updated_at": subject.updated_at.isoformat(),
         "detail_url": f"/slm/subjects/{subject.id}/modules/",
     }
+
+
+def validate_year_choice(value):
+    """
+    Return the cleaned value if it belongs to Subject.YEAR_CHOICES.
+    Raise ValidationError otherwise.
+    """
+    if value is None:
+        return None                     # client omitted the key → keep default
+    allowed = {c[0] for c in Subject.YEAR_CHOICES}
+    if value not in allowed:
+        raise ValidationError(
+            f"Invalid year '{value}'. Allowed values are: {', '.join(sorted(allowed))}"
+        )
+    return value
+
 
 # -------------------------------------------------
 # 1️⃣  GET – paginated list of public subjects
@@ -126,15 +140,27 @@ def api_subject_create(request):
 
     code = payload.get("subject_code", "").strip()
     name = payload.get("subject_name", "").strip()
+    raw_year = payload.get("year")                # <-- NEW
+
     if not code or not name:
         return JsonResponse({"error": "Both fields are required."}, status=400)
+
+    # ---- Validate the year choice ---------------------------------
+    try:
+        clean_year = validate_year_choice(raw_year)
+    except ValidationError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
 
     subject = Subject.objects.create(
         subject_code=code,
         subject_name=name,
         author=request.user,
+        year=clean_year or Subject.YEAR_FIRST,    # fallback to default if omitted
     )
-    return JsonResponse(subject_to_dict(subject, request_user=request.user), status=201)
+    return JsonResponse(
+        subject_to_dict(subject, request_user=request.user),
+        status=201,
+    )
 
 # -----------------------------------------------------------------
 # 3️⃣  PUT – update a subject (owner only)
@@ -155,10 +181,19 @@ def api_subject_update(request, pk):
     except json.JSONDecodeError:
         return HttpResponseBadRequest("Invalid JSON")
 
+    # ---- normal fields -------------------------------------------------
     if "subject_code" in payload:
         subject.subject_code = payload["subject_code"].strip()
     if "subject_name" in payload:
         subject.subject_name = payload["subject_name"].strip()
+
+    # ---- year -----------------------------------------------------------
+    if "year" in payload:
+        try:
+            subject.year = validate_year_choice(payload["year"])
+        except ValidationError as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+
     subject.save()
     return JsonResponse(subject_to_dict(subject, request_user=request.user))
 
@@ -197,3 +232,21 @@ def subject_modules(request, subject_id):
         "modules": modules,
     }
     return render(request, "slm/subject_modules.html", context)
+
+
+@require_GET
+def api_subject_year_choices(request):
+    """
+    Returns JSON:
+    {
+        "choices": [
+            {"value": "1", "label": "First"},
+            {"value": "2", "label": "Second"},
+            {"value": "3", "label": "Third"},
+            {"value": "4", "label": "Four"}
+        ]
+    }
+    """
+    return JsonResponse(
+        {"choices": [{"value": v, "label": l} for v, l in Subject.YEAR_CHOICES]}
+    )

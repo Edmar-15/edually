@@ -24,68 +24,100 @@ export function initSubjectWidget(rootEl) {
   // Optional create‑form (visible only for logged‑in users)
   const $codeInput = rootEl.querySelector("#code-input");
   const $nameInput = rootEl.querySelector("#name-input");
+  const $yearSelect = rootEl.querySelector("#year-select");
   const $addBtn = rootEl.querySelector("#add-btn");
 
   // -----------------------------------------------------------------
-// Helper – render a *single* subject card (now clickable)
-// -----------------------------------------------------------------
-function renderCard(subject) {
-    const card = document.createElement('div');
-    card.className = 'subject-card';
+  // Helper – fetch the list of year choices from the back‑end and
+  // fill the <select>. Returns a Promise that resolves when done.
+  // -----------------------------------------------------------------
+  async function loadYearChoices() {
+    try {
+      const resp = await fetch("/slm/api/subjects/year-choices/", {
+        credentials: "same-origin",
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json(); // {choices: [{value, label}, ...]}
+
+      // empty any old options
+      $yearSelect.innerHTML = "";
+      data.choices.forEach((choice) => {
+        const opt = document.createElement("option");
+        opt.value = choice.value;
+        opt.textContent = choice.label;
+        $yearSelect.appendChild(opt);
+      });
+    } catch (e) {
+      console.error("Failed to load year choices:", e);
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // Helper – render a *single* subject card (now clickable)
+  // -----------------------------------------------------------------
+  function renderCard(subject) {
+    const card = document.createElement("div");
+    card.className = "subject-card";
     card.dataset.id = subject.id;
 
-    const contentLink = document.createElement('a');
+    const contentLink = document.createElement("a");
     contentLink.href = subject.detail_url;
-    contentLink.className = 'subject-card-link';
-    contentLink.setAttribute('aria-label', `Open ${subject.subject_code}`);
+    contentLink.className = "subject-card-link";
+    contentLink.setAttribute("aria-label", `Open ${subject.subject_code}`);
 
-    const h1 = document.createElement('h1');
+    const h1 = document.createElement("h1");
     h1.textContent = subject.subject_code;
     contentLink.appendChild(h1);
 
-    const p = document.createElement('p');
+    const p = document.createElement("p");
     p.textContent = subject.subject_name;
     contentLink.appendChild(p);
 
-    const i = document.createElement('i');
+    const yearEl = document.createElement("p");
+    yearEl.textContent = `Year: ${subject.year_display}`;
+    contentLink.appendChild(yearEl);
+
+    const i = document.createElement("i");
     i.textContent = `By ${subject.author_name}`;
     contentLink.appendChild(i);
 
     card.appendChild(contentLink);
 
     if (subject.is_owner) {
-        const actionBar = document.createElement('div');
-        actionBar.className = 'subject-card__actions';
+      const actionBar = document.createElement("div");
+      actionBar.className = "subject-card__actions";
 
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'subject-card__action';
-        editBtn.title = 'Edit';
-        editBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
-        editBtn.addEventListener('click', e => {
-            e.preventDefault();
-            e.stopPropagation();
-            editSubject(subject);
-        });
-        actionBar.appendChild(editBtn);
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "subject-card__action";
+      editBtn.title = "Edit";
+      editBtn.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
+      editBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editSubject(subject);
+      });
+      actionBar.appendChild(editBtn);
 
-        const delBtn = document.createElement('button');
-        delBtn.type = 'button';
-        delBtn.className = 'subject-card__action subject-card__action--delete';
-        delBtn.title = 'Delete';
-        delBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
-        delBtn.addEventListener('click', e => {
-            e.preventDefault();
-            e.stopPropagation();
-            deleteSubject(subject.id);
-        });
-        actionBar.appendChild(delBtn);
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "subject-card__action subject-card__action--delete";
+      delBtn.title = "Delete";
+      delBtn.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
+      delBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        deleteSubject(subject.id);
+      });
+      actionBar.appendChild(delBtn);
 
-        card.appendChild(actionBar);
+      card.appendChild(actionBar);
     }
 
     return card;
-}
+  }
 
   // ---------------------------------------------------------------
   // Helper – build the paginator UI from the meta object received
@@ -279,6 +311,7 @@ function renderCard(subject) {
     const payload = {
       subject_code: $codeInput.value.trim(),
       subject_name: $nameInput.value.trim(),
+      year: $yearSelect.value, // <-- NEW
     };
     if (!payload.subject_code || !payload.subject_name) {
       alert("Both fields are required");
@@ -315,15 +348,38 @@ function renderCard(subject) {
   // 3️⃣  UPDATE – PUT a single subject (owner only) – unchanged
   // -----------------------------------------------------------------
   async function editSubject(subject) {
+    // Build a tiny modal‑like prompt that also lets the user pick year.
+    // For simplicity we’ll reuse the same <select> that exists on the page.
     const newCode = prompt("New code (blank = keep old)", subject.subject_code);
     const newName = prompt("New name (blank = keep old)", subject.subject_name);
-    if (newCode === null && newName === null) return; // cancelled
+
+    // Ask for a new year – we reuse the options we already loaded.
+    let newYear = null;
+    if ($yearSelect) {
+      // clone the <select>, set its current value and ask the user to pick
+      const tempSelect = $yearSelect.cloneNode(true);
+      tempSelect.value = subject.year; // pre‑select current year
+      const html = tempSelect.outerHTML;
+      // Very quick way to show a prompt with HTML: use a custom dialog library,
+      // but for pure‑JS we’ll just use `prompt` with a numeric representation.
+      // (You could replace this with a nicer modal later.)
+      newYear = prompt(
+        `New year (blank = keep old)\n${subject.year_display} → ${subject.year}\n` +
+          "Enter one of: 1, 2, 3, 4",
+        subject.year,
+      );
+      if (newYear !== null && newYear.trim() === "") newYear = null;
+    }
+
+    if (newCode === null && newName === null && newYear === null) return; // cancelled
 
     const payload = {};
     if (newCode !== null && newCode !== "")
       payload.subject_code = newCode.trim();
     if (newName !== null && newName !== "")
       payload.subject_name = newName.trim();
+    if (newYear !== null && newYear !== "") payload.year = newYear.trim(); // <-- NEW
+
     if (Object.keys(payload).length === 0) return; // nothing to send
 
     const url = updateTpl.replace("{id}", subject.id);
@@ -340,7 +396,7 @@ function renderCard(subject) {
       });
       if (resp.ok) {
         $status.textContent = `✅ Updated #${subject.id}`;
-        load(); // keep the same page
+        load(); // refresh list
       } else {
         const err = await resp.json();
         $status.textContent = `❌ ${err.error || resp.statusText}`;
@@ -378,5 +434,6 @@ function renderCard(subject) {
   // UI bindings
   // -----------------------------------------------------------------
   if ($addBtn) $addBtn.addEventListener("click", create);
+  loadYearChoices();
   load(); // initial load → page 1
 }

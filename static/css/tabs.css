@@ -358,16 +358,9 @@
     margin-top: auto;
     color: var(--muted);
     font-size: 0.85rem;
-    font-style: normal;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-}
-
-.subject-card i::before {
-    content: "↗";
-    color: #0e9aa7;
-    font-weight: 700;
 }
 
 /* Make the whole card clickable – style the <a> wrapper */

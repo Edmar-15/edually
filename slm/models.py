@@ -4,6 +4,18 @@ from django.conf import settings
 # Create your models here.
 class Subject(models.Model):
     
+    YEAR_FIRST = '1'
+    YEAR_TWO = '2'
+    YEAR_THREE = '3'
+    YEAR_FOUR = '4'
+    
+    YEAR_CHOICES = [
+        (YEAR_FIRST, "First"),
+        (YEAR_TWO, "Second"),
+        (YEAR_THREE, "Third"),
+        (YEAR_FOUR, "Four"),
+    ]
+    
     subject_code = models.CharField(
         max_length=20,
         unique=True,
@@ -18,6 +30,12 @@ class Subject(models.Model):
         on_delete=models.CASCADE,
         related_name="subjects",
         help_text="The user who created/uploaded the subject.",
+    )
+    year = models.CharField(
+        max_length=1,
+        choices=YEAR_CHOICES,
+        default=YEAR_FIRST,
+        help_text="Identifer for subject intended year.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
