@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/paginator.css' %}">
-    <!-- optional: style for module cards (you can copy the subject‑card CSS) -->
+    <link rel="stylesheet" href="{% static 'css/slm.css' %}">
 </head>
 <body>
     {% include "components/navigations.html" %}
@@ -33,12 +33,20 @@
 
             <!-- Optional “Add module” form – only show to the *owner* -->
             {% if request.user == subject.author %}
-            <form id="module-form" class="module-form">
-                <input id="module-number-input" type="number" min="1" placeholder="No." required>
-                <input id="module-name-input"   type="text" placeholder="Title" required>
-                <input id="module-file-input"   type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" required>
-                <button id="module-add-btn" type="button">Add module</button>
-            </form>
+            <section class="module-form-card" aria-label="Add module form">
+                <div class="module-form__header">
+                    <div>
+                        <h3>Add a new module</h3>
+                        <span>Upload learning materials for this subject</span>
+                    </div>
+                </div>
+                <form id="module-form" class="module-form">
+                    <input id="module-number-input" type="number" min="1" placeholder="Module no." required>
+                    <input id="module-name-input" type="text" placeholder="Module title" required>
+                    <input id="module-file-input" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" required>
+                    <button id="module-add-btn" type="button">Add module</button>
+                </form>
+            </section>
             {% endif %}
 
             <!-- The list that the widget will fill -->

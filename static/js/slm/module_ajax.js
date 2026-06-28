@@ -42,24 +42,45 @@ export function initModuleWidget(rootEl) {
     card.className = "module-card";
     card.dataset.id = mod.id;
 
+    const preview = document.createElement("div");
+    preview.className = "module-card__preview";
+    card.appendChild(preview);
+
+    const body = document.createElement("div");
+    body.className = "module-card__body";
+
     // Whole card is a link to the file (if present)
     const link = document.createElement("a");
     link.href = mod.file_url || "#";
     link.className = "module-card__link";
-    link.setAttribute("aria-label", `Download ${mod.module_name}`);
+    link.setAttribute("aria-label", `Open ${mod.module_name}`);
     link.target = "_blank";
 
     const h2 = document.createElement("h2");
     h2.textContent = `#${mod.module_number} – ${mod.module_name}`;
     link.appendChild(h2);
 
+    const meta = document.createElement("div");
+    meta.className = "module-card__meta";
+
+    const typePill = document.createElement("span");
+    typePill.className = "module-card__pill";
+    const fileName = mod.file_url ? mod.file_url.split("/").pop() : "Document";
+    const extension = fileName.includes(".") ? fileName.split(".").pop().toUpperCase() : "FILE";
+    typePill.textContent = extension;
+    meta.appendChild(typePill);
+
     if (mod.file_url) {
-      const dl = document.createElement("small");
-      dl.textContent = "📥 Download";
-      link.appendChild(dl);
+      const dl = document.createElement("span");
+      dl.className = "module-card__pill";
+      dl.textContent = "Open";
+      meta.appendChild(dl);
     }
 
-    card.appendChild(link);
+    link.appendChild(meta);
+    body.appendChild(link);
+
+    card.appendChild(body);
 
     // Owner‑only actions ------------------------------------------------
     if (mod.is_owner) {
@@ -94,7 +115,7 @@ export function initModuleWidget(rootEl) {
       });
       actions.appendChild(delBtn);
 
-      card.appendChild(actions);
+      body.appendChild(actions);
     }
 
     return card;
