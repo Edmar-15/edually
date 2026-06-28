@@ -6,30 +6,53 @@
     <title>{{ subject.subject_code }} – {{ subject.subject_name }}</title>
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/paginator.css' %}">
+    <!-- optional: style for module cards (you can copy the subject‑card CSS) -->
 </head>
 <body>
     {% include "components/navigations.html" %}
 
     <main class="main-content">
         <header class="content-header">
-            <p><i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> > {{ subject.subject_code }} – {{ subject.subject_name }}</i></p>
+            <p><i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+               {{ subject.subject_code }} – {{ subject.subject_name }}</i></p>
         </header>
 
-        <section class="module-list">
-            {% if modules %}
-                <ul class="module-list__grid">
-                    {% for module in modules %}
-                        <li class="module-card">
-                            <h2>{{ module.title }}</h2>
-                            <p>{{ module.description|truncatewords:20 }}</p>
-                            <small>By {{ module.author }}</small>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No modules have been uploaded for this subject yet.</p>
+        {% comment %} <!-- -----------------------------------------------------------------
+             ROOT element – all data‑attrs needed by moduleWidget.js
+             ----------------------------------------------------------------- --> {% endcomment %}
+        <section id="module-widget"
+                 data-list-url="{% url 'slm:module-list' subject.id %}"
+                 data-create-url="{% url 'slm:module-create' subject.id %}"
+                 data-update-url="{% url 'slm:module-update' 0 %}"   {# placeholder {id} #}
+                 data-delete-url="{% url 'slm:module-delete' 0 %}"
+                 data-subject-id="{{ subject.id }}">
+
+            <!-- Status line (ARIA live) -->
+            <p id="module-status" aria-live="polite"></p>
+
+            <!-- Optional “Add module” form – only show to the *owner* -->
+            {% if request.user == subject.author %}
+            <form id="module-form" class="module-form">
+                <input id="module-number-input" type="number" min="1" placeholder="No." required>
+                <input id="module-name-input"   type="text" placeholder="Title" required>
+                <input id="module-file-input"   type="file" accept=".pdf,.zip,.mp4" required>
+                <button id="module-add-btn" type="button">Add module</button>
+            </form>
             {% endif %}
+
+            <!-- The list that the widget will fill -->
+            <div id="module-list"></div>
         </section>
     </main>
+
+    {% comment %} <!-- -----------------------------------------------------------------
+         Load the widget script (type="module" so we can use import)
+         ----------------------------------------------------------------- --> {% endcomment %}
+    <script type="module">
+        import { initModuleWidget } from "{% static 'js/slm/module_ajax.js' %}";
+        const root = document.getElementById('module-widget');
+        initModuleWidget(root);
+    </script>
 </body>
 </html>

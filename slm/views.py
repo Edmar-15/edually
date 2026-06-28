@@ -250,3 +250,179 @@ def api_subject_year_choices(request):
     return JsonResponse(
         {"choices": [{"value": v, "label": l} for v, l in Subject.YEAR_CHOICES]}
     )
+    
+def module_to_dict(module, request_user=None):
+    """
+    Convert a Module instance into the flat dict the front‑end expects.
+    Extra keys:
+        * subject_code – for easy grouping on the UI
+        * is_owner     – true only for the module’s uploader
+        * file_url     – absolute URL to download the uploaded file
+    """
+    return {
+        "id": module.id,
+        "subject_id": module.subject_id,
+        "subject_code": module.subject.subject_code,
+        "module_number": module.module_number,
+        "module_name": module.module_name,
+        "file_url": module.file.url if module.file else "",
+        "is_owner": request_user is not None and module.subject.author_id == request_user.id,
+        "created_at": module.created_at.isoformat() if hasattr(module, "created_at") else "",
+        "updated_at": module.updated_at.isoformat() if hasattr(module, "updated_at") else "",
+    }
+
+
+@require_GET
+@ensure_csrf_cookie
+def api_module_list(request, subject_id):
+    """
+    GET /slm/api/subjects/<subject_id>/modules/?page=1
+    Returns the same pagination meta‑structure that the subject list does.
+    """
+    subject = get_object_or_404(Subject, pk=subject_id)
+    qs = Module.objects.filter(subject=subject).order_by("module_number")
+
+    paginator = Paginator(qs, PAGE_SIZE)          # reuse PAGE_SIZE from above
+    page_number = request.GET.get("page", 1)
+
+    try:
+        page_obj = paginator.page(page_number)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+
+    results = [
+        module_to_dict(m, request_user=request.user)
+        for m in page_obj.object_list
+    ]
+
+    payload = {
+        "results": results,
+        "page": page_obj.number,
+        "total_pages": paginator.num_pages,
+        "has_previous": page_obj.has_previous(),
+        "has_next": page_obj.has_next(),
+        "previous_page_number": page_obj.previous_page_number() if page_obj.has_previous() else None,
+        "next_page_number": page_obj.next_page_number() if page_obj.has_next() else None,
+    }
+    return JsonResponse(payload, safe=False)
+
+
+@login_required
+@require_http_methods(["POST"])
+def api_module_create(request, subject_id):
+    """POST /slm/api/subjects/<subject_id>/modules/  (multipart/form-data)"""
+    subject = get_object_or_404(Subject, pk=subject_id)
+
+    # Only the *author* of the subject may upload modules
+    if subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    # Use `request.POST` for normal fields and `request.FILES` for the upload
+    module_number = request.POST.get("module_number")
+    module_name   = request.POST.get("module_name", "").strip()
+    file_obj       = request.FILES.get("file")
+
+    # Simple validation
+    try:
+        module_number = int(module_number)
+        if module_number <= 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "module_number must be a positive integer"}, status=400)
+
+    if not module_name:
+        return JsonResponse({"error": "module_name is required"}, status=400)
+
+    # `unique_together` on (subject, module_number) will raise IntegrityError
+    try:
+        module = Module.objects.create(
+            subject=subject,
+            module_number=module_number,
+            module_name=module_name,
+            file=file_obj,
+        )
+    except Exception as exc:          # catch IntegrityError, etc.
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    return JsonResponse(module_to_dict(module, request_user=request.user), status=201)
+
+
+@login_required
+@require_http_methods(["PUT", "PATCH"])
+def api_module_update(request, pk):
+    """PUT /slm/api/modules/<pk>/  (JSON payload)"""
+    try:
+        module = Module.objects.select_related("subject").get(pk=pk)
+    except Module.DoesNotExist:
+        return JsonResponse({"error": "Not found"}, status=404)
+
+    # Only the *author* of the *subject* may edit the module
+    if module.subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON")
+
+    # Allow partial updates
+    if "module_number" in payload:
+        try:
+            new_num = int(payload["module_number"])
+            if new_num <= 0:
+                raise ValueError
+            module.module_number = new_num
+        except (TypeError, ValueError):
+            return JsonResponse({"error": "module_number must be a positive integer"}, status=400)
+
+    if "module_name" in payload:
+        module.module_name = payload["module_name"].strip()
+
+    # NOTE: file updates are handled via a separate endpoint (see below) –
+    # we keep this view JSON‑only for simplicity.
+
+    try:
+        module.save()
+    except Exception as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    return JsonResponse(module_to_dict(module, request_user=request.user))
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def api_module_delete(request, pk):
+    """DELETE /slm/api/modules/<pk>/delete/"""
+    try:
+        module = Module.objects.select_related("subject").get(pk=pk)
+    except Module.DoesNotExist:
+        return JsonResponse({"error": "Not found"}, status=404)
+
+    if module.subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    module.delete()
+    return JsonResponse({}, status=204)
+
+
+@login_required
+@require_http_methods(["POST"])
+def api_module_file_replace(request, pk):
+    """POST /slm/api/modules/<pk>/file/   (multipart)"""
+    try:
+        module = Module.objects.select_related("subject").get(pk=pk)
+    except Module.DoesNotExist:
+        return JsonResponse({"error": "Not found"}, status=404)
+
+    if module.subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    file_obj = request.FILES.get("file")
+    if not file_obj:
+        return JsonResponse({"error": "File missing"}, status=400)
+
+    module.file = file_obj
+    module.save()
+    return JsonResponse(module_to_dict(module, request_user=request.user))
+
+

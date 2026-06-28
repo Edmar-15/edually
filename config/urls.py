@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from account.views import landing
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,3 +28,7 @@ urlpatterns = [
     path("aihelper/", include('aihelper.urls')),
     path('slm/', include('slm.urls')),
 ]
+
+if settings.DEBUG:
+    # This will map /media/... → <PROJECT_ROOT>/media/...
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
