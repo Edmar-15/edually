@@ -8,7 +8,31 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <style>
-        .module-content { max-width: 900px; margin: 2rem auto; line-height: 1.6; }
+        .module-content-card {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            border: 1px solid #e7edf5;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+        .module-content-card__header {
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eef2f7;
+        }
+        .module-content-card__header h2 {
+            margin: 0 0 0.25rem;
+            font-size: 1.2rem;
+            color: #0f172a;
+        }
+        .module-content-card__header p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+        .module-content { line-height: 1.6; }
         .module-content h1,
         .module-content h2,
         .module-content h3 { margin-top: 1.4rem; }
@@ -29,12 +53,18 @@
             </i></p>
         </header>
 
-        <section class="module-content">
-            {% if module.extracted_html %}
-                {{ module.extracted_html|safe }}
-            {% else %}
-                <p><em>No extracted preview is available for this file.</em></p>
-            {% endif %}
+        <section class="module-content-card" aria-labelledby="module-content-title">
+            <div class="module-content-card__header">
+                <h2 id="module-content-title">Module Content</h2>
+                <p>Preview of the uploaded material.</p>
+            </div>
+            <div class="module-content">
+                {% if module.extracted_html %}
+                    {{ module.extracted_html|safe }}
+                {% else %}
+                    <p><em>No extracted preview is available for this file.</em></p>
+                {% endif %}
+            </div>
         </section>
 
         <section class="module-actions" style="margin-top:2rem;">
