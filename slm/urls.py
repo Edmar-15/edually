@@ -39,4 +39,10 @@ urlpatterns = [
     ),
     # optional file‑replace endpoint
     path("api/modules/<int:pk>/file/", views.api_module_file_replace, name="module-file-replace"),
+    
+    path(
+        "subjects/<int:subject_id>/modules/<int:module_id>/",
+        views.module_detail,
+        name="module-detail",
+    ),
 ]

@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ subject.subject_code }} – {{ module.module_name }}</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/slm.css' %}">
+    <style>
+        .module-content { max-width: 900px; margin: 2rem auto; line-height: 1.6; }
+        .module-content h1,
+        .module-content h2,
+        .module-content h3 { margin-top: 1.4rem; }
+        .module-content p { margin: 0.5rem 0; }
+        .module-content img { max-width: 100%; }
+        .module-actions { text-align: right; }
+    </style>
+</head>
+<body>
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <header class="content-header">
+            <p><i>
+                <a href="{% url "slm:subject-modules" subject.id %}">Modules for {{ subject.subject_code }}</a>
+                &gt; {{ module.module_name }}
+            </i></p>
+        </header>
+
+        <section class="module-content">
+            {% if module.extracted_html %}
+                {{ module.extracted_html|safe }}
+            {% else %}
+                <p><em>No extracted preview is available for this file.</em></p>
+            {% endif %}
+        </section>
+
+        <section class="module-actions" style="margin-top:2rem;">
+            <a href="{{ module.file.url }}" class="button" download>
+                <i class="fa-solid fa-download"></i> Download original file
+            </a>
+        </section>
+    </main>
+</body>
+</html>

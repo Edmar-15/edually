@@ -8,6 +8,8 @@ from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
 from .models import Subject, Module
 import os
+from .content_extractor import extract_content
+import logging as logger
 
 
 # Create your views here.
@@ -255,10 +257,6 @@ def api_subject_year_choices(request):
 def module_to_dict(module, request_user=None):
     """
     Convert a Module instance into the flat dict the front‑end expects.
-    Extra keys:
-        * subject_code – for easy grouping on the UI
-        * is_owner     – true only for the module’s uploader
-        * file_url     – absolute URL to download the uploaded file
     """
     return {
         "id": module.id,
@@ -267,9 +265,10 @@ def module_to_dict(module, request_user=None):
         "module_number": module.module_number,
         "module_name": module.module_name,
         "file_url": module.file.url if module.file else "",
+        "extracted_html": module.extracted_html or "",   # <-- NEW
         "is_owner": request_user is not None and module.subject.author_id == request_user.id,
-        "created_at": module.created_at.isoformat() if hasattr(module, "created_at") else "",
-        "updated_at": module.updated_at.isoformat() if hasattr(module, "updated_at") else "",
+        "created_at": getattr(module, "created_at", "").isoformat() if hasattr(module, "created_at") else "",
+        "updated_at": getattr(module, "updated_at", "").isoformat() if hasattr(module, "updated_at") else "",
     }
 
 
@@ -335,16 +334,14 @@ def api_module_create(request, subject_id):
     """POST /slm/api/subjects/<subject_id>/modules/  (multipart/form-data)"""
     subject = get_object_or_404(Subject, pk=subject_id)
 
-    # Only the *author* of the subject may upload modules
     if subject.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 
-    # Use `request.POST` for normal fields and `request.FILES` for the upload
     module_number = request.POST.get("module_number")
     module_name   = request.POST.get("module_name", "").strip()
-    file_obj       = request.FILES.get("file")
+    file_obj      = request.FILES.get("file")
 
-    # Simple validation
+    # ---- validation -------------------------------------------------
     try:
         module_number = int(module_number)
         if module_number <= 0:
@@ -355,15 +352,13 @@ def api_module_create(request, subject_id):
     if not module_name:
         return JsonResponse({"error": "module_name is required"}, status=400)
 
-    # -------------------------------------------------------------
-    #  📎  Validate uploaded file type
-    # -------------------------------------------------------------
+    # ---- file‑type validation (still done in the helper) ------------
     try:
         validate_module_file(file_obj)
     except ValidationError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # `unique_together` on (subject, module_number) will raise IntegrityError
+    # ---- create the Model row ---------------------------------------
     try:
         module = Module.objects.create(
             subject=subject,
@@ -371,10 +366,24 @@ def api_module_create(request, subject_id):
             module_name=module_name,
             file=file_obj,
         )
-    except Exception as exc:  # includes IntegrityError for duplicate numbers
+    except Exception as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    return JsonResponse(module_to_dict(module, request_user=request.user), status=201)
+    # ---- 1️⃣ Extract content -----------------------------------------
+    try:
+        html = extract_content(module.file)
+        module.extracted_html = html
+        module.save(update_fields=["extracted_html"])
+    except ValueError as exc:
+        # Extraction failed – we keep the file, just warn the client.
+        logger.warning("Extraction failed for module %s: %s", module.id, exc)
+
+    # ---- 2️⃣ Return fresh payload ------------------------------------
+    return JsonResponse(
+        module_to_dict(module, request_user=request.user),
+        status=201,
+    )
+# -------------------------------------------------------
 
 
 @login_required
@@ -464,3 +473,17 @@ def api_module_file_replace(request, pk):
     return JsonResponse(module_to_dict(module, request_user=request.user))
 
 
+@login_required
+def module_detail(request, subject_id, module_id):
+    """
+    Render a page that shows the extracted HTML of a module.
+    The original file can still be downloaded.
+    """
+    subject = get_object_or_404(Subject, pk=subject_id)
+    module  = get_object_or_404(Module, pk=module_id, subject=subject)
+
+    context = {
+        "subject": subject,
+        "module": module,
+    }
+    return render(request, "slm/module_detail.html", context)

@@ -115,6 +115,15 @@ export function initModuleWidget(rootEl) {
       });
       actions.appendChild(delBtn);
 
+          // ----- VIEW (available to everyone) ---------------------------------
+      const viewBtn = document.createElement("a");
+      viewBtn.href = `/slm/subjects/${mod.subject_id}/modules/${mod.id}/`;
+      viewBtn.title = "View extracted content";
+      viewBtn.className = "module-card__action module-card__action--view";
+      viewBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>`;
+      actions.appendChild(viewBtn);
+
       body.appendChild(actions);
     }
 
