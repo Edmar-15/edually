@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ subject.subject_code }} – {{ module.module_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/slm.css' %}">
     <style>
         .module-content { max-width: 900px; margin: 2rem auto; line-height: 1.6; }
         .module-content h1,
@@ -23,7 +23,8 @@
     <main class="main-content">
         <header class="content-header">
             <p><i>
-                <a href="{% url "slm:subject-modules" subject.id %}">Modules for {{ subject.subject_code }}</a>
+                <a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+                <a href="{% url "slm:subject-modules" subject.id %}">{{ subject.subject_code }} – {{ subject.subject_name }}</a>
                 &gt; {{ module.module_name }}
             </i></p>
         </header>
