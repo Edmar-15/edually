@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 class Subject(models.Model):
     YEAR_FIRST = '1'
@@ -82,3 +83,65 @@ class Module(models.Model):
 
     def __str__(self) -> str:
         return f"{self.subject.subject_code} – Module {self.module_number}: {self.module_name}"
+
+def user_media_path(instance, filename):
+    """
+    Store a user’s files under `media/users/<user‑pk>/<filename>`.
+    Feel free to extend with a date‑based sub‑folder if you like:
+        f'users/{instance.author_id}/{timezone.now():%Y/%m/%d}/{filename}'
+    """
+    return f"users/{instance.author_id}/{filename}"
+
+
+class PersonalMaterial(models.Model):
+    """
+    A file that belongs to a single user.  No connection to Subject/Module.
+    """
+    title = models.CharField(
+        max_length=255,
+        help_text=_("Human‑readable title for the file."),
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="personal_materials",
+        help_text=_("Owner of the file."),
+    )
+    file = models.FileField(
+        upload_to=user_media_path,
+        max_length=255,
+        help_text=_("The uploaded document."),
+    )
+    extracted_html = models.TextField(
+        blank=True,
+        help_text=_(
+            "HTML version generated from the uploaded document (optional, "
+            "usually filled by a background task)."
+        ),
+    )
+
+    class Visibility(models.TextChoices):
+        PRIVATE = "PR", _("Private – only the owner can see it")
+        PUBLIC = "PU", _("Public – any logged‑in user can see it")
+        # you can add RESTRICTED later without a migration
+
+    visibility = models.CharField(
+        max_length=2,
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+        help_text=_("Who may view this file."),
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("Personal Material")
+        verbose_name_plural = _("Personal Materials")
+        indexes = [
+            models.Index(fields=["visibility"], name="idx_personal_visibility"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.title} ({self.author})"
