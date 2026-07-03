@@ -18,14 +18,12 @@
                {{ subject.subject_code }} – {{ subject.subject_name }}</i></p>
         </header>
 
-        {% comment %} <!-- -----------------------------------------------------------------
-             ROOT element – all data‑attrs needed by moduleWidget.js
-             ----------------------------------------------------------------- --> {% endcomment %}
         <section id="module-widget"
                  data-list-url="{% url 'slm:module-list' subject.id %}"
                  data-create-url="{% url 'slm:module-create' subject.id %}"
-                 data-update-url="{% url 'slm:module-update' 0 %}"   {# placeholder {id} #}
+                 data-update-url="{% url 'slm:module-update' 0 %}"
                  data-delete-url="{% url 'slm:module-delete' 0 %}"
+                 data-file-replace-url="{% url 'slm:module-file-replace' 0 %}"
                  data-subject-id="{{ subject.id }}">
 
             <!-- Status line (ARIA live) -->
@@ -41,9 +39,12 @@
                     </div>
                 </div>
                 <form id="module-form" class="module-form">
-                    <input id="module-number-input" type="number" min="1" placeholder="Module no." required>
-                    <input id="module-name-input" type="text" placeholder="Module title" required>
-                    <input id="module-file-input" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" required>
+                    <input id="module-number-input" type="number" min="1"
+                           placeholder="Module no." required>
+                    <input id="module-name-input" type="text"
+                           placeholder="Module title" required>
+                    <input id="module-file-input" type="file"
+                           accept=".pdf,.doc,.docx,.ppt,.pptx" required>
                     <button id="module-add-btn" type="button">Add module</button>
                 </form>
             </section>
@@ -51,12 +52,12 @@
 
             <!-- The list that the widget will fill -->
             <div id="module-list"></div>
+
+            <!-- Empty modal placeholder – the script will populate it -->
+            <div id="module-edit-modal" class="modal hidden"></div>
         </section>
     </main>
 
-    {% comment %} <!-- -----------------------------------------------------------------
-         Load the widget script (type="module" so we can use import)
-         ----------------------------------------------------------------- --> {% endcomment %}
     <script type="module">
         import { initModuleWidget } from "{% static 'js/slm/module_ajax.js' %}";
         const root = document.getElementById('module-widget');

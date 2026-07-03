@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------
-// moduleWidget.js – Ajax widget for “Modules” of a Subject
+// module_ajax.js – Ajax widget for “Modules” of a Subject
 // ---------------------------------------------------------------
 import { csrftoken } from "./utils.js";
 
@@ -8,35 +8,45 @@ import { csrftoken } from "./utils.js";
  *
  * Expected data‑attributes on the root element:
  *
- *   data-list-url   → "/slm/api/subjects/42/modules/"
- *   data-create-url → "/slm/api/subjects/42/modules/create/"
- *   data-update-url → "/slm/api/modules/{id}/"
- *   data-delete-url → "/slm/api/modules/{id}/delete/"
+ *   data-list-url           → "/slm/api/subjects/42/modules/"
+ *   data-create-url         → "/slm/api/subjects/42/modules/create/"
+ *   data-update-url         → "/slm/api/modules/0/"
+ *   data-delete-url         → "/slm/api/modules/0/delete/"
+ *   data-file-replace-url   → "/slm/api/modules/0/file/"
  */
 export function initModuleWidget(rootEl) {
-  // -----------------------------------------------------------------
-  // 1️⃣  URLs from data‑attributes
-  // -----------------------------------------------------------------
-  const listUrl   = rootEl.dataset.listUrl;   // …?page=
-  const createUrl = rootEl.dataset.createUrl;
-  const updateTpl = rootEl.dataset.updateUrl; // “…/modules/{id}/”
-  const deleteTpl = rootEl.dataset.deleteUrl; // “…/modules/{id}/delete/”
+  /* -----------------------------------------------------------------
+   * 1️⃣  URLs from data‑attributes – they contain the dummy “0”
+   * ----------------------------------------------------------------- */
+  const listUrl        = rootEl.dataset.listUrl;      // …?page=
+  const createUrl      = rootEl.dataset.createUrl;
+  const updateTpl      = rootEl.dataset.updateUrl;     // “…/modules/0/”
+  const deleteTpl      = rootEl.dataset.deleteUrl;     // “…/modules/0/delete/”
+  const replaceFileTpl = rootEl.dataset.fileReplaceUrl; // “…/modules/0/file/”
 
-  // -----------------------------------------------------------------
-  // 2️⃣  DOM shortcuts (all inside the widget)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * Helper – replace the dummy “0” with a real id
+   * ----------------------------------------------------------------- */
+  const replaceId = (template, id) => template.replace(/0(?=\/|$)/, id);
+  // The RegExp looks for a `0` that is either at the very end of the string
+  // or just before a slash – this prevents accidental replacement of a
+  // `0` that could appear in a query‑string or elsewhere.
+
+  /* -----------------------------------------------------------------
+   * 2️⃣  DOM shortcuts (all inside the widget)
+   * ----------------------------------------------------------------- */
   const $list   = rootEl.querySelector("#module-list");
   const $status = rootEl.querySelector("#module-status");
 
-  // Create‑form (only for owners – you can hide it with an {% if %} in the template)
   const $numInput   = rootEl.querySelector("#module-number-input");
   const $nameInput  = rootEl.querySelector("#module-name-input");
   const $fileInput  = rootEl.querySelector("#module-file-input");
   const $addBtn     = rootEl.querySelector("#module-add-btn");
+  const $modal      = rootEl.querySelector("#module-edit-modal");
 
-  // -----------------------------------------------------------------
-  // 3️⃣  Render a single module card
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 3️⃣  Render a single module card
+   * ----------------------------------------------------------------- */
   function renderCard(mod) {
     const card = document.createElement("div");
     card.className = "module-card";
@@ -49,7 +59,6 @@ export function initModuleWidget(rootEl) {
     const body = document.createElement("div");
     body.className = "module-card__body";
 
-    // Whole card is a link to the file (if present)
     const link = document.createElement("a");
     link.href = mod.file_url || "#";
     link.className = "module-card__link";
@@ -66,8 +75,8 @@ export function initModuleWidget(rootEl) {
     const typePill = document.createElement("span");
     typePill.className = "module-card__pill";
     const fileName = mod.file_url ? mod.file_url.split("/").pop() : "Document";
-    const extension = fileName.includes(".") ? fileName.split(".").pop().toUpperCase() : "FILE";
-    typePill.textContent = extension;
+    const ext = fileName.includes(".") ? fileName.split(".").pop().toUpperCase() : "FILE";
+    typePill.textContent = ext;
     meta.appendChild(typePill);
 
     if (mod.file_url) {
@@ -79,15 +88,14 @@ export function initModuleWidget(rootEl) {
 
     link.appendChild(meta);
     body.appendChild(link);
-
     card.appendChild(body);
 
-    // Owner‑only actions ------------------------------------------------
+    /* ---- Owner‑only actions --------------------------------------- */
     if (mod.is_owner) {
       const actions = document.createElement("div");
       actions.className = "module-card__actions";
 
-      // ✏️ Edit button
+      // ✏️ Edit
       const editBtn = document.createElement("button");
       editBtn.type = "button";
       editBtn.title = "Edit";
@@ -97,11 +105,11 @@ export function initModuleWidget(rootEl) {
       editBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        editModule(mod);
+        openEditModal(mod);
       });
       actions.appendChild(editBtn);
 
-      // 🗑️ Delete button
+      // 🗑️ Delete
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.title = "Delete";
@@ -115,7 +123,7 @@ export function initModuleWidget(rootEl) {
       });
       actions.appendChild(delBtn);
 
-          // ----- VIEW (available to everyone) ---------------------------------
+      // 👁️ View extracted content (available to everyone)
       const viewBtn = document.createElement("a");
       viewBtn.href = `/slm/subjects/${mod.subject_id}/modules/${mod.id}/`;
       viewBtn.title = "View extracted content";
@@ -130,9 +138,9 @@ export function initModuleWidget(rootEl) {
     return card;
   }
 
-  // -----------------------------------------------------------------
-  // 4️⃣  Paginator – copy‑paste from subjectWidget (no changes)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 4️⃣  Paginator – unchanged copy‑paste from subject widget
+   * ----------------------------------------------------------------- */
   function renderPaginator(meta) {
     const old = rootEl.querySelector(".paginator");
     if (old) old.remove();
@@ -150,7 +158,7 @@ export function initModuleWidget(rootEl) {
       li.className = "paginator__item";
       if (disabled) li.classList.add("paginator__item--disabled");
       if (current)   li.classList.add("paginator__item--current");
-      if (ellipsis)   li.classList.add("paginator__item--ellipsis");
+      if (ellipsis)  li.classList.add("paginator__item--ellipsis");
 
       if (current || ellipsis) {
         const span = document.createElement("span");
@@ -174,16 +182,10 @@ export function initModuleWidget(rootEl) {
       return li;
     };
 
-    // ← prev
     ul.appendChild(makeItem("←", meta.previous_page_number, !meta.has_previous));
-
-    // first page
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-
-    // gap before inner window
     if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
 
-    // inner pages (max 5)
     const start = Math.max(2, meta.page - 1);
     const end   = Math.min(meta.total_pages - 1, meta.page + 1);
     for (let i = start; i <= end; i++) {
@@ -192,23 +194,18 @@ export function initModuleWidget(rootEl) {
       }
     }
 
-    // gap after inner window
     if (meta.page + 2 < meta.total_pages - 1) ul.appendChild(makeItem("…", null, false, false, true));
-
-    // last page
     if (meta.total_pages > 1) {
       ul.appendChild(makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages));
     }
-
-    // → next
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
 
     $list.parentNode.appendChild(nav);
   }
 
-  // -----------------------------------------------------------------
-  // 5️⃣  LOAD – fetch a page and render
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 5️⃣  LOAD – fetch a page and render
+   * ----------------------------------------------------------------- */
   async function load(page = 1) {
     try {
       const resp = await fetch(`${listUrl}?page=${page}`, {
@@ -224,7 +221,6 @@ export function initModuleWidget(rootEl) {
       if (!data.length) {
         $list.innerHTML = "<p>No modules yet.</p>";
       } else {
-        // we keep the 3‑per‑row layout that the subject widget uses
         let row;
         data.forEach((mod, idx) => {
           if (idx % 3 === 0) {
@@ -243,24 +239,21 @@ export function initModuleWidget(rootEl) {
     }
   }
 
-  // -----------------------------------------------------------------
-  // 6️⃣  CREATE – POST a new module (multipart/form‑data)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 6️⃣  CREATE – POST a new module (multipart/form‑data)
+   * ----------------------------------------------------------------- */
   async function create() {
     if (!$numInput || !$nameInput || !$fileInput) return;
 
     const form = new FormData();
     form.append("module_number", $numInput.value.trim());
     form.append("module_name", $nameInput.value.trim());
-    // -----------------------------------------------------------------
-    //  📎  Validate file type before we ever send it to the server
-    // -----------------------------------------------------------------
+
     const file = $fileInput.files[0];
     if (file) {
       const ALLOWED_EXT = [".pdf", ".doc", ".docx", ".ppt", ".pptx"];
       const name = file.name.toLowerCase();
-      const hasAllowedExt = ALLOWED_EXT.some((ext) => name.endsWith(ext));
-      if (!hasAllowedExt) {
+      if (!ALLOWED_EXT.some(ext => name.endsWith(ext))) {
         $status.textContent =
           "❌ Only PDF, Word (.doc/.docx) and PowerPoint (.ppt/.pptx) files are allowed.";
         return;
@@ -278,46 +271,9 @@ export function initModuleWidget(rootEl) {
 
       if (resp.status === 201) {
         $status.textContent = "✅ Module created";
-        // clear the form
         $numInput.value = "";
         $nameInput.value = "";
         $fileInput.value = "";
-        load(); // refresh current page
-      } else {
-        const err = await resp.json();
-        $status.textContent = `❌ ${err.error || resp.statusText}`;
-      }
-    } catch (e) {
-      $status.textContent = `❌ ${e}`;
-    }
-  }
-
-  // -----------------------------------------------------------------
-  // 7️⃣  UPDATE – PUT a module (JSON only – no file change)
-  // -----------------------------------------------------------------
-  async function editModule(mod) {
-    const newNum  = prompt("New number (blank = keep old)", mod.module_number);
-    const newName = prompt("New name (blank = keep old)", mod.module_name);
-
-    const payload = {};
-    if (newNum !== null && newNum.trim() !== "") payload.module_number = newNum.trim();
-    if (newName !== null && newName.trim() !== "") payload.module_name = newName.trim();
-
-    if (!Object.keys(payload).length) return; // nothing changed
-
-    const url = updateTpl.replace("{id}", mod.id);
-    try {
-      const resp = await fetch(url, {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (resp.ok) {
-        $status.textContent = "✅ Updated";
         load();
       } else {
         const err = await resp.json();
@@ -328,12 +284,113 @@ export function initModuleWidget(rootEl) {
     }
   }
 
-  // -----------------------------------------------------------------
-  // 8️⃣  DELETE – DELETE a module
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 7️⃣  EDIT – open modal form (no more `prompt()`)
+   * ----------------------------------------------------------------- */
+  function openEditModal(mod) {
+    // Build the modal only once – reuse it on subsequent edits
+    if ($modal.dataset.built !== "true") {
+      $modal.innerHTML = `
+        <div class="modal__backdrop"></div>
+        <div class="modal__content">
+          <h2>Edit module</h2>
+          <form id="modal-edit-form">
+            <label>
+              Module number
+              <input type="number" name="module_number" min="1" required>
+            </label>
+            <label>
+              Module name
+              <input type="text" name="module_name" required>
+            </label>
+            <label>
+              Replace file (optional)
+              <input type="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx">
+            </label>
+            <div class="modal__actions">
+              <button type="submit" class="button-primary">Save</button>
+              <button type="button" class="button-plain" id="modal-cancel">Cancel</button>
+            </div>
+          </form>
+        </div>`;
+      $modal.dataset.built = "true";
+
+      // Cancel button
+      $modal.querySelector("#modal-cancel").addEventListener("click", () => {
+        $modal.classList.add("hidden");
+      });
+
+      // Submit handler
+      $modal.querySelector("#modal-edit-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const number = form.module_number.value.trim();
+        const name   = form.module_name.value.trim();
+        const file   = form.file.files[0];
+
+        const payload = {};
+        if (number) payload.module_number = number;
+        if (name)   payload.module_name   = name;
+
+        const updateUrl = replaceId(updateTpl, mod.id);
+        try {
+          const resp = await fetch(updateUrl, {
+            method: "PUT",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrftoken,
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!resp.ok) {
+            const err = await resp.json();
+            $status.textContent = `❌ ${err.error || resp.statusText}`;
+            return;
+          }
+
+          // If the user selected a new file, send it via the dedicated endpoint
+          if (file) {
+            const replaceUrl = replaceId(replaceFileTpl, mod.id);
+            const fileForm = new FormData();
+            fileForm.append("file", file);
+            const fileResp = await fetch(replaceUrl, {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "X-CSRFToken": csrftoken },
+              body: fileForm,
+            });
+            if (!fileResp.ok) {
+              const ferr = await fileResp.json();
+              $status.textContent = `❌ File replace failed – ${ferr.error || fileResp.statusText}`;
+              return;
+            }
+          }
+
+          $status.textContent = "✅ Module updated";
+          $modal.classList.add("hidden");
+          load();   // refresh the list
+        } catch (err) {
+          $status.textContent = `❌ ${err}`;
+        }
+      });
+    }
+
+    // Pre‑fill fields with the current values
+    const form = $modal.querySelector("#modal-edit-form");
+    form.module_number.value = mod.module_number;
+    form.module_name.value   = mod.module_name;
+    form.file.value = "";
+    $modal.classList.remove("hidden");
+  }
+
+  /* -----------------------------------------------------------------
+   * 8️⃣  DELETE – DELETE a module (still uses the replaceId helper)
+   * ----------------------------------------------------------------- */
   async function deleteModule(pk) {
     if (!confirm("Delete this module?")) return;
-    const url = deleteTpl.replace("{id}", pk);
+    const url = replaceId(deleteTpl, pk);
     try {
       const resp = await fetch(url, {
         method: "DELETE",
@@ -352,9 +409,40 @@ export function initModuleWidget(rootEl) {
     }
   }
 
-  // -----------------------------------------------------------------
-  // 9️⃣  UI bindings
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 9️⃣  UI bindings & minimal modal CSS (injected once)
+   * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
-  load(); // first page
+
+  const style = document.createElement("style");
+  style.textContent = `
+    #module-edit-modal.hidden { display: none; }
+    #module-edit-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #module-edit-modal .modal__backdrop {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+    }
+    #module-edit-modal .modal__content {
+      position: relative; background: #fff; padding: 1.5rem;
+      border-radius: 8px; max-width: 420px; width: 90%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    #module-edit-modal label { display: block; margin-bottom: .75rem; }
+    #module-edit-modal input[type="text"],
+    #module-edit-modal input[type="number"],
+    #module-edit-modal input[type="file"] {
+      width: 100%; padding: .4rem .6rem; margin-top: .2rem;
+    }
+    .modal__actions { text-align: right; margin-top: 1rem; }
+    .button-primary { background: #2563eb; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer;}
+    .button-plain   { background: transparent; color:#555; border:none; margin-left:.5rem; cursor:pointer;}
+  `;
+  document.head.appendChild(style);
+
+  /* -----------------------------------------------------------------
+   * 10️⃣  Initial load
+   * ----------------------------------------------------------------- */
+  load();   // first page
 }

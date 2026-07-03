@@ -386,6 +386,9 @@ def api_module_create(request, subject_id):
 # -------------------------------------------------------
 
 
+# -----------------------------------------------------------------
+# 6️⃣  UPDATE – PUT a module (JSON only – no file change)
+# -----------------------------------------------------------------
 @login_required
 @require_http_methods(["PUT", "PATCH"])
 def api_module_update(request, pk):
@@ -404,25 +407,53 @@ def api_module_update(request, pk):
     except json.JSONDecodeError:
         return HttpResponseBadRequest("Invalid JSON")
 
-    # Allow partial updates
+    # -------------------------------------------------------------
+    # 1️⃣  Validate & apply *module_number* (must stay unique per subject)
+    # -------------------------------------------------------------
     if "module_number" in payload:
         try:
             new_num = int(payload["module_number"])
             if new_num <= 0:
                 raise ValueError
-            module.module_number = new_num
         except (TypeError, ValueError):
-            return JsonResponse({"error": "module_number must be a positive integer"}, status=400)
+            return JsonResponse(
+                {"error": "module_number must be a positive integer"},
+                status=400,
+            )
 
+        # Is there another module in the SAME subject with this number?
+        conflict = (
+            Module.objects.filter(subject=module.subject, module_number=new_num)
+            .exclude(pk=module.pk)
+            .exists()
+        )
+        if conflict:
+            return JsonResponse(
+                {
+                    "error": "module_number already exists for this subject – choose another number"
+                },
+                status=400,
+            )
+
+        module.module_number = new_num
+
+    # -------------------------------------------------------------
+    # 2️⃣  Validate *module_name*
+    # -------------------------------------------------------------
     if "module_name" in payload:
-        module.module_name = payload["module_name"].strip()
+        name = payload["module_name"].strip()
+        if not name:
+            return JsonResponse(
+                {"error": "module_name cannot be blank"}, status=400
+            )
+        module.module_name = name
 
-    # NOTE: file updates are handled via a separate endpoint (see below) –
-    # we keep this view JSON‑only for simplicity.
+    # (file updates are handled by the separate file‑replace endpoint)
 
     try:
         module.save()
     except Exception as exc:
+        # Any unexpected DB error – return its message
         return JsonResponse({"error": str(exc)}, status=400)
 
     return JsonResponse(module_to_dict(module, request_user=request.user))
@@ -447,7 +478,22 @@ def api_module_delete(request, pk):
 @login_required
 @require_http_methods(["POST"])
 def api_module_file_replace(request, pk):
-    """POST /slm/api/modules/<pk>/file/   (multipart)"""
+    """
+    POST /slm/api/modules/<pk>/file/   (multipart)
+
+    1️⃣  Validate ownership + file type (same as in `api_module_create`).
+    2️⃣  Replace the file on the model instance.
+    3️⃣  **Run the content extractor** on the newly‑uploaded file.
+    4️⃣  Store the resulting HTML in ``module.extracted_html``.
+    5️⃣  Return a fresh JSON payload (including the new ``extracted_html``).
+
+    The front‑end already calls this endpoint from the edit‑modal, so after
+    a successful request it will simply reload the module list and display the
+    updated preview.
+    """
+    # -------------------------------------------------------------
+    # 1️⃣  Grab the module & check permission
+    # -------------------------------------------------------------
     try:
         module = Module.objects.select_related("subject").get(pk=pk)
     except Module.DoesNotExist:
@@ -456,21 +502,48 @@ def api_module_file_replace(request, pk):
     if module.subject.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 
+    # -------------------------------------------------------------
+    # 2️⃣  Validate the uploaded file
+    # -------------------------------------------------------------
     file_obj = request.FILES.get("file")
     if not file_obj:
         return JsonResponse({"error": "File missing"}, status=400)
 
-    # -------------------------------------------------------------
-    #  📎  Validate file type (same whitelist as upload)
-    # -------------------------------------------------------------
     try:
         validate_module_file(file_obj)
     except ValidationError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
+    # -------------------------------------------------------------
+    # 3️⃣  Swap the file on the model instance
+    # -------------------------------------------------------------
     module.file = file_obj
     module.save()
-    return JsonResponse(module_to_dict(module, request_user=request.user))
+
+    # -------------------------------------------------------------
+    # 4️⃣  Run the extractor and store the HTML preview
+    # -------------------------------------------------------------
+    try:
+        html = extract_content(module.file)
+        module.extracted_html = html
+        # ``update_fields`` ensures we only touch the HTML column – the file
+        # field is already saved.
+        module.save(update_fields=["extracted_html"])
+    except ValueError as exc:          # extraction failed – keep the file
+        logger.warning(
+            "Extraction failed after file replace for module %s: %s",
+            module.id,
+            exc,
+        )
+        # We *don’t* abort the request – the file was successfully stored.
+        # The client will simply see the old (or empty) preview.
+
+    # -------------------------------------------------------------
+    # 5️⃣  Return the fresh payload (includes the new HTML)
+    # -------------------------------------------------------------
+    return JsonResponse(
+        module_to_dict(module, request_user=request.user)
+    )
 
 
 @login_required
