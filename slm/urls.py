@@ -7,14 +7,21 @@ app_name = 'slm'
 
 urlpatterns = [
     path('slm-lists/', views.slmlists, name='slmlists'),
+
+    # -----------------------------------------------------------------
+    # SUBJECT API
+    # -----------------------------------------------------------------
     path('api/subjects/',               views.api_subject_list,   name='subject-list'),
     path('api/subjects/create/',        views.api_subject_create, name='subject-create'),
     path('api/subjects/<int:pk>/',      views.api_subject_update, name='subject-update'),
     path('api/subjects/<int:pk>/delete/', views.api_subject_delete, name='subject-delete'),
-    path('subjects/<int:subject_id>/modules/', views.subject_modules, name='subject-modules'),
     path('api/subjects/year-choices/', views.api_subject_year_choices, name='subject-year-choices'),
-    # ---- MODULE API -------------------------------------------------
-    # List + create modules for a given subject
+
+    # -----------------------------------------------------------------
+    # SUBJECT > MODULES (list/create)
+    # -----------------------------------------------------------------
+    path('subjects/<int:subject_id>/modules/', views.subject_modules, name='subject-modules'),
+
     path(
         "api/subjects/<int:subject_id>/modules/",
         views.api_module_list,
@@ -26,7 +33,9 @@ urlpatterns = [
         name="module-create",
     ),
 
-    # CRUD for a single module (outside the subject nesting)
+    # -----------------------------------------------------------------
+    # MODULE CRUD (outside the subject nesting)
+    # -----------------------------------------------------------------
     path(
         "api/modules/<int:pk>/",
         views.api_module_update,
@@ -37,19 +46,17 @@ urlpatterns = [
         views.api_module_delete,
         name="module-delete",
     ),
-    # optional file‑replace endpoint
     path("api/modules/<int:pk>/file/", views.api_module_file_replace, name="module-file-replace"),
-    
+
     path(
         "subjects/<int:subject_id>/modules/<int:module_id>/",
         views.module_detail,
         name="module-detail",
     ),
-    
-    # -------------------------------------------------------------
+
+    # -----------------------------------------------------------------
     # PERSONAL MATERIAL – CRUD + file‑replace
-    # -------------------------------------------------------------
-    # List & create (the “My learning materials” page)
+    # -----------------------------------------------------------------
     path(
         "api/personal-materials/",
         views.api_personal_material_list,
@@ -60,25 +67,28 @@ urlpatterns = [
         views.api_personal_material_create,
         name="personalmaterial-create",
     ),
-
-    # Detail – JSON only (used for edit)
     path(
         "api/personal-materials/<int:pk>/",
         views.api_personal_material_update,
         name="personalmaterial-update",
     ),
-
-    # Delete
     path(
         "api/personal-materials/<int:pk>/delete/",
         views.api_personal_material_delete,
         name="personalmaterial-delete",
     ),
-
-    # Replace the uploaded file (optional – separate endpoint)
     path(
         "api/personal-materials/<int:pk>/file/",
         views.api_personal_material_file_replace,
         name="personalmaterial-file-replace",
+    ),
+
+    # -----------------------------------------------------------------
+    # NEW – Detail page (preview) for a PersonalMaterial
+    # -----------------------------------------------------------------
+    path(
+        "personal-material/<int:pk>/",
+        views.personal_material_detail,
+        name="personalmaterial-detail",
     ),
 ]

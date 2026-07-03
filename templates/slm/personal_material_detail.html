@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ pm.title }}{% if pm.visibility == "PU" %} – Public Material{% else %} – My Material{% endif %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    {# Re‑use the same styling you already have for module_detail #}
+    <link rel="stylesheet" href="{% static "css/module_detail.css" %}">
+</head>
+<body>
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <header class="content-header">
+            <p><i>
+                <a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+                <a href="{% url "slm:slmlists" %}#tab-1">My Learning Materials</a> &gt;
+                {{ pm.title }}
+            </i></p>
+        </header>
+
+        <section class="module-content-card" aria-labelledby="material-content-title">
+            <div class="module-content-card__header">
+                <h2 id="material-content-title">Material Preview</h2>
+                <p>{% if pm.visibility == "PU" %}Publicly shared{% else %}Your private material{% endif %}</p>
+            </div>
+            <div class="module-content">
+                {% if pm.extracted_html %}
+                    {{ pm.extracted_html|safe }}
+                {% else %}
+                    <p><em>No extracted preview is available for this file.</em></p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="module-actions" style="margin-top:2rem;">
+            <a href="{{ pm.file_url }}" class="button" download>
+                <i class="fa-solid fa-download"></i> Download original file
+            </a>
+        </section>
+    </main>
+
+    {# -----------------------------------------------------------------
+       The same selection‑toolbar you already have on `module_detail.html`.
+       Keeping it here makes the UI identical for both page types.
+       ----------------------------------------------------------------- #}
+    <div id="selection-toolbar" class="selection-toolbar"
+         role="toolbar" aria-label="Selection actions">
+        <button id="tb-highlight" type="button" title="Highlight">
+            <i class="fa-solid fa-highlighter"></i> Highlight
+        </button>
+        <button id="tb-ask-ai" type="button" title="Ask AI">
+            <i class="fa-solid fa-robot"></i> Ask AI
+        </button>
+        <button id="tb-note" type="button" title="Add note">
+            <i class="fa-solid fa-sticky-note"></i> Note
+        </button>
+    </div>
+
+    <script>
+        (function () {
+            const toolbar = document.getElementById('selection-toolbar');
+
+            const hideToolbar = () => { toolbar.style.display = 'none'; };
+            const logAction = (name) => {
+                const sel = window.getSelection().toString().trim();
+                console.log(`${name} clicked – selection:`, sel);
+                hideToolbar();
+            };
+            document.getElementById('tb-highlight')
+                    .addEventListener('click', () => logAction('🔆 Highlight'));
+            document.getElementById('tb-ask-ai')
+                    .addEventListener('click', () => logAction('🤖 Ask AI'));
+            document.getElementById('tb-note')
+                    .addEventListener('click', () => logAction('🗒️ Note'));
+
+            const showToolbarForSelection = (event) => {
+                const sel = window.getSelection();
+                const text = sel.toString().trim();
+                if (toolbar.contains(event.target)) return;
+                if (!text) { hideToolbar(); return; }
+
+                const range = sel.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+
+                const toolbarX = rect.left + (rect.width / 2) - (toolbar.offsetWidth / 2);
+                const toolbarY = rect.top + window.scrollY - toolbar.offsetHeight - 8;
+
+                const maxX = document.documentElement.clientWidth - toolbar.offsetWidth - 4;
+                const maxY = document.documentElement.clientHeight - toolbar.offsetHeight - 4;
+
+                toolbar.style.left = `${Math.min(Math.max(toolbarX, 4), maxX)}px`;
+                toolbar.style.top  = `${Math.min(Math.max(toolbarY, 4), maxY)}px`;
+                toolbar.style.display = 'flex';
+            };
+
+            document.addEventListener('mouseup', showToolbarForSelection);
+            document.addEventListener('touchend', (e) => setTimeout(() => showToolbarForSelection(e), 10));
+            document.addEventListener('selectionchange', () => {
+                const sel = window.getSelection();
+                if (!sel || !sel.toString().trim()) hideToolbar();
+            });
+            document.addEventListener('mousedown', (e) => {
+                if (!toolbar.contains(e.target)) hideToolbar();
+            });
+            document.addEventListener('touchstart', (e) => {
+                if (!toolbar.contains(e.target)) hideToolbar();
+            });
+        })();
+    </script>
+</body>
+</html>

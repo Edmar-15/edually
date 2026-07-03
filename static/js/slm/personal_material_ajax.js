@@ -74,32 +74,21 @@ export function initPersonalMaterialWidget(rootEl) {
     header.appendChild(meta);
     card.appendChild(header);
 
-    // preview (if we have extracted HTML – show first 200 chars)
-    if (pm.extracted_html) {
-      const preview = document.createElement("div");
-      preview.className = "pm-card__preview";
-      const txt = new DOMParser()
-        .parseFromString(pm.extracted_html, "text/html")
-        .body.textContent.trim()
-        .slice(0, 200);
-      preview.textContent = txt + (txt.length >= 200 ? "…" : "");
-      card.appendChild(preview);
-    }
-
-    // actions – always show “Download”
+    // actions – always show “Download” and a “View” button
     const actions = document.createElement("div");
     actions.className = "pm-card__actions";
 
-    const dl = document.createElement("a");
-    dl.href = pm.file_url;
-    dl.className = "button button-plain";
-    dl.textContent = "Download";
-    dl.setAttribute("download", "");
-    actions.appendChild(dl);
+    // --- View (preview page) ---------------------------------------
+    const viewBtn = document.createElement("a");
+    viewBtn.href = `/slm/personal-material/${pm.id}/`;   // matches the URL added in urls.py
+    viewBtn.className = "button button-plain";
+    viewBtn.textContent = "View";
+    viewBtn.title = "Open preview page";
+    actions.appendChild(viewBtn);
 
     // owner‑only edit / delete
     if (pm.is_owner) {
-      // Edit
+      // Edit -------------------------------------------------------
       const editBtn = document.createElement("button");
       editBtn.type = "button";
       editBtn.title = "Edit";
@@ -113,7 +102,7 @@ export function initPersonalMaterialWidget(rootEl) {
       });
       actions.appendChild(editBtn);
 
-      // Delete
+      // Delete -----------------------------------------------------
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.title = "Delete";
@@ -149,7 +138,7 @@ export function initPersonalMaterialWidget(rootEl) {
       const li = document.createElement("li");
       li.className = "paginator__item";
       if (disabled) li.classList.add("paginator__item--disabled");
-      if (current) li.classList.add("paginator__item--current");
+      if (current)   li.classList.add("paginator__item--current");
       if (ellipsis) li.classList.add("paginator__item--ellipsis");
 
       if (current || ellipsis) {
@@ -192,7 +181,6 @@ export function initPersonalMaterialWidget(rootEl) {
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
 
-    nav.appendChild(ul);
     $list.parentNode.appendChild(nav);
   }
 
@@ -201,7 +189,6 @@ export function initPersonalMaterialWidget(rootEl) {
   // -----------------------------------------------------------------
   async function load(page = 1) {
     try {
-      // Respect the optional data‑visibility attribute (public tab)
       const extra = rootEl.dataset.visibility ? `&visibility=${rootEl.dataset.visibility}` : "";
       const resp = await fetch(`${listUrl}?page=${page}${extra}`, {
         credentials: "same-origin",
@@ -250,7 +237,7 @@ export function initPersonalMaterialWidget(rootEl) {
       const resp = await fetch(createUrl, {
         method: "POST",
         credentials: "same-origin",
-        headers: { "X-CSRFToken": csrftoken },   // <-- ASCII hyphen
+        headers: { "X-CSRFToken": csrftoken },
         body: form,
       });
 
@@ -303,12 +290,10 @@ export function initPersonalMaterialWidget(rootEl) {
         </div>`;
       $modal.dataset.built = "true";
 
-      // Cancel
       $modal.querySelector("#pm-cancel").addEventListener("click", () => {
         $modal.classList.add("hidden");
       });
 
-      // Submit handler
       $modal.querySelector("#pm-edit-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const form = e.target;
@@ -325,7 +310,7 @@ export function initPersonalMaterialWidget(rootEl) {
             credentials: "same-origin",
             headers: {
               "Content-Type": "application/json",
-              "X-CSRFToken": csrftoken,   // <-- ASCII hyphen
+              "X-CSRFToken": csrftoken,
             },
             body: JSON.stringify(payload),
           });
@@ -344,7 +329,7 @@ export function initPersonalMaterialWidget(rootEl) {
             const fileResp = await fetch(replaceUrl, {
               method: "POST",
               credentials: "same-origin",
-              headers: { "X-CSRFToken": csrftoken },   // <-- ASCII hyphen
+              headers: { "X-CSRFToken": csrftoken },
               body: fileForm,
             });
             if (!fileResp.ok) {
@@ -381,7 +366,7 @@ export function initPersonalMaterialWidget(rootEl) {
       const resp = await fetch(url, {
         method: "DELETE",
         credentials: "same-origin",
-        headers: { "X-CSRFToken": csrftoken },   // <-- ASCII hyphen
+        headers: { "X-CSRFToken": csrftoken },
       });
       if (resp.status === 204) {
         $status.textContent = "✅ Deleted";
@@ -416,7 +401,9 @@ export function initPersonalMaterialWidget(rootEl) {
     #pm-edit-modal label { display:block; margin-bottom:.75rem; }
     #pm-edit-modal input[type=text],
     #pm-edit-modal input[type=file],
-    #pm-edit-modal select { width:100%; padding:.4rem .6rem; margin-top:.2rem; }
+    #pm-edit-modal select {
+      width:100%; padding:.4rem .6rem; margin-top:.2rem;
+    }
     .modal__actions { text-align:right; margin-top:1rem; }
     .button-primary { background:#2563eb; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
     .button-plain   { background:transparent; color:#555; border:none; margin-left:.5rem; cursor:pointer; }
@@ -426,5 +413,5 @@ export function initPersonalMaterialWidget(rootEl) {
   // -----------------------------------------------------------------
   // Initial load
   // -----------------------------------------------------------------
-  load();   // first page
+  load();
 }

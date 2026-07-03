@@ -796,3 +796,22 @@ def api_personal_material_file_replace(request, pk):
         # continue – the file is still replaced
 
     return JsonResponse(personal_material_to_dict(pm, request_user=request.user))
+
+
+@login_required
+def personal_material_detail(request, pk):
+    """
+    Show the extracted HTML preview (if any) for a PersonalMaterial.
+    * Owners can view private or public items.
+    * Other users see only PUBLIC items.
+    """
+    pm = get_object_or_404(PersonalMaterial, pk=pk)
+
+    # Visibility guard – non‑owners may only see PUBLIC items
+    if pm.visibility == PersonalMaterial.Visibility.PRIVATE and pm.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    context = {
+        "pm": pm,                 # used by the template
+    }
+    return render(request, "slm/personal_material_detail.html", context)
