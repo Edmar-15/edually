@@ -45,4 +45,40 @@ urlpatterns = [
         views.module_detail,
         name="module-detail",
     ),
+    
+    # -------------------------------------------------------------
+    # PERSONAL MATERIAL – CRUD + file‑replace
+    # -------------------------------------------------------------
+    # List & create (the “My learning materials” page)
+    path(
+        "api/personal-materials/",
+        views.api_personal_material_list,
+        name="personalmaterial-list",
+    ),
+    path(
+        "api/personal-materials/create/",
+        views.api_personal_material_create,
+        name="personalmaterial-create",
+    ),
+
+    # Detail – JSON only (used for edit)
+    path(
+        "api/personal-materials/<int:pk>/",
+        views.api_personal_material_update,
+        name="personalmaterial-update",
+    ),
+
+    # Delete
+    path(
+        "api/personal-materials/<int:pk>/delete/",
+        views.api_personal_material_delete,
+        name="personalmaterial-delete",
+    ),
+
+    # Replace the uploaded file (optional – separate endpoint)
+    path(
+        "api/personal-materials/<int:pk>/file/",
+        views.api_personal_material_file_replace,
+        name="personalmaterial-file-replace",
+    ),
 ]

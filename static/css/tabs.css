@@ -381,3 +381,29 @@
     border-color: rgba(14, 154, 167, 0.28);
     cursor: pointer;
 }
+
+/* -----------------------------------------------------------------
+   PERSONAL MATERIAL CARD – mirrors the module‑card style
+   ----------------------------------------------------------------- */
+.pm-card {
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:6px;
+  padding:1rem;
+  box-shadow:0 1px 3px rgba(0,0,0,.1);
+}
+.pm-card__header { margin-bottom:.75rem; }
+.pm-card__header h3 { margin:0; font-size:1.1rem; }
+.pm-card__meta { margin-top:.4rem; font-size:.85rem; color:#555; }
+.pm-card__pill {
+  background:#f1f5f9;
+  color:#334155;
+  padding:.2rem .5rem;
+  border-radius:4px;
+  margin-right:.4rem;
+}
+.pm-card__actions { margin-top:.75rem; display:flex; gap:.5rem; }
+.pm-card__action { background:none; border:none; cursor:pointer; }
+.pm-card__action--delete { color:#dc2626; }
+
+.pm-row { display:flex; gap:1rem; margin-bottom:1rem; }

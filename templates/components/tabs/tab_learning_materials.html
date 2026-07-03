@@ -1,0 +1,44 @@
+{% load static %}
+<section id="personal-material-widget"
+         class="personal-material-widget"
+         data-list-url="{% url 'slm:personalmaterial-list' %}"
+         data-create-url="{% url 'slm:personalmaterial-create' %}"
+         data-update-url="{% url 'slm:personalmaterial-update' 0 %}"
+         data-delete-url="{% url 'slm:personalmaterial-delete' 0 %}"
+         data-file-replace-url="{% url 'slm:personalmaterial-file-replace' 0 %}">
+
+    <!-- status line (ARIA live) -->
+    <p id="personal-material-status" aria-live="polite"></p>
+
+    <!-- **Add new material** – only for logged‑in users -->
+    
+    <section class="pm-form-card" aria-label="Add learning material">
+        <div class="pm-form__header">
+            <h3>Add a new material</h3>
+            <p>Upload a PDF, DOCX or PPTX and optionally make it public.</p>
+        </div>
+        <form class="pm-form">
+            <input id="pm-title-input" type="text" placeholder="Title" required>
+            <select id="pm-visibility-select">
+                <option value="PR">Private (only me)</option>
+                <option value="PU">Public (any logged‑in user)</option>
+            </select>
+            <input id="pm-file-input" type="file"
+                   accept=".pdf,.doc,.docx,.ppt,.pptx" required>
+            <button id="pm-add-btn" type="button">Add material</button>
+        </form>
+    </section>
+    
+
+    <!-- List that will be filled by the widget -->
+    <div id="personal-material-list"></div>
+
+    <!-- Modal placeholder – the script will populate it -->
+    <div id="pm-edit-modal" class="modal hidden"></div>
+</section>
+
+<script type="module">
+    import { initPersonalMaterialWidget } from "{% static 'js/slm/personal_material_ajax.js' %}";
+    const root = document.getElementById('personal-material-widget');
+    initPersonalMaterialWidget(root);
+</script>

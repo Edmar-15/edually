@@ -6,7 +6,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
-from .models import Subject, Module
+from .models import Subject, Module, PersonalMaterial
 import os
 from .content_extractor import extract_content
 import logging as logger
@@ -560,3 +560,239 @@ def module_detail(request, subject_id, module_id):
         "module": module,
     }
     return render(request, "slm/module_detail.html", context)
+
+
+# -----------------------------------------------------------------
+# PERSONAL MATERIAL – helpers
+# -----------------------------------------------------------------
+def personal_material_to_dict(pm, request_user=None):
+    """
+    Serialise a PersonalMaterial for the JS widget.
+    """
+    return {
+        "id": pm.id,
+        "title": pm.title,
+        "author_id": pm.author_id,
+        "author_name": str(pm.author),
+        "visibility": pm.visibility,
+        "visibility_display": pm.get_visibility_display(),
+        "file_url": pm.file.url if pm.file else "",
+        "extracted_html": pm.extracted_html or "",
+        "is_owner": request_user is not None and pm.author_id == request_user.id,
+        "created_at": pm.created_at.isoformat(),
+        "updated_at": pm.updated_at.isoformat(),
+    }
+
+
+# -------------------------------------------------------------
+# 1️⃣  LIST – GET (paginated)
+# -------------------------------------------------------------
+@require_GET
+@ensure_csrf_cookie
+def api_personal_material_list(request):
+    """
+    GET /slm/api/personal-materials/?page=1&visibility=all|public
+
+    * When the user is **authenticated**, we return:
+        – all his/her own materials (both PRIVATE and PUBLIC)
+        – plus, if ``visibility=public`` is supplied, every PUBLIC material
+          from any user (i.e. the “Public Learning Materials” page).
+
+    * When the user is **anonymous**, we only return PUBLIC materials.
+    """
+    # -----------------------------------------------------------------
+    # 1️⃣  Determine the filter
+    # -----------------------------------------------------------------
+    visibility = request.GET.get("visibility", "own")   # own | public | all
+    qs = PersonalMaterial.objects.all().select_related("author")
+
+    if request.user.is_authenticated:
+        if visibility == "own":
+            qs = qs.filter(author=request.user)                 # only mine
+        elif visibility == "public":
+            qs = qs.filter(visibility=PersonalMaterial.Visibility.PUBLIC)
+        else:   # “all” – my + public from others
+            qs = qs.filter(
+                models.Q(author=request.user) |
+                models.Q(visibility=PersonalMaterial.Visibility.PUBLIC)
+            )
+    else:
+        # anonymous users can only see PUBLIC things
+        qs = qs.filter(visibility=PersonalMaterial.Visibility.PUBLIC)
+
+    # -----------------------------------------------------------------
+    # 2️⃣  Pagination (reuse PAGE_SIZE from the top of the file)
+    # -----------------------------------------------------------------
+    paginator = Paginator(qs.order_by("-created_at"), PAGE_SIZE)
+    page_number = request.GET.get("page", 1)
+    try:
+        page_obj = paginator.page(page_number)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+
+    payload = {
+        "results": [
+            personal_material_to_dict(pm, request_user=request.user)
+            for pm in page_obj.object_list
+        ],
+        "page": page_obj.number,
+        "total_pages": paginator.num_pages,
+        "has_previous": page_obj.has_previous(),
+        "has_next": page_obj.has_next(),
+        "previous_page_number": page_obj.previous_page_number()
+        if page_obj.has_previous()
+        else None,
+        "next_page_number": page_obj.next_page_number()
+        if page_obj.has_next()
+        else None,
+    }
+    return JsonResponse(payload, safe=False)
+
+
+# -------------------------------------------------------------
+# 2️⃣  CREATE – POST (multipart/form‑data)
+# -------------------------------------------------------------
+@login_required
+@require_http_methods(["POST"])
+def api_personal_material_create(request):
+    """
+    POST /slm/api/personal-materials/create/
+    Expected fields:
+        title          – text
+        visibility     – “PR” or “PU”
+        file           – uploaded document (pdf/docx/pptx)
+    """
+    title = request.POST.get("title", "").strip()
+    visibility = request.POST.get("visibility", "").strip()
+    file_obj = request.FILES.get("file")
+
+    # ---- basic validation -------------------------------------------------
+    if not title:
+        return JsonResponse({"error": "Title is required"}, status=400)
+
+    if visibility not in dict(PersonalMaterial.Visibility.choices):
+        return JsonResponse(
+            {"error": "Invalid visibility – choose Private or Public"},
+            status=400,
+        )
+
+    try:
+        validate_module_file(file_obj)          # reuse the same helper as modules
+    except ValidationError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    # ---- create the model -------------------------------------------------
+    pm = PersonalMaterial.objects.create(
+        title=title,
+        author=request.user,
+        visibility=visibility,
+        file=file_obj,
+    )
+
+    # ---- run content extractor (optional) --------------------------------
+    try:
+        html = extract_content(pm.file)
+        pm.extracted_html = html
+        pm.save(update_fields=["extracted_html"])
+    except ValueError as exc:
+        logger.warning("Content extraction failed for PersonalMaterial %s: %s", pm.id, exc)
+
+    return JsonResponse(
+        personal_material_to_dict(pm, request_user=request.user),
+        status=201,
+    )
+
+
+# -------------------------------------------------------------
+# 3️⃣  UPDATE – PUT / PATCH (JSON only – metadata)
+# -------------------------------------------------------------
+@login_required
+@require_http_methods(["PUT", "PATCH"])
+def api_personal_material_update(request, pk):
+    """PUT /slm/api/personal-materials/<pk>/ – edit title / visibility."""
+    pm = get_object_or_404(PersonalMaterial, pk=pk)
+
+    if pm.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON")
+
+    if "title" in payload:
+        new_title = payload["title"].strip()
+        if not new_title:
+            return JsonResponse({"error": "Title cannot be blank"}, status=400)
+        pm.title = new_title
+
+    if "visibility" in payload:
+        new_vis = payload["visibility"]
+        if new_vis not in dict(PersonalMaterial.Visibility.choices):
+            return JsonResponse({"error": "Invalid visibility value"}, status=400)
+        pm.visibility = new_vis
+
+    pm.save()
+    return JsonResponse(personal_material_to_dict(pm, request_user=request.user))
+
+
+# -------------------------------------------------------------
+# 4️⃣  DELETE – DELETE
+# -------------------------------------------------------------
+@login_required
+@require_http_methods(["DELETE"])
+def api_personal_material_delete(request, pk):
+    """DELETE /slm/api/personal-materials/<pk>/delete/"""
+    pm = get_object_or_404(PersonalMaterial, pk=pk)
+
+    if pm.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    pm.delete()
+    return JsonResponse({}, status=204)
+
+
+# -------------------------------------------------------------
+# 5️⃣  FILE REPLACE – POST (multipart)
+# -------------------------------------------------------------
+@login_required
+@require_http_methods(["POST"])
+def api_personal_material_file_replace(request, pk):
+    """
+    POST /slm/api/personal-materials/<pk>/file/
+    Allows the owner to upload a new file for an existing material.
+    Content extraction is re‑run and the new HTML is saved.
+    """
+    pm = get_object_or_404(PersonalMaterial, pk=pk)
+
+    if pm.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    file_obj = request.FILES.get("file")
+    if not file_obj:
+        return JsonResponse({"error": "File missing"}, status=400)
+
+    try:
+        validate_module_file(file_obj)
+    except ValidationError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    # -----------------------------------------------------------------
+    # Replace the file and re‑extract
+    # -----------------------------------------------------------------
+    pm.file = file_obj
+    pm.save()                         # stores the file
+
+    try:
+        html = extract_content(pm.file)
+        pm.extracted_html = html
+        pm.save(update_fields=["extracted_html"])
+    except ValueError as exc:
+        logger.warning(
+            "Content extraction failed after file replace for PersonalMaterial %s: %s",
+            pm.id,
+            exc,
+        )
+        # continue – the file is still replaced
+
+    return JsonResponse(personal_material_to_dict(pm, request_user=request.user))
