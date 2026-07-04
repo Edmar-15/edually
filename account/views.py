@@ -4,8 +4,9 @@ from __future__ import annotations
 from datetime import datetime
 from urllib.parse import urlencode
 
+import json
 import requests
-from django.conf import settings
+from django.conf import settings as django_settings
 from django.contrib import messages
 from django.contrib.auth import (
     authenticate,
@@ -13,11 +14,13 @@ from django.contrib.auth import (
     login as auth_login,
 )
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
 # --------------------------------------------------------------
@@ -47,8 +50,8 @@ def _build_google_auth_url(state: str | None = None) -> str:
     """
     base_url = "https://accounts.google.com/o/oauth2/v2/auth"
     params = {
-        "client_id": settings.GOOGLE_CLIENT_ID,
-        "redirect_uri": settings.GOOGLE_OAUTH_REDIRECT_URI,
+        "client_id": django_settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": django_settings.GOOGLE_OAUTH_REDIRECT_URI,
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
@@ -67,9 +70,9 @@ def _exchange_code_for_tokens(code: str) -> dict:
     token_url = "https://oauth2.googleapis.com/token"
     data = {
         "code": code,
-        "client_id": settings.GOOGLE_CLIENT_ID,
-        "client_secret": settings.GOOGLE_CLIENT_SECRET,
-        "redirect_uri": settings.GOOGLE_OAUTH_REDIRECT_URI,
+        "client_id": django_settings.GOOGLE_CLIENT_ID,
+        "client_secret": django_settings.GOOGLE_CLIENT_SECRET,
+        "redirect_uri": django_settings.GOOGLE_OAUTH_REDIRECT_URI,
         "grant_type": "authorization_code",
     }
     resp = requests.post(token_url, data=data, timeout=10)
@@ -165,7 +168,7 @@ def google_callback(request):
         # Record consent immediately (the user is effectively “registering”)
         UserConsent.objects.create(
             user=user,
-            version=settings.POLICY_VERSION,
+            version=django_settings.POLICY_VERSION,
             accepted_at=timezone.now(),
         )
         messages.success(request, "Your EduAlly account was created via Google.")
@@ -174,7 +177,7 @@ def google_callback(request):
         if not hasattr(user, "consent"):
             UserConsent.objects.create(
                 user=user,
-                version=settings.POLICY_VERSION,
+                version=django_settings.POLICY_VERSION,
                 accepted_at=timezone.now(),
             )
 
@@ -194,6 +197,13 @@ def google_callback(request):
     return redirect(next_url)
 
 def register(request):
+    policy_context = {
+        "policy_version": django_settings.POLICY_VERSION,
+        "effective_date": datetime.strptime(
+            django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
+        ),
+    }
+
     if request.method == "POST":
         form = PublicRegisterForm(request.POST, request.FILES)
         if form.is_valid():
@@ -204,20 +214,13 @@ def register(request):
                 auth_login(request, user)
                 messages.success(request, "Welcome! Your account has been created.")
                 return redirect(reverse_lazy("account:dashboard"))
-            else:
-                messages.warning(request, "Account created but auto‑login failed. Please log in.")
-                return redirect(reverse_lazy("account:login"))
-        else:
-            messages.error(request, "Please fix the errors below.")
+            messages.warning(request, "Account created but auto-login failed. Please log in.")
+            return redirect(reverse_lazy("account:login"))
+
+        messages.error(request, "Please fix the errors below.")
     else:
         form = PublicRegisterForm()
-        
-        policy_context = {
-            "policy_version": settings.POLICY_VERSION,
-            "effective_date": datetime.strptime(
-                settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
-            ),
-        }
+
     return render(request, "account/register.html", {"form": form, **policy_context})
 
 def landing(request):
@@ -231,15 +234,38 @@ def dashboard(request):
 def profile(request):
     return render(request, 'account/profile.html')
 
+@login_required(login_url='account:login')
+@ensure_csrf_cookie
+def settings(request):
+    return render(request, 'account/settings.html')
+
+@require_POST
+def api_set_theme(request):
+    theme = request.POST.get('theme')
+    if theme is None:
+        try:
+            payload = json.loads(request.body or b'{}')
+            theme = payload.get('theme')
+        except Exception:
+            theme = None
+
+    if theme not in ('dark', 'light'):
+        return JsonResponse({'error': 'Invalid theme'}, status=400)
+
+    response = JsonResponse({'theme': theme})
+    max_age = 365 * 24 * 60 * 60
+    response.set_cookie('eduallyTheme', theme, max_age=max_age, httponly=False, samesite='Lax')
+    return response
+
 
 class PolicyBaseView(TemplateView):
     """Common base for both policies – inject version & effective date."""
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["policy_version"] = settings.POLICY_VERSION
+        context["policy_version"] = django_settings.POLICY_VERSION
         # Convert string → date for nicer display
         context["effective_date"] = datetime.strptime(
-            settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
+            django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
         )
         return context
     
@@ -256,7 +282,7 @@ class ConsentRequiredView(TemplateView):
         UserConsent.objects.update_or_create(
             user=request.user,
             defaults={
-                "version": settings.POLICY_VERSION,
+                "version": django_settings.POLICY_VERSION,
                 "accepted_at": timezone.now(),
             },
         )
@@ -266,8 +292,8 @@ class ConsentRequiredView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["policy_version"] = settings.POLICY_VERSION
+        ctx["policy_version"] = django_settings.POLICY_VERSION
         ctx["effective_date"] = datetime.strptime(
-            settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
+            django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
         )
         return ctx

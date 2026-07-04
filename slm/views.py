@@ -6,6 +6,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
+from django.db import models
 from .models import Subject, Module, PersonalMaterial
 import os
 from .content_extractor import extract_content
@@ -619,6 +620,15 @@ def api_personal_material_list(request):
     else:
         # anonymous users can only see PUBLIC things
         qs = qs.filter(visibility=PersonalMaterial.Visibility.PUBLIC)
+
+    file_type = request.GET.get("type")
+    if file_type in {"pdf", "doc", "ppt"}:
+        if file_type == "pdf":
+            qs = qs.filter(file__iendswith=".pdf")
+        elif file_type == "doc":
+            qs = qs.filter(models.Q(file__iendswith=".doc") | models.Q(file__iendswith=".docx"))
+        elif file_type == "ppt":
+            qs = qs.filter(models.Q(file__iendswith=".ppt") | models.Q(file__iendswith=".pptx"))
 
     # -----------------------------------------------------------------
     # 2️⃣  Pagination (reuse PAGE_SIZE from the top of the file)

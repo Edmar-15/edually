@@ -28,6 +28,18 @@
     </section>
     {% endif %}
 
+    <div class="pm-filter-row">
+        <label>
+            File type
+            <select id="pm-filter-type-select">
+                <option value="all">All types</option>
+                <option value="pdf">PDF</option>
+                <option value="doc">Word</option>
+                <option value="ppt">PowerPoint</option>
+            </select>
+        </label>
+    </div>
+
     <div id="personal-material-list"></div>
     <div id="pm-edit-modal" class="modal hidden"></div>
 </section>

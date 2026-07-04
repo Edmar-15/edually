@@ -44,6 +44,40 @@ export function initModuleWidget(rootEl) {
   const $addBtn     = rootEl.querySelector("#module-add-btn");
   const $modal      = rootEl.querySelector("#module-edit-modal");
 
+  function getModuleIconMarkup(fileUrl = "") {
+    const ext = (fileUrl || "").split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+
+    switch (ext) {
+      case "pdf":
+        return '<i class="fas fa-file-pdf" aria-hidden="true"></i>';
+      case "doc":
+      case "docx":
+        return '<i class="fas fa-file-word" aria-hidden="true"></i>';
+      case "ppt":
+      case "pptx":
+        return '<i class="fas fa-file-powerpoint" aria-hidden="true"></i>';
+      default:
+        return '<i class="fas fa-file-alt" aria-hidden="true"></i>';
+    }
+  }
+
+  function getModuleIconClass(fileUrl = "") {
+    const ext = (fileUrl || "").split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+
+    switch (ext) {
+      case "pdf":
+        return "module-card__preview--pdf";
+      case "doc":
+      case "docx":
+        return "module-card__preview--doc";
+      case "ppt":
+      case "pptx":
+        return "module-card__preview--ppt";
+      default:
+        return "";
+    }
+  }
+
   /* -----------------------------------------------------------------
    * 3️⃣  Render a single module card
    * ----------------------------------------------------------------- */
@@ -53,7 +87,8 @@ export function initModuleWidget(rootEl) {
     card.dataset.id = mod.id;
 
     const preview = document.createElement("div");
-    preview.className = "module-card__preview";
+    preview.className = `module-card__preview ${getModuleIconClass(mod.file_url)}`.trim();
+    preview.innerHTML = getModuleIconMarkup(mod.file_url);
     card.appendChild(preview);
 
     const body = document.createElement("div");
@@ -213,7 +248,7 @@ export function initModuleWidget(rootEl) {
       } else {
         let row;
         data.forEach((mod, idx) => {
-          if (idx % 3 === 0) {
+          if (idx % 4 === 0) {
             row = document.createElement("div");
             row.className = "module-row";
             $list.appendChild(row);

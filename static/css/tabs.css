@@ -19,13 +19,11 @@
     padding: .85rem 1.05rem;
     text-align: left;
     line-height: 1.3;
-    border-radius: 999px;
     transition: all 0.22s ease;
     box-shadow: 0 6px 14px rgba(31, 42, 71, 0.04);
 }
 
 .tab-card:hover {
-    transform: translateY(-2px);
     border-color: rgba(14, 154, 167, 0.28);
     box-shadow: 0 10px 18px rgba(14, 154, 167, 0.10);
 }
@@ -383,27 +381,358 @@
 }
 
 /* -----------------------------------------------------------------
-   PERSONAL MATERIAL CARD – mirrors the module‑card style
+   PERSONAL MATERIAL CARD – polished cards for learning materials
    ----------------------------------------------------------------- */
-.pm-card {
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:6px;
-  padding:1rem;
-  box-shadow:0 1px 3px rgba(0,0,0,.1);
+.personal-material-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
 }
-.pm-card__header { margin-bottom:.75rem; }
-.pm-card__header h3 { margin:0; font-size:1.1rem; }
-.pm-card__meta { margin-top:.4rem; font-size:.85rem; color:#555; }
-.pm-card__pill {
-  background:#f1f5f9;
-  color:#334155;
-  padding:.2rem .5rem;
-  border-radius:4px;
-  margin-right:.4rem;
-}
-.pm-card__actions { margin-top:.75rem; display:flex; gap:.5rem; }
-.pm-card__action { background:none; border:none; cursor:pointer; }
-.pm-card__action--delete { color:#dc2626; }
 
-.pm-row { display:flex; gap:1rem; margin-bottom:1rem; }
+#personal-material-status {
+  margin: 0;
+  min-height: 1.5rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.pm-form-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(14, 154, 167, 0.16);
+  border-radius: 20px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+  padding: 1.15rem;
+}
+
+.pm-form__header {
+  margin-bottom: 0.9rem;
+}
+
+.pm-form__header h3 {
+  margin: 0 0 0.25rem;
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.pm-form__header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.pm-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.pm-form input[type="text"],
+.pm-form input[type="file"],
+.pm-form select {
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  padding: 0.8rem 0.95rem;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.pm-form input:focus,
+.pm-form select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(14, 154, 167, 0.12);
+}
+
+.pm-form button {
+  border: none;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(14, 154, 167, 0.16);
+}
+
+.pm-form button:hover {
+  transform: translateY(-1px);
+}
+
+#personal-material-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pm-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f9fcff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 1rem 1.05rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.pm-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+}
+
+.pm-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.pm-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(14, 154, 167, 0.16), rgba(14, 154, 167, 0.28));
+  color: var(--primary);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.45);
+}
+
+.pm-card__icon i {
+  font-size: 1.3rem;
+}
+
+.fa-file-pdf,
+.fa-file-pdf:before,
+.fa-file-word,
+.fa-file-word:before,
+.fa-file-powerpoint,
+.fa-file-powerpoint:before {
+  font-size: 3rem;
+}
+
+.pm-card__icon--pdf {
+  background: rgba(220, 38, 38, 0.14);
+  color: #b91c1c;
+}
+
+.pm-card__icon--doc {
+  background: rgba(37, 99, 235, 0.14);
+  color: #2563eb;
+}
+
+.pm-card__icon--ppt {
+  background: rgba(234, 88, 12, 0.14);
+  color: #ea580c;
+}
+
+.pm-card__content {
+  flex: 1;
+}
+
+.pm-card__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.pm-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.pm-card__pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(14, 154, 167, 0.08);
+  color: var(--primary);
+  padding: 0.24rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.pm-card__pill--visibility {
+  min-width: 28px;
+  justify-content: center;
+  padding: 0.24rem 0.5rem;
+}
+
+.pm-card__pill--visibility i {
+  font-size: 0.86rem;
+}
+
+.pm-card__actions {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pm-card__actions .button,
+.pm-card__actions .button-plain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  text-decoration: none;
+  background: rgba(14, 154, 167, 0.1);
+  color: var(--primary);
+  border: 1px solid rgba(14, 154, 167, 0.16);
+  font-weight: 700;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.pm-card__actions .button:hover,
+.pm-card__actions .button-plain:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(14, 154, 167, 0.12);
+  background: rgba(14, 154, 167, 0.16);
+}
+
+.pm-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(14, 154, 167, 0.06);
+  border: 1px solid rgba(14, 154, 167, 0.12);
+  margin: 1.4rem 0;
+  align-items: center;
+}
+
+.pm-filter-row label {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  color: var(--text);
+  min-width: 180px;
+}
+
+.pm-filter-row label::after {
+  content: "▾";
+  position: absolute;
+  right: 0.9rem;
+  top: 3.6rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: rgba(15, 23, 42, 0.65);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.pm-filter-row label span,
+.pm-filter-row label strong {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.pm-filter-row select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  min-width: 180px;
+  padding: 0.85rem 1.1rem;
+  padding-right: 0px;
+  border-radius: 14px;
+  border: 1px solid rgba(102, 112, 133, 0.18);
+  background: #ffffff;
+  background-repeat: no-repeat;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pm-filter-row select::-ms-expand {
+  display: none;
+}
+
+.pm-filter-row select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(14, 154, 167, 0.12);
+}
+
+@media (max-width: 720px) {
+  .pm-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pm-filter-row label {
+    min-width: 0;
+  }
+}
+
+.pm-card__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: rgba(15, 23, 42, 0.04);
+  border: none;
+  border-radius: 10px;
+  color: var(--primary);
+  cursor: pointer;
+  transition: transform 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.pm-card__action svg {
+  width: 14px;
+  height: 14px;
+}
+
+.pm-card__action:hover,
+.pm-card__action:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(14, 154, 167, 0.12);
+  box-shadow: 0 6px 14px rgba(14, 154, 167, 0.12);
+}
+
+.pm-card__action--delete {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.pm-card__action--delete:hover,
+.pm-card__action--delete:focus-visible {
+  background: rgba(220, 38, 38, 0.12);
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.12);
+}
+
+.pm-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+@media (min-width: 900px) {
+  .pm-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .pm-form {
+    grid-template-columns: 1fr;
+  }
+
+  .pm-card__header {
+    flex-direction: column;
+  }
+}

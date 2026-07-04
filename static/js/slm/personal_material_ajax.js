@@ -38,8 +38,49 @@ export function initPersonalMaterialWidget(rootEl) {
   const $titleInput = rootEl.querySelector("#pm-title-input");
   const $fileInput = rootEl.querySelector("#pm-file-input");
   const $visibilitySelect = rootEl.querySelector("#pm-visibility-select");
+  const $filterVisibility = rootEl.querySelector("#pm-filter-visibility-select");
+  const $filterType = rootEl.querySelector("#pm-filter-type-select");
   const $addBtn = rootEl.querySelector("#pm-add-btn");
   const $modal = rootEl.querySelector("#pm-edit-modal");
+
+  const currentFilters = {
+    type: $filterType ? $filterType.value : "all",
+    visibility: rootEl.dataset.visibility || ($filterVisibility ? $filterVisibility.value : "own"),
+  };
+
+  function getMaterialIconMarkup(fileUrl = "") {
+    const ext = (fileUrl || "").split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+
+    switch (ext) {
+      case "pdf":
+        return '<i class="fas fa-file-pdf" aria-hidden="true"></i>';
+      case "doc":
+      case "docx":
+        return '<i class="fas fa-file-word" aria-hidden="true"></i>';
+      case "ppt":
+      case "pptx":
+        return '<i class="fas fa-file-powerpoint" aria-hidden="true"></i>';
+      default:
+        return '<i class="fas fa-file-alt" aria-hidden="true"></i>';
+    }
+  }
+
+  function getMaterialIconClass(fileUrl = "") {
+    const ext = (fileUrl || "").split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+
+    switch (ext) {
+      case "pdf":
+        return "pm-card__icon--pdf";
+      case "doc":
+      case "docx":
+        return "pm-card__icon--doc";
+      case "ppt":
+      case "pptx":
+        return "pm-card__icon--ppt";
+      default:
+        return "";
+    }
+  }
 
   // -----------------------------------------------------------------
   // Render a single material card
@@ -52,17 +93,27 @@ export function initPersonalMaterialWidget(rootEl) {
     const header = document.createElement("div");
     header.className = "pm-card__header";
 
+    const iconWrap = document.createElement("div");
+    iconWrap.className = `pm-card__icon ${getMaterialIconClass(pm.file_url)}`.trim();
+    iconWrap.innerHTML = getMaterialIconMarkup(pm.file_url);
+    header.appendChild(iconWrap);
+
+    const content = document.createElement("div");
+    content.className = "pm-card__content";
+
     const title = document.createElement("h3");
     title.textContent = pm.title;
-    header.appendChild(title);
+    content.appendChild(title);
 
     const meta = document.createElement("div");
     meta.className = "pm-card__meta";
 
     // visibility pill
     const visPill = document.createElement("span");
-    visPill.className = "pm-card__pill";
-    visPill.textContent = pm.visibility_display;
+    visPill.className = "pm-card__pill pm-card__pill--visibility";
+    visPill.innerHTML = pm.visibility === "PU"
+      ? '<i class="fas fa-globe" aria-hidden="true" title="Public"></i>'
+      : '<i class="fas fa-lock" aria-hidden="true" title="Private"></i>';
     meta.appendChild(visPill);
 
     // author pill
@@ -71,7 +122,8 @@ export function initPersonalMaterialWidget(rootEl) {
     authorPill.textContent = `by ${pm.author_name}`;
     meta.appendChild(authorPill);
 
-    header.appendChild(meta);
+    content.appendChild(meta);
+    header.appendChild(content);
     card.appendChild(header);
 
     // actions – always show “Download” and a “View” button
@@ -189,8 +241,17 @@ export function initPersonalMaterialWidget(rootEl) {
   // -----------------------------------------------------------------
   async function load(page = 1) {
     try {
-      const extra = rootEl.dataset.visibility ? `&visibility=${rootEl.dataset.visibility}` : "";
-      const resp = await fetch(`${listUrl}?page=${page}${extra}`, {
+      const params = new URLSearchParams({ page });
+      if (rootEl.dataset.visibility) {
+        params.set("visibility", rootEl.dataset.visibility);
+      } else {
+        params.set("visibility", currentFilters.visibility);
+      }
+      if (currentFilters.type && currentFilters.type !== "all") {
+        params.set("type", currentFilters.type);
+      }
+
+      const resp = await fetch(`${listUrl}?${params.toString()}`, {
         credentials: "same-origin",
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -215,6 +276,26 @@ export function initPersonalMaterialWidget(rootEl) {
     } catch (e) {
       $status.textContent = `❌ ${e}`;
     }
+  }
+
+  function attachFilters() {
+    if ($filterVisibility) {
+      $filterVisibility.addEventListener("change", (event) => {
+        currentFilters.visibility = event.target.value;
+        load(1);
+      });
+    }
+
+    if ($filterType) {
+      $filterType.addEventListener("change", (event) => {
+        currentFilters.type = event.target.value;
+        load(1);
+      });
+    }
+  }
+
+  if ($filterVisibility || $filterType) {
+    attachFilters();
   }
 
   // -----------------------------------------------------------------

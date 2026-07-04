@@ -30,6 +30,8 @@
             <div class="module-content">
                 {% if pm.extracted_html %}
                     {{ pm.extracted_html|safe }}
+                {% elif pm.file_url and pm.file_url|lower|slice:"-4:" == ".pdf" %}
+                    <iframe src="{{ pm.file_url }}" class="pdf-preview" title="PDF preview" allowfullscreen></iframe>
                 {% else %}
                     <p><em>No extracted preview is available for this file.</em></p>
                 {% endif %}

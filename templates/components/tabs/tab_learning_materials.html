@@ -28,7 +28,26 @@
             <button id="pm-add-btn" type="button">Add material</button>
         </form>
     </section>
-    
+
+    <div class="pm-filter-row">
+        <label>
+            Visibility
+            <select id="pm-filter-visibility-select">
+                <option value="own">My materials</option>
+                <option value="public">Public materials</option>
+                <option value="all">All materials</option>
+            </select>
+        </label>
+        <label>
+            File type
+            <select id="pm-filter-type-select">
+                <option value="all">All types</option>
+                <option value="pdf">PDF</option>
+                <option value="doc">Word</option>
+                <option value="ppt">PowerPoint</option>
+            </select>
+        </label>
+    </div>
 
     <!-- List that will be filled by the widget -->
     <div id="personal-material-list"></div>

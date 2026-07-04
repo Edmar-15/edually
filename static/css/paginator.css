@@ -8,36 +8,8 @@
    -------------------------------------------------------------- */
 
 /* ---- Root variables ------------------------------------------------ */
-:root {
-  /* Colours */
-  --pgn-bg:           #ffffff;
-  --pgn-bg-dark:      #1e1e1e;
-  --pgn-fg:           #1a1a1a;
-  --pgn-fg-dark:      #e5e5e5;
-  --pgn-primary:     #0E9AA7;
-  --pgn-primary-dark:#4d9aff;
-  --pgn-muted:        #777777;
-  --pgn-muted-dark:   #b3b3b3;
-  --pgn-border:       #dfe7ef;
-  --pgn-border-dark:  #333333;
 
-  /* Sizing */
-  --pgn-radius:      999px;
-  --pgn-px:           .75rem;   /* horizontal padding */
-  --pgn-py:           .45rem;   /* vertical padding */
-  --pgn-gap:          .35rem;   /* space between items */
-}
 
-/* Dark‑mode overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pgn-bg:        var(--pgn-bg-dark);
-    --pgn-fg:        var(--pgn-fg-dark);
-    --pgn-muted:     var(--pgn-muted-dark);
-    --pgn-border:   var(--pgn-border-dark);
-    --pgn-primary:  var(--pgn-primary-dark);
-  }
-}
 
 /* --------------------------------------------------------------
    Main container

@@ -153,7 +153,7 @@ body {
 .hero-blob { position:absolute; right:-40px; top:-80px; width:360px; height:360px; filter: blur(18px); z-index:0; }
 .hero-card { z-index:2; }
 .trust-row { display:flex; gap:10px; margin-top:14px; }
-.trust-pill { background: linear-gradient(90deg,var(--teal),var(--coral)); color:#fff; padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; }
+.trust-pill { background: #0e9aa7; color:#fff; padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; }
 .hero-card h2 { margin:0 0 12px; font-size:1.8rem; }
 .hero-card p  { margin:0; color:var(--muted); line-height:1.8; }
 

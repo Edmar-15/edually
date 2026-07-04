@@ -1,5 +1,12 @@
-<aside class="sidebar">
+{% load static %}
+<aside id="sidebar" class="sidebar Sidebar" role="navigation" aria-label="Primary navigation">
   <div class="sidebar-header">
+    <button type="button" class="sidebar-trigger" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse navigation sidebar">
+      <span class="sr-only">Toggle sidebar</span>
+      <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
     <h2 class="sidebar-logo">EduAlly</h2>
   </div>
 
@@ -24,6 +31,10 @@
       <i class="fas fa-user-circle nav-icon"></i>
       <span class="nav-label">Profile</span>
     </a>
+    <a href="{% url 'account:settings' %}" class="nav-item {% if request.resolver_match.view_name == 'account:settings' %}active{% endif %}">
+      <i class="fas fa-cog nav-icon"></i>
+      <span class="nav-label">Settings</span>
+    </a>
   </nav>
 
   <div class="sidebar-footer">
@@ -36,3 +47,4 @@
     </form>
   </div>
 </aside>
+<script src="{% static 'js/sidebar-toggle.js' %}" defer></script>

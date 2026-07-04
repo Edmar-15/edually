@@ -157,10 +157,10 @@ label {
 /* Inputs */
 input {
     width: 100%;
-    padding: 14px 16px;
+    padding: 17px 16px;
     border-radius: 16px;
     border: 1px solid rgba(148, 163, 184, 0.24);
-    background: #f8fafc;
+    background: transparent;
     font-size: 1rem;
     color: var(--text);
     margin-bottom: 18px;
