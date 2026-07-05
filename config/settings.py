@@ -144,6 +144,10 @@ LOGOUT_REDIRECT_URL = 'account:landing'
 POLICY_VERSION = "1.0"
 POLICY_EFFECTIVE_DATE = "2026-04-01"      # YYYY‑MM‑DD format
 
+OLLAMA_API_KEY = ""
+OLLAMA_HOST = ""
+OLLAMA_MODEL = ""
+
 # --------------------------------------------------------------
 # Google OAuth2 configuration
 # --------------------------------------------------------------

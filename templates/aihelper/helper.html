@@ -4,76 +4,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduAlly - AI Helper</title>
+    <title>EduAlly – AI Helper</title>
+
+    <!-- FontAwesome & base styles you already use -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
-    <link rel="stylesheet" href="{% static "css/helper.css" %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+
+    <!-- Helper‑specific CSS -->
+    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
 </head>
 <body>
-    <div class="dashboard-container">
-        {% include "components/navigations.html" %}
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
 
-        <main class="main-content">
-            <div class="ai-helper-page">
-                <section class="chat-shell">
-                    <section class="chat-area">
-                        <header class="chat-header">
-                            <div>
-                                <p class="eyebrow">AI Helper</p>
-                                <h1>Ask questions, explore concepts, and learn at your own pace.</h1>
-                            </div>
-                            <p class="chat-note">This interface is designed to feel approachable and guide you gently toward deeper understanding.</p>
-                        </header>
+    <main class="main-content">
+        <section class="ai-helper-page">
+            <div class="chat-shell">
 
-                        <div class="chat-window">
-                            <div class="chat-card">
-                                <div class="message ai-message">
-                                    <div class="message-avatar">AI</div>
-                                    <div class="message-body">
-                                        <p class="message-author">EduAlly</p>
-                                        <p class="message-text">Hi! What topic would you like help with today?</p>
-                                    </div>
-                                </div>
-                                <div class="message user-message">
-                                    <div class="message-avatar user-avatar">You</div>
-                                    <div class="message-body">
-                                        <p class="message-author">Student</p>
-                                        <p class="message-text">Can you explain the main idea behind the module's first lesson?</p>
-                                    </div>
-                                </div>
-                                <div class="message ai-message">
-                                    <div class="message-avatar">AI</div>
-                                    <div class="message-body">
-                                        <p class="message-author">EduAlly</p>
-                                        <p class="message-text">Sure! Let's break it down into simple steps so it's easier to understand.</p>
-                                    </div>
-                                </div>
-                            </div>
+                <!-- ──────── LEFT: HISTORY LIST ──────── -->
+                <aside class="chat-history">
+                    <h2 class="sidebar-title">Previous queries</h2>
+                    <ul class="history-list">
+                        {% for msg in history %}
+                            {% if msg.role == "user" %}
+                                <li class="history-item"
+                                    data-question="{{ msg.content|escapejs }}">
+                                    <i class="fa-solid fa-user"></i>
+                                    {{ msg.content|truncatechars:30 }}
+                                </li>
+                            {% endif %}
+                        {% empty %}
+                            <li class="history-empty">No history yet.</li>
+                        {% endfor %}
+                    </ul>
+                </aside>
 
-                            <form class="chat-form" action="#" method="post">
-                                <label for="chat-input" class="sr-only">Type your question</label>
-                                <div class="input-row">
-                                    <input id="chat-input" type="text" placeholder="Type your question or concept here..." autocomplete="off">
-                                    <button type="submit" class="button send-button">Send</button>
-                                </div>
-                            </form>
+                <!-- ──────── RIGHT: ACTIVE CONVERSATION ──────── -->
+                <section class="chat-area">
+                    <header class="chat-header">
+                        <div>
+                            <p class="eyebrow">AI Helper</p>
+                            <h1>Ask questions, explore concepts, and learn at your own pace.</h1>
                         </div>
-                    </section>
+                        <p class="chat-note">
+                            This interface is designed to feel approachable and guide you gently toward deeper understanding.
+                        </p>
+                    </header>
 
-                    <aside class="chat-controls">
-                        <div class="toggle-panel">
-                            <p class="toggle-title">Deep-Dive Level</p>
-                            <div class="toggle-group">
-                                <button type="button" class="toggle-button active">Easy</button>
-                                <button type="button" class="toggle-button">Technical</button>
-                                <button type="button" class="toggle-button">Advanced</button>
+                    <div class="chat-window" id="chat-window">
+                        {% for msg in history %}
+                            <div class="message {{ msg.role }}-message">
+                                <div class="message-avatar">
+                                    {% if msg.role == "ai" %}AI{% else %}You{% endif %}
+                                </div>
+                                <div class="message-body">
+                                    <p class="message-author">
+                                        {% if msg.role == "ai" %}EduAlly{% else %}Student{% endif %}
+                                    </p>
+                                    <p class="message-text">{{ msg.content }}</p>
+                                </div>
                             </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- INPUT FORM -->
+                    <form id="chat-form" class="chat-form" autocomplete="off">
+                        <div class="input-row">
+                            <input id="chat-input"
+                                   type="text"
+                                   placeholder="Type your question or concept here..."
+                                   required
+                                   autocomplete="off">
+
+                            <!-- Explanation‑level selector -->
+                            <select id="explanation-level" class="explanation-select">
+                                <option value="easy" selected>Easy</option>
+                                <option value="technical">Technical</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+
+                            <button type="submit" class="button send-button">
+                                <i class="fa-solid fa-paper-plane"></i> Send
+                            </button>
                         </div>
-                    </aside>
+                    </form>
                 </section>
             </div>
-        </main>
-    </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    // This variable is available to any script that runs after this tag.
+    const AI_HELPER_API_URL = "{% url 'aihelper:helper_api' %}";
+</script>
+
+<!-- NEW JS for UI logic (still a static file) -->
+<script src="{% static 'js/ai-helper.js' %}"></script>
 </body>
 </html>
