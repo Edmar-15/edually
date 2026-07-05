@@ -1,12 +1,11 @@
 # aihelper/views.py
 import json
 import logging
-
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
-
+from .explanations import system_prompt_for
 from .models import Message, Conversation
 
 # ----------------------------------------------------------------------
@@ -23,10 +22,9 @@ log = logging.getLogger(__name__)
 # ----------------------------------------------------------------------
 # Helper that actually contacts Ollama Cloud
 # ----------------------------------------------------------------------
-def _call_ollama(question: str, level: str) -> str:
+def _call_ollama(question: str, system_prompt: str) -> str:
     """
-    Sends *question* to Ollama Cloud and returns the model's answer.
-    All configuration lives in ``settings.py``.
+    Sends *question* to Ollama Cloud using the supplied *system_prompt*.
     """
     if OllamaClient is None:
         raise RuntimeError("ollama Python client not installed")
@@ -36,10 +34,9 @@ def _call_ollama(question: str, level: str) -> str:
         headers={"Authorization": f"Bearer {settings.OLLAMA_API_KEY}"},
     )
 
-    system_prompt = f"You are an educational assistant. Provide a {level} explanation."
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": question},
+        {"role": "user",   "content": question},
     ]
 
     resp = client.chat(
@@ -131,46 +128,57 @@ def get_conversation(request, pk):
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
 def helper_api(request):
-    """Accept a POST with a question, call Ollama, store -> return answer."""
+    """Accept a POST with a question, call Ollama, store → return answer."""
     if request.method != "POST":
         return HttpResponseBadRequest("POST only")
 
     payload = json.loads(request.body)
 
     question = payload.get("question")
-    level = payload.get("explanation_level", "easy")
+    # ← Payload.get already gives you a default if the key is missing.
+    level   = payload.get("explanation_level", "simplified")
     conv_id = payload.get("conversation_id")          # may be None
 
     if not question:
         return JsonResponse({"error": "No question supplied"}, status=400)
 
     # ------------------------------------------------------------------
-    # Find or create the conversation we will write to
+    # 1️⃣ Resolve the system prompt for the requested level.
+    # ------------------------------------------------------------------
+    try:
+        system_prompt = system_prompt_for(level, question)
+    except ValueError as exc:          # unknown level – fallback to simplified
+        log.warning("Invalid explanation level %r – using simplified", level)
+        system_prompt = system_prompt_for("simplified", question)
+
+    # ------------------------------------------------------------------
+    # 2️⃣ Find or create the conversation we will write to
     # ------------------------------------------------------------------
     if conv_id:
         conversation = get_object_or_404(
             Conversation, pk=conv_id, user=request.user
         )
     else:
-        # No conversation yet → create a brand‑new one.
         conversation = Conversation.objects.create(
             user=request.user,
-            title=question[:80],          # store a preview for the mini‑map
+            title=question[:80],
         )
 
     # ------------------------------------------------------------------
-    # Call Ollama (fallback on error)
+    # 3️⃣ Call Ollama (fallback on error)
     # ------------------------------------------------------------------
     try:
-        ai_reply = _call_ollama(question, level)
+        ai_reply = _call_ollama(question, system_prompt)
     except Exception as exc:               # pragma: no cover – exercised via test mock
         log.error("Ollama request failed – falling back to canned response: %s", exc)
+        # Keep the fallback wording *consistent* with the chosen level.
         ai_reply = (
-            f"[{level.title()} explanation] (fallback) Here is a short answer to: “{question}”."
+            f"[{level.title()} explanation] (fallback) Here is a short answer to: "
+            f"“{question}”."
         )
 
     # ------------------------------------------------------------------
-    # Persist both user + AI messages inside the same conversation
+    # 4️⃣ Persist both user + AI messages inside the same conversation
     # ------------------------------------------------------------------
     Message.objects.bulk_create(
         [
@@ -189,16 +197,15 @@ def helper_api(request):
         ]
     )
 
-    # If this was the **first** message we also want the conversation title to
-    # reflect it (overwrite the generic auto‑title we set on creation).
+    # Keep the title in sync if this was the first message.
     if not conversation.title:
         conversation.title = question[:80]
         conversation.save(update_fields=["title"])
 
     return JsonResponse(
         {
-            "answer": ai_reply,
-            "conversation_id": conversation.id,
-            "title": conversation.title,
+            "answer":           ai_reply,
+            "conversation_id":  conversation.id,
+            "title":            conversation.title,
         }
     )
