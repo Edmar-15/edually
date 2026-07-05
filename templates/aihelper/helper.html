@@ -6,12 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduAlly – AI Helper</title>
 
-    <!-- FontAwesome & base styles you already use -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-
-    <!-- Helper‑specific CSS -->
     <link rel="stylesheet" href="{% static 'css/helper.css' %}">
 </head>
 <body>
@@ -22,26 +20,26 @@
         <section class="ai-helper-page">
             <div class="chat-shell">
 
-                <!-- ──────── LEFT: HISTORY LIST ──────── -->
-                <aside class="chat-history">
-                    <h2 class="sidebar-title">Previous queries</h2>
-                    <ul class="history-list">
-                        {% for msg in history %}
-                            {% if msg.role == "user" %}
-                                <li class="history-item"
-                                    data-question="{{ msg.content|escapejs }}">
-                                    <i class="fa-solid fa-user"></i>
-                                    {{ msg.content|truncatechars:30 }}
-                                </li>
-                            {% endif %}
+                <!-- ──────── LEFT: CONVERSATION LIST (mini‑map) ──────── -->
+                <aside class="conversation-map">
+                    <h2>Conversations</h2>
+                    <ul id="conversation-list" class="conversation-list">
+                        {% for conv in conversations %}
+                            <li class="conversation-item {% if conv.id|stringformat:'s' == active_conversation_id %}active{% endif %}"
+                                data-id="{{ conv.id }}"
+                                data-title="{{ conv.title|escapejs }}">
+                                <i class="fa-solid fa-comments"></i>
+                                {{ conv.title|truncatechars:30 }}
+                            </li>
                         {% empty %}
-                            <li class="history-empty">No history yet.</li>
+                            <li class="conversation-empty">No conversations yet.</li>
                         {% endfor %}
                     </ul>
                 </aside>
 
-                <!-- ──────── RIGHT: ACTIVE CONVERSATION ──────── -->
+                <!-- ──────── RIGHT: ACTIVE CHAT ──────── -->
                 <section class="chat-area">
+
                     <header class="chat-header">
                         <div>
                             <p class="eyebrow">AI Helper</p>
@@ -66,9 +64,13 @@
                                 </div>
                             </div>
                         {% endfor %}
+
+                        <!--  Mini‑map progress bar – will be populated & updated by JS  -->
+                        <div class="message-minimap">
+                            <div class="progress"></div>
+                        </div>
                     </div>
 
-                    <!-- INPUT FORM -->
                     <form id="chat-form" class="chat-form" autocomplete="off">
                         <div class="input-row">
                             <input id="chat-input"
@@ -77,7 +79,6 @@
                                    required
                                    autocomplete="off">
 
-                            <!-- Explanation‑level selector -->
                             <select id="explanation-level" class="explanation-select">
                                 <option value="easy" selected>Easy</option>
                                 <option value="technical">Technical</option>
@@ -90,17 +91,19 @@
                         </div>
                     </form>
                 </section>
-            </div>
+                <!-- END .chat-area -->
+
+            </div> <!-- /.chat-shell -->
         </section>
     </main>
 </div>
 
 <script>
-    // This variable is available to any script that runs after this tag.
     const AI_HELPER_API_URL = "{% url 'aihelper:helper_api' %}";
+    const LIST_CONV_URL    = "{% url 'aihelper:list_conversations' %}";
+    const GET_CONV_URL     = "{% url 'aihelper:get_conversation' 0 %}".replace('/0/', '/'); // we'll append the id later
 </script>
 
-<!-- NEW JS for UI logic (still a static file) -->
 <script src="{% static 'js/ai-helper.js' %}"></script>
 </body>
 </html>
