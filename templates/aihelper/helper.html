@@ -20,78 +20,111 @@
         <section class="ai-helper-page">
             <div class="chat-shell">
 
-                <!-- ──────── LEFT: CONVERSATION LIST (mini‑map) ──────── -->
-                <aside class="conversation-map">
-                    <h2>Conversations</h2>
-                    <ul id="conversation-list" class="conversation-list">
-                        {% for conv in conversations %}
-                            <li class="conversation-item {% if conv.id|stringformat:'s' == active_conversation_id %}active{% endif %}"
-                                data-id="{{ conv.id }}"
-                                data-title="{{ conv.title|escapejs }}">
-                                <i class="fa-solid fa-comments"></i>
-                                {{ conv.title|truncatechars:30 }}
-                            </li>
-                        {% empty %}
-                            <li class="conversation-empty">No conversations yet.</li>
-                        {% endfor %}
-                    </ul>
-                </aside>
+                <!-- ──────── RIGHT: CONVERSATION LIST PANEL ──────── -->
+                <div class="conversation-panel">
+                    <aside class="conversation-map" id="conversation-map">
+                        <div class="conversation-resizer" id="conversation-resizer" title="Drag to resize"></div>
+                        <div class="conversation-map-header">
+                            <div>
+                                <p class="conversation-label">Workspace</p>
+                                <h2>Conversations</h2>
+                            </div>
+                            <a href="{% url 'aihelper:helper' %}" class="new-chat-button" title="Start a new chat">
+                                <i class="fa-solid fa-plus"></i>
+                            </a>
+                        </div>
+                        <ul id="conversation-list" class="conversation-list">
+                            {% for conv in conversation_summaries %}
+                                <li class="conversation-item {% if conv.id|stringformat:'s' == active_conversation_id %}active{% endif %}"
+                                    data-id="{{ conv.id }}"
+                                    data-title="{{ conv.prompt|escapejs }}">
+                                    <span>{{ conv.prompt|truncatechars:60 }}</span>
+                                </li>
+                            {% empty %}
+                                <li class="conversation-empty">No conversations yet.</li>
+                            {% endfor %}
+                        </ul>
+                    </aside>
 
-                <!-- ──────── RIGHT: ACTIVE CHAT ──────── -->
-                <section class="chat-area">
+                </div>
+
+                <!-- ──────── LEFT: ACTIVE CHAT PANEL ──────── -->
+                <div class="chat-panel">
+                    <section class="chat-area">
 
                     <header class="chat-header">
-                        <div>
-                            <p class="eyebrow">AI Helper</p>
-                            <h1>Ask questions, explore concepts, and learn at your own pace.</h1>
+                        <div class="chat-header-top">
+                            <div id="chat-header-badge" class="chat-header-badge" title="Current conversation">
+                                <i class="fa-solid fa-robot"></i>
+                                <span id="chat-header-badge-text">{{ active_title|default:"New conversation" }}</span>
+                            </div>
+                            <div class="chat-header-actions">
+                                <div class="minimap-dropdown">
+                                    <button id="minimap-toggle" class="minimap-button" aria-expanded="false" title="Open conversations">
+                                        <i class="fa-solid fa-list-ul"></i>
+                                    </button>
+                                    <div id="minimap-popup" class="minimap-popup hidden" role="dialog" aria-label="Prompt history minimap">
+                                        <div class="minimap-header">Prompt history</div>
+                                        <ul id="minimap-list" class="minimap-list"></ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <p class="chat-note">
-                            This interface is designed to feel approachable and guide you gently toward deeper understanding.
-                        </p>
+                        <h1>Ask questions, explore concepts, and learn at your own pace.</h1>
                     </header>
 
                     <div class="chat-window" id="chat-window">
+                        {% if not history %}
+                            <div class="empty-state">
+                                <i class="fa-solid fa-comments"></i>
+                                <h3>How can EduAlly help today?</h3>
+                                <p>Start a conversation with a question, concept, or topic you want to understand better.</p>
+                            </div>
+                        {% endif %}
                         {% for msg in history %}
                             <div class="message {{ msg.role }}-message">
                                 <div class="message-avatar">
                                     {% if msg.role == "ai" %}AI{% else %}You{% endif %}
                                 </div>
                                 <div class="message-body">
-                                    <p class="message-author">
-                                        {% if msg.role == "ai" %}EduAlly{% else %}Student{% endif %}
-                                    </p>
                                     <p class="message-text">{{ msg.content }}</p>
                                 </div>
                             </div>
                         {% endfor %}
 
-                        <!--  Mini‑map progress bar – will be populated & updated by JS  -->
-                        <div class="message-minimap">
-                            <div class="progress"></div>
+                        <div class="chat-loading hidden" id="chat-loading">
+                            <div class="typing-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <p>EduAlly is analyzing your question...</p>
                         </div>
+
+                        <!-- Move the chat form inside the chat-window so it's
+                             visually combined with messages and scrolls with them. -->
+                        <form id="chat-form" class="chat-form" autocomplete="off">
+                            <div class="input-row">
+                                <input id="chat-input"
+                                       type="text"
+                                       placeholder="Type your question or concept here..."
+                                       required
+                                       autocomplete="off">
+
+                                <select id="explanation-level" class="explanation-select">
+                                    <option value="simplified" selected>Simplified</option>
+                                    <option value="technical">Technical</option>
+                                    <option value="socratic">Socratic</option>
+                                </select>
+
+                                <button type="submit" class="button send-button">
+                                    <i class="fa-solid fa-paper-plane"></i> Send
+                                </button>
+                            </div>
+                        </form>
+
                     </div>
-
-                    <form id="chat-form" class="chat-form" autocomplete="off">
-                        <div class="input-row">
-                            <input id="chat-input"
-                                   type="text"
-                                   placeholder="Type your question or concept here..."
-                                   required
-                                   autocomplete="off">
-
-                            <select id="explanation-level" class="explanation-select">
-                                <option value="simplified" selected>Simplified</option>
-                                <option value="technical">Technical</option>
-                                <option value="socratic">Socratic</option>
-                            </select>
-
-                            <button type="submit" class="button send-button">
-                                <i class="fa-solid fa-paper-plane"></i> Send
-                            </button>
-                        </div>
-                    </form>
-                </section>
-                <!-- END .chat-area -->
+                    </section>
+                </div>
+                <!-- END .chat-panel -->
 
             </div> <!-- /.chat-shell -->
         </section>

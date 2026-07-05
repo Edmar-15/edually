@@ -69,6 +69,29 @@ def _call_ollama(messages: list[dict]) -> str:
     return resp["message"]["content"]
 
 
+def _conversation_summaries(user) -> list[dict]:
+    """Build lightweight summaries with the first user prompt as the display text."""
+    conversations = Conversation.objects.filter(user=user).prefetch_related("messages")
+    summaries = []
+    for conversation in conversations:
+        first_user_prompt = (
+            conversation.messages.filter(role="user")
+            .order_by("created_at")
+            .values_list("content", flat=True)
+            .first()
+        )
+        prompt = (first_user_prompt or conversation.title or f"Conversation {conversation.id}").strip()
+        summaries.append(
+            {
+                "id": conversation.id,
+                "title": prompt,
+                "prompt": prompt,
+                "created_at": conversation.created_at,
+            }
+        )
+    return summaries
+
+
 # ----------------------------------------------------------------------
 # 2️⃣ Page view – renders the chat UI
 # ----------------------------------------------------------------------
@@ -89,14 +112,15 @@ def helper(request):
         messages = []  # no messages yet
 
     # Load *all* conversations for the right‑hand mini‑map
-    conversations = Conversation.objects.filter(user=request.user)
+    conversation_summaries = _conversation_summaries(request.user)
 
     return render(
         request,
         "aihelper/helper.html",
         {
             "history": messages,               # messages of the active thread
-            "conversations": conversations,   # for the mini‑map
+            "conversations": conversation_summaries,   # for the mini‑map
+            "conversation_summaries": conversation_summaries,
             "active_conversation_id": conv_id,
         },
     )
@@ -108,17 +132,15 @@ def helper(request):
 @login_required(login_url="account:login")
 def list_conversations(request):
     """Return a tiny JSON payload for the right‑hand mini‑map."""
-    conversations = Conversation.objects.filter(user=request.user).values(
-        "id", "title", "created_at"
-    )
-    # Turn ``created_at`` into iso‑string for the front‑end
+    summaries = _conversation_summaries(request.user)
     payload = [
         {
-            "id": c["id"],
-            "title": c["title"] or f"Conversation {c['id']}",
-            "created_at": c["created_at"].isoformat(),
+            "id": item["id"],
+            "title": item["title"],
+            "prompt": item["prompt"],
+            "created_at": item["created_at"].isoformat(),
         }
-        for c in conversations
+        for item in summaries
     ]
     return JsonResponse({"conversations": payload})
 
