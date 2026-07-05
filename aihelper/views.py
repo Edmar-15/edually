@@ -20,11 +20,38 @@ except Exception:          # pragma: no cover – defensive fallback
 log = logging.getLogger(__name__)
 
 # ----------------------------------------------------------------------
-# Helper that actually contacts Ollama Cloud
+# 0️⃣ Utility – fetch the most recent *n* turns (default 8) from a conversation
 # ----------------------------------------------------------------------
-def _call_ollama(question: str, system_prompt: str) -> str:
+def _last_n_turns(conversation: Conversation, n_turns: int = 8) -> list[dict]:
     """
-    Sends *question* to Ollama Cloud using the supplied *system_prompt*.
+    Return a list of ``{'role': ..., 'content': ...}`` dictionaries representing the
+    last ``n_turns`` *pairs* (user + AI) from *conversation* ordered **chronologically**.
+
+    The DB stores each message separately, so we fetch up to ``2 * n_turns``
+    rows, slice the newest ones, then reverse them so the oldest message appears
+    first – exactly what Ollama expects.
+    """
+    # Grab the newest ``2 * n_turns`` rows (user + ai for each turn)
+    recent_qs = (
+        conversation.messages.select_related("user")
+        .order_by("-created_at")                # newest first
+        .values("role", "content")[: 2 * n_turns]
+    )
+    recent = list(recent_qs)
+    # Reverse to chronological order (oldest → newest) for the model.
+    recent.reverse()
+    # Return in the exact shape the Ollama API expects.
+    return [{"role": r["role"], "content": r["content"]} for r in recent]
+
+# ----------------------------------------------------------------------
+# 1️⃣ Helper that actually contacts Ollama Cloud
+# ----------------------------------------------------------------------
+def _call_ollama(messages: list[dict]) -> str:
+    """
+    Sends a **pre‑formatted** list of ``messages`` to Ollama Cloud and returns the
+    assistant’s reply. ``messages`` must already contain a leading ``system``
+    entry, followed by the ordered conversation history (user/ai alternating)
+    and finally the *current* user question.
     """
     if OllamaClient is None:
         raise RuntimeError("ollama Python client not installed")
@@ -33,11 +60,6 @@ def _call_ollama(question: str, system_prompt: str) -> str:
         host=settings.OLLAMA_HOST,
         headers={"Authorization": f"Bearer {settings.OLLAMA_API_KEY}"},
     )
-
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user",   "content": question},
-    ]
 
     resp = client.chat(
         model=settings.OLLAMA_MODEL,
@@ -48,7 +70,7 @@ def _call_ollama(question: str, system_prompt: str) -> str:
 
 
 # ----------------------------------------------------------------------
-# 1️⃣ Page view – renders the chat UI
+# 2️⃣ Page view – renders the chat UI
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
 def helper(request):
@@ -81,7 +103,7 @@ def helper(request):
 
 
 # ----------------------------------------------------------------------
-# 2️⃣ JSON: list of all user conversations (mini‑map)
+# 3️⃣ JSON: list of all user conversations (mini‑map)
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
 def list_conversations(request):
@@ -102,7 +124,7 @@ def list_conversations(request):
 
 
 # ----------------------------------------------------------------------
-# 3️⃣ JSON: fetch a single conversation (messages)
+# 4️⃣ JSON: fetch a single conversation (messages)
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
 def get_conversation(request, pk):
@@ -124,7 +146,7 @@ def get_conversation(request, pk):
 
 
 # ----------------------------------------------------------------------
-# 4️⃣ JSON API – answer a question (store both sides)
+# 5️⃣ JSON API – answer a question (store both sides)
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
 def helper_api(request):
@@ -135,7 +157,6 @@ def helper_api(request):
     payload = json.loads(request.body)
 
     question = payload.get("question")
-    # ← Payload.get already gives you a default if the key is missing.
     level   = payload.get("explanation_level", "simplified")
     conv_id = payload.get("conversation_id")          # may be None
 
@@ -147,7 +168,7 @@ def helper_api(request):
     # ------------------------------------------------------------------
     try:
         system_prompt = system_prompt_for(level, question)
-    except ValueError as exc:          # unknown level – fallback to simplified
+    except ValueError:          # unknown level – fallback to simplified
         log.warning("Invalid explanation level %r – using simplified", level)
         system_prompt = system_prompt_for("simplified", question)
 
@@ -165,10 +186,25 @@ def helper_api(request):
         )
 
     # ------------------------------------------------------------------
-    # 3️⃣ Call Ollama (fallback on error)
+    # 3️⃣ Gather recent history (up to 8 turns) if we have an existing
+    #    conversation.  For brand‑new threads ``history`` is empty.
+    # ------------------------------------------------------------------
+    if conv_id:
+        history = _last_n_turns(conversation, n_turns=8)
+    else:
+        history = []
+
+    # Build the final Ollama message list:
+    #   system → (optional) history → current user question
+    ollama_messages = [{"role": "system", "content": system_prompt}]
+    ollama_messages.extend(history)
+    ollama_messages.append({"role": "user", "content": question})
+
+    # ------------------------------------------------------------------
+    # 4️⃣ Call Ollama (fallback on error)
     # ------------------------------------------------------------------
     try:
-        ai_reply = _call_ollama(question, system_prompt)
+        ai_reply = _call_ollama(ollama_messages)
     except Exception as exc:               # pragma: no cover – exercised via test mock
         log.error("Ollama request failed – falling back to canned response: %s", exc)
         # Keep the fallback wording *consistent* with the chosen level.
@@ -178,7 +214,7 @@ def helper_api(request):
         )
 
     # ------------------------------------------------------------------
-    # 4️⃣ Persist both user + AI messages inside the same conversation
+    # 5️⃣ Persist both user + AI messages inside the same conversation
     # ------------------------------------------------------------------
     Message.objects.bulk_create(
         [
@@ -205,7 +241,7 @@ def helper_api(request):
     return JsonResponse(
         {
             "answer":           ai_reply,
-            "conversation_id":  conversation.id,
+            "conversation_id": conversation.id,
             "title":            conversation.title,
         }
     )
