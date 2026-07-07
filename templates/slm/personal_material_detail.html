@@ -17,7 +17,11 @@
         <header class="content-header">
             <p><i>
                 <a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
-                <a href="{% url "slm:slmlists" %}#tab-1">My Learning Materials</a> &gt;
+                {% if pm.visibility == 'PU' and pm.author_id != request.user.id %}
+                    <a href="{% url "slm:slmlists" %}#tab-2">Public Learning Materials</a> &gt;
+                {% else %}
+                    <a href="{% url "slm:slmlists" %}#tab-1">My Learning Materials</a> &gt;
+                {% endif %}
                 {{ pm.title }}
             </i></p>
         </header>
