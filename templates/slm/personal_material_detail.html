@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    {# Re‑use the same styling you already have for module_detail #}
     <link rel="stylesheet" href="{% static "css/module_detail.css" %}">
+    <link rel="stylesheet" href="{% static 'css/highlight_ai.css' %}">   {# ← NEW #}
 </head>
 <body>
     {% include "components/navigations.html" %}
@@ -17,7 +17,7 @@
         <header class="content-header">
             <p><i>
                 <a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
-                <a href="{% url "slm:slmlists" %}#tab-1">My Learning Materials</a> &gt;
+                <a href="{% url "slmlists" %}#tab-1">My Learning Materials</a> &gt;
                 {{ pm.title }}
             </i></p>
         </header>
@@ -45,48 +45,30 @@
         </section>
     </main>
 
-    {# -----------------------------------------------------------------
-       The same selection‑toolbar you already have on `module_detail.html`.
-       Keeping it here makes the UI identical for both page types.
-       ----------------------------------------------------------------- #}
     <div id="selection-toolbar" class="selection-toolbar"
-         role="toolbar" aria-label="Selection actions">
-        <button id="tb-highlight" type="button" title="Highlight">
-            <i class="fa-solid fa-highlighter"></i> Highlight
-        </button>
-        <button id="tb-ask-ai" type="button" title="Ask AI">
-            <i class="fa-solid fa-robot"></i> Ask AI
-        </button>
-        <button id="tb-note" type="button" title="Add note">
-            <i class="fa-solid fa-sticky-note"></i> Note
-        </button>
+        role="toolbar" aria-label="Selection actions">
     </div>
+
 
     <script>
         (function () {
             const toolbar = document.getElementById('selection-toolbar');
 
             const hideToolbar = () => { toolbar.style.display = 'none'; };
-            const logAction = (name) => {
+            const logAction   = (name) => {
                 const sel = window.getSelection().toString().trim();
                 console.log(`${name} clicked – selection:`, sel);
                 hideToolbar();
             };
-            document.getElementById('tb-highlight')
-                    .addEventListener('click', () => logAction('🔆 Highlight'));
-            document.getElementById('tb-ask-ai')
-                    .addEventListener('click', () => logAction('🤖 Ask AI'));
-            document.getElementById('tb-note')
-                    .addEventListener('click', () => logAction('🗒️ Note'));
 
             const showToolbarForSelection = (event) => {
-                const sel = window.getSelection();
+                const sel  = window.getSelection();
                 const text = sel.toString().trim();
                 if (toolbar.contains(event.target)) return;
                 if (!text) { hideToolbar(); return; }
 
                 const range = sel.getRangeAt(0);
-                const rect = range.getBoundingClientRect();
+                const rect  = range.getBoundingClientRect();
 
                 const toolbarX = rect.left + (rect.width / 2) - (toolbar.offsetWidth / 2);
                 const toolbarY = rect.top + window.scrollY - toolbar.offsetHeight - 8;
@@ -112,6 +94,32 @@
                 if (!toolbar.contains(e.target)) hideToolbar();
             });
         })();
+    </script>
+
+    <script type="module">
+        import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
+        const toolbar = document.getElementById('selection-toolbar');
+        const moduleId = {{ pm.id }};
+
+        // ---- preload cached highlights (same as in module_detail) ----
+        (async () => {
+            try {
+                const resp = await fetch(`/slm/api/modules/${moduleId}/highlight/`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                data.answers.forEach(item => {
+                    const esc = item.query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const re  = new RegExp(`(${esc})`, 'gi');
+                    document.body.innerHTML = document.body.innerHTML.replace(re,
+                        '<span class="highlight-marked">$1</span>');
+                });
+            } catch (e) {
+                console.warn('Could not preload highlights:', e);
+            }
+        })();
+
+        // ---- activate the new mini‑AI behaviour ----
+        initHighlightAI(toolbar, moduleId);
     </script>
 </body>
 </html>

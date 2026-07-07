@@ -1,0 +1,44 @@
+/* static/css/slm/highlight_ai.css */
+.ai-mini {
+    position: absolute;
+    z-index: 2000;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    padding: 0.6rem 0.8rem;
+    min-width: 200px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.ai-mini .ai-level {
+    width: 100%;
+    padding: .3rem .5rem;
+}
+.ai-mini .ai-get {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: .35rem .6rem;
+    cursor: pointer;
+}
+.ai-mini .ai-get:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+.ai-mini .ai-answer {
+    margin-top: 0.4rem;
+    border-top: 1px solid #eee;
+    padding-top: 0.4rem;
+}
+.ai-mini .ai-answer.hidden { display: none; }
+.ai-mini .ai-cached {
+    display: inline-block;
+    margin-right: .4rem;
+    color: #555;
+    font-size: .85rem;
+}

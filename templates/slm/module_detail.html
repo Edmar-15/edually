@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static "css/module_detail.css" %}">
+    <link rel="stylesheet" href="{% static 'css/highlight_ai.css' %}">   {# ← NEW #}
 </head>
 <body>
     {% include "components/navigations.html" %}
@@ -43,67 +44,34 @@
     </main>
 
     <div id="selection-toolbar" class="selection-toolbar"
-         role="toolbar" aria-label="Selection actions">
-        <button id="tb-highlight" type="button" title="Highlight">
-            <i class="fa-solid fa-highlighter"></i> Highlight
-        </button>
-        <button id="tb-ask-ai" type="button" title="Ask AI">
-            <i class="fa-solid fa-robot"></i> Ask AI
-        </button>
-        <button id="tb-note" type="button" title="Add note">
-            <i class="fa-solid fa-sticky-note"></i> Note
-        </button>
+        role="toolbar" aria-label="Selection actions">
     </div>
 
     <script>
         (function () {
             const toolbar = document.getElementById('selection-toolbar');
 
-            /** Utility – hide the toolbar */
-            const hideToolbar = () => {
-                toolbar.style.display = 'none';
-            };
-
-            /** Placeholder callbacks – replace with real logic later */
-            const logAction = (name) => {
+            const hideToolbar = () => { toolbar.style.display = 'none'; };
+            const logAction   = (name) => {
                 const sel = window.getSelection().toString().trim();
                 console.log(`${name} clicked – selection:`, sel);
                 hideToolbar();
             };
-            document.getElementById('tb-highlight')
-                    .addEventListener('click', () => logAction('🔆 Highlight'));
-            document.getElementById('tb-ask-ai')
-                    .addEventListener('click', () => logAction('🤖 Ask AI'));
-            document.getElementById('tb-note')
-                    .addEventListener('click', () => logAction('🗒️ Note'));
 
-            /** ---------------------------------------------------------
-             *  Show toolbar – shared logic for mouse & touch
-             *  ------------------------------------------------------- */
+            // ---- same mouse / touch handling you already had ----
             const showToolbarForSelection = (event) => {
-                const sel = window.getSelection();
+                const sel  = window.getSelection();
                 const text = sel.toString().trim();
 
-                // If the click/tap landed inside the toolbar, keep it open
-                if (toolbar.contains(event.target)) {
-                    return;
-                }
+                if (toolbar.contains(event.target)) return;
+                if (!text) { hideToolbar(); return; }
 
-                if (text.length === 0) {
-                    hideToolbar();
-                    return;
-                }
-
-                // Get the geometry of the selected range
                 const range = sel.getRangeAt(0);
-                const rect = range.getBoundingClientRect();
+                const rect  = range.getBoundingClientRect();
 
-                // Position toolbar centred above the selection.
-                // We also make sure it never goes off‑screen.
                 const toolbarX = rect.left + (rect.width / 2) - (toolbar.offsetWidth / 2);
-                const toolbarY = rect.top + window.scrollY - toolbar.offsetHeight - 8; // 8 px gap
+                const toolbarY = rect.top + window.scrollY - toolbar.offsetHeight - 8;
 
-                // Clamp to viewport bounds
                 const maxX = document.documentElement.clientWidth - toolbar.offsetWidth - 4;
                 const maxY = document.documentElement.clientHeight - toolbar.offsetHeight - 4;
 
@@ -112,35 +80,12 @@
                 toolbar.style.display = 'flex';
             };
 
-            /* -----------------------------------------------------------------
-             *  Desktop – mouse interaction
-             * ----------------------------------------------------------------- */
             document.addEventListener('mouseup', showToolbarForSelection);
-
-            /* -----------------------------------------------------------------
-             *  Mobile – touch interaction
-             *
-             *  • `touchend` fires after a tap/long‑press.  The selection is already
-             *    available via `window.getSelection()`.
-             *
-             *  • `selectionchange` fires on iOS/Android when the user **clears**
-             *    the selection (e.g., taps elsewhere).  We use it to hide the toolbar.
-             * ----------------------------------------------------------------- */
-            document.addEventListener('touchend', (e) => {
-                // Defer the call slightly so the selection is finalized
-                setTimeout(() => showToolbarForSelection(e), 10);
-            });
-
+            document.addEventListener('touchend', (e) => setTimeout(() => showToolbarForSelection(e), 10));
             document.addEventListener('selectionchange', () => {
                 const sel = window.getSelection();
-                if (!sel || sel.toString().trim().length === 0) {
-                    hideToolbar();
-                }
+                if (!sel || !sel.toString().trim()) hideToolbar();
             });
-
-            /* -----------------------------------------------------------------
-             *  Click / tap outside the toolbar → hide it
-             * ----------------------------------------------------------------- */
             document.addEventListener('mousedown', (e) => {
                 if (!toolbar.contains(e.target)) hideToolbar();
             });
@@ -148,6 +93,32 @@
                 if (!toolbar.contains(e.target)) hideToolbar();
             });
         })();
+    </script>
+
+    <script type="module">
+        import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
+        const toolbar  = document.getElementById('selection-toolbar');
+        const moduleId = {{ module.id|default:"null" }};
+
+        // ---- pre‑load already‑cached highlights (unchanged) ----
+        (async () => {
+            try {
+                const resp = await fetch(`/slm/api/modules/${moduleId}/highlight/`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();               // {answers:[{query,…}]}
+                data.answers.forEach(item => {
+                    const esc = item.query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const re  = new RegExp(`(${esc})`, 'gi');
+                    document.body.innerHTML = document.body.innerHTML.replace(re,
+                        '<span class="highlight-marked">$1</span>');
+                });
+            } catch (e) {
+                console.warn('Could not preload highlights:', e);
+            }
+        })();
+
+        // ---- activate the new mini‑AI behaviour ----
+        initHighlightAI(toolbar, moduleId);
     </script>
 </body>
 </html>

@@ -7,11 +7,11 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
 from django.db import models
-from .models import Subject, Module, PersonalMaterial
+from .models import Subject, Module, PersonalMaterial, HighlightAnswer
 import os
 from .content_extractor import extract_content
 import logging as logger
-
+from .ai_bridge import ask_ai_one_level
 
 # Create your views here.
 @login_required(login_url='account:login')
@@ -825,3 +825,96 @@ def personal_material_detail(request, pk):
         "pm": pm,                 # used by the template
     }
     return render(request, "slm/personal_material_detail.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def api_module_highlight(request, module_id):
+    """
+    GET  → returns all cached answers for the module.
+          Format:
+          {
+              "answers": [
+                  {
+                      "query": "programming",
+                      "answer": {
+                          "simplified": "...",
+                          "technical":  "..."
+                      }
+                  },
+                  …
+              ]
+          }
+
+    POST → expects JSON payload:
+            {
+                "query": "<highlighted text>",
+                "level": "simplified" | "technical"
+            }
+          Returns:
+            {
+                "query":   "...",
+                "answer":  "<HTML string for the selected level>",
+                "cached":  true|false
+            }
+          Only the requested level is queried / stored.
+    """
+    module = get_object_or_404(Module, pk=module_id)
+
+    # --------------------------------------------------------------
+    #  GET – list cached answers (unchanged except for column names)
+    # --------------------------------------------------------------
+    if request.method == "GET":
+        qs = HighlightAnswer.objects.filter(module=module).values(
+            "query", "answer_simplified", "answer_technical"
+        )
+        answers = [
+            {
+                "query": item["query"],
+                "answer": {
+                    "simplified": item["answer_simplified"],
+                    "technical":  item["answer_technical"],
+                },
+            }
+            for item in qs
+        ]
+        return JsonResponse({"answers": answers}, safe=False)
+
+    # --------------------------------------------------------------
+    #  POST – ask AI for **one** level only
+    # --------------------------------------------------------------
+    try:
+        payload = json.loads(request.body)
+        query = payload.get("query", "").strip()
+        level = payload.get("level", "simplified").strip().lower()
+        if not query:
+            raise ValueError("Empty query")
+        if level not in {"simplified", "technical"}:
+            raise ValueError("Invalid level – must be 'simplified' or 'technical'")
+    except (json.JSONDecodeError, ValueError) as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    # 1️⃣  Look for a cached answer *only* in the appropriate column
+    try:
+        stored = HighlightAnswer.objects.get(module=module, query=query)
+        cached_answer = getattr(stored, f"answer_{level}")
+        if cached_answer:                     # already cached → return it
+            return JsonResponse(
+                {"query": query, "answer": cached_answer, "cached": True},
+                status=200,
+            )
+    except HighlightAnswer.DoesNotExist:
+        # No row yet – we will create one after the AI call
+        stored = HighlightAnswer(module=module, query=query)
+
+    # 2️⃣  Call the AI **once** for the requested level
+    answer_body = ask_ai_one_level(query, level)
+
+    # 3️⃣  Store the answer in the correct column
+    setattr(stored, f"answer_{level}", answer_body)
+    stored.save()   # saves only the column we just set
+
+    return JsonResponse(
+        {"query": query, "answer": answer_body, "cached": False},
+        status=200,
+    )

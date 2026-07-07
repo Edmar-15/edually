@@ -145,3 +145,33 @@ class PersonalMaterial(models.Model):
 
     def __str__(self) -> str:
         return f"{self.title} ({self.author})"
+    
+
+class HighlightAnswer(models.Model):
+    """
+    One row per exact highlighted string that has already been sent to the AI.
+    """
+    module = models.ForeignKey(Module,
+                               on_delete=models.CASCADE,
+                               related_name="highlight_answers")
+    query = models.CharField(max_length=255,
+                             help_text="Exact highlighted text.")
+    # ----- NEW COLUMNS -------------------------------------------------
+    answer_simplified = models.TextField(blank=True, null=True,
+                                         help_text="Simplified explanation.")
+    answer_technical = models.TextField(blank=True, null=True,
+                                        help_text="Technical explanation.")
+    # KEEP THE OLD JSON FIELD ONLY for the short migration window.
+    answer = models.JSONField(blank=True,
+                              null=True,
+                              help_text="(Deprecated) Two‑part answer.")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("module", "query")
+        ordering = ["-created_at"]
+        verbose_name = "Highlight answer"
+        verbose_name_plural = "Highlight answers"
+
+    def __str__(self):
+        return f"{self.module.id}:{self.query[:30]}…"

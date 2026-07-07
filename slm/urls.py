@@ -91,4 +91,10 @@ urlpatterns = [
         views.personal_material_detail,
         name="personalmaterial-detail",
     ),
+    
+    path(
+        "api/modules/<int:module_id>/highlight/",
+        views.api_module_highlight,          # ← ONE view for both verbs
+        name="module-highlight",              # a single name is enough
+    ),
 ]
