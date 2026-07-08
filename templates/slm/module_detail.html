@@ -119,24 +119,6 @@
         const moduleId = {{ module.id|default:"null" }};
         const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        // ---- pre‑load already‑cached highlights (scoped to the content card) ----
-        (async () => {
-            try {
-                const resp = await fetch(`/slm/api/modules/${moduleId}/highlight/`);
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const data = await resp.json();               // {answers:[{query,…}]}
-                if (!contentRoot) return;
-                data.answers.forEach(item => {
-                    const esc = item.query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const re  = new RegExp(`(${esc})`, 'gi');
-                    contentRoot.innerHTML = contentRoot.innerHTML.replace(re,
-                        '<span class="highlight-marked">$1</span>');
-                });
-            } catch (e) {
-                console.warn('Could not preload highlights:', e);
-            }
-        })();
-
         // ---- activate the new mini‑AI behaviour ----
         initHighlightAI(toolbar, moduleId, contentRoot);
     </script>

@@ -44,6 +44,9 @@
     margin-top: 0.4rem;
     border-top: 1px solid #eee;
     padding-top: 0.4rem;
+    max-height: 16rem;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
 }
 .ai-mini .ai-answer.hidden { display: none; }
 .ai-mini .ai-answer-content {
@@ -53,6 +56,28 @@
     font-size: 0.95rem;
     line-height: 1.5;
     color: #1f2937;
+}
+
+/* Typing animation styles */
+.ai-mini .ai-answer-typing {
+    white-space: pre-wrap;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #1f2937;
+    display: inline-block;
+    max-height: 18rem;
+    overflow: auto;
+}
+.ai-typing-caret {
+    display: inline-block;
+    margin-left: 0.08rem;
+    color: #2563eb;
+    opacity: 0.95;
+    animation: ai-caret-blink 1s steps(1) infinite;
+}
+@keyframes ai-caret-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
 }
 .ai-mini .ai-answer-content p,
 .ai-mini .ai-answer-content ul,
@@ -104,31 +129,86 @@
 }
 
 .highlight-marked {
+    --highlight-bg: #fef3c7;
+    --highlight-hover-bg: #fde68a;
+    --highlight-shadow: rgba(245, 158, 11, 0.16);
     padding: 0 0.16em;
     border-radius: 0.3em;
-    background: #fef3c7;
+    background: var(--highlight-bg);
     color: inherit;
-    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
-    transition: filter 120ms ease, transform 120ms ease;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.03);
+    transition: background-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 
 .highlight-marked:hover,
 .highlight-marked:focus-visible {
-    filter: brightness(0.97);
+    background: var(--highlight-hover-bg);
+    color: inherit;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 4px 12px var(--highlight-shadow);
     transform: translateY(-1px);
     outline: none;
 }
 
+.highlight-marked--technical:hover,
+.highlight-marked--technical:focus-visible {
+    color: #7c2d12;
+    text-decoration: underline;
+    text-underline-offset: 0.16em;
+    text-decoration-thickness: 0.08em;
+}
+
+.highlight-marked:active {
+    transform: translateY(0) scale(0.99);
+}
+
 .highlight-marked--simplified {
-    background: #dcfce7;
+    --highlight-bg: #eaffef;
+    --highlight-hover-bg: #c8f7d0;
+    --highlight-shadow: rgba(22, 163, 74, 0.2);
+    color: #166534;
+    font-weight: 600;
+    border: 1px solid rgba(22, 163, 74, 0.24);
+    box-shadow: inset 0 -1px 0 rgba(20, 83, 45, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
 
 .highlight-marked--technical {
-    background: #fef3c7;
+    --highlight-bg: #fff7d6;
+    --highlight-hover-bg: #ffe58a;
+    --highlight-shadow: rgba(217, 119, 6, 0.2);
+    color: #92400e;
+    font-weight: 600;
+    border: 1px solid rgba(217, 119, 6, 0.28);
+    box-shadow: inset 0 -1px 0 rgba(120, 53, 15, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
 
 .highlight-marked--both {
-    background: #dbeafe;
+    --highlight-bg: #dbeafe;
+    --highlight-hover-bg: #bfdbfe;
+    --highlight-shadow: rgba(59, 130, 246, 0.18);
+}
+
+.highlight-marked--active {
+    position: relative;
+    z-index: 1;
+    background: var(--highlight-hover-bg);
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 0 0 2px rgba(59, 130, 246, 0.25), 0 0 0 6px rgba(191, 219, 254, 0.5), 0 8px 18px var(--highlight-shadow);
+    transform: translateY(-1px) scale(1.01);
+    animation: highlight-history-glow 1.2s ease;
+}
+
+@keyframes highlight-history-glow {
+    0% {
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.03);
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 0 0 2px rgba(59, 130, 246, 0.3), 0 0 0 6px rgba(191, 219, 254, 0.55), 0 10px 24px var(--highlight-shadow);
+        transform: translateY(-1px) scale(1.02);
+    }
+    100% {
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 0 0 2px rgba(59, 130, 246, 0.2), 0 0 0 4px rgba(191, 219, 254, 0.35);
+        transform: translateY(-1px) scale(1.01);
+    }
 }
 
 .module-content-history {
@@ -164,12 +244,14 @@
     z-index: 2500;
     min-width: 290px;
     max-width: min(380px, 90vw);
+    max-height: min(320px, 70vh);
     padding: 0.6rem;
     border: 1px solid #e5e7eb;
     border-radius: 0.9rem;
     background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
     backdrop-filter: blur(8px);
+    overflow: hidden;
 }
 
 .module-content-history__list {
@@ -179,6 +261,9 @@
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
+    max-height: 100%;
+    overflow-y: auto;
+    padding-right: 0.2rem;
 }
 
 .module-content-history__item {
@@ -189,6 +274,7 @@
     border-radius: 0.6rem;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid #eef2f7;
+    cursor: pointer;
 }
 
 .module-content-history__text {
@@ -208,18 +294,22 @@
     position: absolute;
     z-index: 3000;
     max-width: min(320px, 78vw);
-    pointer-events: none;
+    pointer-events: auto; /* allow hover/scroll */
 }
 
 .highlight-answer-tooltip__body {
     padding: 0.75rem 0.85rem;
     border-radius: 0.8rem;
-    background: rgba(15, 23, 42, 0.95);
-    color: #f9fafb;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-    font-size: 0.9rem;
-    line-height: 1.45;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 24, 39, 0.96) 100%);
+    color: #ffffff;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.26);
+    font-size: 0.92rem;
+    line-height: 1.5;
     white-space: pre-wrap;
+    max-height: 18rem;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid rgba(148, 163, 184, 0.24);
 }
 
 .highlight-answer-tooltip__body p,
@@ -228,6 +318,20 @@
 .highlight-answer-tooltip__body blockquote,
 .highlight-answer-tooltip__body pre {
     margin: 0;
+}
+
+.highlight-answer-tooltip__body h1,
+.highlight-answer-tooltip__body h2,
+.highlight-answer-tooltip__body h3,
+.highlight-answer-tooltip__body h4,
+.highlight-answer-tooltip__body h5,
+.highlight-answer-tooltip__body h6,
+.highlight-answer-tooltip__body p,
+.highlight-answer-tooltip__body li,
+.highlight-answer-tooltip__body td,
+.highlight-answer-tooltip__body th,
+.highlight-answer-tooltip__body blockquote {
+    color: #ffffff;
 }
 
 .highlight-answer-tooltip__body a {

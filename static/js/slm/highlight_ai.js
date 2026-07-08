@@ -25,6 +25,7 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
     const highlightStates = new Map();
     const answerStore = new Map();
     let activeTooltip = null;
+    let tooltipRemovalTimer = null;
 
     const toggleHistoryPopover = () => {
         if (!historyPopover || !historyToggle) return;
@@ -39,6 +40,38 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
         historyToggle.setAttribute('aria-expanded', 'false');
     };
 
+    const clearActiveHistoryHighlight = () => {
+        if (!contentRoot) return;
+        contentRoot.querySelectorAll('.highlight-marked--active').forEach((span) => {
+            span.classList.remove('highlight-marked--active');
+        });
+    };
+
+    const focusHighlightByQuery = (query, { scroll = true } = {}) => {
+        const normalized = (query || '').trim();
+        if (!normalized || !contentRoot) return;
+
+        clearActiveHistoryHighlight();
+
+        const matches = Array.from(contentRoot.querySelectorAll('.highlight-marked'))
+            .filter((span) => {
+                const spanQuery = (span.dataset.highlightQuery || span.textContent || '').trim();
+                return spanQuery.toLowerCase() === normalized.toLowerCase();
+            });
+
+        if (matches.length === 0) return;
+
+        matches.forEach((span) => {
+            span.classList.add('highlight-marked--active');
+            if (!span.dataset.highlightQuery) {
+                span.dataset.highlightQuery = normalized;
+            }
+        });
+        if (scroll) {
+            matches[0].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        }
+    };
+
     const updateHistoryUI = () => {
         if (!historyList) return;
         historyList.innerHTML = '';
@@ -51,10 +84,25 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
             historyEntries.slice().reverse().forEach((entry) => {
                 const item = document.createElement('li');
                 item.className = 'module-content-history__item';
+                item.dataset.historyQuery = entry.text;
+                item.setAttribute('role', 'button');
+                item.setAttribute('tabindex', '0');
+                item.setAttribute('title', `Jump to “${entry.text}”`);
                 item.innerHTML = `
                     <span class="module-content-history__text">${entry.text}</span>
                     <span class="module-content-history__meta">${entry.levels.join(' + ')}</span>
                 `;
+                item.addEventListener('click', () => {
+                    focusHighlightByQuery(entry.text);
+                    closeHistoryPopover();
+                });
+                item.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        focusHighlightByQuery(entry.text);
+                        closeHistoryPopover();
+                    }
+                });
                 historyList.appendChild(item);
             });
         }
@@ -118,6 +166,10 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
     };
 
     const removeTooltip = () => {
+        if (tooltipRemovalTimer) {
+            clearTimeout(tooltipRemovalTimer);
+            tooltipRemovalTimer = null;
+        }
         if (activeTooltip) {
             activeTooltip.remove();
             activeTooltip = null;
@@ -132,7 +184,7 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
 
         const tooltip = document.createElement('div');
         tooltip.className = 'highlight-answer-tooltip';
-        tooltip.innerHTML = `<div class="highlight-answer-tooltip__body">${renderMarkdown(answerText)}</div>`;
+        tooltip.innerHTML = `<div class="highlight-answer-tooltip__body" tabindex="0">${renderMarkdown(answerText)}</div>`;
         document.body.appendChild(tooltip);
 
         const rect = span.getBoundingClientRect();
@@ -143,15 +195,65 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
         tooltip.style.top = `${top}px`;
         tooltip.style.left = `${Math.max(8, left)}px`;
         tooltip.style.maxWidth = `${tooltipWidth}px`;
+        // remember the anchor span so we can reposition on scroll
+        tooltip._anchorSpan = span;
         activeTooltip = tooltip;
+
+        // Make the tooltip interactive: allow pointer events and keep it
+        // visible while the mouse is over it. Clear any pending removal.
+        tooltip.style.pointerEvents = 'auto';
+        tooltip.addEventListener('mouseenter', () => {
+            if (tooltipRemovalTimer) {
+                clearTimeout(tooltipRemovalTimer);
+                tooltipRemovalTimer = null;
+            }
+        });
+        tooltip.addEventListener('mouseleave', () => removeTooltip());
+        tooltip.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') removeTooltip();
+        });
+    };
+
+    const repositionTooltipOnScroll = () => {
+        if (!activeTooltip) return;
+        // if the user is interacting with the tooltip, don't reposition/remove
+        if (activeTooltip.matches(':hover')) return;
+
+        const span = activeTooltip._anchorSpan;
+        if (!span || !document.body.contains(span)) {
+            removeTooltip();
+            return;
+        }
+
+        // Recompute position relative to the anchor span
+        const rect = span.getBoundingClientRect();
+        const tooltipWidth = Math.min(320, window.innerWidth - 24);
+        const left = Math.min(rect.left + window.scrollX, document.documentElement.clientWidth - tooltipWidth - 8);
+        const top = rect.bottom + window.scrollY + 8;
+
+        activeTooltip.style.top = `${top}px`;
+        activeTooltip.style.left = `${Math.max(8, left)}px`;
+        activeTooltip.style.maxWidth = `${tooltipWidth}px`;
     };
 
     const attachHighlightEvents = (span, query) => {
         if (span.dataset.tooltipBound === 'true') return;
         span.addEventListener('mouseenter', () => showTooltip(null, span, query));
         span.addEventListener('focus', () => showTooltip(null, span, query));
-        span.addEventListener('mouseleave', removeTooltip);
-        span.addEventListener('blur', removeTooltip);
+        span.addEventListener('mouseleave', () => {
+            if (tooltipRemovalTimer) clearTimeout(tooltipRemovalTimer);
+            tooltipRemovalTimer = setTimeout(() => {
+                if (!activeTooltip || !activeTooltip.matches(':hover')) removeTooltip();
+                tooltipRemovalTimer = null;
+            }, 150);
+        });
+        span.addEventListener('blur', () => {
+            if (tooltipRemovalTimer) clearTimeout(tooltipRemovalTimer);
+            tooltipRemovalTimer = setTimeout(() => {
+                if (!activeTooltip || !activeTooltip.matches(':hover')) removeTooltip();
+                tooltipRemovalTimer = null;
+            }, 150);
+        });
         span.setAttribute('tabindex', '0');
         span.dataset.tooltipBound = 'true';
     };
@@ -163,7 +265,10 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
             const query = span.dataset.highlightQuery || span.textContent?.trim() || '';
             if (!query) return;
             const state = highlightStates.get(query) || { simplified: false, technical: false };
-            span.className = getHighlightClassName(state);
+            const shouldStayActive = span.classList.contains('highlight-marked--active');
+            span.className = shouldStayActive
+                ? `${getHighlightClassName(state)} highlight-marked--active`
+                : getHighlightClassName(state);
             span.dataset.answer = buildAnswerText(query);
             attachHighlightEvents(span, query);
         });
@@ -258,6 +363,16 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
             }
         };
         document.addEventListener("mousedown", clickOutside);
+
+        // Ensure any typing interval is cleared when the widget is removed.
+        const origRemove = mini.remove.bind(mini);
+        mini.remove = function () {
+            if (mini._typingInterval) {
+                clearInterval(mini._typingInterval);
+                mini._typingInterval = null;
+            }
+            origRemove();
+        };
 
         return mini;
     };
@@ -443,11 +558,66 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
 
     const renderAnswer = (mini, html, cached) => {
         const box = mini.querySelector(".ai-answer");
-        box.innerHTML = `
-            ${cached ? '<span class="ai-cached">🗃️ Cached answer</span>' : ''}
-            <div class="ai-answer-content">${renderMarkdown(html)}</div>
-        `;
         box.classList.remove("hidden");
+
+        // If the answer is cached, render immediately.
+        if (cached) {
+            box.innerHTML = `
+                ${cached ? '<span class="ai-cached">🗃️ Cached answer</span>' : ''}
+                <div class="ai-answer-content">${renderMarkdown(html)}</div>
+            `;
+            return;
+        }
+
+        // Non-cached: show a typewriter animation of the plain text,
+        // then replace with the full rendered markdown HTML.
+        box.innerHTML = `${cached ? '<span class="ai-cached">🗃️ Cached answer</span>' : ''}`;
+        const typingContainer = document.createElement('div');
+        typingContainer.className = 'ai-answer-typing';
+        typingContainer.setAttribute('aria-live', 'polite');
+        box.appendChild(typingContainer);
+
+        // Convert rendered markdown to HTML, then extract plain text for typing.
+        const renderedHtml = renderMarkdown(html);
+        const tmp = document.createElement('div');
+        tmp.innerHTML = renderedHtml;
+        const plain = tmp.textContent || tmp.innerText || '';
+
+        // Clear any existing typing interval for this mini widget.
+        if (mini._typingInterval) {
+            clearInterval(mini._typingInterval);
+            mini._typingInterval = null;
+        }
+
+        // Typing state
+        let index = 0;
+        const speed = 16 + Math.floor(Math.random() * 18); // 16-34ms per char
+        const caret = document.createElement('span');
+        caret.className = 'ai-typing-caret';
+        caret.textContent = '\u25AE';
+        typingContainer.appendChild(caret);
+
+        const typeNext = () => {
+            if (index >= plain.length) {
+                // Finished typing: replace with full rendered HTML
+                box.innerHTML = `${cached ? '<span class="ai-cached">🗃️ Cached answer</span>' : ''}`;
+                const final = document.createElement('div');
+                final.className = 'ai-answer-content';
+                final.innerHTML = renderedHtml;
+                box.appendChild(final);
+                mini._typingInterval = null;
+                return;
+            }
+
+            // Insert next character before the caret
+            const char = plain.charAt(index);
+            const node = document.createTextNode(char);
+            typingContainer.insertBefore(node, caret);
+            index += 1;
+        };
+
+        // Start typing with setInterval; keep reference so we can cancel.
+        mini._typingInterval = setInterval(typeNext, speed);
     };
 
     // -----------------------------------------------------------------
@@ -624,7 +794,7 @@ export function initHighlightAI(toolbar, moduleId, contentScope = '.module-conte
             closeHistoryPopover();
         }
     });
-    document.addEventListener("scroll", removeTooltip, true);
+    document.addEventListener("scroll", repositionTooltipOnScroll, true);
     document.addEventListener("mousedown", (e) => {
         if (activeTooltip && !activeTooltip.contains(e.target)) {
             removeTooltip();

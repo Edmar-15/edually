@@ -1,6 +1,6 @@
 :root {
-  --module-surface: #ffffff;
-  --module-surface-soft: #f7faff;
+  --module-surface: var(--surface);
+  --module-surface-soft: var(--surface-soft);
   --module-border: rgba(14, 154, 167, 0.18);
   --module-shadow: 0 18px 40px rgba(14, 154, 167, 0.12);
   --module-accent: #0e9aa7;
@@ -24,7 +24,7 @@
 }
 
 .module-form-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  background: var(--module-surface);
   border: 1px solid var(--module-border);
   border-radius: 22px;
   box-shadow: var(--module-shadow);
@@ -63,7 +63,7 @@
   border: 1px solid var(--border-slm);
   border-radius: 12px;
   padding: 0.8rem 0.95rem;
-  background: #ffffff;
+  background: var(--module-surface);
   color: var(--text-slm);
   font-size: 0.95rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -118,7 +118,7 @@
   padding: 0;
   border-radius: 20px;
   border: 1px solid rgba(14, 154, 167, 0.16);
-  background: linear-gradient(135deg, #ffffff 0%, #f9fcfe 100%);
+  background: var(--module-surface);
   box-shadow: var(--module-shadow);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -212,12 +212,12 @@
 }
 
 .module-card__action--delete {
-  background: #fff2f2;
+  background: rgba(248, 113, 113, 0.12);
   color: #d14343;
 }
 
 .module-card__action--delete:hover {
-  background: #ffe5e5;
+  background: rgba(248, 113, 113, 0.16);
 }
 
 .module-card__action svg {
