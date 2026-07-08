@@ -1,35 +1,52 @@
+// -----------------------------------------------------------------
+// subject_ajax.js – Ajax widget for “Subjects”
+// -----------------------------------------------------------------
 import { csrftoken } from "./utils.js";
 
 /**
- * Initialise the “self‑learning modules” widget.
+ * Initialise the subjects widget.
+ *
  * Expected data‑attributes on the root element:
- *   data-list-url   → "/slm/api/subjects/"
- *   data-create-url → "/slm/api/subjects/create/"
+ *
+ *   data-list-url           → "/slm/api/subjects/"
+ *   data-create-url         → "/slm/api/subjects/create/"
+ *   data-update-url        → "/slm/api/subjects/0/"          (dummy 0)
+ *   data-delete-url        → "/slm/api/subjects/0/delete/"   (dummy 0)
+ *
+ * The edit UI is a modal (same pattern as in module_ajax.js).
  */
 export function initSubjectWidget(rootEl) {
   // -----------------------------------------------------------------
-  // URLs coming from the template
+  // 1️⃣  URLs coming from the template (contain a dummy “0”)
   // -----------------------------------------------------------------
-  const listUrl = rootEl.dataset.listUrl; // will receive ?page=
+  const listUrl   = rootEl.dataset.listUrl;   // …?page=
   const createUrl = rootEl.dataset.createUrl;
-  const updateTpl = rootEl.dataset.updateUrl; // "/slm/api/subjects/{id}/"
-  const deleteTpl = rootEl.dataset.deleteUrl; // "/slm/api/subjects/{id}/delete/"
+  const updateTpl = rootEl.dataset.updateUrl; // “…/subjects/0/”
+  const deleteTpl = rootEl.dataset.deleteUrl; // “…/subjects/0/delete/”
 
   // -----------------------------------------------------------------
-  // DOM shortcuts
+  // Helper – replace the dummy “0” with a real id
   // -----------------------------------------------------------------
-  const $list = rootEl.querySelector("#subject-list");
+  // RegExp finds the first 0 that is either the end of the string
+  // or followed by a slash – exactly what the module widget does.
+  const replaceId = (template, id) => template.replace(/0(?=\/|$)/, id);
+
+  // -----------------------------------------------------------------
+  // 2️⃣  DOM shortcuts (all inside the widget)
+  // -----------------------------------------------------------------
+  const $list   = rootEl.querySelector("#subject-list");
   const $status = rootEl.querySelector("#status");
 
-  // Optional create‑form (visible only for logged‑in users)
-  const $codeInput = rootEl.querySelector("#code-input");
-  const $nameInput = rootEl.querySelector("#name-input");
-  const $yearSelect = rootEl.querySelector("#year-select");
-  const $addBtn = rootEl.querySelector("#add-btn");
+  const $codeInput   = rootEl.querySelector("#code-input");
+  const $nameInput   = rootEl.querySelector("#name-input");
+  const $yearSelect  = rootEl.querySelector("#year-select");
+  const $addBtn      = rootEl.querySelector("#add-btn");
+
+  // Modal placeholder – the widget will inject the modal the first time
+  const $modal = rootEl.querySelector("#subject-edit-modal");
 
   // -----------------------------------------------------------------
-  // Helper – fetch the list of year choices from the back‑end and
-  // fill the <select>. Returns a Promise that resolves when done.
+  // 3️⃣  Load the YEAR <select> (same as before)
   // -----------------------------------------------------------------
   async function loadYearChoices() {
     try {
@@ -37,14 +54,13 @@ export function initSubjectWidget(rootEl) {
         credentials: "same-origin",
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json(); // {choices: [{value, label}, ...]}
+      const data = await resp.json(); // {choices: [{value, label}, …]}
 
-      // empty any old options
       $yearSelect.innerHTML = "";
-      data.choices.forEach((choice) => {
+      data.choices.forEach((c) => {
         const opt = document.createElement("option");
-        opt.value = choice.value;
-        opt.textContent = choice.label;
+        opt.value = c.value;
+        opt.textContent = c.label;
         $yearSelect.appendChild(opt);
       });
     } catch (e) {
@@ -53,57 +69,62 @@ export function initSubjectWidget(rootEl) {
   }
 
   // -----------------------------------------------------------------
-  // Helper – render a *single* subject card (now clickable)
+  // 4️⃣  Render a **single** subject card (clickable, with actions)
   // -----------------------------------------------------------------
   function renderCard(subject) {
     const card = document.createElement("div");
     card.className = "subject-card";
     card.dataset.id = subject.id;
 
-    const contentLink = document.createElement("a");
-    contentLink.href = subject.detail_url;
-    contentLink.className = "subject-card-link";
-    contentLink.setAttribute("aria-label", `Open ${subject.subject_code}`);
+    const link = document.createElement("a");
+    link.href = subject.detail_url;
+    link.className = "subject-card-link";
+    link.setAttribute("aria-label", `Open ${subject.subject_code}`);
 
     const h1 = document.createElement("h1");
     h1.textContent = subject.subject_code;
-    contentLink.appendChild(h1);
+    link.appendChild(h1);
 
     const p = document.createElement("p");
     p.textContent = subject.subject_name;
-    contentLink.appendChild(p);
+    link.appendChild(p);
 
-    const yearEl = document.createElement("p");
-    yearEl.textContent = `Year: ${subject.year_display}`;
-    contentLink.appendChild(yearEl);
+    const year = document.createElement("p");
+    year.textContent = `Year: ${subject.year_display}`;
+    link.appendChild(year);
 
-    const i = document.createElement("i");
-    i.textContent = `By ${subject.author_name}`;
-    contentLink.appendChild(i);
+    const author = document.createElement("i");
+    author.textContent = `By ${subject.author_name}`;
+    link.appendChild(author);
 
-    card.appendChild(contentLink);
+    card.appendChild(link);
 
+    // -------------------------------------------------------------
+    // Owner‑only actions (edit / delete)
+    // -------------------------------------------------------------
     if (subject.is_owner) {
-      const actionBar = document.createElement("div");
-      actionBar.className = "subject-card__actions";
+      const actions = document.createElement("div");
+      actions.className = "subject-card__actions";
 
+      // ----- Edit -------------------------------------------------
       const editBtn = document.createElement("button");
       editBtn.type = "button";
-      editBtn.className = "subject-card__action";
       editBtn.title = "Edit";
+      editBtn.className = "subject-card__action";
       editBtn.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
       editBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        editSubject(subject);
+        openEditModal(subject);               // ← modal version
       });
-      actionBar.appendChild(editBtn);
+      actions.appendChild(editBtn);
 
+      // ----- Delete -----------------------------------------------
       const delBtn = document.createElement("button");
       delBtn.type = "button";
-      delBtn.className = "subject-card__action subject-card__action--delete";
       delBtn.title = "Delete";
+      delBtn.className = "subject-card__action subject-card__action--delete";
       delBtn.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
       delBtn.addEventListener("click", (e) => {
@@ -111,61 +132,43 @@ export function initSubjectWidget(rootEl) {
         e.stopPropagation();
         deleteSubject(subject.id);
       });
-      actionBar.appendChild(delBtn);
+      actions.appendChild(delBtn);
 
-      card.appendChild(actionBar);
+      card.appendChild(actions);
     }
 
     return card;
   }
 
-  // ---------------------------------------------------------------
-  // Helper – build the paginator UI from the meta object received
-  // ---------------------------------------------------------------
+  // -----------------------------------------------------------------
+  // 5️⃣  Paginator UI (exact copy of the module widget’s paginator)
+  // -----------------------------------------------------------------
   function renderPaginator(meta) {
-    // Remove any old paginator that might be there
     const old = rootEl.querySelector(".paginator");
     if (old) old.remove();
 
-    // -----------------------------------------------------------------
-    // 1️⃣  <nav class="paginator"> … </nav>
-    // -----------------------------------------------------------------
     const nav = document.createElement("nav");
     nav.className = "paginator";
-    nav.setAttribute("aria-label", "Search results pagination");
+    nav.setAttribute("aria-label", "Subjects pagination");
 
     const ul = document.createElement("ul");
     ul.className = "paginator__list";
     nav.appendChild(ul);
 
-    /**
-     * makeItem(label, targetPage?, disabled?, current?, isEllipsis?)
-     *
-     * *label* – the text that appears inside the link (e.g. "←", "1", "…").
-     * *targetPage* – the **numeric** page we want to load when the item is
-     *                clicked.  If omitted we will try to infer it from the
-     *                label (only for the normal page‑number links).
-     * *disabled* – render as a disabled item.
-     * *current* – render as the current page (no link, just a <span>).
-     * *isEllipsis* – render as the “…’’ item.
-     */
     const makeItem = (
       label,
       targetPage = null,
       disabled = false,
       current = false,
-      isEllipsis = false,
+      ellipsis = false,
     ) => {
       const li = document.createElement("li");
       li.className = "paginator__item";
       if (disabled) li.classList.add("paginator__item--disabled");
       if (current) li.classList.add("paginator__item--current");
-      if (isEllipsis) li.classList.add("paginator__item--ellipsis");
+      if (ellipsis) li.classList.add("paginator__item--ellipsis");
 
-      // -------------------------------------------------------------
-      // Current page → plain <span>
-      // -------------------------------------------------------------
-      if (current) {
+      if (current || ellipsis) {
         const span = document.createElement("span");
         span.className = "paginator__link";
         span.textContent = label;
@@ -173,112 +176,54 @@ export function initSubjectWidget(rootEl) {
         return li;
       }
 
-      // -------------------------------------------------------------
-      // Ellipsis → plain <span> (no link)
-      // -------------------------------------------------------------
-      if (isEllipsis) {
-        const span = document.createElement("span");
-        span.className = "paginator__link";
-        span.textContent = label;
-        li.appendChild(span);
-        return li;
-      }
-
-      // -------------------------------------------------------------
-      // Normal link (arrow or number)
-      // -------------------------------------------------------------
       const a = document.createElement("a");
       a.className = "paginator__link";
       a.href = "#";
       a.textContent = label;
       if (disabled) a.setAttribute("tabindex", "-1");
-
-      // Click handler – only if we have a *real* page to go to
       a.addEventListener("click", (e) => {
         e.preventDefault();
-        // If a specific targetPage was given, use it.
-        // Otherwise try to parse the label (this works for numeric pages).
-        const pageToLoad = targetPage !== null ? targetPage : Number(label);
-        if (!isNaN(pageToLoad) && pageToLoad !== meta.page) {
-          load(pageToLoad);
-        }
+        const page = targetPage !== null ? targetPage : Number(label);
+        if (!isNaN(page) && page !== meta.page) load(page);
       });
-
       li.appendChild(a);
       return li;
     };
 
-    // -------------------------------------------------------------
-    // 2️⃣  Prev arrow
-    // -------------------------------------------------------------
-    ul.appendChild(
-      makeItem(
-        "←",
-        meta.previous_page_number, // ← target page
-        !meta.has_previous,
-      ), // disabled?
-    );
+    ul.appendChild(makeItem("←", meta.previous_page_number, !meta.has_previous));
+    ul.appendChild(makeItem("1", null, false, meta.page === 1));
+    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
 
-    // -------------------------------------------------------------
-    // 3️⃣  Page numbers – show up to 5 pages around the current one
-    // -------------------------------------------------------------
-    const total = meta.total_pages;
-    const cur = meta.page;
-
-    // always show first page
-    ul.appendChild(makeItem("1", null, false, cur === 1));
-
-    // gap between first page and the first inner page?
-    if (cur - 2 > 2) {
-      ul.appendChild(makeItem("…", null, false, false, true));
-    }
-
-    // inner window (max 5 total, centred on current)
-    const start = Math.max(2, cur - 1);
-    const end = Math.min(total - 1, cur + 1);
+    const start = Math.max(2, meta.page - 1);
+    const end   = Math.min(meta.total_pages - 1, meta.page + 1);
     for (let i = start; i <= end; i++) {
-      if (i !== 1 && i !== total) {
-        ul.appendChild(makeItem(String(i), null, false, cur === i));
+      if (i !== 1 && i !== meta.total_pages) {
+        ul.appendChild(makeItem(String(i), null, false, meta.page === i));
       }
     }
 
-    // another gap before the last page?
-    if (cur + 2 < total - 1) {
-      ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page + 2 < meta.total_pages - 1) ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.total_pages > 1) {
+      ul.appendChild(makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages));
     }
+    ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
 
-    // always show last page (if there is more than one page)
-    if (total > 1) {
-      ul.appendChild(makeItem(String(total), null, false, cur === total));
-    }
-
-    // -------------------------------------------------------------
-    // 4️⃣  Next arrow
-    // -------------------------------------------------------------
-    ul.appendChild(
-      makeItem(
-        "→",
-        meta.next_page_number, // → target page
-        !meta.has_next,
-      ), // disabled?
-    );
-
-    // Insert the paginator after the list (or wherever you like)
     $list.parentNode.appendChild(nav);
   }
 
   // -----------------------------------------------------------------
-  // 1️⃣  LOAD – GET a specific page (default = 1)
+  // 6️⃣  LOAD – GET a page and render the list
   // -----------------------------------------------------------------
   async function load(page = 1) {
     try {
-      const url = `${listUrl}?page=${page}`;
-      const resp = await fetch(url, { credentials: "same-origin" });
+      const resp = await fetch(`${listUrl}?page=${page}`, {
+        credentials: "same-origin",
+      });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
-      const payload = await resp.json(); // {results: [...], page:…, total_pages:…, …}
+      const payload = await resp.json();
 
-      // ---- Render the cards -------------------------------------------------
+      // ---- render cards -------------------------------------------------
       $list.innerHTML = "";
       const data = payload.results;
       if (data.length === 0) {
@@ -295,7 +240,7 @@ export function initSubjectWidget(rootEl) {
         });
       }
 
-      // ---- Render (or replace) the paginator -------------------------------
+      // ---- paginator ----------------------------------------------------
       renderPaginator(payload);
     } catch (e) {
       $status.textContent = `❌ ${e}`;
@@ -303,7 +248,7 @@ export function initSubjectWidget(rootEl) {
   }
 
   // -----------------------------------------------------------------
-  // 2️⃣  CREATE – POST a new subject (unchanged)
+  // 7️⃣  CREATE – POST a new subject (unchanged)
   // -----------------------------------------------------------------
   async function create() {
     if (!$codeInput || !$nameInput) return;
@@ -311,7 +256,7 @@ export function initSubjectWidget(rootEl) {
     const payload = {
       subject_code: $codeInput.value.trim(),
       subject_name: $nameInput.value.trim(),
-      year: $yearSelect.value, // <-- NEW
+      year: $yearSelect.value,
     };
     if (!payload.subject_code || !payload.subject_name) {
       alert("Both fields are required");
@@ -334,7 +279,7 @@ export function initSubjectWidget(rootEl) {
         $status.textContent = `✅ Created #${created.id}`;
         $codeInput.value = "";
         $nameInput.value = "";
-        load(); // reload current page (still page 1)
+        load(); // stay on page 1
       } else {
         const err = await resp.json();
         $status.textContent = `❌ ${err.error || resp.statusText}`;
@@ -345,82 +290,111 @@ export function initSubjectWidget(rootEl) {
   }
 
   // -----------------------------------------------------------------
-  // 3️⃣  UPDATE – PUT a single subject (owner only) – unchanged
+  // 8️⃣  EDIT – modal (mirrors the module widget)
   // -----------------------------------------------------------------
-  async function editSubject(subject) {
-    // Build a tiny modal‑like prompt that also lets the user pick year.
-    // For simplicity we’ll reuse the same <select> that exists on the page.
-    const newCode = prompt("New code (blank = keep old)", subject.subject_code);
-    const newName = prompt("New name (blank = keep old)", subject.subject_name);
+  function openEditModal(subject) {
+    // -------------------------------------------------
+    // Build the modal **fresh** each time it is opened
+    // -------------------------------------------------
+    $modal.innerHTML = `
+        <div class="modal__backdrop"></div>
+        <div class="modal__content">
+            <h2>Edit subject</h2>
+            <form id="subject-edit-form">
+                <input type="hidden" name="subject_id" value="${subject.id}">
+                <label>
+                    Subject code
+                    <input type="text" name="subject_code" value="${subject.subject_code}" required>
+                </label>
+                <label>
+                    Subject name
+                    <input type="text" name="subject_name" value="${subject.subject_name}" required>
+                </label>
+                <label>
+                    Year
+                    <select name="year">
+                        ${[...$yearSelect.options]
+                          .map(
+                            (opt) =>
+                              `<option value="${opt.value}" ${
+                                opt.value === subject.year ? "selected" : ""
+                              }>${opt.textContent}</option>`
+                          )
+                          .join("")}
+                    </select>
+                </label>
 
-    // Ask for a new year – we reuse the options we already loaded.
-    let newYear = null;
-    if ($yearSelect) {
-      // clone the <select>, set its current value and ask the user to pick
-      const tempSelect = $yearSelect.cloneNode(true);
-      tempSelect.value = subject.year; // pre‑select current year
-      const html = tempSelect.outerHTML;
-      // Very quick way to show a prompt with HTML: use a custom dialog library,
-      // but for pure‑JS we’ll just use `prompt` with a numeric representation.
-      // (You could replace this with a nicer modal later.)
-      newYear = prompt(
-        `New year (blank = keep old)\n${subject.year_display} → ${subject.year}\n` +
-          "Enter one of: 1, 2, 3, 4",
-        subject.year,
-      );
-      if (newYear !== null && newYear.trim() === "") newYear = null;
-    }
+                <div class="modal__actions">
+                    <button type="submit" class="button-primary">Save</button>
+                    <button type="button" class="button-plain" id="subject-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    `;
 
-    if (newCode === null && newName === null && newYear === null) return; // cancelled
+    // ----- cancel button -------------------------------------------------
+    $modal.querySelector("#subject-cancel").addEventListener("click", () => {
+      $modal.classList.add("hidden");
+    });
 
-    const payload = {};
-    if (newCode !== null && newCode !== "")
-      payload.subject_code = newCode.trim();
-    if (newName !== null && newName !== "")
-      payload.subject_name = newName.trim();
-    if (newYear !== null && newYear !== "") payload.year = newYear.trim(); // <-- NEW
+    // ----- submit handler ------------------------------------------------
+    $modal.querySelector("#subject-edit-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const sid  = form.subject_id.value;
 
-    if (Object.keys(payload).length === 0) return; // nothing to send
+      const payload = {
+        subject_code: form.subject_code.value.trim(),
+        subject_name: form.subject_name.value.trim(),
+        year: form.year.value,
+      };
 
-    const url = updateTpl.replace("{id}", subject.id);
+      const url = replaceId(updateTpl, sid); // <-- correct URL
+      try {
+        const resp = await fetch(url, {
+          method: "PUT",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+          },
+          body: JSON.stringify(payload),
+        });
 
-    try {
-      const resp = await fetch(url, {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (resp.ok) {
-        $status.textContent = `✅ Updated #${subject.id}`;
+        if (!resp.ok) {
+          const err = await resp.json();
+          $status.textContent = `❌ ${err.error || resp.statusText}`;
+          return;
+        }
+
+        $status.textContent = "✅ Subject updated";
+        $modal.classList.add("hidden");
         load(); // refresh list
-      } else {
-        const err = await resp.json();
-        $status.textContent = `❌ ${err.error || resp.statusText}`;
+      } catch (err) {
+        $status.textContent = `❌ ${err}`;
       }
-    } catch (e) {
-      $status.textContent = `❌ ${e}`;
-    }
+    });
+
+    // show modal
+    $modal.classList.remove("hidden");
   }
 
   // -----------------------------------------------------------------
-  // 4️⃣  DELETE – DELETE a subject (owner only) – unchanged
+  // 9️⃣  DELETE – DELETE a subject (uses replaceId helper)
   // -----------------------------------------------------------------
   async function deleteSubject(pk) {
     if (!confirm("Delete this subject?")) return;
-    const url = deleteTpl.replace("{id}", pk);
+    const url = replaceId(deleteTpl, pk);
     try {
       const resp = await fetch(url, {
         method: "DELETE",
         credentials: "same-origin",
         headers: { "X-CSRFToken": csrftoken },
       });
+
       if (resp.status === 204) {
         $status.textContent = "✅ Deleted";
-        load(); // keep the same page (or fallback to last page)
+        load(); // refresh current page
       } else {
         const err = await resp.json();
         $status.textContent = `❌ ${err.error || resp.statusText}`;
@@ -431,9 +405,40 @@ export function initSubjectWidget(rootEl) {
   }
 
   // -----------------------------------------------------------------
-  // UI bindings
+  // 10️⃣  UI bindings & minimal modal CSS (exactly as in module_ajax.js)
   // -----------------------------------------------------------------
   if ($addBtn) $addBtn.addEventListener("click", create);
-  loadYearChoices();
-  load(); // initial load → page 1
+
+  // inject tiny CSS for the modal (you can move it to a static file)
+  const style = document.createElement("style");
+  style.textContent = `
+    #subject-edit-modal.hidden { display: none; }
+    #subject-edit-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #subject-edit-modal .modal__backdrop {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+    }
+    #subject-edit-modal .modal__content {
+      position: relative; background:#fff; padding:1.5rem;
+      border-radius:8px; max-width:460px; width:90%;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+    #subject-edit-modal label { display:block; margin-bottom:.75rem; }
+    #subject-edit-modal input[type="text"],
+    #subject-edit-modal select {
+      width:100%; padding:.4rem .6rem; margin-top:.2rem;
+    }
+    .modal__actions { text-align:right; margin-top:1rem; }
+    .button-primary { background:#2563eb; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
+    .button-plain   { background:transparent; color:#555; border:none; margin-left:.5rem; cursor:pointer; }
+  `;
+  document.head.appendChild(style);
+
+  // -----------------------------------------------------------------
+  // 11️⃣  Initial load
+  // -----------------------------------------------------------------
+  loadYearChoices();   // fills the year <select>
+  load();              // first page
 }
