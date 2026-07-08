@@ -831,43 +831,20 @@ def personal_material_detail(request, pk):
 @require_http_methods(["GET", "POST"])
 def api_module_highlight(request, module_id):
     """
-    GET  → returns all cached answers for the module.
-          Format:
-          {
-              "answers": [
-                  {
-                      "query": "programming",
-                      "answer": {
-                          "simplified": "...",
-                          "technical":  "..."
-                      }
-                  },
-                  …
-              ]
-          }
-
-    POST → expects JSON payload:
-            {
-                "query": "<highlighted text>",
-                "level": "simplified" | "technical"
-            }
-          Returns:
-            {
-                "query":   "...",
-                "answer":  "<HTML string for the selected level>",
-                "cached":  true|false
-            }
-          Only the requested level is queried / stored.
+    GET  → returns only the cached answers that belong to request.user.
+    POST → stores a new answer for request.user, using a case‑insensitive key.
     """
     module = get_object_or_404(Module, pk=module_id)
 
     # --------------------------------------------------------------
-    #  GET – list cached answers (unchanged except for column names)
+    #  GET – list cached answers *for the current user only*
     # --------------------------------------------------------------
     if request.method == "GET":
-        qs = HighlightAnswer.objects.filter(module=module).values(
-            "query", "answer_simplified", "answer_technical"
-        )
+        qs = HighlightAnswer.objects.filter(
+                module=module,
+                owner=request.user        # <-- filter by owner
+            ).values("query", "answer_simplified", "answer_technical")
+
         answers = [
             {
                 "query": item["query"],
@@ -881,40 +858,48 @@ def api_module_highlight(request, module_id):
         return JsonResponse({"answers": answers}, safe=False)
 
     # --------------------------------------------------------------
-    #  POST – ask AI for **one** level only
+    #  POST – ask AI for ONE level only
     # --------------------------------------------------------------
     try:
         payload = json.loads(request.body)
-        query = payload.get("query", "").strip()
+        raw_query = payload.get("query", "").strip()
         level = payload.get("level", "simplified").strip().lower()
-        if not query:
+
+        if not raw_query:
             raise ValueError("Empty query")
         if level not in {"simplified", "technical"}:
             raise ValueError("Invalid level – must be 'simplified' or 'technical'")
     except (json.JSONDecodeError, ValueError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # 1️⃣  Look for a cached answer *only* in the appropriate column
+    # ----- 1️⃣  canonicalise the query (lower‑case) -----------------
+    query = raw_query.lower()
+
+    # ----- 2️⃣  try to fetch an existing row for *this* user -------
     try:
-        stored = HighlightAnswer.objects.get(module=module, query=query)
+        stored = HighlightAnswer.objects.get(
+            module=module,
+            owner=request.user,
+            query=query,
+        )
         cached_answer = getattr(stored, f"answer_{level}")
-        if cached_answer:                     # already cached → return it
+        if cached_answer:  # already cached → return it
             return JsonResponse(
-                {"query": query, "answer": cached_answer, "cached": True},
+                {"query": raw_query, "answer": cached_answer, "cached": True},
                 status=200,
             )
     except HighlightAnswer.DoesNotExist:
-        # No row yet – we will create one after the AI call
-        stored = HighlightAnswer(module=module, query=query)
+        # No row yet – create a *blank* instance; we will fill it later.
+        stored = HighlightAnswer(module=module, owner=request.user, query=query)
 
-    # 2️⃣  Call the AI **once** for the requested level
-    answer_body = ask_ai_one_level(query, level)
+    # ----- 3️⃣  call the AI *once* for the requested level ----------
+    answer_body = ask_ai_one_level(raw_query, level)   # keep original casing for the AI
 
-    # 3️⃣  Store the answer in the correct column
+    # ----- 4️⃣  store the answer in the correct column ---------------
     setattr(stored, f"answer_{level}", answer_body)
-    stored.save()   # saves only the column we just set
+    stored.save()   # persists only the column we just set (plus owner/module/query)
 
     return JsonResponse(
-        {"query": query, "answer": answer_body, "cached": False},
+        {"query": raw_query, "answer": answer_body, "cached": False},
         status=200,
     )
