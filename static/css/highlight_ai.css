@@ -162,6 +162,7 @@
 }
 
 .highlight-marked--simplified {
+<<<<<<< HEAD
     --highlight-bg: #eaffef;
     --highlight-hover-bg: #c8f7d0;
     --highlight-shadow: rgba(22, 163, 74, 0.2);
@@ -209,6 +210,17 @@
         box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 0 0 2px rgba(59, 130, 246, 0.2), 0 0 0 4px rgba(191, 219, 254, 0.35);
         transform: translateY(-1px) scale(1.01);
     }
+=======
+    background: #b2ffcd;
+}
+
+.highlight-marked--technical {
+    background: #ffeda6;
+}
+
+.highlight-marked--both {
+    background: #9cc7ff;
+>>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
 }
 
 .module-content-history {
