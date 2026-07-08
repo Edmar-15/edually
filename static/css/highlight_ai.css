@@ -120,15 +120,15 @@
 }
 
 .highlight-marked--simplified {
-    background: #dcfce7;
+    background: #b2ffcd;
 }
 
 .highlight-marked--technical {
-    background: #fef3c7;
+    background: #ffeda6;
 }
 
 .highlight-marked--both {
-    background: #dbeafe;
+    background: #9cc7ff;
 }
 
 .module-content-history {
