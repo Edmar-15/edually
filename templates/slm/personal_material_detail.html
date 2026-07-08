@@ -31,6 +31,15 @@
                 <h2 id="material-content-title">Material Preview</h2>
                 <p>{% if pm.visibility == "PU" %}Publicly shared{% else %}Your private material{% endif %}</p>
             </div>
+            <div class="module-content-history" aria-label="Highlight history">
+                <button type="button" class="module-content-history__toggle" id="highlight-history-toggle" aria-expanded="false" aria-controls="highlight-history-list">
+                    <span>Highlight History</span>
+                    <span id="highlight-history-count">0 items</span>
+                </button>
+                <div class="module-content-history__popover" id="highlight-history-popover" hidden>
+                    <ul id="highlight-history-list" class="module-content-history__list"></ul>
+                </div>
+            </div>
             <div class="module-content">
                 {% if pm.extracted_html %}
                     {{ pm.extracted_html|safe }}
@@ -57,19 +66,28 @@
     <script>
         (function () {
             const toolbar = document.getElementById('selection-toolbar');
+            const contentRoot = document.querySelector('.module-content-card .module-content');
 
             const hideToolbar = () => { toolbar.style.display = 'none'; };
-            const logAction   = (name) => {
-                const sel = window.getSelection().toString().trim();
-                console.log(`${name} clicked – selection:`, sel);
-                hideToolbar();
+            const isSelectionInContent = (selection) => {
+                if (!selection || selection.rangeCount === 0 || !contentRoot) return false;
+                const range = selection.getRangeAt(0);
+                const checkNode = (node) => {
+                    let current = node;
+                    while (current) {
+                        if (current === contentRoot) return true;
+                        current = current.parentNode;
+                    }
+                    return false;
+                };
+                return checkNode(range.startContainer) && checkNode(range.endContainer);
             };
 
             const showToolbarForSelection = (event) => {
                 const sel  = window.getSelection();
                 const text = sel.toString().trim();
                 if (toolbar.contains(event.target)) return;
-                if (!text) { hideToolbar(); return; }
+                if (!text || !isSelectionInContent(sel)) { hideToolbar(); return; }
 
                 const range = sel.getRangeAt(0);
                 const rect  = range.getBoundingClientRect();
@@ -104,17 +122,19 @@
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
         const toolbar = document.getElementById('selection-toolbar');
         const moduleId = {{ pm.id }};
+        const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        // ---- preload cached highlights (same as in module_detail) ----
+        // ---- preload cached highlights (scoped to the content card) ----
         (async () => {
             try {
                 const resp = await fetch(`/slm/api/modules/${moduleId}/highlight/`);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
+                if (!contentRoot) return;
                 data.answers.forEach(item => {
                     const esc = item.query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                     const re  = new RegExp(`(${esc})`, 'gi');
-                    document.body.innerHTML = document.body.innerHTML.replace(re,
+                    contentRoot.innerHTML = contentRoot.innerHTML.replace(re,
                         '<span class="highlight-marked">$1</span>');
                 });
             } catch (e) {
@@ -123,7 +143,7 @@
         })();
 
         // ---- activate the new mini‑AI behaviour ----
-        initHighlightAI(toolbar, moduleId);
+        initHighlightAI(toolbar, moduleId, contentRoot);
     </script>
 </body>
 </html>

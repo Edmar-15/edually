@@ -27,6 +27,15 @@
                 <h2 id="module-content-title">Module Content</h2>
                 <p>Preview of the uploaded material.</p>
             </div>
+            <div class="module-content-history" aria-label="Highlight history">
+                <button type="button" class="module-content-history__toggle" id="highlight-history-toggle" aria-expanded="false" aria-controls="highlight-history-list">
+                    <span>Highlight History</span>
+                    <span id="highlight-history-count">0 items</span>
+                </button>
+                <div class="module-content-history__popover" id="highlight-history-popover" hidden>
+                    <ul id="highlight-history-list" class="module-content-history__list"></ul>
+                </div>
+            </div>
             <div class="module-content">
                 {% if module.extracted_html %}
                     {{ module.extracted_html|safe }}
@@ -50,12 +59,21 @@
     <script>
         (function () {
             const toolbar = document.getElementById('selection-toolbar');
+            const contentRoot = document.querySelector('.module-content-card .module-content');
 
             const hideToolbar = () => { toolbar.style.display = 'none'; };
-            const logAction   = (name) => {
-                const sel = window.getSelection().toString().trim();
-                console.log(`${name} clicked – selection:`, sel);
-                hideToolbar();
+            const isSelectionInContent = (selection) => {
+                if (!selection || selection.rangeCount === 0 || !contentRoot) return false;
+                const range = selection.getRangeAt(0);
+                const checkNode = (node) => {
+                    let current = node;
+                    while (current) {
+                        if (current === contentRoot) return true;
+                        current = current.parentNode;
+                    }
+                    return false;
+                };
+                return checkNode(range.startContainer) && checkNode(range.endContainer);
             };
 
             // ---- same mouse / touch handling you already had ----
@@ -64,7 +82,7 @@
                 const text = sel.toString().trim();
 
                 if (toolbar.contains(event.target)) return;
-                if (!text) { hideToolbar(); return; }
+                if (!text || !isSelectionInContent(sel)) { hideToolbar(); return; }
 
                 const range = sel.getRangeAt(0);
                 const rect  = range.getBoundingClientRect();
@@ -99,17 +117,19 @@
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
         const toolbar  = document.getElementById('selection-toolbar');
         const moduleId = {{ module.id|default:"null" }};
+        const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        // ---- pre‑load already‑cached highlights (unchanged) ----
+        // ---- pre‑load already‑cached highlights (scoped to the content card) ----
         (async () => {
             try {
                 const resp = await fetch(`/slm/api/modules/${moduleId}/highlight/`);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();               // {answers:[{query,…}]}
+                if (!contentRoot) return;
                 data.answers.forEach(item => {
                     const esc = item.query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                     const re  = new RegExp(`(${esc})`, 'gi');
-                    document.body.innerHTML = document.body.innerHTML.replace(re,
+                    contentRoot.innerHTML = contentRoot.innerHTML.replace(re,
                         '<span class="highlight-marked">$1</span>');
                 });
             } catch (e) {
@@ -118,7 +138,7 @@
         })();
 
         // ---- activate the new mini‑AI behaviour ----
-        initHighlightAI(toolbar, moduleId);
+        initHighlightAI(toolbar, moduleId, contentRoot);
     </script>
 </body>
 </html>
