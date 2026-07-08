@@ -1,45 +1,40 @@
 {% load static %}
 
-
 <div id="subject-widget"
      class="subject-widget"
      data-list-url="{% url 'slm:subject-list' %}"
      data-create-url="{% url 'slm:subject-create' %}"
-     data-update-url="{% url 'slm:subject-update' pk=0 %}"
-     data-delete-url="{% url 'slm:subject-delete' pk=0 %}">
+     data-update-url="{% url 'slm:subject-update' 0 %}"      {# ← dummy 0 #}
+     data-delete-url="{% url 'slm:subject-delete' 0 %}"      {# ← dummy 0 #}>
 
-    <div class="subject-form-card">
+    <!-- Status line (ARIA live) -->
+    <p id="subject-status" aria-live="polite"></p>
+
+    <!-- Optional “Add subject” form – only visible to the *owner* -->
+    <section class="subject-form-card" aria-label="Add subject form">
         <div class="subject-form-card__header">
             <div>
                 <h3>Add a new subject</h3>
-                <p>Create a new learning subject for others to explore.</p>
+                <span>Create a new learning subject for others to explore.</span>
             </div>
         </div>
         <div class="subject-form-card__body">
             <input type="text" id="code-input" placeholder="Subject code (e.g. GEC101)">
             <input type="text" id="name-input" placeholder="Subject name">
-            <select id="year-select">
-                <!-- Options will be filled by JS -->
-            </select>
-            <button id="add-btn">Add subject</button>
+            <select id="year-select"></select>   {# will be populated by JS #}
+            <button type="button" id="add-btn">Add subject</button>
         </div>
         <p id="status" class="subject-status"></p>
-    </div>
+    </section>
 
-    <div class="subject-list-card">
-        <div class="subject-list-card__header">
-            <div>
-                <h3>Available subjects</h3>
-                <p>Browse public subjects and open their learning modules.</p>
-            </div>
-        </div>
-        <div id="subject-list">
-            <p class="subject-list-loading">Loading subjects…</p>
-        </div>
-    </div>
+
+    <!-- The list that the widget will fill -->
+    <div id="subject-list"></div>
+
+    <!-- Empty modal placeholder – the script will populate it -->
+    <div id="subject-edit-modal" class="modal hidden"></div>
 </div>
 
-{% comment %} {# ---- Tiny bootstrap that imports the module ---- #} {% endcomment %}
 <script type="module">
     import { initSubjectWidget } from "{% static 'js/slm/subject_ajax.js' %}";
     const widget = document.getElementById('subject-widget');
