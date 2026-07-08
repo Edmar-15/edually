@@ -151,27 +151,37 @@ class HighlightAnswer(models.Model):
     """
     One row per exact highlighted string that has already been sent to the AI.
     """
-    module = models.ForeignKey(Module,
+    module   = models.ForeignKey(Module,
                                on_delete=models.CASCADE,
                                related_name="highlight_answers")
+    # -----------------------------------------------------------------
+    # NEW – the user that created the answer
+    # -----------------------------------------------------------------
+    owner    = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="highlight_answers",
+        help_text="User that asked the question – guarantees a private cache."
+    )
+
+    # store the *canonical* version of the highlighted text (lower‑case)
     query = models.CharField(max_length=255,
-                             help_text="Exact highlighted text.")
-    # ----- NEW COLUMNS -------------------------------------------------
+                             help_text="Exact highlighted text (lower‑cased).")
+
+    # -----------------------------------------------------------------
+    # NEW columns – one per level (still keep the old JSON field for a migration
+    # window – it will be left untouched)
+    # -----------------------------------------------------------------
     answer_simplified = models.TextField(blank=True, null=True,
                                          help_text="Simplified explanation.")
-    answer_technical = models.TextField(blank=True, null=True,
-                                        help_text="Technical explanation.")
-    # KEEP THE OLD JSON FIELD ONLY for the short migration window.
-    answer = models.JSONField(blank=True,
-                              null=True,
-                              help_text="(Deprecated) Two‑part answer.")
+    answer_technical  = models.TextField(blank=True, null=True,
+                                         help_text="Technical explanation.")
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("module", "query")
+        # now unique per module + query + owner
+        unique_together = ("module", "query", "owner")
         ordering = ["-created_at"]
         verbose_name = "Highlight answer"
         verbose_name_plural = "Highlight answers"
-
-    def __str__(self):
-        return f"{self.module.id}:{self.query[:30]}…"
