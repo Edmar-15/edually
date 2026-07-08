@@ -120,11 +120,15 @@
 
     <script type="module">
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
-        const toolbar = document.getElementById('selection-toolbar');
-        const moduleId = {{ pm.id }};
+        const toolbar   = document.getElementById('selection-toolbar');
+        const moduleId  = {{ pm.id }};
         const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        // ---- activate the new mini‑AI behaviour ----
+        /* -----------------------------------------------------------------
+         * Cached highlights are loaded by the highlight helper itself.
+         * This keeps the DOM annotations and tooltip data consistent
+         * before the selection toolbar is activated.
+         * ----------------------------------------------------------------- */
         initHighlightAI(toolbar, moduleId, contentRoot);
     </script>
 </body>
