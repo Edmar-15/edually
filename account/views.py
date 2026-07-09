@@ -26,7 +26,7 @@ from django.views.generic import TemplateView
 # --------------------------------------------------------------
 # Existing imports continued (forms, models, etc.)
 # --------------------------------------------------------------
-from .forms import PublicRegisterForm
+from .forms import PublicRegisterForm, ProfileForm
 from .models import UserConsent
 
 User = get_user_model()
@@ -196,6 +196,40 @@ def google_callback(request):
     )
     return redirect(next_url)
 
+def landing(request):
+    return render(request, "account/landing.html")
+
+@login_required(login_url='account:login')
+def dashboard(request):
+    return render(request, 'dashboard.html')
+
+@login_required(login_url="account:login")
+def profile(request):
+    """
+    Render the profile page.
+    GET  – show the read‑only overview + edit form (collapsed).
+    POST – validate & save changes, then redirect back.
+    """
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your profile was updated.")
+            return redirect("account:profile")
+        messages.error(request, "Please correct the errors below.")
+    else:
+        form = ProfileForm(instance=request.user)
+
+    context = {
+        "user_obj": request.user,
+        "profile_form": form,
+    }
+    return render(request, "account/profile.html", context)
+
+
+# -----------------------------------------------------------------
+# REGISTER – unchanged except it now uses the trimmed PublicRegisterForm
+# -----------------------------------------------------------------
 def register(request):
     policy_context = {
         "policy_version": django_settings.POLICY_VERSION,
@@ -214,7 +248,7 @@ def register(request):
                 auth_login(request, user)
                 messages.success(request, "Welcome! Your account has been created.")
                 return redirect(reverse_lazy("account:dashboard"))
-            messages.warning(request, "Account created but auto-login failed. Please log in.")
+            messages.warning(request, "Account created but auto‑login failed. Please log in.")
             return redirect(reverse_lazy("account:login"))
 
         messages.error(request, "Please fix the errors below.")
@@ -222,17 +256,6 @@ def register(request):
         form = PublicRegisterForm()
 
     return render(request, "account/register.html", {"form": form, **policy_context})
-
-def landing(request):
-    return render(request, "account/landing.html")
-
-@login_required(login_url='account:login')
-def dashboard(request):
-    return render(request, 'dashboard.html')
-
-@login_required(login_url='account:login')
-def profile(request):
-    return render(request, 'account/profile.html')
 
 @login_required(login_url='account:login')
 @ensure_csrf_cookie
