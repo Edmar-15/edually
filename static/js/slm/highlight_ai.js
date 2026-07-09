@@ -28,6 +28,7 @@ export function initHighlightAI(toolbar, moduleId,
     const historyCount  = document.getElementById('highlight-history-count');
     const historyToggle = document.getElementById('highlight-history-toggle');
     const historyPopover= document.getElementById('highlight-history-popover');
+<<<<<<< HEAD
 
     const historyEntries = [];
     const highlightStates = new Map();
@@ -37,15 +38,29 @@ export function initHighlightAI(toolbar, moduleId,
     // -----------------------------------------------------------------
     // 3️⃣ Normalise everything to lower‑case (DB stores lower‑case)
     // -----------------------------------------------------------------
+=======
+
+    const historyEntries = [];
+
+    /* -----------------------------------------------------------------
+     * 3️⃣ Normalise every query (lower‑case) – DB stores lower‑case
+     * ----------------------------------------------------------------- */
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
     const normalise = (txt) => (txt || '').trim().toLowerCase();
 
     // Internal maps keyed by the *normalised* query.
     const highlightStates = new Map();   // { simplified:bool, technical:bool }
     const answerStore      = new Map();   // { simplified:'html', technical:'html' }
 
+<<<<<<< HEAD
     // -----------------------------------------------------------------
     // 4️⃣ History UI helpers
     // -----------------------------------------------------------------
+=======
+    /* -----------------------------------------------------------------
+     * 4️⃣ History UI helpers
+     * ----------------------------------------------------------------- */
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
     const toggleHistoryPopover = () => {
         if (!historyPopover || !historyToggle) return;
         const next = historyPopover.hidden;
@@ -57,6 +72,7 @@ export function initHighlightAI(toolbar, moduleId,
         historyPopover.hidden = true;
         historyToggle.setAttribute('aria-expanded', 'false');
     };
+<<<<<<< HEAD
 <<<<<<< HEAD
 
     const clearActiveHistoryHighlight = () => {
@@ -93,6 +109,8 @@ export function initHighlightAI(toolbar, moduleId,
 
 =======
 >>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
+=======
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
     const updateHistoryUI = () => {
         if (!historyList) return;
         historyList.innerHTML = '';
@@ -102,6 +120,7 @@ export function initHighlightAI(toolbar, moduleId,
             empty.textContent = 'No highlights yet.';
             historyList.appendChild(empty);
         } else {
+<<<<<<< HEAD
 <<<<<<< HEAD
             historyEntries.slice().reverse().forEach((entry) => {
                 const item = document.createElement('li');
@@ -136,6 +155,16 @@ export function initHighlightAI(toolbar, moduleId,
                 `;
                 historyList.appendChild(li);
 >>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
+=======
+            historyEntries.slice().reverse().forEach(entry => {
+                const li = document.createElement('li');
+                li.className = 'module-content-history__item';
+                li.innerHTML = `
+                    <span class="module-content-history__text">${entry.text}</span>
+                    <span class="module-content-history__meta">${entry.levels.join(' + ')}</span>
+                `;
+                historyList.appendChild(li);
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
             });
         }
         if (historyCount) {
@@ -181,6 +210,26 @@ export function initHighlightAI(toolbar, moduleId,
         if (ans.technical)   parts.push(`Technical:\n${ans.technical}`);
         return parts.join('\n\n');
     };
+<<<<<<< HEAD
+=======
+
+    /* -----------------------------------------------------------------
+     * 6️⃣ CSS class helper
+     * ----------------------------------------------------------------- */
+    const getHighlightClassName = (state) => {
+        const simp = !!state?.simplified;
+        const tech = !!state?.technical;
+        if (simp && tech) return 'highlight-marked highlight-marked--both';
+        if (simp)          return 'highlight-marked highlight-marked--simplified';
+        if (tech)          return 'highlight-marked highlight-marked--technical';
+        return 'highlight-marked';
+    };
+
+    /* -----------------------------------------------------------------
+     * 7️⃣ Tooltip handling (click‑to‑show)
+     * ----------------------------------------------------------------- */
+    let activeTooltip = null;   // single tooltip at a time
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
 
     /* -----------------------------------------------------------------
      * 6️⃣ CSS class helper
@@ -222,11 +271,16 @@ export function initHighlightAI(toolbar, moduleId,
 
         // Otherwise close any existing tooltip and open a new one.
         removeTooltip();
+<<<<<<< HEAD
+=======
+
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
         const tip = document.createElement('div');
         tip.className = 'highlight-answer-tooltip';
         tip.dataset.for = query;                     // remember which query it belongs to
         tip.innerHTML = `<div class="highlight-answer-tooltip__body">${renderMarkdown(answer)}</div>`;
         document.body.appendChild(tip);
+<<<<<<< HEAD
         const rect = span.getBoundingClientRect();
         const maxW = Math.min(320, window.innerWidth - 24);
         const left = Math.min(rect.left + window.scrollX,
@@ -280,10 +334,20 @@ export function initHighlightAI(toolbar, moduleId,
                               document.documentElement.clientWidth - maxW - 8);
         const top  = rect.bottom + window.scrollY + 8;
 
+=======
+
+        const rect = span.getBoundingClientRect();
+        const maxW = Math.min(320, window.innerWidth - 24);
+        const left = Math.min(rect.left + window.scrollX,
+                              document.documentElement.clientWidth - maxW - 8);
+        const top  = rect.bottom + window.scrollY + 8;
+
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
         tip.style.top = `${top}px`;
         tip.style.left = `${Math.max(8, left)}px`;
         tip.style.maxWidth = `${maxW}px`;
         activeTooltip = tip;
+<<<<<<< HEAD
 >>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
     };
 
@@ -293,6 +357,20 @@ export function initHighlightAI(toolbar, moduleId,
         span.addEventListener('focus',    () => showTooltip(span, query));
         span.addEventListener('mouseleave', removeTooltip);
         span.addEventListener('blur',        removeTooltip);
+=======
+    };
+
+    const attachHighlightEvents = (span, query) => {
+        if (span.dataset.clickBound === 'true') return;
+
+        // ---------- Click toggles the tooltip ----------
+        span.addEventListener('click', (e) => {
+            e.stopPropagation();           // keep the document‑click handler from closing it immediately
+            showTooltip(span, query);
+        });
+
+        // Make the span focusable for keyboard users – pressing *Enter* will fire the click.
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
         span.setAttribute('tabindex', '0');
         span.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -412,8 +490,7 @@ export function initHighlightAI(toolbar, moduleId,
                 document.removeEventListener('mousedown', clickOutside);
             }
         };
-        document.addEventListener("mousedown", clickOutside);
-
+        document.addEventListener('mousedown', clickOutside);
         return mini;
     };
 
@@ -520,12 +597,12 @@ export function initHighlightAI(toolbar, moduleId,
     };
 
     const renderAnswer = (mini, html, cached) => {
-        const box = mini.querySelector(".ai-answer");
+        const box = mini.querySelector('.ai-answer');
         box.innerHTML = `
             ${cached ? '<span class="ai-cached">🗃️ Cached answer</span>' : ''}
             <div class="ai-answer-content">${renderMarkdown(html)}</div>
         `;
-        box.classList.remove("hidden");
+        box.classList.remove('hidden');
     };
 
     /* -----------------------------------------------------------------
@@ -697,6 +774,7 @@ export function initHighlightAI(toolbar, moduleId,
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     document.addEventListener("mouseup", onSelectionDone);
     document.addEventListener('click', (event) => {
         if (!historyPopover || historyPopover.hidden) return;
@@ -713,6 +791,8 @@ export function initHighlightAI(toolbar, moduleId,
     document.addEventListener("touchend", (e) => setTimeout(() => onSelectionDone(e), 10));
     document.addEventListener("selectionchange", () => {
 =======
+=======
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
     // -----------------------------------------------------------------
     // Mouse / touch handling (same as before)
     // -----------------------------------------------------------------
@@ -720,7 +800,10 @@ export function initHighlightAI(toolbar, moduleId,
     document.addEventListener('touchend', (e) => setTimeout(() => onSelectionDone(e), 10));
 
     document.addEventListener('selectionchange', () => {
+<<<<<<< HEAD
 >>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
+=======
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
         const sel = window.getSelection();
         if (!sel || !sel.toString().trim() || !isSelectionWithinContent(sel)) {
             if (mini) mini.remove();

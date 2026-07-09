@@ -163,6 +163,7 @@
 
 .highlight-marked--simplified {
 <<<<<<< HEAD
+<<<<<<< HEAD
     --highlight-bg: #eaffef;
     --highlight-hover-bg: #c8f7d0;
     --highlight-shadow: rgba(22, 163, 74, 0.2);
@@ -221,6 +222,17 @@
 .highlight-marked--both {
     background: #9cc7ff;
 >>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
+=======
+    background: #b2ffcd;
+}
+
+.highlight-marked--technical {
+    background: #ffeda6;
+}
+
+.highlight-marked--both {
+    background: #9cc7ff;
+>>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
 }
 
 .module-content-history {

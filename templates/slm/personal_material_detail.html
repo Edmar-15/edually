@@ -125,11 +125,18 @@
         const moduleId  = {{ pm.id }};
         const contentRoot = document.querySelector('.module-content-card .module-content');
 
+<<<<<<< HEAD
+        // ---- activate the new mini‑AI behaviour ----
+=======
         /* -----------------------------------------------------------------
-         * Cached highlights are loaded by the highlight helper itself.
-         * This keeps the DOM annotations and tooltip data consistent
-         * before the selection toolbar is activated.
+         *  Cached highlights are now loaded by `highlight_ai.js` itself.
+         *  The function `preloadExistingHighlights()` fetches the same
+         *  endpoint, populates the internal maps and decorates the DOM.
+         *  Keeping a separate “inline” replacement caused the spans to
+         *  miss the required data‑attributes, which made the hover‑tooltip
+         *  appear empty.
          * ----------------------------------------------------------------- */
+>>>>>>> 1c991a0 (highlighting less buggy (needs refactoring))
         initHighlightAI(toolbar, moduleId, contentRoot);
     </script>
 </body>
