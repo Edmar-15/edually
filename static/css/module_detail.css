@@ -1,70 +1,271 @@
+/* ==============================================================
+   Module Detail Page – Full Design System (drop‑in CSS)
+   ============================================================== */
+
 /* -----------------------------------------------------------------
-         * Card layout (unchanged)
-         * ----------------------------------------------------------------- */
-        .module-content-card {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 1.5rem;
-            border: 1px solid #e7edf5;
-            border-radius: 16px;
-            background: #ffffff;
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-        }
-        .module-content-card__header {
-            margin-bottom: 1rem;
-            padding-bottom: .75rem;
-            border-bottom: 1px solid #eef2f7;
-        }
-        .module-content-card__header h2 {
-            margin: 0 0 .25rem;
-            font-size: 1.2rem;
-            color: #0f172a;
-        }
-        .module-content-card__header p {
-            margin:0;
-            color:#64748b;
-            font-size:.95rem;
-        }
-        .module-content { line-height:1.6; }
-        .module-content h1,
-        .module-content h2,
-        .module-content h3 { margin-top:1.4rem; }
-        .module-content p { margin:.5rem 0; }
-        .module-content img { max-width:100%; }
-        .module-actions { text-align:right; }
+   1️⃣ Card layout – a subtle gradient + stronger shadow
+   ----------------------------------------------------------------- */
+.module-content-card {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    border: 1px solid #e7edf5;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #fafbfc, #fff);
+    /* Slightly stronger shadow for depth */
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+}
 
-        /* -----------------------------------------------------------------
-         *  📌  Floating toolbar – appears when the user selects text
-         * ----------------------------------------------------------------- */
-        .selection-toolbar {
-            position: absolute;
-            top:0;
-            left:0;
-            display:none;                     /* hidden until needed */
-            background:#fff;
-            border:1px solid #e2e8f0;
-            border-radius:6px;
-            box-shadow:0 2px 8px rgba(0,0,0,.12);
-            padding:4px 6px;
-            z-index:1000;
-            font-size:.9rem;
-            white-space:nowrap;
-        }
-        .selection-toolbar button {
-            background:transparent;
-            border:none;
-            cursor:pointer;
-            margin:0 2px;
-            padding:2px 4px;
-            color:#374151;
-        }
-        .selection-toolbar button:hover {
-            color:#2563eb;
-        }
-        .selection-toolbar i { margin-right:2px; }
+/* -----------------------------------------------------------------
+   2️⃣ Header inside the card
+   ----------------------------------------------------------------- */
+.module-content-card__header {
+    margin-bottom: 1rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid #eef2f7;
+}
+.module-content-card__header h2 {
+    margin: 0 0 .35rem;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #111827;
+}
+.module-content-card__header p {
+    margin: 0;
+    color: #6b7280;
+    font-size: .95rem;
+    line-height: 1.4;
+}
 
-        /* Make the tap‑target a little larger on tiny screens */
-        @media (max-width:480px) {
-            .selection-toolbar button { padding:.6rem .8rem; }
-        }
+/* -----------------------------------------------------------------
+   3️⃣ Main content – base typography (used for PDF pages)
+   ----------------------------------------------------------------- */
+.module-content {
+    line-height: 1.75;
+    color: #374151;
+}
 
+/* Paragraphs – comfortable width */
+.module-content p {
+    max-width: 70ch;               /* keep line length readable */
+    margin: .6rem 0;
+}
+
+/* Headings – clear hierarchy */
+.module-content h1,
+.module-content h2,
+.module-content h3,
+.module-content h4 {
+    margin-top: 1.6rem;
+    margin-bottom: .4rem;
+    line-height: 1.3;
+}
+.module-content h1 { font-size: 2rem;   color: #111827; }
+.module-content h2 { font-size: 1.6rem; color: #1f2937; }
+.module-content h3 { font-size: 1.35rem; color: #374151; }
+.module-content h4 { font-size: 1.2rem;  color: #475569; }
+
+/* Images – rounded corners + tiny zoom on hover */
+.module-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    cursor: zoom-in;
+    transition: transform .2s ease;
+}
+.module-content img:hover { transform: scale(1.02); }
+
+/* -----------------------------------------------------------------
+   4️⃣ PDF‑page “slide” blocks (already in your markup)
+   ----------------------------------------------------------------- */
+.pdf-page {
+    background: #fafafa;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.2rem;
+    border-radius: 6px;
+}
+
+/* Alternating background for easier scanning */
+.pdf-page:nth-child(even) { background: #f5f7fa; }
+
+/* Hide completely empty pages */
+.pdf-page:empty,
+.pdf-page p:empty { display: none; }
+
+/* Paragraphs inside a PDF page */
+.pdf-page > p {
+    margin: .4rem 0;
+    color: #1f2937;
+}
+
+/* Turn a single‑line “title” paragraph into a heading‑style */
+.pdf-page > p:first-child:only-child,
+.pdf-page > p:first-child:not(:empty):not(:has(~ p)) {
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #111827;
+    margin-bottom: .6rem;
+}
+
+/* Remove stray “•” paragraphs that only contain a bullet character */
+.pdf-page p:has(+ ul) + p,
+.pdf-page p:only-child:matches(:contains('•')) { display: none; }
+
+/* -----------------------------------------------------------------
+   5️⃣ PPTX‑page styling (new!)
+   ----------------------------------------------------------------- */
+
+/* General container – looks like a slide */
+.ppt-page {
+    background: #f8fafc;                 /* very light gray */
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin: 1.5rem 0;
+    padding: 1rem 1.2rem;
+}
+
+/* Slight alternating shade for visual rhythm */
+.ppt-page:nth-child(even) { background: #f1f5f9; }
+
+/* Remove default list‑style – we’ll add our own */
+.ppt-page ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── First‑level list items ──────────────────────────────────────── */
+/* The first <li> in every slide is usually the *slide number* */
+.ppt-page > ul > li:first-child {
+    font-weight: 600;
+    color: #2563eb;               /* accent colour for the number */
+    font-size: 1.2rem;
+    margin-bottom: .4rem;
+}
+
+/* The second <li> is often the *slide title* */
+.ppt-page > ul > li:nth-child(2) {
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #111827;
+    margin-bottom: .6rem;
+}
+
+/* Remaining first‑level items are normal bullet content */
+.ppt-page > ul > li:nth-child(n+3) {
+    margin: .35rem 0;
+    line-height: 1.6;
+    color: #1f2937;
+}
+
+/* ── Nested lists (used for tables, sub‑bullets, etc.) ──────────────── */
+.ppt-page ul ul {
+    margin-left: 1.8rem;          /* indent nested lists */
+    border-left: 2px solid #e2e8f0;
+    padding-left: .6rem;
+}
+.ppt-page ul ul li {
+    margin: .3rem 0;
+    color: #374151;
+}
+
+/* Optional visual cue for a “definition‑style” nested list */
+.ppt-page ul ul li::before {
+    content: "▸";
+    color: #9ca3af;
+    margin-right: .4rem;
+}
+
+/* ── Simple list‑style for plain bullet slides (no titles) ──────── */
+.ppt-page > ul > li {
+    /* already handled above, but keep a fallback */
+}
+
+/* If a slide is *purely* a list of items (e.g., a “summary” slide)
+   give a little more vertical spacing */
+.ppt-page > ul > li + li { margin-top: .6rem; }
+
+/* -----------------------------------------------------------------
+   6️⃣ Button (download) – keep existing style, add hover
+   ----------------------------------------------------------------- */
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: .45rem .9rem;
+    font-weight: 500;
+    font-size: .95rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s ease;
+}
+.button:hover { background: #1d4ed8; }
+
+/* Optional secondary style (available for future UI extensions) */
+.button.secondary {
+    background: #e5e7eb;
+    color: #111827;
+}
+.button.secondary:hover { background: #d1d5db; }
+
+/* -----------------------------------------------------------------
+   7️⃣ Floating selection‑toolbar – pill‑shaped + animation
+   ----------------------------------------------------------------- */
+.selection-toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;                       /* hidden until needed */
+    background: #ffffff;
+    background: linear-gradient(180deg, #fafafa, #fff);
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    padding: .5rem .8rem;
+    z-index: 1000;
+    font-size: .9rem;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity .15s ease, transform .15s ease;
+}
+.selection-toolbar.show {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+.selection-toolbar button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    margin: 0 2px;
+    padding: .4rem .6rem;
+    color: #374151;
+    font-size: .9rem;
+}
+.selection-toolbar button:hover { color: #2563eb; }
+.selection-toolbar button i { margin-right: 2px; font-size: 1.1rem; }
+
+/* Larger tap‑targets on tiny screens */
+@media (max-width: 480px) {
+    .selection-toolbar button { padding: .6rem .8rem; }
+    .module-content-card { margin: 1rem; padding: 1rem; }
+    .module-content p { max-width: 100%; }
+    .selection-toolbar {
+        left: 1rem !important;
+        right: 1rem !important;
+        width: auto;
+    }
+}
+
+/* -----------------------------------------------------------------
+   9️⃣ Misc helpers – keep the rest of your original rules
+   ----------------------------------------------------------------- */
+.module-actions { text-align: right; }
+
+/* End of module_detail.css ------------------------------------------------ */

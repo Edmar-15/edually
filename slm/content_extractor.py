@@ -215,12 +215,11 @@ def _extract_docx(raw: bytes) -> str:
       are extracted from the zip container and embedded as base64 data‑uri.
     Returns sanitised HTML.
     """
-    # Mammoth already inlines most images, but we add a post‑process
-    # for the rare case where the src points to a file path.
-    result = mammoth.convert_to_html(
-        io.BytesIO(raw),
-        convert_image=mammoth.images.inline(),
-    )
+    # NOTE: We **do not** pass a custom ``convert_image`` function.
+    # Mammoth’s default behavior works across all supported versions.
+    # The post‑processing step below will embed any image that is still
+    # referenced via a file path.
+    result = mammoth.convert_to_html(io.BytesIO(raw))
     raw_html = result.value
 
     if EXTRACTOR_SETTINGS["docx"]["embed_images"] and _BS4_AVAILABLE:
@@ -228,7 +227,7 @@ def _extract_docx(raw: bytes) -> str:
         for img in soup.find_all("img"):
             src = img.get("src", "")
             if src.startswith("data:"):
-                continue  # already safe
+                continue  # already a data‑uri, nothing to do
 
             # Try to read the image from the DOCX zip container
             try:
