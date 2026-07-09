@@ -98,6 +98,11 @@
   --radius-lg: 16px;
   --bp-sm: 640px;
   --bp-md: 900px;
+  --radius-xl: 24px;
+  --surface-elevated: rgba(255,255,255,0.96);
+  --surface-muted: #f8fafc;
+  --shadow-soft: 0 18px 48px rgba(15, 23, 42, 0.08);
+  --transition: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -137,12 +142,23 @@ input:checked + .slider:before { transform: translateX(20px); }
 /* Global body background to provide a muted canvas across the site */
 body {
   min-height: 100vh;
-  background: var(--bg);
+  margin: 0;
+  background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
   color: var(--text);
   line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02" 1, "cv03" 1;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+a:hover {
+  color: var(--primary-dark);
 }
 
 button,
@@ -151,6 +167,89 @@ select,
 textarea {
   font: inherit;
   color: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition), transform var(--transition);
+}
+
+input::placeholder,
+textarea::placeholder,
+select:invalid {
+  color: #94a3b8;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: rgba(14, 154, 167, 0.3);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(14, 154, 167, 0.45);
+  box-shadow: 0 0 0 4px rgba(14, 154, 167, 0.12);
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+input[type="file"] {
+  padding: 0.8rem 0.9rem;
+  border: 1px dashed rgba(14, 154, 167, 0.35);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(14, 154, 167, 0.06), rgba(255, 255, 255, 0.96));
+  color: var(--muted);
+  cursor: pointer;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+input[type="file"]::file-selector-button,
+input[type="file"]::-webkit-file-upload-button {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0.7rem 1rem;
+  margin-right: 0.8rem;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(14, 154, 167, 0.16);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+input[type="file"]:hover::file-selector-button,
+input[type="file"]:focus::file-selector-button,
+input[type="file"]::-webkit-file-upload-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(14, 154, 167, 0.2);
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  box-shadow: none;
+  accent-color: var(--primary);
 }
 
 /* Navbar logo image sizing and alignment */
@@ -205,21 +304,36 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  padding: 0.95rem 1.4rem;
+  padding: 0.9rem 1.35rem;
   border: none;
   border-radius: 999px;
   color: #ffffff;
-  background: #0e9aa7;
-  box-shadow: 0 16px 40px rgba(14, 154, 167, 0.12);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  box-shadow: 0 14px 30px rgba(14, 154, 167, 0.16);
   text-decoration: none;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  font-weight: 700;
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
 }
 
 .button:hover,
 .button:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 22px 50px rgba(14, 154, 167, 0.16);
-  background: #0b7b80;
+  box-shadow: 0 20px 42px rgba(14, 154, 167, 0.2);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #0a666b 100%);
+}
+
+.button-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid rgba(14, 154, 167, 0.2);
+  box-shadow: none;
+}
+
+.button-outline:hover,
+.button-outline:focus-visible {
+  background: rgba(14, 154, 167, 0.08);
+  color: var(--primary-dark);
+  box-shadow: none;
 }
 
 /* Card elevation and interactive lift */
@@ -231,15 +345,20 @@ body {
 .module-content-card,
 .profile-overview-card,
 .profile-details-card {
-  transition: transform 220ms ease, box-shadow 220ms ease;
+  background: var(--surface-elevated);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--transition), box-shadow var(--transition);
 }
+
 .card:hover,
 .home-item:hover,
 .benefit-item:hover,
 .test-card:hover,
 .hero-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 30px 80px rgba(16,42,67,0.12);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
 }
 
 /* Simple fade-up animation */

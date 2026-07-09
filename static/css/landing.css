@@ -28,13 +28,14 @@ body {
 /* Header */
 .page-header {
     width: 100%;
-    padding: 22px 32px;
+    padding: 18px 32px;
     position: sticky;
     top: 0;
     z-index: 20;
-    background: rgba(255,255,255,0.88);
-    backdrop-filter: blur(12px);
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(14px);
     border-bottom: 1px solid rgba(84,105,129,0.12);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 .header-inner {
     max-width: 1200px;
@@ -141,10 +142,7 @@ body {
     max-width: 420px;
     padding: 32px;
     border-radius: 32px;
-    background:
-        radial-gradient(circle at top left,
-            rgba(14,154,167,0.16), transparent 40%),
-        rgba(255,255,255,0.95);
+    background: linear-gradient(135deg, rgba(14,154,167,0.12), rgba(255,255,255,0.96));
     box-shadow: var(--shadow);
     border: 1px solid rgba(84,105,129,0.08);
 }
@@ -168,10 +166,10 @@ body {
     margin-bottom: 48px;
 }
 .home-item, .benefit-item, .info-section, .project-overview {
-    background: var(--surface);
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
     border-radius: 28px;
     padding: 28px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-soft);
     border: 1px solid rgba(148,163,184,0.12);
 }
 .home-item, .benefit-item { margin-bottom: 8px; }

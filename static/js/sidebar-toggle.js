@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
   const body = document.body;
-  body.classList.add('SidebarProvider');
-
   const sidebar = document.getElementById('sidebar');
   const mainContent = document.querySelector('.main-content');
 
@@ -9,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  body.classList.add('SidebarProvider');
   mainContent.classList.add('SidebarInset');
 
   let trigger = document.querySelector('.sidebar-trigger');
@@ -17,13 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!sidebarHeader) {
       return;
     }
+
     trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'sidebar-trigger';
     trigger.setAttribute('aria-controls', 'sidebar');
     trigger.setAttribute('aria-expanded', 'true');
     trigger.setAttribute('aria-label', 'Collapse navigation sidebar');
-    trigger.innerHTML = '<span class="sr-only">Toggle sidebar</span><i class="fas fa-bars" aria-hidden="true"></i>';
+    trigger.innerHTML = '<span class="sr-only">Toggle sidebar</span><svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
     sidebarHeader.insertBefore(trigger, sidebarHeader.firstChild);
   }
 
@@ -33,37 +33,44 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const STORAGE_KEY = 'eduallySidebarState';
+  let isAnimating = false;
+
+  const applyState = (isCollapsed) => {
+    body.classList.toggle('sidebar-collapsed', isCollapsed);
+    setExpandedState(!isCollapsed);
+  };
+
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'collapsed') {
-      body.classList.add('sidebar-collapsed');
-      setExpandedState(false);
+      applyState(true);
     }
   } catch (error) {
     // Ignore storage errors in restricted environments.
   }
 
-  // Prevent rapid double-toggles by ignoring clicks while animating.
-  let isAnimating = false;
-
   const handleToggle = () => {
-    if (isAnimating) return;
+    if (isAnimating) {
+      return;
+    }
+
     isAnimating = true;
-
-    // reflect new state immediately for screen readers
-    const collapsed = body.classList.toggle('sidebar-collapsed');
-    setExpandedState(!collapsed);
-
-    // disable the trigger to avoid extra clicks
     trigger.disabled = true;
     body.classList.add('sidebar-animating');
 
-    // Listen for the sidebar transition end; only respond when target is the sidebar
-    const onEnd = (ev) => {
-      if (ev.target !== sidebar) return;
-      // Only consider relevant properties to avoid multiple callbacks
-      const prop = ev.propertyName || '';
-      if (prop && !/width|transform|padding/.test(prop)) return;
+    const shouldCollapse = !body.classList.contains('sidebar-collapsed');
+    applyState(shouldCollapse);
+
+    const onEnd = (event) => {
+      if (event.target !== sidebar) {
+        return;
+      }
+
+      const prop = event.propertyName || '';
+      if (prop && !/width|transform|padding|margin-left|opacity/.test(prop)) {
+        return;
+      }
+
       sidebar.removeEventListener('transitionend', onEnd);
       body.classList.remove('sidebar-animating');
       trigger.disabled = false;
@@ -72,20 +79,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sidebar.addEventListener('transitionend', onEnd);
 
-    // Fallback: ensure we re-enable if transitionend doesn't fire
-    setTimeout(() => {
+    window.setTimeout(() => {
       if (isAnimating) {
         body.classList.remove('sidebar-animating');
         trigger.disabled = false;
         isAnimating = false;
         try {
           sidebar.removeEventListener('transitionend', onEnd);
-        } catch (e) {}
+        } catch (error) {
+          // Ignore cleanup errors.
+        }
       }
-    }, 600);
+    }, 350);
 
     try {
-      localStorage.setItem(STORAGE_KEY, collapsed ? 'collapsed' : 'expanded');
+      localStorage.setItem(STORAGE_KEY, shouldCollapse ? 'collapsed' : 'expanded');
     } catch (error) {
       // Ignore storage errors.
     }

@@ -48,7 +48,7 @@
                     </div>
 
                     <div class="profile-summary">
-                        <p><strong>Program</strong></p>
+                        <p><strong>Course / Program</strong></p>
                         <p>{{ user_obj.program|default:"–" }}</p>
                     </div>
 
@@ -63,8 +63,8 @@
                     </div>
 
                     <div class="profile-actions">
-                        <a href="#edit-form" class="button primary-button">Edit Profile</a>
-                        <button class="button secondary-button">View History</button>
+                        <button type="button" class="button primary-button" id="edit-profile-toggle">Edit Profile</button>
+                        <button type="button" class="button secondary-button">View History</button>
                     </div>
                 </aside>
 
@@ -72,10 +72,10 @@
                 <section class="profile-details-card" id="edit-form">
                     <div class="details-header">
                         <h2>Edit Personal Information</h2>
-                        <p>Make changes and press **Save**. Required fields are marked.</p>
+                        <p>Make changes and press Save. Required fields are marked.</p>
                     </div>
 
-                    <form method="post" enctype="multipart/form-data" novalidate>
+                    <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
 
                         {% if messages %}
@@ -88,34 +88,34 @@
 
                         {{ profile_form.non_field_errors }}
 
-                        <div class="floating-label-group input-group">
-                            <label for="{{ profile_form.first_name.id_for_label }}">First name</label>
-                            {{ profile_form.first_name }}
+                        <div class="name-row">
+                            <div class="floating-label-group input-group">
+                                <label for="{{ profile_form.first_name.id_for_label }}">First name</label>
+                                {{ profile_form.first_name }}
+                            </div>
+
+                            <div class="floating-label-group input-group">
+                                <label for="{{ profile_form.last_name.id_for_label }}">Last name</label>
+                                {{ profile_form.last_name }}
+                            </div>
                         </div>
 
                         <div class="floating-label-group input-group">
-                            <label for="{{ profile_form.last_name.id_for_label }}">Last name</label>
-                            {{ profile_form.last_name }}
-                        </div>
-
-                        <div class="floating-label-group input-group">
-                            <label for="{{ profile_form.avatar.id_for_label }}">Avatar (optional)</label>
                             {{ profile_form.avatar }}
-                            {% if user_obj.avatar %}
-                                <p class="small-text">Current: <img src="{{ user_obj.avatar.url }}" alt="Current avatar" style="height:40px;"></p>
-                            {% endif %}
                         </div>
 
                         <hr class="form-section-divider">
 
-                        <div class="floating-label-group input-group">
-                            <label for="{{ profile_form.student_id.id_for_label }}">Student ID (optional)</label>
-                            {{ profile_form.student_id }}
-                        </div>
+                        <div class="name-row">
+                            <div class="floating-label-group input-group">
+                                <label for="{{ profile_form.student_id.id_for_label }}">Student ID (optional)</label>
+                                {{ profile_form.student_id }}
+                            </div>
 
-                        <div class="floating-label-group input-group">
-                            <label for="{{ profile_form.program.id_for_label }}">Program / Course</label>
-                            {{ profile_form.program }}
+                            <div class="floating-label-group input-group">
+                                <label for="{{ profile_form.program.id_for_label }}">Course / Program</label>
+                                {{ profile_form.program }}
+                            </div>
                         </div>
 
                         <div class="floating-label-group input-group">
@@ -123,8 +123,8 @@
                             {{ profile_form.year_level }}
                         </div>
 
-                        <button type="submit" class="button primary-button" style="margin-top:1.5rem;">Save changes</button>
-                        <a href="{% url 'account:profile' %}" class="button outline-button" style="margin-left:1rem;">Cancel</a>
+                        <button type="submit" class="button primary-button" style="margin-top:1.5rem;" id="save-profile-button" disabled>Save changes</button>
+                        <button type="button" class="button outline-button" style="margin-left:1rem;" id="cancel-edit-profile" disabled>Cancel</button>
                     </form>
                 </section>
             </div>
@@ -134,5 +134,45 @@
 
 <script src="{% static 'js/floating_labels.js' %}"></script>
 <script src="{% static 'js/form_validation.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('profile-form');
+        if (!form) return;
+
+        const editButton = document.getElementById('edit-profile-toggle');
+        const saveButton = document.getElementById('save-profile-button');
+        const cancelButton = document.getElementById('cancel-edit-profile');
+        const editableFields = form.querySelectorAll('input, select, textarea');
+        const setEditingState = (isEditing) => {
+            editableFields.forEach((field) => {
+                field.disabled = !isEditing;
+            });
+            saveButton.disabled = !isEditing;
+            cancelButton.disabled = !isEditing;
+            form.classList.toggle('is-editing', isEditing);
+            if (isEditing) {
+                editButton.textContent = 'Editing...';
+                editButton.disabled = true;
+            } else {
+                editButton.textContent = 'Edit Profile';
+                editButton.disabled = false;
+            }
+        };
+
+        setEditingState(false);
+
+        editButton.addEventListener('click', function () {
+            setEditingState(true);
+            const firstField = form.querySelector('input:not([type="hidden"]), select, textarea');
+            if (firstField) {
+                firstField.focus();
+            }
+        });
+
+        cancelButton.addEventListener('click', function () {
+            setEditingState(false);
+        });
+    });
+</script>
 </body>
 </html>
