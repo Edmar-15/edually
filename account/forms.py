@@ -18,14 +18,13 @@ User = get_user_model()
 class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].widget = forms.EmailInput(attrs={
-            'placeholder': 'Email Address',
-            'autocomplete': 'username',
-        })
-        self.fields['password'].widget.attrs.update({
-            'placeholder': 'Password',
-            'autocomplete': 'current-password',
-        })
+        self.fields["username"].widget = forms.EmailInput(
+            attrs={"placeholder": "Email Address", "autocomplete": "username"}
+        )
+        self.fields["password"].widget.attrs.update(
+            {"placeholder": "Password", "autocomplete": "current-password"}
+        )
+
 
 class UserCreationForm(DjangoUserCreationForm):
     class Meta(DjangoUserCreationForm.Meta):
@@ -35,9 +34,10 @@ class UserCreationForm(DjangoUserCreationForm):
             "username",
             "first_name",
             "last_name",
-            "phone_number",
-            "birth_date",
             "avatar",
+            "student_id",
+            "program",
+            "year_level",
         )
 
 
@@ -59,11 +59,11 @@ class PublicRegisterForm(forms.ModelForm):
         strip=False,
         widget=forms.PasswordInput(attrs={"placeholder": "Confirm your password"}),
     )
-    
+
     accept_terms = forms.BooleanField(
         label=(
             "I have read and agree to the "
-            "<a href=\"{% url 'account:terms' %}\" target=\"_blank\">Terms & Conditions</a> "
+            "<a href=\"{% url 'account:terms' %}\" target=\"_blank\">Terms &amp; Conditions</a> "
             "and the <a href=\"{% url 'account:privacy' %}\" target=\"_blank\">Privacy Notice</a>."
         ),
         required=True,
@@ -76,9 +76,10 @@ class PublicRegisterForm(forms.ModelForm):
             "username",
             "first_name",
             "last_name",
-            "phone_number",
-            "birth_date",
             "avatar",
+            "student_id",
+            "program",
+            "year_level",
         )
         widgets = {
             "email": forms.EmailInput(attrs={"placeholder": "you@example.com"}),
@@ -114,3 +115,33 @@ class PublicRegisterForm(forms.ModelForm):
                 accepted_at=timezone.now(),
             )
         return user
+
+
+# -----------------------------------------------------------------
+# NEW – PROFILE FORM (used on the profile page)
+# -----------------------------------------------------------------
+class ProfileForm(forms.ModelForm):
+    """Form displayed on the profile page for editing allowed fields."""
+    class Meta:
+        model = User
+        fields = (
+            "first_name",
+            "last_name",
+            "avatar",
+            "student_id",
+            "program",
+            "year_level",
+        )
+        widgets = {
+            "first_name": forms.TextInput(attrs={"placeholder": "First name"}),
+            "last_name": forms.TextInput(attrs={"placeholder": "Last name"}),
+            "avatar": forms.ClearableFileInput(),
+            "student_id": forms.TextInput(attrs={"placeholder": "e.g. 0323‑4526"}),
+            "program": forms.TextInput(attrs={"placeholder": "e.g. Information Technology"}),
+            "year_level": forms.TextInput(attrs={"placeholder": "e.g. 3rd Year"}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        # No special validation needed now, but you can add checks here.
+        return cleaned

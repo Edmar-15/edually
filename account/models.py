@@ -21,12 +21,26 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     first_name = models.CharField("first name", max_length=150, blank=True)
     last_name = models.CharField("last name", max_length=150, blank=True)
-    phone_number = models.CharField(
-        "phone number", max_length=20, blank=True, help_text="Optional."
-    )
-    birth_date = models.DateField("date of birth", blank=True, null=True)
+
     avatar = models.ImageField(
         "profile picture", upload_to="avatars/", blank=True, null=True
+    )
+    
+    student_id   = models.CharField(
+        "Student ID",
+        max_length=30,
+        blank=True,
+        help_text="University‑assigned identifier (optional).",
+    )
+    program      = models.CharField(
+        "Program / Course",
+        max_length=100,
+        blank=True,
+    )
+    year_level   = models.CharField(
+        "Year Level",
+        max_length=20,
+        blank=True,
     )
 
     is_staff = models.BooleanField(
