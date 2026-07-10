@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.title }} – EduAlly Forum</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <aside class="forum-sidebar">
+        {% include "components/category_nav.html" %}
+    </aside>
+
+    <main class="main-content">
+        <section class="forum-page">
+
+            <!-- THE QUESTION -->
+            <article class="post-item{% if post.verified %} verified{% endif %}">
+                <div class="post-main">
+                    <div class="post-meta">
+                        {% if post.category %}
+                            <span class="tag">{{ post.category.name }}</span>
+                        {% endif %}
+                        <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                        {% if post.verified %}
+                            <span class="badge verified-badge">Teacher Verified</span>
+                        {% endif %}
+                    </div>
+                    <h2 class="post-title">{{ post.title }}</h2>
+                    <p class="post-author">by {{ post.author.get_full_name|default:post.author.username }}</p>
+                    <div class="post-content">
+                        {{ post.content|linebreaks }}
+                    </div>
+                </div>
+
+                <div class="post-stats">
+                    <div class="stats-row">
+                        <a href="{% url 'forum:upvote' post.pk %}" class="stat upvote-link">
+                            {{ post.upvotes }} upvote{{ post.upvotes|pluralize }}
+                        </a>
+                        <span class="stat">{{ post.replies_cnt }} repl{{ post.replies_cnt|pluralize:"y,ies" }}</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- REPLIES -->
+            <section class="replies">
+                <h3>{{ post.replies_cnt }} Reply{{ post.replies_cnt|pluralize }}</h3>
+
+                {% for reply in replies %}
+                <div class="reply-item" style="margin-top:1.5rem; padding:1rem; border:1px solid #e0e0e0; border-radius:6px;">
+                    <p class="reply-author" style="margin:0 0 .5rem;">
+                        <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
+                        • {{ reply.created_at|timesince }} ago
+                    </p>
+                    <div class="reply-content">{{ reply.content|linebreaks }}</div>
+                </div>
+                {% empty %}
+                <p class="no-replies">No replies yet. Be the first to answer!</p>
+                {% endfor %}
+            </section>
+
+            <!-- ADD REPLY FORM -->
+            <section class="add-reply" style="margin-top:2rem;">
+                <h3>Leave a Reply</h3>
+                <form method="post" class="reply-form">
+                    {% csrf_token %}
+                    {{ reply_form.as_p }}
+                    <button type="submit" class="button primary-button">Post Reply</button>
+                </form>
+            </section>
+
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<nav class="category-nav">
+    <h3 class="sidebar-title">Categories</h3>
+    <ul>
+        <li{% if not active_category %} class="active"{% endif %}>
+            <a href="{% url 'forum:feed' %}">All</a>
+        </li>
+        {% for cat in categories %}
+        <li{% if active_category == cat.slug %} class="active"{% endif %}>
+            <a href="{% url 'forum:feed' %}?cat={{ cat.slug }}">{{ cat.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
