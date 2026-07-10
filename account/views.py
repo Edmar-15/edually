@@ -28,6 +28,7 @@ from django.views.generic import TemplateView
 # --------------------------------------------------------------
 from .forms import PublicRegisterForm, ProfileForm
 from .models import UserConsent
+from slm.models import Module
 
 User = get_user_model()
 
@@ -201,7 +202,53 @@ def landing(request):
 
 @login_required(login_url='account:login')
 def dashboard(request):
-    return render(request, 'dashboard.html')
+    subjects = request.user.subjects.all()[:3]
+    modules = Module.objects.filter(subject__author=request.user).select_related("subject")[:3]
+    recent_activity = [
+        {
+            "title": "Continue where you left off",
+            "detail": "Open your latest module and pick up your progress in a few seconds.",
+            "icon": "fas fa-play-circle",
+        },
+        {
+            "title": "Ask the AI Helper",
+            "detail": "Get guidance on confusing topics before they become blockers.",
+            "icon": "fas fa-robot",
+        },
+        {
+            "title": "Join the forum",
+            "detail": "See what classmates are asking and share a useful insight.",
+            "icon": "fas fa-comment",
+        },
+    ]
+
+    onboarding_steps = [
+        {
+            "title": "Complete your profile",
+            "detail": "Add your course details and a profile photo so your learning space feels personal.",
+            "done": bool(request.user.first_name or request.user.last_name or request.user.program),
+        },
+        {
+            "title": "Open a module",
+            "detail": "Review the latest materials and start building momentum with one small step.",
+            "done": modules.exists(),
+        },
+        {
+            "title": "Ask one question",
+            "detail": "Share what you are stuck on and let the community or AI helper support you.",
+            "done": False,
+        },
+    ]
+
+    context = {
+        "subjects": subjects,
+        "modules": modules,
+        "recent_activity": recent_activity,
+        "module_count": modules.count(),
+        "subject_count": subjects.count(),
+        "onboarding_steps": onboarding_steps,
+    }
+    return render(request, 'dashboard.html', context)
 
 @login_required(login_url="account:login")
 def profile(request):

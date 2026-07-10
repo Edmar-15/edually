@@ -42,6 +42,14 @@
 
                     <div class="profile-badge">Active Student</div>
 
+                    <div class="profile-highlights">
+                        <div class="profile-highlight-card">
+                            <span class="highlight-label">Profile strength</span>
+                            <strong>Almost there</strong>
+                            <p>Keep your details current so your learning space feels personal and easier to navigate.</p>
+                        </div>
+                    </div>
+
                     <div class="profile-summary">
                         <p><strong>Student ID</strong></p>
                         <p>{{ user_obj.student_id|default:"–" }}</p>
@@ -74,6 +82,8 @@
                         <h2>Edit Personal Information</h2>
                         <p>Make changes and press Save. Required fields are marked.</p>
                     </div>
+
+                    <div class="profile-form-note">Keep your profile current so classmates and staff can recognize you quickly.</div>
 
                     <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}

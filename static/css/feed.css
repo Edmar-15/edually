@@ -68,8 +68,8 @@ body {
 }
 
 .button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 18px 40px rgba(79, 70, 229, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px rgba(14, 154, 167, 0.16);
 }
 
 /* Search */
@@ -125,8 +125,9 @@ body {
 }
 
 .post-item:hover {
-    transform: translateY(-2px);
-    border-color: rgba(79, 70, 229, 0.18);
+    transform: translateY(-3px);
+    border-color: rgba(14, 154, 167, 0.24);
+    box-shadow: 0 20px 42px rgba(14, 154, 167, 0.12);
 }
 
 .post-item.verified {
@@ -210,6 +211,38 @@ body {
 .stat {
     color: var(--muted);
     font-size: 0.95rem;
+}
+
+.forum-empty-state {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+    padding: 30px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(14, 154, 167, 0.08), rgba(255,255,255,0.96));
+    border: 1px dashed rgba(14, 154, 167, 0.24);
+    box-shadow: var(--shadow);
+}
+
+.forum-empty-state__icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: rgba(14, 154, 167, 0.12);
+    font-size: 1.5rem;
+}
+
+.forum-empty-state h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.forum-empty-state p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.7;
 }
 
 /* Responsive */

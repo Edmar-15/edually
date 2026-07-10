@@ -14,8 +14,8 @@
             <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
         </a>
         <nav class="main-nav">
-            <a href="{% url 'landing' %}">Home</a>
-            <a href="{% url 'account:register' %}">Register</a>
+            <a class="button button-outline" href="{% url 'landing' %}">Home</a>
+            <a class="button" href="{% url 'account:register' %}">Register</a>
         </nav>
     </div>
 </header>
@@ -67,7 +67,7 @@
                 {% endif %}
             </div>
 
-            <button type="submit">Log in</button>
+            <button type="submit" class="button">Log in</button>
         </form>
 
         <div class="social-login">

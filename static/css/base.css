@@ -4,6 +4,8 @@
 :root {
   --primary: #0E9AA7;
   --primary-dark: #0B7B80;
+  --primary-soft: rgba(14, 154, 167, 0.12);
+  --primary-strong: #0A7B83;
   --accent: #FF6B6B;
   --teal: #0E9AA7;
   --coral: #FF6B6B;
@@ -103,6 +105,8 @@
   --surface-muted: #f8fafc;
   --shadow-soft: 0 18px 48px rgba(15, 23, 42, 0.08);
   --transition: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-slow: 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ring: rgba(14, 154, 167, 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -141,14 +145,31 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 /* Global body background to provide a muted canvas across the site */
 body {
+  position: relative;
   min-height: 100vh;
   margin: 0;
-  background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+  background: linear-gradient(135deg, #f7fbfc 0%, var(--bg) 45%, #eef7f9 100%);
   color: var(--text);
   line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02" 1, "cv03" 1;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top left, rgba(14, 154, 167, 0.10), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(255, 107, 107, 0.08), transparent 28%);
+  z-index: -1;
+}
+
+::selection {
+  background: rgba(14, 154, 167, 0.24);
+  color: #0f172a;
 }
 
 a {
@@ -159,6 +180,24 @@ a {
 
 a:hover {
   color: var(--primary-dark);
+}
+
+button,
+.button,
+.nav-item,
+.quick-btn,
+.activity-item,
+.stat-card,
+.subject-card,
+.pm-card,
+.post-item,
+.home-item,
+.benefit-item,
+.overview-item,
+.module-content-card,
+.auth-card,
+.hero-card {
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background-color var(--transition), color var(--transition);
 }
 
 button,
@@ -250,6 +289,27 @@ input[type="checkbox"] {
   padding: 0;
   box-shadow: none;
   accent-color: var(--primary);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up,
+.animate-slide-in,
+.animate-pop {
+  animation: fadeUp 0.7s var(--transition-slow) both;
+}
+
+.animate-pop {
+  animation-duration: 0.55s;
 }
 
 /* Navbar logo image sizing and alignment */

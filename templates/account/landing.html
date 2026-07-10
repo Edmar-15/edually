@@ -30,11 +30,16 @@
         <section class="hero">
             <div class="hero-copy animate-fade-up">
                 <span class="eyebrow">Welcome to EduAlly</span>
-                <h1>AI-powered learning support for Self-Learning Modules.</h1>
-                <p>EduAlly is an AI-powered e-learning ecosystem with collaborative forums designed to improve SLM comprehension, reduce question-asking anxiety, and help learners progress confidently.</p>
+                <h1>Learn faster with calm, guided AI support.</h1>
+                <p>EduAlly helps students break down self-learning modules with clear explanations, collaborative support, and a less intimidating path to progress.</p>
                 <div class="button-group">
                     <a class="button" href="{% url 'account:register' %}">Get Started</a>
                     <a class="button button-outline" href="{% url 'account:login' %}">Sign In</a>
+                </div>
+                <div class="hero-highlights">
+                    <span>24/7 guided help</span>
+                    <span>Less pressure, more clarity</span>
+                    <span>Built for SLM learners</span>
                 </div>
             </div>
             <div class="hero-visual">
@@ -55,6 +60,30 @@
                     </defs>
                     <path fill="url(#g1)" d="M421.5,330.3Q396,410,324,427.5Q252,445,192.5,402.5Q133,360,96.5,303Q60,246,95,183.5Q130,121,190.5,90.5Q251,60,318.5,76Q386,92,426,147Q466,202,421.5,330.3Z"/>
                 </svg>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <div class="section-heading">
+                <span class="eyebrow">How it works</span>
+                <h2>Start in three simple steps</h2>
+            </div>
+            <div class="steps-grid">
+                <article class="step-card animate-fade-up">
+                    <div class="step-icon">1</div>
+                    <h3>Open your module</h3>
+                    <p>Upload or select your learning material and begin with a clear next step.</p>
+                </article>
+                <article class="step-card animate-fade-up">
+                    <div class="step-icon">2</div>
+                    <h3>Ask for guidance</h3>
+                    <p>Use the AI Helper for step-by-step explanations instead of getting stuck.</p>
+                </article>
+                <article class="step-card animate-fade-up">
+                    <div class="step-icon">3</div>
+                    <h3>Learn with others</h3>
+                    <p>Join the forum for support, discussion, and shared progress.</p>
+                </article>
             </div>
         </section>
 
@@ -108,12 +137,40 @@
             </article>
         </section>
 
+        <section class="testimonials-section">
+            <div class="section-heading">
+                <span class="eyebrow">Testimonials</span>
+                <h2>What learners are saying</h2>
+            </div>
+            <div class="testimonials-grid">
+                <article class="testimonial-card animate-fade-up">
+                    <p>“EduAlly made difficult modules feel less intimidating. The AI support helped me understand concepts step by step.”</p>
+                    <div class="testimonial-author">
+                        <strong>Maria</strong>
+                        <span>Student</span>
+                    </div>
+                </article>
+                <article class="testimonial-card animate-fade-up">
+                    <p>“I finally feel comfortable asking questions. The forum and guided explanations helped me stay consistent.”</p>
+                    <div class="testimonial-author">
+                        <strong>Jules</strong>
+                        <span>Independent Learner</span>
+                    </div>
+                </article>
+                <article class="testimonial-card animate-fade-up">
+                    <p>“The platform feels calm, organized, and genuinely supportive. It helped me complete my modules with more confidence.”</p>
+                    <div class="testimonial-author">
+                        <strong>Rina</strong>
+                        <span>Working Student</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
         <section id="about" class="info-section">
             <h2>Why EduAlly?</h2>
             <p>Designed for students who want structure, clarity, and motivation, EduAlly gives you simple tools to stay engaged and achieve more.</p>
         </section>
-
-        <!-- Testimonials removed per request -->
     </main>
 
     <footer class="page-footer" id="contact">

@@ -52,7 +52,20 @@
             {% endif %}
 
             <!-- The list that the widget will fill -->
-            <div id="module-list"></div>
+            <div id="module-list">
+                {% if not modules %}
+                <section class="module-empty-state" aria-live="polite">
+                    <div class="module-empty-state__icon">📚</div>
+                    <h3>No modules here yet</h3>
+                    <p>Share your first learning material and make this subject feel ready to study.</p>
+                    {% if request.user == subject.author %}
+                    <p class="module-empty-state__hint">Use the form above to upload the first module.</p>
+                    {% else %}
+                    <p class="module-empty-state__hint">Your instructor can add resources here when they're ready.</p>
+                    {% endif %}
+                </section>
+                {% endif %}
+            </div>
 
             <!-- Empty modal placeholder – the script will populate it -->
             <div id="module-edit-modal" class="modal hidden"></div>

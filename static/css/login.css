@@ -8,7 +8,7 @@ body {
     margin: 0;
     min-height: 100vh;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
+    background: linear-gradient(135deg, #eef7f9 0%, #f8fafc 100%);
     color: var(--text);
 }
 
@@ -53,6 +53,33 @@ body {
     font-size: 0.95rem;
 }
 
+.main-nav .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 18px;
+    border-radius: 999px;
+    border: none;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    font-weight: 700;
+    box-shadow: 0 12px 24px rgba(14, 154, 167, 0.16);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+
+.main-nav .button-outline {
+    background: rgba(255,255,255,0.9);
+    color: var(--primary);
+    border: 1px solid rgba(14, 154, 167, 0.2);
+    box-shadow: none;
+}
+
+.main-nav .button:hover,
+.main-nav .button:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(14, 154, 167, 0.2);
+}
+
 /* Page */
 .auth-page {
     min-height: calc(100vh - 84px);
@@ -65,11 +92,11 @@ body {
 /* Card */
 .auth-card {
     width: min(460px, 100%);
-    background: var(--card);
+    background: rgba(255,255,255,0.97);
     border-radius: 28px;
     padding: 24px 36px 38px;
-    box-shadow: var(--shadow);
-    border: 1px solid rgba(100, 116, 139, 0.12);
+    box-shadow: 0 24px 60px rgba(14, 154, 167, 0.12);
+    border: 1px solid rgba(14, 154, 167, 0.12);
 }
 
 .auth-card h1 {
@@ -189,8 +216,38 @@ button {
 }
 
 button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 16px 40px rgba(79, 70, 229, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(14, 154, 167, 0.18);
+}
+
+form button.button,
+form button[type="submit"] {
+    width: 100%;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    box-shadow: 0 12px 24px rgba(14, 154, 167, 0.16);
+}
+
+form button.button:hover,
+form button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(14, 154, 167, 0.2);
+}
+
+.toggle-password {
+    width: auto;
+    padding: 0.5rem;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    box-shadow: none;
+}
+
+.toggle-password:hover {
+    background: rgba(14, 154, 167, 0.08);
+    color: var(--primary);
+    transform: none;
+    box-shadow: none;
 }
 
 /* OAuth */

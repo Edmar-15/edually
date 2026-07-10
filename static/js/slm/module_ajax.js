@@ -38,6 +38,11 @@ export function initModuleWidget(rootEl) {
   const $list   = rootEl.querySelector("#module-list");
   const $status = rootEl.querySelector("#module-status");
 
+  if (!$list) {
+    console.warn("Module widget is missing #module-list container.");
+    return;
+  }
+
   const $numInput   = rootEl.querySelector("#module-number-input");
   const $nameInput  = rootEl.querySelector("#module-name-input");
   const $fileInput  = rootEl.querySelector("#module-file-input");
@@ -241,21 +246,33 @@ export function initModuleWidget(rootEl) {
       const payload = await resp.json();
 
       // ---- render cards -------------------------------------------------
-      $list.innerHTML = "";
       const data = payload.results;
       if (!data.length) {
-        $list.innerHTML = "<p>No modules yet.</p>";
-      } else {
-        let row;
-        data.forEach((mod, idx) => {
-          if (idx % 4 === 0) {
-            row = document.createElement("div");
-            row.className = "module-row";
-            $list.appendChild(row);
-          }
-          row.appendChild(renderCard(mod));
-        });
+        const existingEmpty = $list.querySelector(".module-empty-state");
+        if (!existingEmpty) {
+          $list.innerHTML = `
+            <section class="module-empty-state" aria-live="polite">
+              <div class="module-empty-state__icon">📚</div>
+              <h3>No modules here yet</h3>
+              <p>Share your first learning material and make this subject feel ready to study.</p>
+            </section>
+          `;
+        }
+        const old = rootEl.querySelector(".paginator");
+        if (old) old.remove();
+        return;
       }
+
+      $list.innerHTML = "";
+      let row;
+      data.forEach((mod, idx) => {
+        if (idx % 4 === 0) {
+          row = document.createElement("div");
+          row.className = "module-row";
+          $list.appendChild(row);
+        }
+        row.appendChild(renderCard(mod));
+      });
 
       // ---- paginator ----------------------------------------------------
       renderPaginator(payload);

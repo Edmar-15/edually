@@ -20,7 +20,7 @@
             <!-- Header -->
             <header class="content-header">
                 <div class="header-left">
-                    <h1>Welcome back, {{ user.username }}! <i class="fas fa-wave"></i></h1>
+                    <h1>Welcome back, {{ user.get_full_name|default:user.username|default:user.email }}! <i class="fas fa-wave"></i></h1>
                 </div>
                 <div class="header-right">
                     <span class="user-info">{{ user.email }}</span>
@@ -33,86 +33,105 @@
                 <section class="welcome-section">
                     <div class="welcome-card">
                         <h2>Ready to learn?</h2>
-                        <p>Start your learning journey today with AI-powered support and collaborative learning tools.</p>
+                        <p>Use your dashboard to pick up momentum, review your study materials, and keep your next step clear.</p>
                     </div>
                 </section>
 
-                <!-- Quick Access Buttons -->
-                <section class="quick-access">
-                    <h3>Quick Access</h3>
-                    <div class="quick-buttons">
-                        <a href="{% url 'aihelper:helper' %}" class="quick-btn ai-helper-btn">
-                            <i class="fas fa-brain btn-icon"></i>
-                            <span class="btn-title">AI Helper</span>
-                            <span class="btn-desc">Get instant explanations</span>
-                        </a>
-                        <a href="{% url 'forum:feed' %}" class="quick-btn forum-btn">
-                            <i class="fas fa-comments btn-icon"></i>
-                            <span class="btn-title">Forum</span>
-                            <span class="btn-desc">Ask the community</span>
-                        </a>
-                        <a href="{% url 'slm:slmlists' %}" class="quick-btn modules-btn">
-                            <i class="fas fa-book btn-icon"></i>
-                            <span class="btn-title">Modules</span>
-                            <span class="btn-desc">Access your SLMs</span>
-                        </a>
+                <section class="journey-section">
+                    <div class="journey-card">
+                        <div class="journey-copy">
+                            <span class="section-chip">Your learning snapshot</span>
+                            <h3>Continue where you left off</h3>
+                            <p>Here’s a simple view of your study space so you can jump back in with confidence.</p>
+                        </div>
+                        <div class="journey-steps">
+                            <a href="{% url 'slm:slmlists' %}" class="journey-step">
+                                <span class="step-badge">1</span>
+                                <div>
+                                    <strong>Open your modules</strong>
+                                    <p>{{ module_count }} module{{ module_count|pluralize }} ready to review or continue.</p>
+                                </div>
+                            </a>
+                            <a href="{% url 'forum:feed' %}" class="journey-step">
+                                <span class="step-badge">2</span>
+                                <div>
+                                    <strong>Join the forum</strong>
+                                    <p>Ask questions and see what classmates are discussing.</p>
+                                </div>
+                            </a>
+                            <a href="{% url 'aihelper:helper' %}" class="journey-step">
+                                <span class="step-badge">3</span>
+                                <div>
+                                    <strong>Ask the AI Helper</strong>
+                                    <p>Get quick explanations when a concept feels unclear.</p>
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </section>
 
-                <!-- Recent Activity -->
+                <section class="onboarding-section">
+                    <div class="onboarding-card">
+                        <div class="onboarding-card__header">
+                            <span class="section-chip">First-time setup</span>
+                            <h3>Set up your learning space</h3>
+                        </div>
+                        <p class="onboarding-card__intro">A quick checklist to help you get comfortable and make the most of your study tools.</p>
+                        <div class="onboarding-steps">
+                            {% for step in onboarding_steps %}
+                            <div class="onboarding-step{% if step.done %} onboarding-step--done{% endif %}">
+                                <span class="onboarding-step__icon">{% if step.done %}✓{% else %}•{% endif %}</span>
+                                <div>
+                                    <strong>{{ step.title }}</strong>
+                                    <p>{{ step.detail }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
                 <section class="recent-activity">
-                    <h3>Recent Activity</h3>
+                    <h3>Suggested next actions</h3>
                     <div class="activity-list">
+                        {% for item in recent_activity %}
                         <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-clipboard"></i></div>
+                            <div class="activity-icon"><i class="{{ item.icon }}"></i></div>
                             <div class="activity-details">
-                                <h4>Started Module: Introduction to SLMs</h4>
-                                <p class="activity-meta">2 hours ago</p>
+                                <h4>{{ item.title }}</h4>
+                                <p class="activity-meta">{{ item.detail }}</p>
                             </div>
                         </div>
+                        {% empty %}
                         <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-comment"></i></div>
+                            <div class="activity-icon"><i class="fas fa-compass"></i></div>
                             <div class="activity-details">
-                                <h4>Posted a question in Forum</h4>
-                                <p class="activity-meta">5 hours ago</p>
+                                <h4>Start with a small step</h4>
+                                <p class="activity-meta">Open a module or ask the AI helper to begin your next session.</p>
                             </div>
                         </div>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-check-circle"></i></div>
-                            <div class="activity-details">
-                                <h4>Completed a module assessment</h4>
-                                <p class="activity-meta">1 day ago</p>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-robot"></i></div>
-                            <div class="activity-details">
-                                <h4>Used AI Helper for concept explanation</h4>
-                                <p class="activity-meta">2 days ago</p>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </section>
 
-                <!-- Learning Stats -->
                 <section class="learning-stats">
-                    <h3>Your Progress</h3>
+                    <h3>Your progress</h3>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <span class="stat-number">3</span>
-                            <span class="stat-label">Modules Started</span>
+                            <span class="stat-number">{{ module_count }}</span>
+                            <span class="stat-label">Modules available</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">12</span>
-                            <span class="stat-label">Forum Posts</span>
+                            <span class="stat-number">{{ subject_count }}</span>
+                            <span class="stat-label">Subjects in your space</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">28</span>
-                            <span class="stat-label">AI Helper Queries</span>
+                            <span class="stat-number">{{ modules|length }}</span>
+                            <span class="stat-label">Recently added modules</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-number">85%</span>
-                            <span class="stat-label">Completion Rate</span>
+                            <span class="stat-number">{{ subjects|length }}</span>
+                            <span class="stat-label">Active study tracks</span>
                         </div>
                     </div>
                 </section>

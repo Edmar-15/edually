@@ -9,11 +9,10 @@
     max-width: 900px;
     margin: 2rem auto;
     padding: 1.5rem;
-    border: 1px solid #e7edf5;
+    border: 1px solid rgba(14, 154, 167, 0.16);
     border-radius: 16px;
     background: linear-gradient(180deg, #fafbfc, #fff);
-    /* Slightly stronger shadow for depth */
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
 }
 
 /* -----------------------------------------------------------------
@@ -139,7 +138,7 @@
 /* The first <li> in every slide is usually the *slide number* */
 .ppt-page > ul > li:first-child {
     font-weight: 600;
-    color: #2563eb;               /* accent colour for the number */
+    color: #0e9aa7;               /* accent colour for the number */
     font-size: 1.2rem;
     margin-bottom: .4rem;
 }
@@ -193,7 +192,7 @@
     display: inline-flex;
     align-items: center;
     gap: .4rem;
-    background: #2563eb;
+    background: #0e9aa7;
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -204,7 +203,7 @@
     text-decoration: none;
     transition: background .2s ease;
 }
-.button:hover { background: #1d4ed8; }
+.button:hover { background: #0b7b80; transform: translateY(-1px); }
 
 /* Optional secondary style (available for future UI extensions) */
 .button.secondary {
@@ -248,7 +247,7 @@
     color: #374151;
     font-size: .9rem;
 }
-.selection-toolbar button:hover { color: #2563eb; }
+.selection-toolbar button:hover { color: #0e9aa7; }
 .selection-toolbar button i { margin-right: 2px; font-size: 1.1rem; }
 
 /* Larger tap‑targets on tiny screens */

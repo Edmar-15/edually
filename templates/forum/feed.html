@@ -34,75 +34,34 @@
                 </section>
 
                 <section class="post-list">
-                    <div class="post-item verified">
-                        <div class="post-main">
-                            <div class="post-meta">
-                                <span class="tag">ITEC 306</span>
-                                <span class="post-time">5 minutes ago</span>
+                    {% if posts %}
+                        {% for post in posts %}
+                            <div class="post-item{% if post.verified %} verified{% endif %}">
+                                <div class="post-main">
+                                    <div class="post-meta">
+                                        <span class="tag">{{ post.subject }}</span>
+                                        <span class="post-time">{{ post.time }}</span>
+                                    </div>
+                                    <h2 class="post-title">{{ post.title }}</h2>
+                                    <p class="post-author">by {{ post.author }}</p>
+                                </div>
+                                <div class="post-stats">
+                                    {% if post.verified %}<span class="badge verified-badge">Teacher Verified</span>{% endif %}
+                                    <div class="stats-row">
+                                        <span class="stat">{{ post.upvotes }} upvotes</span>
+                                        <span class="stat">{{ post.replies }} replies</span>
+                                    </div>
+                                </div>
                             </div>
-                            <h2 class="post-title">How can I structure the app development workflow for our applications assignment?</h2>
-                            <p class="post-author">by Maria Santos</p>
+                        {% endfor %}
+                    {% else %}
+                        <div class="forum-empty-state">
+                            <div class="forum-empty-state__icon">💬</div>
+                            <h2>No discussions yet</h2>
+                            <p>Start the conversation and help your classmates by sharing a question, idea, or study tip.</p>
+                            <a href="#new-question" class="button primary-button">Start a discussion</a>
                         </div>
-                        <div class="post-stats">
-                            <span class="badge verified-badge">Teacher Verified</span>
-                            <div class="stats-row">
-                                <span class="stat">12 upvotes</span>
-                                <span class="stat">8 replies</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="post-item">
-                        <div class="post-main">
-                            <div class="post-meta">
-                                <span class="tag">ITEP 312</span>
-                                <span class="post-time">18 minutes ago</span>
-                            </div>
-                            <h2 class="post-title">What should I include in the capstone project proposal to meet the rubric?</h2>
-                            <p class="post-author">by Juan Dela Cruz</p>
-                        </div>
-                        <div class="post-stats">
-                            <div class="stats-row">
-                                <span class="stat">9 upvotes</span>
-                                <span class="stat">5 replies</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="post-item verified">
-                        <div class="post-main">
-                            <div class="post-meta">
-                                <span class="tag">ITEP 311</span>
-                                <span class="post-time">1 hour ago</span>
-                            </div>
-                            <h2 class="post-title">How can I make the authentication flow more secure for our security assignment?</h2>
-                            <p class="post-author">by Angela Reyes</p>
-                        </div>
-                        <div class="post-stats">
-                            <span class="badge verified-badge">Teacher Verified</span>
-                            <div class="stats-row">
-                                <span class="stat">17 upvotes</span>
-                                <span class="stat">11 replies</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="post-item">
-                        <div class="post-main">
-                            <div class="post-meta">
-                                <span class="tag">ITEL 305</span>
-                                <span class="post-time">2 hours ago</span>
-                            </div>
-                            <h2 class="post-title">What is the best way to document middleware connections for system integration?</h2>
-                            <p class="post-author">by Mark Villanueva</p>
-                        </div>
-                        <div class="post-stats">
-                            <div class="stats-row">
-                                <span class="stat">7 upvotes</span>
-                                <span class="stat">3 replies</span>
-                            </div>
-                        </div>
-                    </div>
+                    {% endif %}
                 </section>
             </div>
         </main>

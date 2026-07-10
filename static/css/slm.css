@@ -234,6 +234,44 @@
   border: 1px dashed rgba(14, 154, 167, 0.2);
 }
 
+.module-empty-state {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+  padding: 1.4rem;
+  border-radius: 20px;
+  border: 1px dashed rgba(14, 154, 167, 0.24);
+  background: linear-gradient(135deg, rgba(14, 154, 167, 0.08), rgba(255,255,255,0.96));
+  box-shadow: var(--module-shadow);
+}
+
+.module-empty-state__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(14, 154, 167, 0.12);
+  font-size: 1.5rem;
+}
+
+.module-empty-state h3 {
+  margin: 0;
+  color: var(--module-accent-dark);
+  font-size: 1.1rem;
+}
+
+.module-empty-state p {
+  margin: 0;
+  color: var(--muted-slm);
+  line-height: 1.7;
+}
+
+.module-empty-state__hint {
+  font-weight: 600;
+  color: var(--module-accent) !important;
+}
+
 @media (max-width: 1100px) {
   .module-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));

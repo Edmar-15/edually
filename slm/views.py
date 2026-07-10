@@ -840,10 +840,14 @@ def api_module_highlight(request, module_id):
     #  GET – list cached answers *for the current user only*
     # --------------------------------------------------------------
     if request.method == "GET":
-        qs = HighlightAnswer.objects.filter(
+        qs = (
+            HighlightAnswer.objects.filter(
                 module=module,
-                owner=request.user        # <-- filter by owner
-            ).values("query", "answer_simplified", "answer_technical")
+                owner=request.user,
+            )
+            .order_by("query")
+            .values("query", "answer_simplified", "answer_technical")
+        )
 
         answers = [
             {

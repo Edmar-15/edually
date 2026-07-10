@@ -28,39 +28,29 @@ export function initHighlightAI(toolbar, moduleId,
     const historyCount  = document.getElementById('highlight-history-count');
     const historyToggle = document.getElementById('highlight-history-toggle');
     const historyPopover= document.getElementById('highlight-history-popover');
-<<<<<<< HEAD
 
     const historyEntries = [];
-    const highlightStates = new Map();
-    const answerStore = new Map();
-    let activeTooltip = null;
+    let historyFocusTimer = null;
 
-    // -----------------------------------------------------------------
-    // 3️⃣ Normalise everything to lower‑case (DB stores lower‑case)
-    // -----------------------------------------------------------------
-=======
-
-    const historyEntries = [];
+    // Keep history scoped to the current module view and reset any stale entries
+    // when this script initializes on a new page.
+    historyList.innerHTML = '';
+    if (historyCount) {
+        historyCount.textContent = '0 items';
+    }
 
     /* -----------------------------------------------------------------
      * 3️⃣ Normalise every query (lower‑case) – DB stores lower‑case
      * ----------------------------------------------------------------- */
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
     const normalise = (txt) => (txt || '').trim().toLowerCase();
 
     // Internal maps keyed by the *normalised* query.
     const highlightStates = new Map();   // { simplified:bool, technical:bool }
     const answerStore      = new Map();   // { simplified:'html', technical:'html' }
 
-<<<<<<< HEAD
-    // -----------------------------------------------------------------
-    // 4️⃣ History UI helpers
-    // -----------------------------------------------------------------
-=======
     /* -----------------------------------------------------------------
      * 4️⃣ History UI helpers
      * ----------------------------------------------------------------- */
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
     const toggleHistoryPopover = () => {
         if (!historyPopover || !historyToggle) return;
         const next = historyPopover.hidden;
@@ -72,45 +62,6 @@ export function initHighlightAI(toolbar, moduleId,
         historyPopover.hidden = true;
         historyToggle.setAttribute('aria-expanded', 'false');
     };
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-    const clearActiveHistoryHighlight = () => {
-        if (!contentRoot) return;
-        contentRoot.querySelectorAll('.highlight-marked--active').forEach((span) => {
-            span.classList.remove('highlight-marked--active');
-        });
-    };
-
-    const focusHighlightByQuery = (query, { scroll = true } = {}) => {
-        const normalized = (query || '').trim();
-        if (!normalized || !contentRoot) return;
-
-        clearActiveHistoryHighlight();
-
-        const matches = Array.from(contentRoot.querySelectorAll('.highlight-marked'))
-            .filter((span) => {
-                const spanQuery = (span.dataset.highlightQuery || span.textContent || '').trim();
-                return spanQuery.toLowerCase() === normalized.toLowerCase();
-            });
-
-        if (matches.length === 0) return;
-
-        matches.forEach((span) => {
-            span.classList.add('highlight-marked--active');
-            if (!span.dataset.highlightQuery) {
-                span.dataset.highlightQuery = normalized;
-            }
-        });
-        if (scroll) {
-            matches[0].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-        }
-    };
-
-=======
->>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
-=======
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
     const updateHistoryUI = () => {
         if (!historyList) return;
         historyList.innerHTML = '';
@@ -120,51 +71,22 @@ export function initHighlightAI(toolbar, moduleId,
             empty.textContent = 'No highlights yet.';
             historyList.appendChild(empty);
         } else {
-<<<<<<< HEAD
-<<<<<<< HEAD
-            historyEntries.slice().reverse().forEach((entry) => {
-                const item = document.createElement('li');
-                item.className = 'module-content-history__item';
-                item.dataset.historyQuery = entry.text;
-                item.setAttribute('role', 'button');
-                item.setAttribute('tabindex', '0');
-                item.setAttribute('title', `Jump to “${entry.text}”`);
-                item.innerHTML = `
+            historyEntries.slice().reverse().forEach(entry => {
+                const li = document.createElement('li');
+                li.className = 'module-content-history__item';
+                li.tabIndex = 0;
+                li.innerHTML = `
                     <span class="module-content-history__text">${entry.text}</span>
                     <span class="module-content-history__meta">${entry.levels.join(' + ')}</span>
                 `;
-                item.addEventListener('click', () => {
-                    focusHighlightByQuery(entry.text);
-                    closeHistoryPopover();
-                });
-                item.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
+                li.addEventListener('click', () => focusHighlightByQuery(entry.text));
+                li.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
                         focusHighlightByQuery(entry.text);
-                        closeHistoryPopover();
                     }
                 });
-                historyList.appendChild(item);
-=======
-            historyEntries.slice().reverse().forEach(entry => {
-                const li = document.createElement('li');
-                li.className = 'module-content-history__item';
-                li.innerHTML = `
-                    <span class="module-content-history__text">${entry.text}</span>
-                    <span class="module-content-history__meta">${entry.levels.join(' + ')}</span>
-                `;
                 historyList.appendChild(li);
->>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
-=======
-            historyEntries.slice().reverse().forEach(entry => {
-                const li = document.createElement('li');
-                li.className = 'module-content-history__item';
-                li.innerHTML = `
-                    <span class="module-content-history__text">${entry.text}</span>
-                    <span class="module-content-history__meta">${entry.levels.join(' + ')}</span>
-                `;
-                historyList.appendChild(li);
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
             });
         }
         if (historyCount) {
@@ -181,6 +103,37 @@ export function initHighlightAI(toolbar, moduleId,
             historyEntries.push({ text: clean, levels: [level] });
         }
         updateHistoryUI();
+    };
+
+    const clearHistoryFocus = () => {
+        if (historyFocusTimer) {
+            window.clearTimeout(historyFocusTimer);
+            historyFocusTimer = null;
+        }
+        contentRoot.querySelectorAll('.highlight-history-focused').forEach(span => {
+            span.classList.remove('highlight-history-focused');
+        });
+    };
+
+    const focusHighlightByQuery = (query) => {
+        const q = normalise(query);
+        if (!q) return;
+
+        const matches = Array.from(contentRoot.querySelectorAll('.highlight-marked[data-highlight-query]'))
+            .filter(span => normalise(span.dataset.highlightQuery) === q);
+
+        if (!matches.length) return;
+
+        clearHistoryFocus();
+        matches.forEach(span => span.classList.add('highlight-history-focused'));
+
+        const target = matches[0];
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        closeHistoryPopover();
+
+        historyFocusTimer = window.setTimeout(() => {
+            clearHistoryFocus();
+        }, 2200);
     };
 
     /* -----------------------------------------------------------------
@@ -210,26 +163,6 @@ export function initHighlightAI(toolbar, moduleId,
         if (ans.technical)   parts.push(`Technical:\n${ans.technical}`);
         return parts.join('\n\n');
     };
-<<<<<<< HEAD
-=======
-
-    /* -----------------------------------------------------------------
-     * 6️⃣ CSS class helper
-     * ----------------------------------------------------------------- */
-    const getHighlightClassName = (state) => {
-        const simp = !!state?.simplified;
-        const tech = !!state?.technical;
-        if (simp && tech) return 'highlight-marked highlight-marked--both';
-        if (simp)          return 'highlight-marked highlight-marked--simplified';
-        if (tech)          return 'highlight-marked highlight-marked--technical';
-        return 'highlight-marked';
-    };
-
-    /* -----------------------------------------------------------------
-     * 7️⃣ Tooltip handling (click‑to‑show)
-     * ----------------------------------------------------------------- */
-    let activeTooltip = null;   // single tooltip at a time
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
 
     /* -----------------------------------------------------------------
      * 6️⃣ CSS class helper
@@ -249,10 +182,6 @@ export function initHighlightAI(toolbar, moduleId,
     let activeTooltip = null;   // single tooltip at a time
 
     const removeTooltip = () => {
-        if (tooltipRemovalTimer) {
-            clearTimeout(tooltipRemovalTimer);
-            tooltipRemovalTimer = null;
-        }
         if (activeTooltip) {
             activeTooltip.remove();
             activeTooltip = null;
@@ -271,70 +200,12 @@ export function initHighlightAI(toolbar, moduleId,
 
         // Otherwise close any existing tooltip and open a new one.
         removeTooltip();
-<<<<<<< HEAD
-=======
 
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
         const tip = document.createElement('div');
         tip.className = 'highlight-answer-tooltip';
         tip.dataset.for = query;                     // remember which query it belongs to
         tip.innerHTML = `<div class="highlight-answer-tooltip__body">${renderMarkdown(answer)}</div>`;
         document.body.appendChild(tip);
-<<<<<<< HEAD
-        const rect = span.getBoundingClientRect();
-        const maxW = Math.min(320, window.innerWidth - 24);
-        const left = Math.min(rect.left + window.scrollX,
-<<<<<<< HEAD
-                              document.documentElement.clientWidth - tooltipWidth - 8);
-        const top = rect.bottom + window.scrollY + 8;
-
-        tooltip.style.top = `${top}px`;
-        tooltip.style.left = `${Math.max(8, left)}px`;
-        tooltip.style.maxWidth = `${tooltipWidth}px`;
-        // remember the anchor span so we can reposition on scroll
-        tooltip._anchorSpan = span;
-        activeTooltip = tooltip;
-
-        // Make the tooltip interactive: allow pointer events and keep it
-        // visible while the mouse is over it. Clear any pending removal.
-        tooltip.style.pointerEvents = 'auto';
-        tooltip.addEventListener('mouseenter', () => {
-            if (tooltipRemovalTimer) {
-                clearTimeout(tooltipRemovalTimer);
-                tooltipRemovalTimer = null;
-            }
-        });
-        tooltip.addEventListener('mouseleave', () => removeTooltip());
-        tooltip.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') removeTooltip();
-        });
-    };
-
-    const repositionTooltipOnScroll = () => {
-        if (!activeTooltip) return;
-        // if the user is interacting with the tooltip, don't reposition/remove
-        if (activeTooltip.matches(':hover')) return;
-
-        const span = activeTooltip._anchorSpan;
-        if (!span || !document.body.contains(span)) {
-            removeTooltip();
-            return;
-        }
-
-        // Recompute position relative to the anchor span
-        const rect = span.getBoundingClientRect();
-        const tooltipWidth = Math.min(320, window.innerWidth - 24);
-        const left = Math.min(rect.left + window.scrollX, document.documentElement.clientWidth - tooltipWidth - 8);
-        const top = rect.bottom + window.scrollY + 8;
-
-        activeTooltip.style.top = `${top}px`;
-        activeTooltip.style.left = `${Math.max(8, left)}px`;
-        activeTooltip.style.maxWidth = `${tooltipWidth}px`;
-=======
-                              document.documentElement.clientWidth - maxW - 8);
-        const top  = rect.bottom + window.scrollY + 8;
-
-=======
 
         const rect = span.getBoundingClientRect();
         const maxW = Math.min(320, window.innerWidth - 24);
@@ -342,22 +213,10 @@ export function initHighlightAI(toolbar, moduleId,
                               document.documentElement.clientWidth - maxW - 8);
         const top  = rect.bottom + window.scrollY + 8;
 
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
         tip.style.top = `${top}px`;
         tip.style.left = `${Math.max(8, left)}px`;
         tip.style.maxWidth = `${maxW}px`;
         activeTooltip = tip;
-<<<<<<< HEAD
->>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
-    };
-
-    const attachHighlightEvents = (span, query) => {
-        if (span.dataset.tooltipBound === 'true') return;
-        span.addEventListener('mouseenter', () => showTooltip(span, query));
-        span.addEventListener('focus',    () => showTooltip(span, query));
-        span.addEventListener('mouseleave', removeTooltip);
-        span.addEventListener('blur',        removeTooltip);
-=======
     };
 
     const attachHighlightEvents = (span, query) => {
@@ -370,7 +229,6 @@ export function initHighlightAI(toolbar, moduleId,
         });
 
         // Make the span focusable for keyboard users – pressing *Enter* will fire the click.
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
         span.setAttribute('tabindex', '0');
         span.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -392,9 +250,8 @@ export function initHighlightAI(toolbar, moduleId,
             const query = span.dataset.highlightQuery ||
                           span.textContent?.trim().toLowerCase() || '';
             if (!query) return;
-            const state = highlightStates.get(query) || {simplified:false, technical:false};
+            const state = highlightStates.get(query) || { simplified: false, technical: false };
             span.className = getHighlightClassName(state);
->>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
             span.dataset.answer = buildAnswerText(query);
             attachHighlightEvents(span, query);
         });
@@ -773,26 +630,6 @@ export function initHighlightAI(toolbar, moduleId,
         });
     }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    document.addEventListener("mouseup", onSelectionDone);
-    document.addEventListener('click', (event) => {
-        if (!historyPopover || historyPopover.hidden) return;
-        if (!historyPopover.contains(event.target) && !historyToggle?.contains(event.target)) {
-            closeHistoryPopover();
-        }
-    });
-    document.addEventListener("scroll", removeTooltip, true);
-    document.addEventListener("mousedown", (e) => {
-        if (activeTooltip && !activeTooltip.contains(e.target)) {
-            removeTooltip();
-        }
-    });
-    document.addEventListener("touchend", (e) => setTimeout(() => onSelectionDone(e), 10));
-    document.addEventListener("selectionchange", () => {
-=======
-=======
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
     // -----------------------------------------------------------------
     // Mouse / touch handling (same as before)
     // -----------------------------------------------------------------
@@ -800,10 +637,6 @@ export function initHighlightAI(toolbar, moduleId,
     document.addEventListener('touchend', (e) => setTimeout(() => onSelectionDone(e), 10));
 
     document.addEventListener('selectionchange', () => {
-<<<<<<< HEAD
->>>>>>> f1da08b (highlighting less buggy v2 (needs refactoring))
-=======
->>>>>>> 95c2f5e14c08c171de877416225675fa3b4ecc7a
         const sel = window.getSelection();
         if (!sel || !sel.toString().trim() || !isSelectionWithinContent(sel)) {
             if (mini) mini.remove();
