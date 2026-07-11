@@ -54,6 +54,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text="Unselect this instead of deleting accounts.",
     )
     date_joined = models.DateTimeField("date joined", default=timezone.now)
+    
+    # Reputation system
+    karma = models.IntegerField(
+        default=0,
+        help_text="Points earned from helpful posts and replies. Starts at 0."
+    )
 
     objects = UserManager()
 

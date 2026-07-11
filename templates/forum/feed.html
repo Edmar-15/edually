@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,14 +9,11 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
 </head>
 <body>
 <div class="dashboard-container">
     {% include "components/navigations.html" %}
-
-    <aside class="forum-sidebar">
-        {% include "components/category_nav.html" %}
-    </aside>
 
     <main class="main-content">
         <section class="forum-page">
@@ -29,10 +26,10 @@
                         and get help from your peers and teachers.
                     </p>
                 </div>
-                <a href="{% url 'forum:post_create' %}" class="button primary-button">Post a Question</a>
+                <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}" class="button primary-button">Ask a Question</a>
             </header>
 
-            <!-- SEARCH -->
+            <!-- SEARCH & FILTERS -->
             <section class="forum-search">
                 <form method="get" action="{% url 'forum:feed' %}" class="search-form">
                     <label class="search-label" for="search-input">Search posts</label>
@@ -50,24 +47,58 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- Unanswered Filter & Sorting -->
+                <div class="filter-row">
+                    <div class="filter-actions">
+                        {% if show_unanswered %}
+                            <a href="{% url 'forum:feed' %}{% if search_query %}?q={{ search_query }}{% endif %}{% if active_category %}{% if search_query %}&{% else %}?{% endif %}cat={{ active_category }}{% endif %}" class="button secondary-button filter-pill filter-pill--muted">
+                                <i class="fa-solid fa-times"></i> Clear unanswered
+                            </a>
+                            <span class="filter-pill filter-pill--active">Showing unanswered posts</span>
+                        {% else %}
+                            <a href="{% url 'forum:feed' %}?unanswered=1{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}" class="button secondary-button filter-pill">
+                                <i class="fa-solid fa-filter"></i> Show unanswered
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="sort-group">
+                        <span class="sort-label">Sort by:</span>
+                        <a href="{% url 'forum:feed' %}?sort=latest{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}" class="button {% if sort_by == 'latest' %}primary-button{% else %}secondary-button{% endif %} sort-pill">Latest</a>
+                        <a href="{% url 'forum:feed' %}?sort=upvotes{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}" class="button {% if sort_by == 'upvotes' %}primary-button{% else %}secondary-button{% endif %} sort-pill">Most Upvoted</a>
+                        <a href="{% url 'forum:feed' %}?sort=replies{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}" class="button {% if sort_by == 'replies' %}primary-button{% else %}secondary-button{% endif %} sort-pill">Most Replied</a>
+                    </div>
+                </div>
             </section>
 
             <!-- POST LIST -->
             <section class="post-list">
                 {% if posts %}
                     {% for post in posts %}
-                    <article class="post-item{% if post.verified %} verified{% endif %}">
+                    <article class="post-item card{% if post.verified %} verified{% endif %}" data-post-id="{{ post.pk }}">
                         <div class="post-main">
-                            <div class="post-meta">
-                                {% if post.category %}
-                                    <span class="tag">{{ post.category.name }}</span>
-                                {% endif %}
-                                <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                            <div class="post-header">
+                                <div class="avatar">
+                                    {% if post.author.avatar %}
+                                        <img src="{{ post.author.avatar.url }}" alt="{{ post.author.get_full_name|default:post.author.username }}">
+                                    {% else %}
+                                        <span class="avatar-fallback">{{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="post-meta">
+                                        {% if post.category %}
+                                            <span class="tag">{{ post.category.name }}</span>
+                                        {% endif %}
+                                        <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                                    </div>
+                                    <h2 class="post-title">
+                                        <a href="{% url 'forum:post_detail' post.pk %}">{{ post.title }}</a>
+                                    </h2>
+                                    <p class="post-author">by {{ post.author.get_full_name|default:post.author.username }}</p>
+                                </div>
                             </div>
-                            <h2 class="post-title">
-                                <a href="{% url 'forum:post_detail' post.pk %}">{{ post.title }}</a>
-                            </h2>
-                            <p class="post-author">by {{ post.author.get_full_name|default:post.author.username }}</p>
+                            <p class="post-excerpt">{{ post.content|striptags|truncatechars:180 }}</p>
                         </div>
 
                         <div class="post-stats">
@@ -75,9 +106,11 @@
                                 <span class="badge verified-badge">Teacher Verified</span>
                             {% endif %}
                             <div class="stats-row">
-                                <a href="{% url 'forum:upvote' post.pk %}" class="stat upvote-link">
-                                    {{ post.upvotes }} upvote{{ post.upvotes|pluralize }}
-                                </a>
+                                <button class="stat upvote-btn" data-post-id="{{ post.pk }}" data-endpoint="{% url 'forum:upvote' post.pk %}">
+                                    <i class="fa-solid fa-thumbs-up upvote-icon"></i> 
+                                    <span class="upvote-count">{{ post.upvotes }}</span>
+                                    upvote{{ post.upvotes|pluralize }}
+                                </button>
                                 <span class="stat">{{ post.replies_cnt }} repl{{ post.replies_cnt|pluralize:"y,ies" }}</span>
                             </div>
                         </div>
@@ -94,6 +127,14 @@
             </section>
         </section>
     </main>
+
+
+    <aside class="forum-sidebar">
+        {% include "components/right_sidebar.html" %}
+    </aside>
+
 </div>
+
+<script src="{% static 'js/forum-upvote.js' %}"></script>
 </body>
 </html>

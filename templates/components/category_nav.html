@@ -1,12 +1,21 @@
+{% load static %}
 <nav class="category-nav">
     <h3 class="sidebar-title">Categories</h3>
-    <ul>
-        <li{% if not active_category %} class="active"{% endif %}>
-            <a href="{% url 'forum:feed' %}">All</a>
+    <ul class="category-list">
+        <li class="category-item{% if not active_category %} active{% endif %}">
+            <a href="{% url 'forum:feed' %}" class="category-link">
+                <span class="cat-dot"></span>
+                <span class="cat-name">All</span>
+                <span class="category-count">{{ categories_count|default:'' }}</span>
+            </a>
         </li>
         {% for cat in categories %}
-        <li{% if active_category == cat.slug %} class="active"{% endif %}>
-            <a href="{% url 'forum:feed' %}?cat={{ cat.slug }}">{{ cat.name }}</a>
+        <li class="category-item{% if active_category == cat.slug %} active{% endif %}">
+            <a href="{% url 'forum:feed' %}?cat={{ cat.slug }}" class="category-link">
+                <span class="cat-dot" data-slug="{{ cat.slug }}"></span>
+                <span class="cat-name">{{ cat.name }}</span>
+                <span class="category-count">{{ cat.post_count|default:'' }}</span>
+            </a>
         </li>
         {% endfor %}
     </ul>

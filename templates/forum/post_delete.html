@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Post – EduAlly Forum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include 'components/navigations.html' %}
+
+    <main class="main-content">
+        <section class="forum-page">
+            <div style="max-width: 600px; margin: 3rem auto; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; text-align: center;">
+                <h2 style="color: #d32f2f;">Delete Post?</h2>
+                <p style="margin: 1rem 0; font-size: 1.1rem;">Are you sure you want to delete this post?</p>
+                <p style="color: #999; margin: 1rem 0;">
+                    <strong>"{{ post.title }}"</strong>
+                </p>
+                <p style="color: #d32f2f; margin: 1.5rem 0;">This action cannot be undone.</p>
+                
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="button" style="background-color: #d32f2f; color: white;">
+                            <i class="fa-solid fa-trash"></i> Delete Post
+                        </button>
+                    </form>
+                    <a href="{% url 'forum:post_detail' post.pk %}" class="button secondary-button">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <aside class="forum-sidebar">{% include 'components/right_sidebar.html' %}</aside>
+</div>
+</body>
+</html>

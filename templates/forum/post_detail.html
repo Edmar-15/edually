@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,32 +8,40 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
 </head>
 <body>
 <div class="dashboard-container">
     {% include "components/navigations.html" %}
 
-    <aside class="forum-sidebar">
-        {% include "components/category_nav.html" %}
-    </aside>
-
     <main class="main-content">
         <section class="forum-page">
 
             <!-- THE QUESTION -->
-            <article class="post-item{% if post.verified %} verified{% endif %}">
+            <article class="post-item card{% if post.verified %} verified{% endif %}" data-post-id="{{ post.pk }}">
                 <div class="post-main">
-                    <div class="post-meta">
-                        {% if post.category %}
-                            <span class="tag">{{ post.category.name }}</span>
-                        {% endif %}
-                        <span class="post-time">{{ post.created_at|timesince }} ago</span>
-                        {% if post.verified %}
-                            <span class="badge verified-badge">Teacher Verified</span>
-                        {% endif %}
+                    <div class="post-header">
+                        <div class="avatar">
+                            {% if post.author.avatar %}
+                                <img src="{{ post.author.avatar.url }}" alt="{{ post.author.get_full_name|default:post.author.username }}">
+                            {% else %}
+                                <span class="avatar-fallback">{{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="post-meta">
+                                {% if post.category %}
+                                    <span class="tag">{{ post.category.name }}</span>
+                                {% endif %}
+                                <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                                {% if post.verified %}
+                                    <span class="badge verified-badge">Teacher Verified</span>
+                                {% endif %}
+                            </div>
+                            <h2 class="post-title">{{ post.title }}</h2>
+                            <p class="post-author">by {{ post.author.get_full_name|default:post.author.username }}</p>
+                        </div>
                     </div>
-                    <h2 class="post-title">{{ post.title }}</h2>
-                    <p class="post-author">by {{ post.author.get_full_name|default:post.author.username }}</p>
                     <div class="post-content">
                         {{ post.content|linebreaks }}
                     </div>
@@ -41,10 +49,27 @@
 
                 <div class="post-stats">
                     <div class="stats-row">
-                        <a href="{% url 'forum:upvote' post.pk %}" class="stat upvote-link">
-                            {{ post.upvotes }} upvote{{ post.upvotes|pluralize }}
-                        </a>
+                        <button class="stat upvote-btn" data-post-id="{{ post.pk }}" data-endpoint="{% url 'forum:upvote' post.pk %}">
+                            <i class="fa-solid fa-thumbs-up upvote-icon"></i> 
+                            <span class="upvote-count">{{ post.upvotes }}</span>
+                            upvote{{ post.upvotes|pluralize }}
+                        </button>
                         <span class="stat">{{ post.replies_cnt }} repl{{ post.replies_cnt|pluralize:"y,ies" }}</span>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        {% if user == post.author %}
+                            <a href="{% url 'forum:post_edit' post.pk %}" class="button secondary-button small-button">
+                                <i class="fa-solid fa-edit"></i> Edit
+                            </a>
+                            <a href="{% url 'forum:post_delete' post.pk %}" class="button secondary-button small-button">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'forum:flag_content' 'post' post.pk %}" class="button secondary-button small-button">
+                            <i class="fa-solid fa-flag"></i> Report
+                        </a>
                     </div>
                 </div>
             </article>
@@ -54,12 +79,37 @@
                 <h3>{{ post.replies_cnt }} Reply{{ post.replies_cnt|pluralize }}</h3>
 
                 {% for reply in replies %}
-                <div class="reply-item" style="margin-top:1.5rem; padding:1rem; border:1px solid #e0e0e0; border-radius:6px;">
-                    <p class="reply-author" style="margin:0 0 .5rem;">
-                        <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
-                        • {{ reply.created_at|timesince }} ago
-                    </p>
-                    <div class="reply-content">{{ reply.content|linebreaks }}</div>
+                <div class="reply-item card" data-reply-id="{{ reply.pk }}">
+                    <div class="avatar avatar--sm">
+                        {% if reply.author.avatar %}
+                            <img src="{{ reply.author.avatar.url }}" alt="{{ reply.author.get_full_name|default:reply.author.username }}">
+                        {% else %}
+                            <span class="avatar-fallback">{{ reply.author.get_full_name|default:reply.author.username|slice:":1"|upper }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="reply-body">
+                        <p class="reply-author">
+                            <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
+                            • {{ reply.created_at|timesince }} ago
+                        </p>
+                        <div class="reply-content">{{ reply.content|linebreaks }}</div>
+                        
+                        <!-- Reply upvote and actions -->
+                        <div class="reply-upvote-section">
+                            <button class="reply-upvote-btn{% if reply.pk in user_reply_upvotes %} has-upvoted{% endif %}" 
+                                    data-reply-id="{{ reply.pk }}" 
+                                    data-endpoint="{% url 'forum:reply_upvote' reply.pk %}">
+                                <i class="fa-solid fa-thumbs-up"></i>
+                                <span class="reply-upvote-count">{{ reply.upvotes }}</span>
+                            </button>
+
+                            {% if user == reply.author %}
+                                <a href="{% url 'forum:reply_edit' reply.pk %}" class="reply-action"> <i class="fa-solid fa-edit"></i> Edit</a>
+                                <a href="{% url 'forum:reply_delete' reply.pk %}" class="reply-action"> <i class="fa-solid fa-trash"></i> Delete</a>
+                            {% endif %}
+                            <a href="{% url 'forum:flag_content' 'reply' reply.pk %}" class="reply-action"> <i class="fa-solid fa-flag"></i> Report</a>
+                        </div>
+                    </div>
                 </div>
                 {% empty %}
                 <p class="no-replies">No replies yet. Be the first to answer!</p>
@@ -67,7 +117,7 @@
             </section>
 
             <!-- ADD REPLY FORM -->
-            <section class="add-reply" style="margin-top:2rem;">
+            <section class="add-reply">
                 <h3>Leave a Reply</h3>
                 <form method="post" class="reply-form">
                     {% csrf_token %}
@@ -78,6 +128,11 @@
 
         </section>
     </main>
+
+    <aside class="forum-sidebar">{% include "components/right_sidebar.html" %}</aside>
 </div>
+
+<script src="{% static 'js/forum-upvote.js' %}"></script>
+<script src="{% static 'js/forum-reply-focus.js' %}"></script>
 </body>
 </html>

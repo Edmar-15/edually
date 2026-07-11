@@ -1,0 +1,241 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Conversation Map — {{ post.title }}</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
+    <!-- map styles moved to feed.css for consistency -->
+</head>
+<body>
+<div class="dashboard-container">
+    {% include 'components/navigations.html' %}
+
+    <main class="main-content">
+        <section class="forum-page">
+            <header class="forum-header">
+                <div>
+                    <p class="eyebrow">Conversation Map</p>
+                    <h1>{{ post.title }}</h1>
+                    <p class="intro-text">Visualize replies as a map. Click nodes to open the thread or upvote.</p>
+                </div>
+                <a href="{% url 'forum:post_detail' post.pk %}" class="button secondary-button">Back to Thread</a>
+            </header>
+
+            <div class="map-toolbar">
+                <button id="fitBtn" class="button secondary-button">Fit</button>
+                <button id="centerBtn" class="button secondary-button">Center</button>
+                <div style="margin-left: auto;">Post upvotes: <strong id="postUpvotes">{{ post.upvotes }}</strong></div>
+            </div>
+
+            <div id="map" class="map-container"></div>
+        </section>
+    </main>
+
+    <aside class="forum-sidebar">{% include 'components/right_sidebar.html' %}</aside>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="{% static 'js/forum-upvote.js' %}"></script>
+<script>
+(async function(){
+    const postPk = {{ post.pk }};
+    const url = "{% url 'forum:conversation_map_json' post.pk %}";
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    const width = document.getElementById('map').clientWidth;
+    const height = document.getElementById('map').clientHeight;
+
+    const svg = d3.select('#map').append('svg')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .call(d3.zoom().on('zoom', (event) => {g.attr('transform', event.transform);}));
+
+    const g = svg.append('g');
+
+    const link = g.selectAll('line').data(data.links).enter().append('line')
+        .attr('stroke', '#cbd5e1')
+        .attr('stroke-width', 1.5);
+
+    const node = g.selectAll('g.node').data(data.nodes).enter().append('g')
+        .attr('class', 'node')
+        .attr('data-pk', d => d.pk)
+        .call(d3.drag()
+            .on('start', (event,d) => {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x; d.fy = d.y;
+            })
+            .on('drag', (event,d) => { d.fx = event.x; d.fy = event.y; })
+            .on('end', (event,d) => { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+        );
+
+    node.append('circle')
+        .attr('r', d => d.type === 'post' ? 28 : 18)
+        .attr('class', d => d.type === 'post' ? 'post' : 'reply')
+        .attr('fill', d => d.type === 'post' ? 'var(--primary)' : 'var(--surface)')
+        .attr('stroke', d => d.type === 'post' ? '#075d5f' : '#d1d5db')
+        .attr('stroke-width', d => d.type === 'post' ? 2 : 1.2);
+
+    node.append('text')
+        .attr('class', 'node-label')
+        .attr('dy', d => d.type === 'post' ? 4 : 4)
+        .attr('x', d => d.type === 'post' ? 0 : 0)
+        .attr('text-anchor', 'middle')
+        .text(d => d.type === 'post' ? d.title : (d.content.length > 40 ? d.content.slice(0,40)+'…' : d.content));
+
+    // tooltip
+    const tooltip = d3.select('body').append('div').attr('class','tooltip').style('display','none');
+
+    // CSRF helper (same logic as forum-upvote.js)
+    function getCsrfToken(){
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== ''){
+            const cookies = document.cookie.split(';');
+            for (let i=0;i<cookies.length;i++){
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length+1) === (name + '=')){
+                    cookieValue = decodeURIComponent(cookie.substring(name.length+1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Template for reply upvote endpoint – we'll replace the 0 with actual id
+    const replyUpvoteTemplate = "{% url 'forum:reply_upvote' 0 %}";
+    const postUpvoteUrl = "{% url 'forum:upvote' post.pk %}";
+
+    node.on('mouseover', (event,d) => {
+        tooltip.style('display','block')
+            .html(() => {
+                if (d.type === 'post') return `<strong>${d.title}</strong><br>by ${d.author}<br>Upvotes: <span class="map-upvotes">${d.upvotes}</span> <button class="map-upvote-btn" data-type="post" data-pk="${d.pk}">Upvote</button>`;
+                return `<strong>Reply</strong><br>${d.content}<br>by ${d.author}<br>Upvotes: <span class="map-upvotes">${d.upvotes}</span> <button class="map-upvote-btn" data-type="reply" data-pk="${d.pk}">Upvote</button>`;
+            });
+    })
+    .on('mousemove', (event) => {
+        tooltip.style('left', (event.pageX + 12) + 'px').style('top', (event.pageY + 12) + 'px');
+    })
+    .on('mouseout', () => tooltip.style('display','none'))
+    .on('click', (event,d) => {
+        if (d.type === 'post') {
+            window.location.href = `{% url 'forum:post_detail' post.pk %}`;
+        } else {
+            // open post detail and highlight reply via query param
+            window.location.href = `{% url 'forum:post_detail' post.pk %}?focus_reply=${d.pk}`;
+        }
+    });
+
+    // Delegate click for upvote buttons inside tooltip
+    document.addEventListener('click', async function(e){
+        const btn = e.target.closest && e.target.closest('.map-upvote-btn');
+        if (!btn) return;
+        e.preventDefault();
+        const type = btn.dataset.type;
+        const pk = btn.dataset.pk;
+        const csrf = getCsrfToken();
+
+        try {
+            let endpoint = '';
+            if (type === 'post') {
+                endpoint = postUpvoteUrl; // post pk already bound in template
+            } else {
+                // replace the '0' path segment with actual id
+                endpoint = replyUpvoteTemplate.replace('/0/', `/${pk}/`);
+            }
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                console.error('Map upvote failed', response.status);
+                return;
+            }
+            const data = await response.json();
+            if (!data.success) return;
+
+            // Update tooltip and map UI counts
+            const upSpan = tooltip.select('.map-upvotes');
+            if (upSpan.size()) upSpan.html(data.upvotes);
+
+            if (type === 'post') {
+                const el = document.getElementById('postUpvotes');
+                if (el) el.textContent = data.upvotes;
+            }
+
+            // Toggle has-upvoted class on matching node
+            const nodeEl = document.querySelector(`g.node[data-pk="${pk}"]`);
+            if (nodeEl) {
+                if (data.has_upvoted) nodeEl.classList.add('has-upvoted');
+                else nodeEl.classList.remove('has-upvoted');
+            }
+
+            // Toggle active state on tooltip button
+            if (btn) {
+                if (data.has_upvoted) btn.classList.add('active'); else btn.classList.remove('active');
+            }
+
+        } catch (err) {
+            console.error('Error upvoting from map', err);
+        }
+    });
+
+    const simulation = d3.forceSimulation(data.nodes)
+        .force('link', d3.forceLink(data.links).id(d=>d.id).distance(80).strength(1))
+        .force('charge', d3.forceManyBody().strength(-220))
+        .force('center', d3.forceCenter(width/2, height/2))
+        .on('tick', () => {
+            link.attr('x1', d=>d.source.x).attr('y1', d=>d.source.y).attr('x2', d=>d.target.x).attr('y2', d=>d.target.y);
+            node.attr('transform', d=>`translate(${d.x},${d.y})`);
+        });
+
+    document.getElementById('fitBtn').addEventListener('click', ()=>{
+        simulation.alpha(1).restart();
+        setTimeout(()=>simulation.alphaTarget(0), 800);
+    });
+    document.getElementById('centerBtn').addEventListener('click', ()=>{
+        svg.transition().duration(600).call(d3.zoom().transform, d3.zoomIdentity.translate((width/2)-0,(height/2)-0));
+    });
+
+    // Keep map responsive when sidebar toggles or window resizes.
+    function resizeMap(){
+        const mapEl = document.getElementById('map');
+        const newW = mapEl.clientWidth;
+        const newH = mapEl.clientHeight;
+        svg.attr('width', '100%').attr('height', '100%');
+        // update centre force
+        simulation.force('center', d3.forceCenter(newW/2, newH/2));
+        // restart simulation gently to reflow
+        simulation.alpha(0.6).restart();
+    }
+
+    // Resize on window resize
+    window.addEventListener('resize', () => { resizeMap(); });
+
+    // Watch for sidebar collapse/expand by observing body's class changes
+    const bodyObserver = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            if (m.attributeName === 'class') {
+                resizeMap();
+                break;
+            }
+        }
+    });
+    bodyObserver.observe(document.body, { attributes: true });
+
+    // Initial call to ensure layout is correct if sidebar state persisted
+    resizeMap();
+
+})();
+</script>
+</body>
+</html>

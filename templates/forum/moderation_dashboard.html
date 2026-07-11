@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Moderation Dashboard – EduAlly Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
+    <style>
+        .mod-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .stat-card p {
+            margin: 0.5rem 0 0;
+            opacity: 0.9;
+        }
+        .report-item {
+            padding: 1.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: #fafafa;
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .report-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-unresolved {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        .status-resolved {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    {% include 'components/navigations.html' %}
+
+    <main class="main-content">
+        <section class="forum-page">
+            <header class="forum-header">
+                <div>
+                    <p class="eyebrow">Admin Panel</p>
+                    <h1>Moderation Dashboard</h1>
+                    <p class="intro-text">Review reported content and manage forum moderation.</p>
+                </div>
+            </header>
+
+            <!-- Statistics -->
+            <div class="mod-stats">
+                <div class="stat-card">
+                    <h3>{{ report_count }}</h3>
+                    <p>Unresolved Reports</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h3>{{ unverified_posts.count }}</h3>
+                    <p>Flagged Posts</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <h3>{{ top_users.count }}</h3>
+                    <p>Top Contributors</p>
+                </div>
+            </div>
+
+            <!-- Unresolved Reports -->
+            <section style="margin-bottom: 3rem;">
+                <h2 style="margin-bottom: 1.5rem;">
+                    <i class="fa-solid fa-exclamation-circle"></i> Unresolved Reports ({{ unresolved_reports.count }})
+                </h2>
+                
+                {% if unresolved_reports %}
+                    {% for report in unresolved_reports %}
+                    <div class="report-item">
+                        <div class="report-header">
+                            <div>
+                                <p style="margin: 0 0 0.5rem; font-weight: 600;">
+                                    <strong>{{ report.get_reason_display }}</strong> • 
+                                    {% if report.content_type == 'post' %}
+                                        <span style="color: #0066cc;">Post</span>
+                                    {% else %}
+                                        <span style="color: #009933;">Reply</span>
+                                    {% endif %}
+                                </p>
+                                <p style="margin: 0; color: #666; font-size: 0.9rem;">
+                                    Reported by <strong>{{ report.reporter.email }}</strong> • 
+                                    {{ report.created_at|timesince }} ago
+                                </p>
+                            </div>
+                            <span class="report-status status-unresolved">Pending</span>
+                        </div>
+                        
+                        <div style="background: white; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                            <p style="margin: 0 0 0.5rem; font-weight: 600;">
+                                {% if report.content_type == 'post' %}
+                                    Post by <strong>{{ report.post.author.email }}</strong>
+                                {% else %}
+                                    Reply by <strong>{{ report.reply.author.email }}</strong>
+                                {% endif %}
+                            </p>
+                            <p style="margin: 0; color: #333;">
+                                {% if report.content_type == 'post' %}
+                                    {{ report.post.title }}
+                                {% else %}
+                                    {{ report.reply.content|truncatewords:20 }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        {% if report.description %}
+                        <p style="margin: 1rem 0; padding: 0.8rem; background: #fff9c4; border-radius: 4px; color: #666;">
+                            <strong>Reporter's notes:</strong> {{ report.description }}
+                        </p>
+                        {% endif %}
+                        
+                        <div>
+                            <a href="{% url 'forum:resolve_report' report.id %}" class="button primary-button" style="font-size: 0.9rem;">
+                                <i class="fa-solid fa-check"></i> Review & Resolve
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="padding: 2rem; text-align: center; color: #999;">
+                        <i class="fa-solid fa-check-circle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>No unresolved reports. Great job!</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <!-- Top Contributors -->
+            <section>
+                <h2 style="margin-bottom: 1.5rem;">
+                    <i class="fa-solid fa-star"></i> Top Contributors
+                </h2>
+                
+                {% if top_users %}
+                    <div style="background: white; border-radius: 8px; overflow: hidden;">
+                        {% for user in top_users %}
+                        <div style="padding: 1rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="margin: 0; font-weight: 600;">{{ user.get_full_name|default:user.email }}</p>
+                                <p style="margin: 0.3rem 0 0; font-size: 0.9rem; color: #666;">{{ user.email }}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="margin: 0; font-weight: 600; font-size: 1.2rem; color: #667eea;">{{ user.karma }}</p>
+                                <p style="margin: 0.3rem 0 0; font-size: 0.85rem; color: #999;">karma points</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: #999;">No user data available yet.</p>
+                {% endif %}
+            </section>
+        </section>
+    </main>
+
+    <aside class="forum-sidebar">{% include 'components/right_sidebar.html' %}</aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Reply – EduAlly Forum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include 'components/navigations.html' %}
+
+    <main class="main-content">
+        <section class="forum-page">
+            <header class="forum-header">
+                <div>
+                    <h1>Edit Reply</h1>
+                    <p class="intro-text">Update your reply.</p>
+                </div>
+                <a href="{% url 'forum:post_detail' reply.post.pk %}" class="button secondary-button">Cancel</a>
+            </header>
+
+            <form method="post" class="reply-form">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="form-actions">
+                    <button type="submit" class="button primary-button">Save Changes</button>
+                    <a href="{% url 'forum:post_detail' reply.post.pk %}" class="button secondary-button">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <aside class="forum-sidebar">{% include 'components/right_sidebar.html' %}</aside>
+</div>
+</body>
+</html>

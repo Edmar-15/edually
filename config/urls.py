@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('account/', include('account.urls')),
     path("", landing, name="landing"),
-    path("forum/", include('forum.urls')),
+    path("forum/", include(("forum.urls", "forum"), namespace="forum")),
     path("aihelper/", include('aihelper.urls')),
     path('slm/', include('slm.urls')),
 ]

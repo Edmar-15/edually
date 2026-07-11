@@ -1,0 +1,47 @@
+{% load static %}
+<div class="right-widgets">
+    <section class="widget widget-categories card">
+        <h3 class="widget-title">Categories</h3>
+        <ul class="category-list">
+            <li class="category-item{% if not active_category %} active{% endif %}">
+                <a href="{% url 'forum:feed' %}" class="category-link">
+                    <span class="cat-dot"></span>
+                    <span class="cat-name">All</span>
+                    <span class="category-count">{{ categories_count|default:'' }}</span>
+                </a>
+            </li>
+            {% for cat in categories %}
+                <li class="category-item{% if active_category == cat.slug %} active{% endif %}">
+                    <a href="{% url 'forum:feed' %}?cat={{ cat.slug }}" class="category-link">
+                        <span class="cat-dot" data-slug="{{ cat.slug }}"></span>
+                        <span class="cat-name">{{ cat.name }}</span>
+                        <span class="category-count">{{ cat.post_count|default:'' }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="widget widget-recent card">
+        <h3 class="widget-title">Recent Posts</h3>
+        <ul class="recent-list">
+            {% for p in recent_posts %}
+                <li><a href="{% url 'forum:post_detail' p.pk %}">{{ p.title|truncatechars:60 }}</a><span class="meta"> • {{ p.created_at|timesince }} ago</span></li>
+            {% empty %}
+                <li class="muted">No recent posts.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="widget widget-top card">
+        <h3 class="widget-title">Top Contributors</h3>
+        <ul class="top-users">
+            {% for u in top_users %}
+                <li><a href="#">{{ u.get_full_name|default:u.username }}</a><span class="meta"> • {{ u.karma }} pts</span></li>
+            {% empty %}
+                <li class="muted">No contributors yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+<script src="{% static 'js/category-dots.js' %}"></script>
