@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ post.title }} – EduAlly Forum</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/feed.css' %}">
@@ -18,7 +18,7 @@
         <section class="forum-page">
 
             <!-- THE QUESTION -->
-            <article class="post-item card{% if post.verified %} verified{% endif %}" data-post-id="{{ post.pk }}">
+            <article class="post-item card{% if post.verified %} verified{% endif %}" data-post-id="{{ post.pk }}" id="post-{{ post.pk }}">
                 <div class="post-main">
                     <div class="post-header">
                         <div class="avatar">
@@ -49,25 +49,32 @@
 
                 <div class="post-stats">
                     <div class="stats-row">
-                        <button class="stat upvote-btn" data-post-id="{{ post.pk }}" data-endpoint="{% url 'forum:upvote' post.pk %}">
-                            <i class="fa-solid fa-thumbs-up upvote-icon"></i> 
+                        <button class="stat upvote-btn{% if post.pk in user_post_upvotes %} has-upvoted{% endif %}"
+                                data-post-id="{{ post.pk }}"
+                                data-endpoint="{% url 'forum:upvote' post.pk %}">
+                            <i class="fa-solid fa-thumbs-up upvote-icon"></i>
                             <span class="upvote-count">{{ post.upvotes }}</span>
                             upvote{{ post.upvotes|pluralize }}
                         </button>
                         <span class="stat">{{ post.replies_cnt }} repl{{ post.replies_cnt|pluralize:"y,ies" }}</span>
                     </div>
-                    
+
                     <!-- Action Buttons -->
                     <div class="action-buttons">
                         {% if user == post.author %}
                             <a href="{% url 'forum:post_edit' post.pk %}" class="button secondary-button small-button">
                                 <i class="fa-solid fa-edit"></i> Edit
                             </a>
-                            <a href="{% url 'forum:post_delete' post.pk %}" class="button secondary-button small-button">
+                            <button class="button secondary-button small-button ajax-delete-btn"
+                                    data-url="{% url 'forum:post_delete' post.pk %}"
+                                    data-target="#post-{{ post.pk }}">
                                 <i class="fa-solid fa-trash"></i> Delete
-                            </a>
+                            </button>
                         {% endif %}
-                        <a href="{% url 'forum:flag_content' 'post' post.pk %}" class="button secondary-button small-button">
+                        <a href="{% url 'forum:flag_content' 'post' post.pk %}"
+                           class="button secondary-button small-button ajax-modal"
+                           data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
+                           data-target="#global-modal">
                             <i class="fa-solid fa-flag"></i> Report
                         </a>
                     </div>
@@ -75,51 +82,24 @@
             </article>
 
             <!-- REPLIES -->
-            <section class="replies">
-                <h3>{{ post.replies_cnt }} Reply{{ post.replies_cnt|pluralize }}</h3>
+            <section class="replies" id="reply-list">
+                <h3 id="reply-count">{{ post.replies_cnt }} Reply{{ post.replies_cnt|pluralize }}</h3>
 
                 {% for reply in replies %}
-                <div class="reply-item card" data-reply-id="{{ reply.pk }}">
-                    <div class="avatar avatar--sm">
-                        {% if reply.author.avatar %}
-                            <img src="{{ reply.author.avatar.url }}" alt="{{ reply.author.get_full_name|default:reply.author.username }}">
-                        {% else %}
-                            <span class="avatar-fallback">{{ reply.author.get_full_name|default:reply.author.username|slice:":1"|upper }}</span>
-                        {% endif %}
-                    </div>
-                    <div class="reply-body">
-                        <p class="reply-author">
-                            <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
-                            • {{ reply.created_at|timesince }} ago
-                        </p>
-                        <div class="reply-content">{{ reply.content|linebreaks }}</div>
-                        
-                        <!-- Reply upvote and actions -->
-                        <div class="reply-upvote-section">
-                            <button class="reply-upvote-btn{% if reply.pk in user_reply_upvotes %} has-upvoted{% endif %}" 
-                                    data-reply-id="{{ reply.pk }}" 
-                                    data-endpoint="{% url 'forum:reply_upvote' reply.pk %}">
-                                <i class="fa-solid fa-thumbs-up"></i>
-                                <span class="reply-upvote-count">{{ reply.upvotes }}</span>
-                            </button>
-
-                            {% if user == reply.author %}
-                                <a href="{% url 'forum:reply_edit' reply.pk %}" class="reply-action"> <i class="fa-solid fa-edit"></i> Edit</a>
-                                <a href="{% url 'forum:reply_delete' reply.pk %}" class="reply-action"> <i class="fa-solid fa-trash"></i> Delete</a>
-                            {% endif %}
-                            <a href="{% url 'forum:flag_content' 'reply' reply.pk %}" class="reply-action"> <i class="fa-solid fa-flag"></i> Report</a>
-                        </div>
-                    </div>
-                </div>
+                    {% include "forum/partials/reply_item.html" %}
                 {% empty %}
-                <p class="no-replies">No replies yet. Be the first to answer!</p>
+                    <p class="no-replies">No replies yet. Be the first to answer!</p>
                 {% endfor %}
             </section>
 
-            <!-- ADD REPLY FORM -->
+            <!-- ADD REPLY FORM (AJAX) -->
             <section class="add-reply">
                 <h3>Leave a Reply</h3>
-                <form method="post" class="reply-form">
+                <form method="post"
+                      class="reply-form ajax-form"
+                      data-target="#reply-list"
+                      data-insert="append"
+                      data-after="#reply-count">
                     {% csrf_token %}
                     {{ reply_form.as_p }}
                     <button type="submit" class="button primary-button">Post Reply</button>
@@ -132,7 +112,11 @@
     <aside class="forum-sidebar">{% include "components/right_sidebar.html" %}</aside>
 </div>
 
+<!-- Global modal container (used for flagging, edit modals, etc.) -->
+<div id="global-modal" class="modal"></div>
+
 <script src="{% static 'js/forum-upvote.js' %}"></script>
+<script src="{% static 'js/forum_ajax.js' %}"></script>
 <script src="{% static 'js/forum-reply-focus.js' %}"></script>
 </body>
 </html>

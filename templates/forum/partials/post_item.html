@@ -1,0 +1,64 @@
+{# forum/partials/_post_item.html #}
+<article class="post-item card{% if post.verified %} verified{% endif %}" data-post-id="{{ post.pk }}" id="post-{{ post.pk }}">
+    <div class="post-main">
+        <div class="post-header">
+            <div class="avatar">
+                {% if post.author.avatar %}
+                    <img src="{{ post.author.avatar.url }}" alt="{{ post.author.get_full_name|default:post.author.username }}">
+                {% else %}
+                    <span class="avatar-fallback">{{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}</span>
+                {% endif %}
+            </div>
+            <div>
+                <div class="post-meta">
+                    {% if post.category %}
+                        <span class="tag">{{ post.category.name }}</span>
+                    {% endif %}
+                    <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                </div>
+                <h2 class="post-title">
+                    <a href="{% url 'forum:post_detail' post.pk %}">{{ post.title }}</a>
+                </h2>
+                <p class="post-author">by {{ post.author.get_full_name|default:post.author.username }}</p>
+            </div>
+        </div>
+        <p class="post-excerpt">{{ post.content|striptags|truncatechars:180 }}</p>
+    </div>
+
+    <div class="post-stats">
+        {% if post.verified %}
+            <span class="badge verified-badge">Teacher Verified</span>
+        {% endif %}
+        <div class="stats-row">
+            <button class="stat upvote-btn{% if post.pk in user_post_upvotes %} has-upvoted{% endif %}"
+                    data-post-id="{{ post.pk }}"
+                    data-endpoint="{% url 'forum:upvote' post.pk %}">
+                <i class="fa-solid fa-thumbs-up upvote-icon"></i>
+                <span class="upvote-count">{{ post.upvotes }}</span>
+                upvote{{ post.upvotes|pluralize }}
+            </button>
+            <span class="stat">{{ post.replies_cnt }} repl{{ post.replies_cnt|pluralize:"y,ies" }}</span>
+        </div>
+
+        {% if request.user == post.author %}
+            <div class="action-buttons">
+                <a href="{% url 'forum:post_edit' post.pk %}"
+                   class="button secondary-button small-button">
+                    <i class="fa-solid fa-edit"></i> Edit
+                </a>
+                <button class="button secondary-button small-button ajax-delete-btn"
+                        data-url="{% url 'forum:post_delete' post.pk %}"
+                        data-target="#post-{{ post.pk }}">
+                    <i class="fa-solid fa-trash"></i> Delete
+                </button>
+            </div>
+        {% endif %}
+
+        <a href="{% url 'forum:flag_content' 'post' post.pk %}"
+           class="button secondary-button small-button ajax-modal"
+           data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
+           data-target="#global-modal">
+            <i class="fa-solid fa-flag"></i> Report
+        </a>
+    </div>
+</article>

@@ -1,0 +1,24 @@
+{# forum/partials/_post_list.html #}
+{% for post in posts %}
+    {% include "forum/partials/post_item.html" %}
+{% empty %}
+    <div class="forum-empty-state">
+        <div class="forum-empty-state__icon">💬</div>
+        <h2>No discussions yet</h2>
+        <p>Start the conversation and help your classmates by sharing a question, idea, or study tip.</p>
+        <a href="{% url 'forum:post_create' %}" class="button primary-button">Start a discussion</a>
+    </div>
+{% endfor %}
+
+{# Pagination (still rendered here so AJAX replaces it together with the list) #}
+{% if page_obj.has_other_pages %}
+    <nav class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|cut:'page='|cut:'&'|add:'&' }}" class="prev">Previous</a>
+        {% endif %}
+        <span class="current">{{ page_obj.number }} of {{ paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|cut:'page='|cut:'&'|add:'&' }}" class="next">Next</a>
+        {% endif %}
+    </nav>
+{% endif %}

@@ -810,3 +810,24 @@ body {
         width: 100%;
     }
 }
+
+/* modal.css – very simple overlay */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+.modal.open {
+    display: flex;
+}
+.modal > * {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+}

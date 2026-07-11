@@ -1,34 +1,17 @@
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Report Content – EduAlly Forum</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
-    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
-</head>
-<body>
-<div class="dashboard-container">
-    {% include "components/navigations.html" %}
-
-    <main class="main-content">
-        <section class="forum-page">
             <div style="max-width: 600px; margin: 2rem auto; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px;">
                 <h2>Report Inappropriate Content</h2>
                 <p style="color: #666; margin: 1rem 0;">Help us keep the forum safe. Please let us know why you're reporting this content.</p>
-                
+
                 {% if error %}
                     <div style="padding: 1rem; background-color: #ffebee; border: 1px solid #ef5350; border-radius: 4px; margin: 1rem 0; color: #c62828;">
                         {{ error }}
                     </div>
                 {% endif %}
-                
-                <form method="post" style="margin: 2rem 0;">
+
+                <form method="post" class="ajax-form" data-target="#global-modal" data-replace="true">
                     {% csrf_token %}
-                    
+
                     <div style="margin: 1.5rem 0;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Reason for report:</label>
                         <select name="reason" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
@@ -38,12 +21,13 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div style="margin: 1.5rem 0;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Additional details (optional):</label>
-                        <textarea name="description" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;">Provide any additional context...</textarea>
+                        <textarea name="description" rows="4"
+                                  style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;">Provide any additional context...</textarea>
                     </div>
-                    
+
                     <div style="display: flex; gap: 1rem;">
                         <button type="submit" class="button primary-button">
                             <i class="fa-solid fa-flag"></i> Submit Report
@@ -52,10 +36,3 @@
                     </div>
                 </form>
             </div>
-        </section>
-</main>
-
-    <aside class="forum-sidebar">{% include "components/right_sidebar.html" %}</aside>
-</div>
-</body>
-</html>

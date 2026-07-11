@@ -1,41 +1,37 @@
 # forum/views.py
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.models import User
-from django.http import Http404
 
 from .models import Category, Post, PostUpvote, Reply, ReplyUpvote, FlagReport
 from .forms import PostForm, ReplyForm
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.utils import timezone
-from django.core.serializers.json import DjangoJSONEncoder
-import json
+
+# -------------------------------------------------------------------------
+# Helpers
+# -------------------------------------------------------------------------
+def is_ajax(request):
+    """Return True if the request is AJAX (X‑Requested‑With header)."""
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
 
-# -----------------------------------------------------------------------
-# Feed – list + search + pagination
-# -----------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Feed – list + search + pagination (now AJAX‑aware)
+# -------------------------------------------------------------------------
 @login_required(login_url="account:login")
 def feed(request):
-    """
-    Render the main forum page.
-
-    * Supports keyword search (`?q=…`)
-    * Supports category filtering (`?cat=…`)
-    * Supports unanswered filter (`?unanswered=1`)
-    * Supports sorting (`?sort=latest|upvotes|replies`)
-    * Paginates 30 items per page
-    """
     query = request.GET.get("q", "").strip()
     category_slug = request.GET.get("cat", "")
     show_unanswered = request.GET.get("unanswered", "").lower() in ["1", "true"]
-    sort_by = request.GET.get("sort", "latest")  # latest, upvotes, replies
+    sort_by = request.GET.get("sort", "latest")      # latest, upvotes, replies
 
-    posts_qs = Post.objects.select_related("author", "category").filter(is_deleted=False)
+    posts_qs = (
+        Post.objects.select_related("author", "category")
+        .filter(is_deleted=False)
+    )
 
     # ----- search ---------------------------------------------------------
     if query:
@@ -50,7 +46,7 @@ def feed(request):
     if category_slug:
         posts_qs = posts_qs.filter(category__slug=category_slug)
 
-    # ----- unanswered filter -----------------------------------------------
+    # ----- unanswered ------------------------------------------------------
     if show_unanswered:
         posts_qs = posts_qs.filter(replies_cnt=0)
 
@@ -59,7 +55,7 @@ def feed(request):
         posts_qs = posts_qs.order_by("-upvotes", "-created_at")
     elif sort_by == "replies":
         posts_qs = posts_qs.order_by("-replies_cnt", "-created_at")
-    else:  # latest
+    else:   # latest
         posts_qs = posts_qs.order_by("-created_at")
 
     # ----- pagination ------------------------------------------------------
@@ -67,7 +63,19 @@ def feed(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
+    # Up‑vote set for the logged‑in user (so the UI can show his votes)
+    if request.user.is_authenticated:
+        user_post_upvotes = set(
+            PostUpvote.objects.filter(voter=request.user)
+            .values_list("post_id", flat=True)
+        )
+    else:
+        user_post_upvotes = set()
+
+    categories = Category.objects.annotate(
+        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    )
+
     context = {
         "posts": page_obj,
         "categories": categories,
@@ -81,13 +89,28 @@ def feed(request):
         "sort_by": sort_by,
         "paginator": paginator,
         "page_obj": page_obj,
+        "user_post_upvotes": user_post_upvotes,
     }
+
+    # ---------- AJAX response (only the list+pagination) --------------------
+    if is_ajax(request):
+        html = render_to_string(
+            "forum/partials/post_list.html",
+            {
+                "posts": page_obj,
+                "user_post_upvotes": user_post_upvotes,
+                "request": request,
+            },
+            request=request,
+        )
+        return JsonResponse({"html": html})
+
     return render(request, "forum/feed.html", context)
 
 
-# -----------------------------------------------------------------------
-# Detail – show a single post + its replies + reply form
-# -----------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Post Detail – show a single post + its replies + reply form (AJAX‑aware)
+# -------------------------------------------------------------------------
 @login_required(login_url="account:login")
 def post_detail(request, pk):
     post = get_object_or_404(
@@ -95,29 +118,47 @@ def post_detail(request, pk):
         .prefetch_related("replies__author"),
         pk=pk,
     )
-    
-    # Don't show deleted posts
     if post.is_deleted:
         raise Http404("This post has been deleted.")
-    
+
     reply_form = ReplyForm()
 
-    # Process a new reply submitted via POST
+    # -----------------------------------------------------------------
+    # Process a new reply – if AJAX, return only the new reply HTML
+    # -----------------------------------------------------------------
     if request.method == "POST":
         reply_form = ReplyForm(request.POST)
         if reply_form.is_valid():
             reply = reply_form.save(commit=False)
             reply.author = request.user
             reply.post = post
-            reply.save()                     # signals will bump replies_cnt
+            reply.save()                     # signals bump replies_cnt
+
+            if is_ajax(request):
+                # No up‑vote yet, so the set is empty
+                html = render_to_string(
+                    "forum/partials/reply_item.html",
+                    {"reply": reply,
+                     "user_reply_upvotes": set(),
+                     "request": request},
+                    request=request,
+                )
+                # Return the new total reply count so the UI can update the heading
+                post.refresh_from_db()
+                return JsonResponse(
+                    {"success": True, "html": html, "replies_cnt": post.replies_cnt},
+                    status=201,
+                )
             return redirect("forum:post_detail", pk=post.pk)
 
-    # Get user's upvotes for context (for UI indication)
+    # -----------------------------------------------------------------
+    # Context for normal GET (or fallback after a non‑AJAX POST)
+    # -----------------------------------------------------------------
     user_post_upvotes = set()
     user_reply_upvotes = set()
     if request.user.is_authenticated:
         user_post_upvotes = set(
-            PostUpvote.objects.filter(post=post, voter=request.user)
+            PostUpvote.objects.filter(voter=request.user)
             .values_list("post_id", flat=True)
         )
         reply_ids = post.replies.filter(is_deleted=False).values_list("id", flat=True)
@@ -126,7 +167,10 @@ def post_detail(request, pk):
             .values_list("reply_id", flat=True)
         )
 
-    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
+    categories = Category.objects.annotate(
+        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    )
+
     context = {
         "post": post,
         "replies": post.replies.filter(is_deleted=False),
@@ -143,159 +187,11 @@ def post_detail(request, pk):
     return render(request, "forum/post_detail.html", context)
 
 
-
-
-
-# -----------------------------------------------------------------------
-# Up‑vote – post (AJAX endpoint returns JSON)
-# -----------------------------------------------------------------------
-@login_required(login_url="account:login")
-@require_http_methods(["POST"])
-def upvote(request, pk):
-    """Toggle upvote on a post and return JSON."""
-    post = get_object_or_404(Post, pk=pk)
-
-    upvote, created = PostUpvote.objects.get_or_create(post=post, voter=request.user)
-    if not created:
-        # User already voted → remove it
-        upvote.delete()
-        has_upvoted = False
-    else:
-        # New vote
-        has_upvoted = True
-
-    # Refresh from DB to get updated count
-    post.refresh_from_db()
-
-    return JsonResponse({
-        "success": True,
-        "upvotes": post.upvotes,
-        "has_upvoted": has_upvoted,
-        "post_id": post.pk,
-    })
-
-
-# -----------------------------------------------------------------------
-# Up‑vote – reply (AJAX endpoint returns JSON)
-# -----------------------------------------------------------------------
-@login_required(login_url="account:login")
-@require_http_methods(["POST"])
-def reply_upvote(request, reply_id):
-    """Toggle upvote on a reply and return JSON."""
-    reply = get_object_or_404(Reply, pk=reply_id)
-
-    upvote, created = ReplyUpvote.objects.get_or_create(reply=reply, voter=request.user)
-    if not created:
-        # User already voted → remove it
-        upvote.delete()
-        has_upvoted = False
-    else:
-        # New vote
-        has_upvoted = True
-
-    # Refresh from DB to get updated count
-    reply.refresh_from_db()
-
-    return JsonResponse({
-        "success": True,
-        "upvotes": reply.upvotes,
-        "has_upvoted": has_upvoted,
-        "reply_id": reply.pk,
-    })
-
-
-# -----------------------------------------------------------------------
-# Edit Post
-# -----------------------------------------------------------------------
-@login_required(login_url="account:login")
-def post_edit(request, pk):
-    """Edit a post (only by author)."""
-    post = get_object_or_404(Post, pk=pk)
-    
-    if post.author != request.user:
-        raise Http404("You can only edit your own posts.")
-    
-    if request.method == "POST":
-        form = PostForm(request.POST, instance=post)
-        if form.is_valid():
-            form.save()
-            return redirect("forum:post_detail", pk=post.pk)
-    else:
-        form = PostForm(instance=post)
-    
-    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
-    context = {"form": form, "post": post, "categories": categories, "categories_count": Post.objects.filter(is_deleted=False).count(), "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40], "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6], "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6]}
-    return render(request, "forum/post_edit.html", context)
-
-
-# -----------------------------------------------------------------------
-# Delete Post (soft delete)
-# -----------------------------------------------------------------------
-@login_required(login_url="account:login")
-def post_delete(request, pk):
-    """Delete a post (soft delete - only by author)."""
-    post = get_object_or_404(Post, pk=pk)
-    
-    if post.author != request.user:
-        raise Http404("You can only delete your own posts.")
-    
-    if request.method == "POST":
-        post.is_deleted = True
-        post.save()
-        return redirect("forum:feed")
-    
-    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
-    context = {"post": post, "categories": categories, "categories_count": Post.objects.filter(is_deleted=False).count(), "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40], "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6], "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6]}
-    return render(request, "forum/post_delete.html", context)
-
-
-# -----------------------------------------------------------------------
-# Edit Reply
-# -----------------------------------------------------------------------
-@login_required(login_url="account:login")
-def reply_edit(request, reply_id):
-    """Edit a reply (only by author)."""
-    reply = get_object_or_404(Reply, pk=reply_id)
-    
-    if reply.author != request.user:
-        raise Http404("You can only edit your own replies.")
-    
-    if request.method == "POST":
-        form = ReplyForm(request.POST, instance=reply)
-        if form.is_valid():
-            form.save()
-            return redirect("forum:post_detail", pk=reply.post.pk)
-    else:
-        form = ReplyForm(instance=reply)
-    
-    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
-    context = {"form": form, "reply": reply, "categories": categories, "categories_count": Post.objects.filter(is_deleted=False).count(), "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40], "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6], "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6]}
-    return render(request, "forum/reply_edit.html", context)
-
-
-@login_required(login_url="account:login")
-def reply_delete(request, reply_id):
-    """Delete a reply (soft delete - only by author)."""
-    reply = get_object_or_404(Reply, pk=reply_id)
-    
-    if reply.author != request.user:
-        raise Http404("You can only delete your own replies.")
-    
-    post_pk = reply.post.pk
-    
-    if request.method == "POST":
-        reply.is_deleted = True
-        reply.save()
-        return redirect("forum:post_detail", pk=post_pk)
-    
-    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
-    context = {"reply": reply, "categories": categories, "categories_count": Post.objects.filter(is_deleted=False).count(), "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40], "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6], "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6]}
-    return render(request, "forum/reply_delete.html", context)
-
-
+# -------------------------------------------------------------------------
+# Create a new post (AJAX‑aware)
+# -------------------------------------------------------------------------
 @login_required(login_url="account:login")
 def post_create(request):
-    """Create a new post (Ask a question)."""
     form = PostForm()
     if request.method == "POST":
         form = PostForm(request.POST)
@@ -303,9 +199,24 @@ def post_create(request):
             new_post = form.save(commit=False)
             new_post.author = request.user
             new_post.save()
+
+            if is_ajax(request):
+                html = render_to_string(
+                    "forum/partials/post_item.html",
+                    {
+                        "post": new_post,
+                        "user_post_upvotes": set(),
+                        "request": request,
+                    },
+                    request=request,
+                )
+                return JsonResponse({"success": True, "html": html}, status=201)
+
             return redirect("forum:post_detail", pk=new_post.pk)
 
-    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
+    categories = Category.objects.annotate(
+        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    )
     context = {
         "form": form,
         "categories": categories,
@@ -315,10 +226,207 @@ def post_create(request):
         "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
     }
     return render(request, "forum/post_create.html", context)
-# -----------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------
+# Edit a post (standard page – works as a fallback for non‑AJAX)
+# -------------------------------------------------------------------------
+@login_required(login_url="account:login")
+def post_edit(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    if post.author != request.user:
+        raise Http404("You can only edit your own posts.")
+
+    if request.method == "POST":
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            if is_ajax(request):
+                html = render_to_string(
+                    "forum/partials/post_item.html",
+                    {
+                        "post": post,
+                        "user_post_upvotes": set(),
+                        "request": request,
+                    },
+                    request=request,
+                )
+                return JsonResponse({"success": True, "html": html})
+            return redirect("forum:post_detail", pk=post.pk)
+    else:
+        form = PostForm(instance=post)
+
+    categories = Category.objects.annotate(
+        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    )
+    context = {
+        "form": form,
+        "post": post,
+        "categories": categories,
+        "categories_count": Post.objects.filter(is_deleted=False).count(),
+        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
+        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
+        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
+    }
+    return render(request, "forum/post_edit.html", context)
+
+
+# -------------------------------------------------------------------------
+# Delete a post (soft delete – AJAX‑aware)
+# -------------------------------------------------------------------------
+@login_required(login_url="account:login")
+def post_delete(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    if post.author != request.user:
+        raise Http404("You can only delete your own posts.")
+
+    if request.method == "POST":
+        post.is_deleted = True
+        post.save()
+        if is_ajax(request):
+            return JsonResponse({"success": True, "deleted_id": post.pk})
+        return redirect("forum:feed")
+
+    # Non‑AJAX fallback – render confirmation page
+    categories = Category.objects.annotate(
+        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    )
+    context = {
+        "post": post,
+        "categories": categories,
+        "categories_count": Post.objects.filter(is_deleted=False).count(),
+        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
+        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
+        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
+    }
+    return render(request, "forum/post_delete.html", context)
+
+
+# -------------------------------------------------------------------------
+# Edit a reply (standard page – fallback)
+# -------------------------------------------------------------------------
+@login_required(login_url="account:login")
+def reply_edit(request, reply_id):
+    reply = get_object_or_404(Reply, pk=reply_id)
+    if reply.author != request.user:
+        raise Http404("You can only edit your own replies.")
+
+    if request.method == "POST":
+        form = ReplyForm(request.POST, instance=reply)
+        if form.is_valid():
+            form.save()
+            if is_ajax(request):
+                html = render_to_string(
+                    "forum/partials/reply_item.html",
+                    {
+                        "reply": reply,
+                        "user_reply_upvotes": set(),
+                        "request": request,
+                    },
+                    request=request,
+                )
+                return JsonResponse({"success": True, "html": html})
+            return redirect("forum:post_detail", pk=reply.post.pk)
+    else:
+        form = ReplyForm(instance=reply)
+
+    categories = Category.objects.annotate(
+        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    )
+    context = {
+        "form": form,
+        "reply": reply,
+        "categories": categories,
+        "categories_count": Post.objects.filter(is_deleted=False).count(),
+        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
+        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
+        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
+    }
+    return render(request, "forum/reply_edit.html", context)
+
+
+# -------------------------------------------------------------------------
+# Delete a reply (soft delete – AJAX‑aware)
+# -------------------------------------------------------------------------
+@login_required(login_url="account:login")
+def reply_delete(request, reply_id):
+    reply = get_object_or_404(Reply, pk=reply_id)
+    if reply.author != request.user:
+        raise Http404("You can only delete your own replies.")
+
+    if request.method == "POST":
+        reply.is_deleted = True
+        reply.save()
+        if is_ajax(request):
+            return JsonResponse({"success": True, "deleted_id": reply.pk})
+        return redirect("forum:post_detail", pk=reply.post.pk)
+
+    # Non‑AJAX fallback – render confirmation page
+    categories = Category.objects.annotate(
+        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    )
+    context = {
+        "reply": reply,
+        "categories": categories,
+        "categories_count": Post.objects.filter(is_deleted=False).count(),
+        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
+        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
+        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
+    }
+    return render(request, "forum/reply_delete.html", context)
+
+
+# -------------------------------------------------------------------------
+# Up‑vote – post (already AJAX; unchanged)
+# -------------------------------------------------------------------------
+@login_required(login_url="account:login")
+@require_http_methods(["POST"])
+def upvote(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    upvote, created = PostUpvote.objects.get_or_create(post=post, voter=request.user)
+    if not created:
+        upvote.delete()
+        has_upvoted = False
+    else:
+        has_upvoted = True
+
+    post.refresh_from_db()
+    return JsonResponse({
+        "success": True,
+        "upvotes": post.upvotes,
+        "has_upvoted": has_upvoted,
+        "post_id": post.pk,
+    })
+
+
+# -------------------------------------------------------------------------
+# Up‑vote – reply (already AJAX; unchanged)
+# -------------------------------------------------------------------------
+@login_required(login_url="account:login")
+@require_http_methods(["POST"])
+def reply_upvote(request, reply_id):
+    reply = get_object_or_404(Reply, pk=reply_id)
+    upvote, created = ReplyUpvote.objects.get_or_create(reply=reply, voter=request.user)
+    if not created:
+        upvote.delete()
+        has_upvoted = False
+    else:
+        has_upvoted = True
+
+    reply.refresh_from_db()
+    return JsonResponse({
+        "success": True,
+        "upvotes": reply.upvotes,
+        "has_upvoted": has_upvoted,
+        "reply_id": reply.pk,
+    })
+
+
+# -------------------------------------------------------------------------
+# Flag content (AJAX‑aware)
+# -------------------------------------------------------------------------
 @login_required(login_url="account:login")
 def flag_content(request, content_type, content_id):
-    """Report inappropriate content (post or reply)."""
     if content_type == "post":
         content = get_object_or_404(Post, pk=content_id)
         post = content
@@ -329,15 +437,25 @@ def flag_content(request, content_type, content_id):
         post = None
     else:
         raise Http404("Invalid content type.")
-    
+
     if request.method == "POST":
         reason = request.POST.get("reason")
         description = request.POST.get("description", "")
-        
         if not reason:
-            return render(request, "forum/flag_content.html", {"content_type": content_type, "content": content, "error": "Please select a reason.", "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40], "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6], "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6]})
-        
-        # Check if already reported
+            # Validation error – send back the form with an error message
+            html = render_to_string(
+                "forum/flag_content.html",
+                {
+                    "content_type": content_type,
+                    "content": content,
+                    "error": "Please select a reason.",
+                    "reason_choices": FlagReport.REASON_CHOICES,
+                    "request": request,
+                },
+                request=request,
+            )
+            return JsonResponse({"success": False, "html": html}, status=400)
+
         FlagReport.objects.get_or_create(
             reporter=request.user,
             content_type=content_type,
@@ -345,17 +463,36 @@ def flag_content(request, content_type, content_id):
             reply=reply,
             defaults={"reason": reason, "description": description},
         )
-        
-        categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
-        return render(request, "forum/flag_success.html", {"content": content, "categories": categories, "categories_count": Post.objects.filter(is_deleted=False).count(), "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40], "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6], "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6]})
-    
-    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False)))
-    context = {"content_type": content_type, "content": content, "reason_choices": FlagReport.REASON_CHOICES, "categories": categories, "categories_count": Post.objects.filter(is_deleted=False).count(), "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40], "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6], "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6]}
-    return render(request, "forum/flag_content.html", context)
+        if is_ajax(request):
+            html = render_to_string(
+                "forum/flag_success.html",
+                {"content": content, "request": request},
+                request=request,
+            )
+            return JsonResponse({"success": True, "html": html})
+        # non‑AJAX fallback – render success page
+        categories = Category.objects.annotate(
+            post_count=Count('posts', filter=Q(posts__is_deleted=False))
+        )
+        return render(request, "forum/flag_success.html", {"content": content, "categories": categories})
+
+    # GET – just return the form fragment (for modal)
+    html = render_to_string(
+        "forum/flag_content.html",
+        {
+            "content_type": content_type,
+            "content": content,
+            "reason_choices": FlagReport.REASON_CHOICES,
+            "request": request,
+        },
+        request=request,
+    )
+    return JsonResponse({"html": html})
 
 
-# -----------------------------------------------------------------------
-# Moderation Dashboard (for staff only)
+# -------------------------------------------------------------------------
+# Moderation Dashboard (staff only – unchanged)
+# -------------------------------------------------------------------------
 @login_required(login_url="account:login")
 def moderation_dashboard(request):
     if not request.user.is_staff:
@@ -385,6 +522,6 @@ def resolve_report(request, report_id):
     report.action_taken = "Reviewed by moderator"
     report.save(update_fields=["resolved", "action_taken"])
 
+    if is_ajax(request):
+        return JsonResponse({"success": True, "resolved_id": report.pk})
     return redirect("forum:moderation_dashboard")
-# -----------------------------------------------------------------------
-# Conversation map feature removed

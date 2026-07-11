@@ -1,0 +1,46 @@
+{# forum/partials/_reply_item.html #}
+<div class="reply-item card" data-reply-id="{{ reply.pk }}" id="reply-{{ reply.pk }}">
+    <div class="avatar avatar--sm">
+        {% if reply.author.avatar %}
+            <img src="{{ reply.author.avatar.url }}" alt="{{ reply.author.get_full_name|default:reply.author.username }}">
+        {% else %}
+            <span class="avatar-fallback">{{ reply.author.get_full_name|default:reply.author.username|slice:":1"|upper }}</span>
+        {% endif %}
+    </div>
+    <div class="reply-body">
+        <p class="reply-author">
+            <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
+            • {{ reply.created_at|timesince }} ago
+        </p>
+        <div class="reply-content">{{ reply.content|linebreaks }}</div>
+
+        <div class="reply-upvote-section">
+            <button class="reply-upvote-btn{% if reply.pk in user_reply_upvotes %} has-upvoted{% endif %}"
+                    data-reply-id="{{ reply.pk }}"
+                    data-endpoint="{% url 'forum:reply_upvote' reply.pk %}">
+                <i class="fa-solid fa-thumbs-up"></i>
+                <span class="reply-upvote-count">{{ reply.upvotes }}</span>
+            </button>
+
+            {% if request.user == reply.author %}
+                <a href="{% url 'forum:reply_edit' reply.pk %}"
+                   class="reply-action ajax-modal"
+                   data-ajax-url="{% url 'forum:reply_edit' reply.pk %}"
+                   data-target="#global-modal">
+                    <i class="fa-solid fa-edit"></i> Edit
+                </a>
+                <button class="reply-action ajax-delete-btn"
+                        data-url="{% url 'forum:reply_delete' reply.pk %}"
+                        data-target="#reply-{{ reply.pk }}">
+                    <i class="fa-solid fa-trash"></i> Delete
+                </button>
+            {% endif %}
+            <a href="{% url 'forum:flag_content' 'reply' reply.pk %}"
+               class="reply-action ajax-modal"
+               data-ajax-url="{% url 'forum:flag_content' 'reply' reply.pk %}"
+               data-target="#global-modal">
+                <i class="fa-solid fa-flag"></i> Report
+            </a>
+        </div>
+    </div>
+</div>

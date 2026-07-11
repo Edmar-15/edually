@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Ask a Question – EduAlly Forum</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/feed.css' %}">
@@ -25,7 +25,10 @@
             </header>
 
             <div class="create-post-container">
-                <form method="post" class="post-create-form">
+                <form method="post"
+                      class="post-create-form ajax-form"
+                      data-target="#post-list"
+                      data-insert="prepend">
                     {% csrf_token %}
                     {{ form.as_p }}
                     <div class="form-actions">
