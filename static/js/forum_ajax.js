@@ -92,7 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Close modal if the form lives inside one
             const modal = form.closest('.modal');
-            if (modal) modal.classList.remove('open');
+            const closeModal = form.dataset.closeModal !== 'false';
+            if (closeModal && modal) modal.classList.remove('open');
         } catch (err) {
             console.error('AJAX form error:', err);
         }

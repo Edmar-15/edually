@@ -27,7 +27,9 @@
                     </p>
                 </div>
                 <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                   class="button primary-button">Ask a Question</a>
+                   class="button primary-button ajax-modal"
+                   data-ajax-url="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+                   data-target="#global-modal">Ask a Question</a>
             </header>
 
             <!-- SEARCH & FILTERS -->

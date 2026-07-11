@@ -1,0 +1,15 @@
+<div class="create-post-container">
+    <h2>Ask a New Question</h2>
+    <form method="post"
+          class="post-create-form ajax-form"
+          data-target="#post-list"
+          data-insert="prepend">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+            <button type="submit" class="button primary-button button-lg"><i class="fas fa-paper-plane"></i> Post Question</button>
+            <a href="javascript:void(0);" class="button secondary-button"
+               onclick="document.getElementById('global-modal').classList.remove('open');">Cancel</a>
+        </div>
+    </form>
+</div>

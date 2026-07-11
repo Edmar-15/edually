@@ -32,7 +32,15 @@
                         <button type="submit" class="button primary-button">
                             <i class="fa-solid fa-flag"></i> Submit Report
                         </button>
-                        <a href="javascript:history.back()" class="button secondary-button">Cancel</a>
+                        {% if content_type == "post" %}
+                            {% url 'forum:post_detail' content.pk as back_url %}
+                        {% else %}
+                            {% url 'forum:post_detail' content.post.pk as back_url %}
+                        {% endif %}
+                        <a href="#"
+                           class="button secondary-button ajax-modal"
+                           data-ajax-url="{{ back_url }}"
+                           data-target="#global-modal">Cancel</a>
                     </div>
                 </form>
             </div>

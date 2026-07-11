@@ -1,0 +1,15 @@
+<div class="edit-post-container">
+    <h2>Edit Question</h2>
+    <form method="post"
+          class="post-edit-form ajax-form"
+          data-target="#global-modal"
+          data-replace="true">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+            <button type="submit" class="button primary-button">Save Changes</button>
+            <a href="javascript:void(0);" class="button secondary-button"
+               onclick="document.getElementById('global-modal').classList.remove('open');">Cancel</a>
+        </div>
+    </form>
+</div>

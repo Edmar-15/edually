@@ -17,7 +17,11 @@
                     <span class="post-time">{{ post.created_at|timesince }} ago</span>
                 </div>
                 <h2 class="post-title">
-                    <a href="{% url 'forum:post_detail' post.pk %}">{{ post.title }}</a>
+                    <!-- Load post detail into modal -->
+                    <a href="{% url 'forum:post_detail' post.pk %}"
+                       class="ajax-modal"
+                       data-ajax-url="{% url 'forum:post_detail' post.pk %}"
+                       data-target="#global-modal">{{ post.title }}</a>
                 </h2>
                 <p class="post-author">by {{ post.author.get_full_name|default:post.author.username }}</p>
             </div>
@@ -43,7 +47,9 @@
         {% if request.user == post.author %}
             <div class="action-buttons">
                 <a href="{% url 'forum:post_edit' post.pk %}"
-                   class="button secondary-button small-button">
+                   class="button secondary-button small-button ajax-modal"
+                   data-ajax-url="{% url 'forum:post_edit' post.pk %}"
+                   data-target="#global-modal">
                     <i class="fa-solid fa-edit"></i> Edit
                 </a>
                 <button class="button secondary-button small-button ajax-delete-btn"

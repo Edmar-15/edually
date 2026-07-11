@@ -124,7 +124,7 @@ def post_detail(request, pk):
     reply_form = ReplyForm()
 
     # -----------------------------------------------------------------
-    # Process a new reply – if AJAX, return only the new reply HTML
+    # Process a new reply – always AJAX response
     # -----------------------------------------------------------------
     if request.method == "POST":
         reply_form = ReplyForm(request.POST)
@@ -134,32 +134,42 @@ def post_detail(request, pk):
             reply.post = post
             reply.save()                     # signals bump replies_cnt
 
-            if is_ajax(request):
-                # No up‑vote yet, so the set is empty
-                html = render_to_string(
-                    "forum/partials/reply_item.html",
-                    {"reply": reply,
-                     "user_reply_upvotes": set(),
-                     "request": request},
-                    request=request,
-                )
-                # Return the new total reply count so the UI can update the heading
-                post.refresh_from_db()
-                return JsonResponse(
-                    {"success": True, "html": html, "replies_cnt": post.replies_cnt},
-                    status=201,
-                )
-            return redirect("forum:post_detail", pk=post.pk)
+            # Render the newly created reply item
+            html = render_to_string(
+                "forum/partials/reply_item.html",
+                {"reply": reply,
+                 "user_reply_upvotes": set(),
+                 "request": request},
+                request=request,
+            )
+            post.refresh_from_db()
+            return JsonResponse(
+                {"success": True, "html": html, "replies_cnt": post.replies_cnt},
+                status=201,
+            )
+        else:
+            # Return form errors inside the modal
+            html = render_to_string(
+                "forum/partials/post_detail.html",
+                {
+                    "post": post,
+                    "replies": post.replies.filter(is_deleted=False),
+                    "reply_form": reply_form,
+                    "user_post_upvotes": set(),
+                    "user_reply_upvotes": set(),
+                },
+                request=request,
+            )
+            return JsonResponse({"success": False, "html": html}, status=400)
 
     # -----------------------------------------------------------------
-    # Context for normal GET (or fallback after a non‑AJAX POST)
+    # GET – return post‑detail fragment for modal
     # -----------------------------------------------------------------
     user_post_upvotes = set()
     user_reply_upvotes = set()
     if request.user.is_authenticated:
         user_post_upvotes = set(
-            PostUpvote.objects.filter(voter=request.user)
-            .values_list("post_id", flat=True)
+            PostUpvote.objects.filter(voter=request.user).values_list("post_id", flat=True)
         )
         reply_ids = post.replies.filter(is_deleted=False).values_list("id", flat=True)
         user_reply_upvotes = set(
@@ -167,24 +177,15 @@ def post_detail(request, pk):
             .values_list("reply_id", flat=True)
         )
 
-    categories = Category.objects.annotate(
-        post_count=Count('posts', filter=Q(posts__is_deleted=False))
-    )
-
     context = {
         "post": post,
         "replies": post.replies.filter(is_deleted=False),
         "reply_form": reply_form,
-        "categories": categories,
-        "categories_count": Post.objects.filter(is_deleted=False).count(),
-        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
-        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
-        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
-        "active_category": post.category.slug if post.category else "",
         "user_post_upvotes": user_post_upvotes,
         "user_reply_upvotes": user_reply_upvotes,
     }
-    return render(request, "forum/post_detail.html", context)
+    html = render_to_string("forum/partials/post_detail.html", context, request=request)
+    return JsonResponse({"html": html})
 
 
 # -------------------------------------------------------------------------
@@ -192,83 +193,77 @@ def post_detail(request, pk):
 # -------------------------------------------------------------------------
 @login_required(login_url="account:login")
 def post_create(request):
-    form = PostForm()
-    if request.method == "POST":
-        form = PostForm(request.POST)
-        if form.is_valid():
-            new_post = form.save(commit=False)
-            new_post.author = request.user
-            new_post.save()
+    """
+    AJAX‑only view – GET returns the empty post form, POST creates a post.
+    """
+    if request.method == "GET":
+        form = PostForm()
+        html = render_to_string("forum/partials/post_form.html", {"form": form}, request=request)
+        return JsonResponse({"html": html})
 
-            if is_ajax(request):
-                html = render_to_string(
-                    "forum/partials/post_item.html",
-                    {
-                        "post": new_post,
-                        "user_post_upvotes": set(),
-                        "request": request,
-                    },
-                    request=request,
-                )
-                return JsonResponse({"success": True, "html": html}, status=201)
+    # POST – create a new post
+    form = PostForm(request.POST)
+    if form.is_valid():
+        new_post = form.save(commit=False)
+        new_post.author = request.user
+        new_post.save()
+        html = render_to_string(
+            "forum/partials/post_item.html",
+            {"post": new_post, "user_post_upvotes": set(), "request": request},
+            request=request,
+        )
+        return JsonResponse({"success": True, "html": html}, status=201)
 
-            return redirect("forum:post_detail", pk=new_post.pk)
-
-    categories = Category.objects.annotate(
-        post_count=Count('posts', filter=Q(posts__is_deleted=False))
-    )
-    context = {
-        "form": form,
-        "categories": categories,
-        "categories_count": Post.objects.filter(is_deleted=False).count(),
-        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
-        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
-        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
-    }
-    return render(request, "forum/post_create.html", context)
-
+    # Form error – return the form markup with errors
+    html = render_to_string("forum/partials/post_form.html", {"form": form}, request=request)
+    return JsonResponse({"success": False, "html": html}, status=400)
 
 # -------------------------------------------------------------------------
 # Edit a post (standard page – works as a fallback for non‑AJAX)
 # -------------------------------------------------------------------------
 @login_required(login_url="account:login")
 def post_edit(request, pk):
+    """
+    AJAX view for editing a post.
+    GET – returns the edit form (modal).
+    POST – saves and returns the refreshed post‑detail fragment.
+    """
     post = get_object_or_404(Post, pk=pk)
     if post.author != request.user:
         raise Http404("You can only edit your own posts.")
 
-    if request.method == "POST":
-        form = PostForm(request.POST, instance=post)
-        if form.is_valid():
-            form.save()
-            if is_ajax(request):
-                html = render_to_string(
-                    "forum/partials/post_item.html",
-                    {
-                        "post": post,
-                        "user_post_upvotes": set(),
-                        "request": request,
-                    },
-                    request=request,
-                )
-                return JsonResponse({"success": True, "html": html})
-            return redirect("forum:post_detail", pk=post.pk)
-    else:
+    if request.method == "GET":
         form = PostForm(instance=post)
+        html = render_to_string("forum/partials/post_edit_form.html", {"form": form, "post": post}, request=request)
+        return JsonResponse({"html": html})
 
-    categories = Category.objects.annotate(
-        post_count=Count('posts', filter=Q(posts__is_deleted=False))
-    )
-    context = {
-        "form": form,
-        "post": post,
-        "categories": categories,
-        "categories_count": Post.objects.filter(is_deleted=False).count(),
-        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
-        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
-        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
-    }
-    return render(request, "forum/post_edit.html", context)
+    # POST – save changes
+    form = PostForm(request.POST, instance=post)
+    if form.is_valid():
+        form.save()
+        # Return the full post‑detail view so the modal can refresh
+        reply_form = ReplyForm()
+        user_post_upvotes = set(
+            PostUpvote.objects.filter(voter=request.user).values_list("post_id", flat=True)
+        )
+        reply_ids = post.replies.filter(is_deleted=False).values_list("id", flat=True)
+        user_reply_upvotes = set(
+            ReplyUpvote.objects.filter(reply_id__in=reply_ids, voter=request.user)
+            .values_list("reply_id", flat=True)
+        )
+        context = {
+            "post": post,
+            "replies": post.replies.filter(is_deleted=False),
+            "reply_form": reply_form,
+            "user_post_upvotes": user_post_upvotes,
+            "user_reply_upvotes": user_reply_upvotes,
+        }
+        html = render_to_string("forum/partials/post_detail.html", context, request=request)
+        return JsonResponse({"success": True, "html": html})
+
+    # Form error – re‑render edit form with errors
+    html = render_to_string("forum/partials/post_edit_form.html", {"form": form, "post": post}, request=request)
+    return JsonResponse({"success": False, "html": html}, status=400)
 
 
 # -------------------------------------------------------------------------
