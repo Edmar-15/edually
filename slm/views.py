@@ -12,6 +12,7 @@ import os
 from .content_extractor import extract_content
 import logging as logger
 from .ai_bridge import ask_ai_one_level
+from .file_utils import delete_file, replace_file
 
 # Create your views here.
 @login_required(login_url='account:login')
@@ -472,6 +473,7 @@ def api_module_delete(request, pk):
     if module.subject.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 
+    delete_file(module.file)
     module.delete()
     return JsonResponse({}, status=204)
 
@@ -518,8 +520,7 @@ def api_module_file_replace(request, pk):
     # -------------------------------------------------------------
     # 3️⃣  Swap the file on the model instance
     # -------------------------------------------------------------
-    module.file = file_obj
-    module.save()
+    replace_file(module, "file", file_obj)
 
     # -------------------------------------------------------------
     # 4️⃣  Run the extractor and store the HTML preview
@@ -758,6 +759,7 @@ def api_personal_material_delete(request, pk):
     if pm.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 
+    delete_file(pm.file)
     pm.delete()
     return JsonResponse({}, status=204)
 
@@ -790,8 +792,7 @@ def api_personal_material_file_replace(request, pk):
     # -----------------------------------------------------------------
     # Replace the file and re‑extract
     # -----------------------------------------------------------------
-    pm.file = file_obj
-    pm.save()                         # stores the file
+    replace_file(pm, "file", file_obj)                         # stores the file
 
     try:
         html = extract_content(pm.file)
