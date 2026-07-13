@@ -151,9 +151,22 @@ class HighlightAnswer(models.Model):
     """
     One row per exact highlighted string that has already been sent to the AI.
     """
-    module   = models.ForeignKey(Module,
-                               on_delete=models.CASCADE,
-                               related_name="highlight_answers")
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.CASCADE,
+        related_name="highlight_answers",
+        null=True,
+        blank=True,
+        help_text="Module the answer belongs to (null when it belongs to a personal material).",
+    )
+    personal_material = models.ForeignKey(
+        "PersonalMaterial",
+        on_delete=models.CASCADE,
+        related_name="highlight_answers",
+        null=True,
+        blank=True,
+        help_text="PersonalMaterial the answer belongs to (null when it belongs to a module).",
+    )
     # -----------------------------------------------------------------
     # NEW – the user that created the answer
     # -----------------------------------------------------------------
@@ -181,7 +194,7 @@ class HighlightAnswer(models.Model):
 
     class Meta:
         # now unique per module + query + owner
-        unique_together = ("module", "query", "owner")
+        unique_together = ("module", "personal_material", "query", "owner")
         ordering = ["-created_at"]
         verbose_name = "Highlight answer"
         verbose_name_plural = "Highlight answers"

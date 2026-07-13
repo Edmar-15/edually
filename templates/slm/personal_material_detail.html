@@ -27,7 +27,7 @@
             </i></p>
             <div class="header-actions">
                 <!-- 1️⃣  Download (icon only) -->
-                <a href="{{ module.file.url }}" class="button download-btn"
+                <a href="{{ pm.file.url }}" class="button download-btn"
                    download
                    aria-label="Download original file"
                    title="Download original file">
@@ -55,10 +55,6 @@
                 <p>{% if pm.visibility == "PU" %}Publicly shared{% else %}Your private material{% endif %}</p>
             </div>
             <div class="module-content-history" aria-label="Highlight history">
-                <button type="button" class="module-content-history__toggle" id="highlight-history-toggle" aria-expanded="false" aria-controls="highlight-history-list">
-                    <span>Highlight History</span>
-                    <span id="highlight-history-count">0 items</span>
-                </button>
                 <div class="module-content-history__popover" id="highlight-history-popover" hidden>
                     <ul id="highlight-history-list" class="module-content-history__list"></ul>
                 </div>
@@ -72,12 +68,6 @@
                     <p><em>No extracted preview is available for this file.</em></p>
                 {% endif %}
             </div>
-        </section>
-
-        <section class="module-actions" style="margin-top:2rem;">
-            <a href="{{ pm.file_url }}" class="button" download>
-                <i class="fa-solid fa-download"></i> Download original file
-            </a>
         </section>
     </main>
 
@@ -144,18 +134,11 @@
     <script type="module">
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
         const toolbar   = document.getElementById('selection-toolbar');
-        const moduleId  = {{ pm.id }};
+        const pmId      = {{ pm.id }};
         const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        /* -----------------------------------------------------------------
-         *  Cached highlights are now loaded by `highlight_ai.js` itself.
-         *  The function `preloadExistingHighlights()` fetches the same
-         *  endpoint, populates the internal maps and decorates the DOM.
-         *  Keeping a separate “inline” replacement caused the spans to
-         *  miss the required data‑attributes, which made the hover‑tooltip
-         *  appear empty.
-         * ----------------------------------------------------------------- */
-        initHighlightAI(toolbar, moduleId, contentRoot);
+        // point the JS to the personal‑material endpoint
+        initHighlightAI(toolbar, pmId, contentRoot, '/slm/api/personal-materials/');
     </script>
 </body>
 </html>

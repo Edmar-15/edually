@@ -830,79 +830,99 @@ def personal_material_detail(request, pk):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def api_module_highlight(request, module_id):
+def api_highlight(request, pk, target_type):
     """
-    GET  → returns only the cached answers that belong to request.user.
-    POST → stores a new answer for request.user, using a case‑insensitive key.
+    `target_type` is either "module" or "personal".
+    The same JSON contract as before is kept:
+        GET  → {answers: [{query, answer:{simplified, technical}}]}
+        POST → {query, answer, cached}
     """
-    module = get_object_or_404(Module, pk=module_id)
+    # -----------------------------------------------------------------
+    # Resolve the target object
+    # -----------------------------------------------------------------
+    if target_type == "module":
+        target = get_object_or_404(Module, pk=pk)
+        fk_name = "module"
+    else:   # personal material
+        target = get_object_or_404(PersonalMaterial, pk=pk)
 
-    # --------------------------------------------------------------
-    #  GET – list cached answers *for the current user only*
-    # --------------------------------------------------------------
+        # Visibility guard – owners may see private, others only public
+        if (
+            target.visibility == PersonalMaterial.Visibility.PRIVATE
+            and target.author_id != request.user.id
+        ):
+            return JsonResponse({"error": "Permission denied"}, status=403)
+
+        fk_name = "personal_material"
+
+    # -----------------------------------------------------------------
+    # GET – list cached answers for the *current* user only
+    # -----------------------------------------------------------------
     if request.method == "GET":
+        filter_kwargs = {fk_name: target, "owner": request.user}
         qs = (
-            HighlightAnswer.objects.filter(
-                module=module,
-                owner=request.user,
-            )
+            HighlightAnswer.objects.filter(**filter_kwargs)
             .order_by("query")
             .values("query", "answer_simplified", "answer_technical")
         )
-
         answers = [
             {
                 "query": item["query"],
                 "answer": {
                     "simplified": item["answer_simplified"],
-                    "technical":  item["answer_technical"],
+                    "technical": item["answer_technical"],
                 },
             }
             for item in qs
         ]
         return JsonResponse({"answers": answers}, safe=False)
 
-    # --------------------------------------------------------------
-    #  POST – ask AI for ONE level only
-    # --------------------------------------------------------------
+    # -----------------------------------------------------------------
+    # POST – ask the AI for ONE level, store it (or return cached)
+    # -----------------------------------------------------------------
     try:
         payload = json.loads(request.body)
         raw_query = payload.get("query", "").strip()
         level = payload.get("level", "simplified").strip().lower()
-
         if not raw_query:
             raise ValueError("Empty query")
         if level not in {"simplified", "technical"}:
-            raise ValueError("Invalid level – must be 'simplified' or 'technical'")
+            raise ValueError("Invalid level")
     except (json.JSONDecodeError, ValueError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # ----- 1️⃣  canonicalise the query (lower‑case) -----------------
+    # canonical (lower‑case) key that we store in the DB
     query = raw_query.lower()
 
-    # ----- 2️⃣  try to fetch an existing row for *this* user -------
-    try:
-        stored = HighlightAnswer.objects.get(
-            module=module,
-            owner=request.user,
-            query=query,
+    # -------------------------------------------------------------
+    # Retrieve (or create) a row for *this* user & target
+    # -------------------------------------------------------------
+    get_kwargs = {
+        "owner": request.user,
+        "query": query,
+        fk_name: target,
+    }
+    stored, created = HighlightAnswer.objects.get_or_create(
+        defaults={"answer_simplified": "", "answer_technical": ""},
+        **get_kwargs,
+    )
+
+    # -------------------------------------------------------------
+    # If we already have an answer for the requested level → return it
+    # -------------------------------------------------------------
+    cached_answer = getattr(stored, f"answer_{level}")
+    if cached_answer:
+        return JsonResponse(
+            {"query": raw_query, "answer": cached_answer, "cached": True},
+            status=200,
         )
-        cached_answer = getattr(stored, f"answer_{level}")
-        if cached_answer:  # already cached → return it
-            return JsonResponse(
-                {"query": raw_query, "answer": cached_answer, "cached": True},
-                status=200,
-            )
-    except HighlightAnswer.DoesNotExist:
-        # No row yet – create a *blank* instance; we will fill it later.
-        stored = HighlightAnswer(module=module, owner=request.user, query=query)
 
-    # ----- 3️⃣  call the AI *once* for the requested level ----------
-    answer_body = ask_ai_one_level(raw_query, level)   # keep original casing for the AI
-
-    # ----- 4️⃣  store the answer in the correct column ---------------
+    # -------------------------------------------------------------
+    # Otherwise ask the AI (once) and store the result
+    # -------------------------------------------------------------
+    answer_body = ask_ai_one_level(raw_query, level)
     setattr(stored, f"answer_{level}", answer_body)
-    stored.save()   # persists only the column we just set (plus owner/module/query)
+    stored.save(update_fields=[f"answer_{level}"])
 
     return JsonResponse(
         {"query": raw_query, "answer": answer_body, "cached": False},

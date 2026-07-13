@@ -131,11 +131,11 @@
 
     <script type="module">
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
-        const toolbar  = document.getElementById('selection-toolbar');
-        const moduleId = {{ module.id|default:"null" }};
+        const toolbar   = document.getElementById('selection-toolbar');
+        const moduleId  = {{ module.id|default:"null" }};
         const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        // ---- activate the new mini‑AI behaviour ----
+        // default apiBase = '/slm/api/modules/'
         initHighlightAI(toolbar, moduleId, contentRoot);
     </script>
 </body>

@@ -93,8 +93,17 @@ urlpatterns = [
     ),
     
     path(
-        "api/modules/<int:module_id>/highlight/",
-        views.api_module_highlight,          # ← ONE view for both verbs
-        name="module-highlight",              # a single name is enough
+    "api/personal-materials/<int:pk>/highlight/",
+    views.api_highlight,
+    {"target_type": "personal"},
+    name="personalmaterial-highlight",
+    ),
+
+    # keep the original, just point it to the same view
+    path(
+        "api/modules/<int:pk>/highlight/",
+        views.api_highlight,
+        {"target_type": "module"},
+        name="module-highlight",
     ),
 ]
