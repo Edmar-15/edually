@@ -16,7 +16,7 @@
 
     <main class="main-content">
         <header class="content-header">
-            <p><i>
+            <p class="breadcrumb"><i>
                 <a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
                 {% if pm.visibility == 'PU' and pm.author_id != request.user.id %}
                     <a href="{% url "slm:slmlists" %}#tab-2">Public Learning Materials</a> &gt;
@@ -25,6 +25,28 @@
                 {% endif %}
                 {{ pm.title }}
             </i></p>
+            <div class="header-actions">
+                <!-- 1️⃣  Download (icon only) -->
+                <a href="{{ module.file.url }}" class="button download-btn"
+                   download
+                   aria-label="Download original file"
+                   title="Download original file">
+                    <i class="fa-solid fa-download" aria-hidden="true"></i>
+                </a>
+
+                <!-- 2️⃣  Highlight‑history toggle (icon only) -->
+                <button type="button"
+                        class="module-content-history__toggle"
+                        id="highlight-history-toggle"
+                        aria-label="Highlight history"
+                        title="Highlight history"
+                        aria-expanded="false"
+                        aria-controls="highlight-history-list">
+                    <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                    <!-- Small badge that still shows the number of history items -->
+                    <span id="highlight-history-count" class="badge">0</span>
+                </button>
+            </div>
         </header>
 
         <section class="module-content-card" aria-labelledby="material-content-title">

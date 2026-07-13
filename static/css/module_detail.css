@@ -16,7 +16,85 @@
 }
 
 /* -----------------------------------------------------------------
-   2️⃣ Header inside the card
+   2️⃣ Page‑level header – breadcrumb + action icons
+   ----------------------------------------------------------------- */
+.content-header {
+    /* Flex container: breadcrumb left, actions right */
+    display: flex;
+    flex-wrap: wrap;               /* wrap on very narrow screens */
+    align-items: center;
+    justify-content: space-between;
+    padding: .75rem 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fafafa;          /* subtle paper‑like bg */
+    position: sticky;             /* stay visible while scrolling */
+    top: 0;
+    z-index: 5;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+}
+
+/* Breadcrumb text */
+.breadcrumb {
+    margin: 0;
+    font-size: .95rem;
+    color: #6b7280;
+    line-height: 1;
+}
+
+/* Remove the italic style that the <i> tag gives by default */
+.breadcrumb i {
+    font-style: normal;
+}
+
+/* Links inside the breadcrumb */
+.breadcrumb a {
+    color: #0e9aa7;
+    text-decoration: none;
+}
+.breadcrumb a:hover,
+.breadcrumb a:focus {
+    text-decoration: underline;
+}
+
+/* Add a little visual “>” separator with spacing */
+.breadcrumb > a:not(:last-child)::after {
+    content: " › ";                /* narrow‑no‑break‑space + arrow */
+    margin-left: .2rem;
+    margin-right: .2rem;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+/* Container for the action icons on the right side */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;                     /* consistent spacing between buttons */
+}
+
+/* Keep the existing .button look but tighten the padding for the tiny icons */
+.header-actions .button {
+    padding: .45rem .7rem;         /* a touch tighter than the main .button */
+}
+
+/* Badge that shows the number of highlight‑history items */
+.badge {
+    display: inline-block;
+    min-width: 1.2rem;
+    padding: .08rem .35rem;
+    margin-left: .25rem;
+    font-size: .7rem;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
+    background: #ef4444;           /* bright, visible red */
+    border-radius: 9999px;         /* pill shape */
+    text-align: center;
+}
+
+/* -----------------------------------------------------------------
+   3️⃣ Header inside the card (unchanged – keep as‑is)
    ----------------------------------------------------------------- */
 .module-content-card__header {
     margin-bottom: 1rem;
@@ -37,7 +115,7 @@
 }
 
 /* -----------------------------------------------------------------
-   3️⃣ Main content – base typography (used for PDF/Docx/PPT pages)
+   4️⃣ Main content – base typography (used for PDF/Docx/PPT pages)
    ----------------------------------------------------------------- */
 .module-content {
     line-height: 1.75;
@@ -75,7 +153,7 @@
 .module-content img:hover { transform: scale(1.02); }
 
 /* -----------------------------------------------------------------
-   4️⃣ PDF‑page “slide” blocks (already in your markup)
+   5️⃣ PDF‑page “slide” blocks (already in your markup)
    ----------------------------------------------------------------- */
 .pdf-page {
     background: #fafafa;
@@ -93,7 +171,7 @@
     color: #1f2937;
 }
 
-/* If the extractor creates a heading inside a PDF page, style it */
+/* Headings inside a PDF page */
 .pdf-page > h1,
 .pdf-page > h2,
 .pdf-page > h3,
@@ -105,7 +183,7 @@
 }
 
 /* -----------------------------------------------------------------
-   5️⃣ DOCX‑page styling (mirrors PDF style)
+   6️⃣ DOCX‑page styling (mirrors PDF style)
    ----------------------------------------------------------------- */
 .docx-page {
     background: #fafafa;
@@ -130,7 +208,7 @@
 }
 
 /* -----------------------------------------------------------------
-   6️⃣ PPTX‑page styling (new!)
+   7️⃣ PPTX‑page styling (new!)
    ----------------------------------------------------------------- */
 .ppt-page {
     background: #f8fafc;                 /* very light gray */
@@ -162,7 +240,7 @@
 /* • First‑level lists – keep the default disc bullet */
 .ppt-page ul {
     list-style: disc;
-    margin: .6rem 0 .6rem 1.8rem;   /* give a pleasant left indent */
+    margin: .6rem 0 .6rem 1.8rem;   /* pleasant left indent */
     padding: 0;
 }
 
@@ -186,7 +264,7 @@
 }
 
 /* -----------------------------------------------------------------
-   7️⃣ Button (download) – keep existing style, add hover
+   8️⃣ Button (download) – keep existing style, add hover
    ----------------------------------------------------------------- */
 .button {
     display: inline-flex;
@@ -203,7 +281,10 @@
     text-decoration: none;
     transition: background .2s ease;
 }
-.button:hover { background: #0b7b80; transform: translateY(-1px); }
+.button:hover {
+    background: #0b7b80;
+    transform: translateY(-1px);
+}
 
 .button.secondary {
     background: #e5e7eb;
@@ -212,7 +293,7 @@
 .button.secondary:hover { background: #d1d5db; }
 
 /* -----------------------------------------------------------------
-   8️⃣ Floating selection‑toolbar – pill‑shaped + animation
+   9️⃣ Floating selection‑toolbar – pill‑shaped + animation
    ----------------------------------------------------------------- */
 .selection-toolbar {
     position: absolute;
@@ -261,7 +342,22 @@
 }
 
 /* -----------------------------------------------------------------
-   9️⃣ Misc helpers – keep the rest of your original rules
+   🔟 Responsive tweaks for very small viewports (header)
+   ----------------------------------------------------------------- */
+@media (max-width: 640px) {
+    .content-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: .6rem .8rem;
+    }
+    .header-actions {
+        margin-top: .4rem;
+        justify-content: flex-end;
+    }
+}
+
+/* -----------------------------------------------------------------
+   1️⃣1️⃣ Misc helpers – keep the rest of your original rules
    ----------------------------------------------------------------- */
 .module-actions { text-align: right; }
 /* End of module_detail.css ------------------------------------------------ */

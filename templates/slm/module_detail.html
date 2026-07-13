@@ -16,11 +16,36 @@
 
     <main class="main-content">
         <header class="content-header">
-            <p><i>
+            <!-- Breadcrumb on the left -->
+            <p class="breadcrumb"><i>
                 <a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
                 <a href="{% url "slm:subject-modules" subject.id %}">{{ subject.subject_code }} – {{ subject.subject_name }}</a>
                 &gt; {{ module.module_name }}
             </i></p>
+
+            <!-- Action icons on the right -->
+            <div class="header-actions">
+                <!-- 1️⃣  Download (icon only) -->
+                <a href="{{ module.file.url }}" class="button download-btn"
+                   download
+                   aria-label="Download original file"
+                   title="Download original file">
+                    <i class="fa-solid fa-download" aria-hidden="true"></i>
+                </a>
+
+                <!-- 2️⃣  Highlight‑history toggle (icon only) -->
+                <button type="button"
+                        class="module-content-history__toggle"
+                        id="highlight-history-toggle"
+                        aria-label="Highlight history"
+                        title="Highlight history"
+                        aria-expanded="false"
+                        aria-controls="highlight-history-list">
+                    <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                    <!-- Small badge that still shows the number of history items -->
+                    <span id="highlight-history-count" class="badge">0</span>
+                </button>
+            </div>
         </header>
 
         <section class="module-content-card" aria-labelledby="module-content-title">
@@ -29,10 +54,6 @@
                 <p>Preview of the uploaded material.</p>
             </div>
             <div class="module-content-history" aria-label="Highlight history">
-                <button type="button" class="module-content-history__toggle" id="highlight-history-toggle" aria-expanded="false" aria-controls="highlight-history-list">
-                    <span>Highlight History</span>
-                    <span id="highlight-history-count">0 items</span>
-                </button>
                 <div class="module-content-history__popover" id="highlight-history-popover" hidden>
                     <ul id="highlight-history-list" class="module-content-history__list"></ul>
                 </div>
@@ -44,12 +65,6 @@
                     <p><em>No extracted preview is available for this file.</em></p>
                 {% endif %}
             </div>
-        </section>
-
-        <section class="module-actions" style="margin-top:2rem;">
-            <a href="{{ module.file.url }}" class="button" download>
-                <i class="fa-solid fa-download"></i> Download original file
-            </a>
         </section>
     </main>
 
