@@ -19,6 +19,7 @@ import pathlib
 import logging
 import base64
 import html                     # standard‑lib escaping for <pre> blocks
+import re                       # used for plain‑text → HTML conversion
 from typing import List
 
 from django.core.files.base import ContentFile
@@ -30,6 +31,7 @@ import mammoth                     # docx → html
 import fitz                        # PyMuPDF (pdf)
 import pdfminer.high_level as pdfminer  # pdfminer.six
 from pptx import Presentation      # python‑pptx
+from pptx.enum.shapes import PP_PLACEHOLDER  # placeholder type enum
 from PIL import Image               # Pillow (image handling)
 
 # Optional OCR – disabled automatically if the binary is missing
@@ -137,14 +139,96 @@ def _read_file_bytes(file_obj) -> bytes:
         return f.read()
 
 # -------------------------------------------------------------------------
+# Helper – convert plain‑text to simple semantic HTML
+# -------------------------------------------------------------------------
+def _plain_text_to_html(text: str) -> str:
+    """
+    Convert raw text (with line‑breaks) into light‑weight HTML.
+
+    Heuristics:
+      * Blank lines separate paragraphs.
+      * Lines that are all‑uppercase (≤ 5 words) become <h2>.
+      * Lines starting with a bullet (``-``, ``*`` or ``•``) become unordered list items.
+      * Lines starting with ``<number>.`` become ordered list items.
+      * Everything else becomes a normal <p>.
+    Nested lists are not recognised – a contiguous block of list items
+    will be wrapped in a single <ul> or <ol>.
+    """
+    bullet_re = re.compile(r"^\s*([-*•])\s+(.*)")
+    ordered_re = re.compile(r"^\s*(\d+)[.)]\s+(.*)")
+
+    html_chunks: List[str] = []
+    list_open = False
+    current_list_tag = None
+
+    for raw_line in text.splitlines():
+        line = raw_line.rstrip()
+        if not line:
+            # Close any open list on a blank line
+            if list_open:
+                html_chunks.append(f"</{current_list_tag}>")
+                list_open = False
+                current_list_tag = None
+            continue
+
+        # Heading detection – short all‑caps line
+        if line.isupper() and len(line.split()) <= 5:
+            if list_open:
+                html_chunks.append(f"</{current_list_tag}>")
+                list_open = False
+                current_list_tag = None
+            html_chunks.append(f"<h2>{html.escape(line.title())}</h2>")
+            continue
+
+        # Ordered list?
+        m_ord = ordered_re.match(line)
+        if m_ord:
+            _, content = m_ord.groups()
+            if not list_open or current_list_tag != "ol":
+                if list_open:
+                    html_chunks.append(f"</{current_list_tag}>")
+                html_chunks.append("<ol>")
+                list_open = True
+                current_list_tag = "ol"
+            html_chunks.append(f"<li>{html.escape(content.strip())}</li>")
+            continue
+
+        # Unordered list?
+        m_bul = bullet_re.match(line)
+        if m_bul:
+            _, content = m_bul.groups()
+            if not list_open or current_list_tag != "ul":
+                if list_open:
+                    html_chunks.append(f"</{current_list_tag}>")
+                html_chunks.append("<ul>")
+                list_open = True
+                current_list_tag = "ul"
+            html_chunks.append(f"<li>{html.escape(content.strip())}</li>")
+            continue
+
+        # Normal paragraph
+        if list_open:
+            html_chunks.append(f"</{current_list_tag}>")
+            list_open = False
+            current_list_tag = None
+        html_chunks.append(f"<p>{html.escape(line)}</p>")
+
+    # Close dangling list at EOF
+    if list_open:
+        html_chunks.append(f"</{current_list_tag}>")
+
+    return "\n".join(html_chunks)
+
+# -------------------------------------------------------------------------
 # PDF extraction -----------------------------------------------------------
 # -------------------------------------------------------------------------
 def _extract_pdf(raw: bytes) -> str:
     """
     1️⃣ Try to get selectable text via pdfminer (keeps columns/tables).
     2️⃣ If the PDF looks mostly scanned, render each page with PyMuPDF,
-       run OCR via pytesseract, and wrap the result in <pre>.
-    Returns **sanitised** HTML.
+       run OCR via pytesseract, and wrap the result in semantic HTML.
+    Returns **sanitised** HTML where every page is wrapped in
+    ``<div class="pdf-page" data-page="N">…</div>``.
     """
     settings = EXTRACTOR_SETTINGS["pdf"]
 
@@ -161,25 +245,35 @@ def _extract_pdf(raw: bytes) -> str:
     text_ratio = (len(txt.strip()) / len(txt)) if txt else 0.0
     need_ocr = (text_ratio < settings["min_text_ratio"]) or not txt
 
+    # -------------------------------------------------
+    # 2️⃣ If we have *good* selectable text → use it page‑by‑page
+    # -------------------------------------------------
     if not need_ocr:
-        # Plain selectable text – keep line breaks with <pre>
-        html_out = f"<pre>{html.escape(txt)}</pre>"
-        return _sanitize_html(html_out)
+        doc = fitz.open(stream=raw, filetype="pdf")
+        html_pages: List[str] = []
+        for page_number, page in enumerate(doc, start=1):
+            page_txt = page.get_text("text")   # plain text of the current page
+            if not page_txt.strip():
+                continue
+            page_html = _plain_text_to_html(page_txt)
+            html_pages.append(
+                f'<div class="pdf-page" data-page="{page_number}">{page_html}</div>'
+            )
+        return _sanitize_html("\n".join(html_pages))
 
     # -------------------------------------------------
-    # 2️⃣ OCR fallback (only if pytesseract is available)
+    # 3️⃣ OCR fallback (only if pytesseract is available)
     # -------------------------------------------------
     if not _OCR_AVAILABLE:
         logger.info("OCR not available – returning empty preview for PDF.")
-        return _sanitize_html("<pre></pre>")
+        return _sanitize_html("<div></div>")
 
     doc = fitz.open(stream=raw, filetype="pdf")
     html_pages: List[str] = []
 
     for page_number, page in enumerate(doc, start=1):
-        # Render the page at a higher DPI for OCR readability
         pix = page.get_pixmap(dpi=settings["dpi_for_ocr"])
-        img_bytes = pix.tobytes("png")  # keep everything in‑memory
+        img_bytes = pix.tobytes("png")
 
         try:
             ocr_text = pytesseract.image_to_string(
@@ -190,8 +284,9 @@ def _extract_pdf(raw: bytes) -> str:
             logger.error("OCR failed on PDF page %s: %s", page_number, exc)
             ocr_text = ""
 
+        page_html = _plain_text_to_html(ocr_text)
         html_pages.append(
-            f'<div class="pdf-page" data-page="{page_number}"><pre>{html.escape(ocr_text)}</pre></div>'
+            f'<div class="pdf-page" data-page="{page_number}">{page_html}</div>'
         )
 
         if page_number >= settings["max_pages_for_ocr"]:
@@ -213,23 +308,25 @@ def _extract_docx(raw: bytes) -> str:
     * Keeps headings, tables, lists, etc.
     * If ``embed_images`` is True, any images that are *not* already inline
       are extracted from the zip container and embedded as base64 data‑uri.
+    * The document is split on Word page‑break elements – each segment is
+      wrapped in ``<div class="docx-page" data-page="N">…</div>``.
+      If the source contains no page‑breaks the entire document is wrapped
+      as page 1.
     Returns sanitised HTML.
     """
-    # NOTE: We **do not** pass a custom ``convert_image`` function.
-    # Mammoth’s default behavior works across all supported versions.
-    # The post‑processing step below will embed any image that is still
-    # referenced via a file path.
     result = mammoth.convert_to_html(io.BytesIO(raw))
     raw_html = result.value
 
+    # ---- Embed images (if enabled) and rewrite stray <pre> blocks ----
     if EXTRACTOR_SETTINGS["docx"]["embed_images"] and _BS4_AVAILABLE:
         soup = BeautifulSoup(raw_html, "html.parser")
+
+        # ----- embed images -------------------------------------------------
         for img in soup.find_all("img"):
             src = img.get("src", "")
             if src.startswith("data:"):
                 continue  # already a data‑uri, nothing to do
 
-            # Try to read the image from the DOCX zip container
             try:
                 import zipfile
                 with zipfile.ZipFile(io.BytesIO(raw)) as z:
@@ -243,11 +340,82 @@ def _extract_docx(raw: bytes) -> str:
                     img["src"] = f"data:{mime};base64,{b64}"
             except Exception as exc:
                 logger.warning("Failed to embed DOCX image %s: %s", src, exc)
-                img["src"] = ""  # break the broken link – the browser will show alt text
+                img["src"] = ""
 
-        raw_html = str(soup)
+        # ----- convert <pre> blocks -----------------------------------------
+        for pre in soup.find_all("pre"):
+            converted = _plain_text_to_html(pre.get_text())
+            pre.replace_with(BeautifulSoup(converted, "html.parser"))
 
-    return _sanitize_html(raw_html)
+        # At this point ``soup`` contains the fully‑processed HTML.
+        # --------------------------------------------------------------
+        # Split into pages on Word “page‑break” paragraphs.
+        # --------------------------------------------------------------
+        parent = soup.body if soup.body else soup
+        pages: List[str] = []
+        cur_parts: List[str] = []
+
+        for elem in list(parent.contents):
+            # Detect a page‑break paragraph.
+            if getattr(elem, "name", None) == "p":
+                style = elem.get("style", "")
+                if re.search(r'page-break-(?:before|after)', style, re.I):
+                    # Finish the current page and start a new one.
+                    pages.append("".join(str(p) for p in cur_parts))
+                    cur_parts = []
+                    continue
+            # Anything else (including normal <p> tags) belongs to the current page.
+            cur_parts.append(str(elem))
+
+        # Append the final page (if any content left).
+        pages.append("".join(str(p) for p in cur_parts))
+
+        # Wrap each page in a <div>.
+        wrapped_pages = [
+            f'<div class="docx-page" data-page="{i + 1}">{page}</div>'
+            for i, page in enumerate(pages) if page.strip()
+        ]
+        final_html = "\n".join(wrapped_pages)
+
+    elif EXTRACTOR_SETTINGS["docx"]["embed_images"] and not _BS4_AVAILABLE:
+        # -----------------------------------------------------------------
+        # No BeautifulSoup – fall back to regex‑only handling.
+        # -----------------------------------------------------------------
+        # Convert <pre> blocks.
+        def _pre_repl(m):
+            inner = html.unescape(m.group(1))
+            return _plain_text_to_html(inner)
+
+        tmp_html = re.sub(r"<pre>(.*?)</pre>", _pre_repl, raw_html, flags=re.DOTALL)
+
+        # Split on page‑break paragraphs using a regex.
+        split_pat = re.compile(
+            r'(?i)<p[^>]*style=["\'][^"\']*page-break-(?:before|after)[^"\']*["\'][^>]*>\s*</p>'
+        )
+        pages = split_pat.split(tmp_html)
+        wrapped_pages = [
+            f'<div class="docx-page" data-page="{i + 1}">{section}</div>'
+            for i, section in enumerate(pages) if section.strip()
+        ]
+        final_html = "\n".join(wrapped_pages)
+
+    else:
+        # -----------------------------------------------------------------
+        # Neither image embedding nor BeautifulSoup is available.
+        # We still split on page‑breaks (regex‑only) so callers get a
+        # consistent structure.
+        # -----------------------------------------------------------------
+        split_pat = re.compile(
+            r'(?i)<p[^>]*style=["\'][^"\']*page-break-(?:before|after)[^"\']*["\'][^>]*>\s*</p>'
+        )
+        pages = split_pat.split(raw_html)
+        wrapped_pages = [
+            f'<div class="docx-page" data-page="{i + 1}">{section}</div>'
+            for i, section in enumerate(pages) if section.strip()
+        ]
+        final_html = "\n".join(wrapped_pages)
+
+    return _sanitize_html(final_html)
 
 # -------------------------------------------------------------------------
 # PPTX extraction ---------------------------------------------------------
@@ -255,65 +423,85 @@ def _extract_docx(raw: bytes) -> str:
 def _extract_pptx(raw: bytes) -> str:
     """
     Convert PPTX → HTML.
-    * Each slide becomes <section class="ppt-slide" data-slide="N">.
-    * First title placeholder → <h2>.
-    * Bullet / numbered paragraphs become nested <ul>/<ol>.
+    * Each slide becomes ``<div class="ppt-page" data-page="N">``.
+    * The first TITLE placeholder (if present) → ``<h2>``.
+    * All other placeholders that are FOOTER/SLIDE_NUMBER/HEADER/DATE are ignored
+      (so slide numbers no longer appear as stray paragraphs).
+    * Bullet / numbered paragraphs become nested ``<ul>/<ol>``.
     * Images are embedded as base64 data‑uri (optional down‑scale).
     Returns sanitised HTML.
     """
     cfg = EXTRACTOR_SETTINGS["pptx"]
     prs = Presentation(io.BytesIO(raw))
 
+    # Placeholder types we want to **skip completely**
+    SKIP_PLACEHOLDER_TYPES = {
+        PP_PLACEHOLDER.FOOTER,
+        PP_PLACEHOLDER.SLIDE_NUMBER,
+        PP_PLACEHOLDER.HEADER,
+        PP_PLACEHOLDER.DATE,
+    }
+
     sections: List[str] = []
 
     for slide_idx, slide in enumerate(prs.slides, start=1):
-        parts: List[str] = [f'<section class="ppt-slide" data-slide="{slide_idx}">']
+        # ---- start the per‑slide wrapper ---------------------------------
+        parts: List[str] = [f'<div class="ppt-page" data-page="{slide_idx}">']
 
-        # --------------------- title placeholder ---------------------
+        # ---- extract a TITLE placeholder (if any) -----------------------
         title_text = None
+        title_shape = None
         for shape in slide.shapes:
-            if getattr(shape, "is_placeholder", False) and shape.placeholder_fmt.idx == 0:
-                title_text = shape.text.strip()
-                break
+            if getattr(shape, "is_placeholder", False):
+                ph_type = shape.placeholder_format.type
+                if ph_type == PP_PLACEHOLDER.TITLE:
+                    title_text = shape.text.strip()
+                    title_shape = shape
+                    break
+
         if title_text:
             parts.append(f"<h2>{html.escape(title_text)}</h2>")
 
-        # --------------------- bullet / numbered lists -------------
-        bullet_items = []  # (level, tag, escaped_text)
+        # ---- paragraphs & lists -----------------------------------------
+        list_open = False
         for shape in slide.shapes:
-            if not shape.has_text_frame:
+            # Skip anything that doesn't contain a text frame
+            if not getattr(shape, "has_text_frame", False):
                 continue
-            # Skip the title shape we already handled
-            if title_text and shape.text.strip() == title_text:
+
+            # Skip the TITLE shape we already rendered
+            if shape is title_shape:
                 continue
+
+            # Skip placeholders we don't want to render (footers, slide numbers, …)
+            if getattr(shape, "is_placeholder", False):
+                ph_type = shape.placeholder_format.type
+                if ph_type in SKIP_PLACEHOLDER_TYPES:
+                    continue
+
             for para in shape.text_frame.paragraphs:
                 txt = para.text.strip()
                 if not txt:
                     continue
+
                 lvl = para.level
-                tag = "ol" if para.font.bold else "ul"
-                bullet_items.append((lvl, tag, html.escape(txt)))
+                if lvl == 0:
+                    # Regular paragraph – close any open list first
+                    if list_open:
+                        parts.append("</ul>")
+                        list_open = False
+                    parts.append(f"<p>{html.escape(txt)}</p>")
+                else:
+                    # List item (any level >0 → treat as an unordered list)
+                    if not list_open:
+                        parts.append("<ul>")
+                        list_open = True
+                    parts.append(f"<li>{html.escape(txt)}</li>")
 
-        if bullet_items:
-            cur_lvl = -1
-            cur_tag = None
-            for lvl, tag, txt in bullet_items:
-                # Open deeper levels
-                while lvl > cur_lvl:
-                    parts.append(f"<{tag}>")
-                    cur_lvl += 1
-                    cur_tag = tag
-                # Close while moving up
-                while lvl < cur_lvl:
-                    parts.append(f"</{cur_tag}>")
-                    cur_lvl -= 1
-                parts.append(f"<li>{txt}</li>")
-            # Close any still‑open list
-            while cur_lvl >= 0:
-                parts.append(f"</{cur_tag}>")
-                cur_lvl -= 1
+        if list_open:
+            parts.append("</ul>")
 
-        # --------------------- images (pictures) ------------------
+        # ---- images (pictures) -------------------------------------------
         if cfg["embed_images"]:
             for shape in slide.shapes:
                 if shape.shape_type == 13:  # MSO_SHAPE_TYPE.PICTURE
@@ -338,7 +526,8 @@ def _extract_pptx(raw: bytes) -> str:
                         f'<img src="data:{mime};base64,{b64}" alt="Slide {slide_idx} image">'
                     )
 
-        parts.append("</section>")
+        # ---- close the wrapper -------------------------------------------
+        parts.append("</div>")
         sections.append("\n".join(parts))
 
     return _sanitize_html("\n".join(sections))
