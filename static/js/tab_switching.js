@@ -1,55 +1,3 @@
-{% comment %} {# --------------------------------------------------------------
-   Tab component – title **plus** description that appears
-   only on the *active* tab.
-   --------------------------------------------------------------
-   Expected `tabs` list (in the view):
-   tabs = [
-       {
-          "title": "Self Learning Modules",
-          "description": "All public modules you can enrol in",
-          "content": render_to_string("components/tab_self.html")
-       },
-       …
-   ]
-   -------------------------------------------------------------- #} {% endcomment %}
-
-<div class="tabs">
-    {# ---------- TAB LIST --------------------------------------- #}
-    <div role="tablist" class="tablist">
-        {% for tab in tabs %}
-        <button role="tab"
-                id="tab-{{ forloop.counter0 }}"
-                aria-controls="panel-{{ forloop.counter0 }}"
-                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
-                tabindex="{% if forloop.first %}0{% else %}-1{% endif %}"
-                class="tab-card {% if forloop.first %}active{% endif %}">
-            <span class="tab-title">{{ tab.title }}</span>
-
-            {# Description – hidden unless this button is .active #}
-            <span class="tab-desc"
-                  aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
-                {{ tab.description }}
-            </span>
-        </button>
-        {% endfor %}
-    </div>
-
-    {# ---------- TAB PANELS -------------------------------------- #}
-    {% for tab in tabs %}
-    <section id="panel-{{ forloop.counter0 }}"
-             role="tabpanel"
-             aria-labelledby="tab-{{ forloop.counter0 }}"
-             class="tab-panel"
-             {% if not forloop.first %}hidden{% endif %}>
-        {{ tab.content|safe }}
-    </section>
-    {% endfor %}
-</div>
-
-{% comment %} {# ------------------------------------------------------------------
-   Tiny vanilla‑JS – now also toggles `aria-hidden` on the description.
-   ------------------------------------------------------------------ #} {% endcomment %}
-<script>
 document.addEventListener('DOMContentLoaded', () => {
   // One handler per .tabs container (you can have many on a page)
   document.querySelectorAll('.tabs').forEach(container => {
@@ -123,4 +71,3 @@ document.addEventListener('DOMContentLoaded', () => {
     activateFromHash();           // <‑‑ this line makes the hash work
   });
 });
-</script>

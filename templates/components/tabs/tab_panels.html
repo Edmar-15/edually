@@ -1,0 +1,9 @@
+{% for tab in tabs %}
+<section id="panel-{{ forloop.counter0 }}"
+         role="tabpanel"
+         aria-labelledby="tab-{{ forloop.counter0 }}"
+         class="tab-panel"
+         {% if not forloop.first %}hidden{% endif %}>
+    {{ tab.content|safe }}
+</section>
+{% endfor %}

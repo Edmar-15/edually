@@ -1,0 +1,17 @@
+<div role="tablist" class="tablist">
+    {% for tab in tabs %}
+    <button role="tab"
+            id="tab-{{ forloop.counter0 }}"
+            aria-controls="panel-{{ forloop.counter0 }}"
+            aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+            tabindex="{% if forloop.first %}0{% else %}-1{% endif %}"
+            class="tab-card {% if forloop.first %}active{% endif %}">
+        <span class="tab-title">{{ tab.title }}</span>
+
+        <span class="tab-desc"
+              aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
+            {{ tab.description }}
+        </span>
+    </button>
+    {% endfor %}
+</div>

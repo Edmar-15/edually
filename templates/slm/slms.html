@@ -9,20 +9,28 @@
     <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
-    <link rel="stylesheet" href="{% static "css/tabs.css" %}">
-    <link rel="stylesheet" href="{% static "css/paginator.css" %}">
+    <link rel="stylesheet" href="{% static 'css/tabs.css' %}">
+    <link rel="stylesheet" href="{% static 'css/paginator.css' %}">
 </head>
 <body>
     <div class="dashboard-container">
         {% include "components/navigations.html" %}
 
         <main class="main-content">
-            <header class="content-header">
-                <div class="header-left">
-            
-                </div>
-            </header>                    
-            {% include "components/tabs/tabs.html" with tabs=tabs %}
+            <div class="tabs">
+                <header class="content-header tabs-header">
+                    <div class="header-left">
+                        {% include "components/tabs/tab_list.html" with tabs=tabs %}
+                    </div>
+
+                    
+                </header>
+
+                {% include "components/tabs/tab_panels.html" with tabs=tabs %}
+
+            </div>
+        </main>
     </div>
+    <script src="{% static "js/tab_switching.js" %}"></script>
 </body>
 </html>
