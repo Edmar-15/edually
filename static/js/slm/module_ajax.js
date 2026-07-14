@@ -18,10 +18,10 @@ export function initModuleWidget(rootEl) {
   /* -----------------------------------------------------------------
    * 1️⃣  URLs from data‑attributes – they contain the dummy “0”
    * ----------------------------------------------------------------- */
-  const listUrl        = rootEl.dataset.listUrl;      // …?page=
-  const createUrl      = rootEl.dataset.createUrl;
-  const updateTpl      = rootEl.dataset.updateUrl;     // “…/modules/0/”
-  const deleteTpl      = rootEl.dataset.deleteUrl;     // “…/modules/0/delete/”
+  const listUrl = rootEl.dataset.listUrl; // …?page=
+  const createUrl = rootEl.dataset.createUrl;
+  const updateTpl = rootEl.dataset.updateUrl; // “…/modules/0/”
+  const deleteTpl = rootEl.dataset.deleteUrl; // “…/modules/0/delete/”
   const replaceFileTpl = rootEl.dataset.fileReplaceUrl; // “…/modules/0/file/”
 
   /* -----------------------------------------------------------------
@@ -35,7 +35,7 @@ export function initModuleWidget(rootEl) {
   /* -----------------------------------------------------------------
    * 2️⃣  DOM shortcuts (all inside the widget)
    * ----------------------------------------------------------------- */
-  const $list   = rootEl.querySelector("#module-list");
+  const $list = rootEl.querySelector("#module-list");
   const $status = rootEl.querySelector("#module-status");
 
   if (!$list) {
@@ -43,14 +43,19 @@ export function initModuleWidget(rootEl) {
     return;
   }
 
-  const $numInput   = rootEl.querySelector("#module-number-input");
-  const $nameInput  = rootEl.querySelector("#module-name-input");
-  const $fileInput  = rootEl.querySelector("#module-file-input");
-  const $addBtn     = rootEl.querySelector("#module-add-btn");
-  const $modal      = rootEl.querySelector("#module-edit-modal");
+  const $numInput = rootEl.querySelector("#module-number-input");
+  const $nameInput = rootEl.querySelector("#module-name-input");
+  const $fileInput = rootEl.querySelector("#module-file-input");
+  const $addBtn = rootEl.querySelector("#module-add-btn");
+  const $modal = rootEl.querySelector("#module-edit-modal");
 
   function getModuleIconMarkup(fileUrl = "") {
-    const ext = (fileUrl || "").split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+    const ext = (fileUrl || "")
+      .split("?")[0]
+      .split("#")[0]
+      .split(".")
+      .pop()
+      ?.toLowerCase();
 
     switch (ext) {
       case "pdf":
@@ -67,7 +72,12 @@ export function initModuleWidget(rootEl) {
   }
 
   function getModuleIconClass(fileUrl = "") {
-    const ext = (fileUrl || "").split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+    const ext = (fileUrl || "")
+      .split("?")[0]
+      .split("#")[0]
+      .split(".")
+      .pop()
+      ?.toLowerCase();
 
     switch (ext) {
       case "pdf":
@@ -84,61 +94,72 @@ export function initModuleWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 3️⃣  Render a single module card
-   * ----------------------------------------------------------------- */
+   3️⃣  Render a single module card – now mirrors the pm‑card UI
+   ----------------------------------------------------------------- */
+  /* -----------------------------------------------------------------
+   3️⃣  Render a single module card – now mirrors the pm‑card UI
+   ----------------------------------------------------------------- */
   function renderCard(mod) {
+    // ---- Card container -------------------------------------------------
     const card = document.createElement("div");
-    card.className = "module-card";
+    card.className = "pm-card"; // use the unified class
     card.dataset.id = mod.id;
 
-    const preview = document.createElement("div");
-    preview.className = `module-card__preview ${getModuleIconClass(mod.file_url)}`.trim();
-    preview.innerHTML = getModuleIconMarkup(mod.file_url);
-    card.appendChild(preview);
+    // ---- Header (icon + title) -----------------------------------------
+    const header = document.createElement("div");
+    header.className = "pm-card__header";
 
-    const body = document.createElement("div");
-    body.className = "module-card__body";
+    const iconWrap = document.createElement("div");
+    iconWrap.className =
+      `pm-card__icon ${getModuleIconClass(mod.file_url)}`.trim();
+    iconWrap.innerHTML = getModuleIconMarkup(mod.file_url);
+    header.appendChild(iconWrap);
 
-    const link = document.createElement("a");
-    link.href = `/slm/subjects/${mod.subject_id}/modules/${mod.id}/` || "#";
-    link.className = "module-card__link";
-    link.setAttribute("aria-label", `Open ${mod.module_name}`);
+    const content = document.createElement("div");
+    content.className = "pm-card__content";
 
-    const h2 = document.createElement("h2");
-    h2.textContent = `#${mod.module_number} – ${mod.module_name}`;
-    link.appendChild(h2);
+    const title = document.createElement("h3");
+    title.textContent = `#${mod.module_number} – ${mod.module_name}`;
+    content.appendChild(title);
 
     const meta = document.createElement("div");
-    meta.className = "module-card__meta";
+    meta.className = "pm-card__meta";
 
     const typePill = document.createElement("span");
-    typePill.className = "module-card__pill";
+    typePill.className = "pm-card__pill";
     const fileName = mod.file_url ? mod.file_url.split("/").pop() : "Document";
-    const ext = fileName.includes(".") ? fileName.split(".").pop().toUpperCase() : "FILE";
+    const ext = fileName.includes(".")
+      ? fileName.split(".").pop().toUpperCase()
+      : "FILE";
     typePill.textContent = ext;
     meta.appendChild(typePill);
 
-    if (mod.file_url) {
-      const dl = document.createElement("span");
-      dl.className = "module-card__pill";
-      dl.textContent = "Open";
-      meta.appendChild(dl);
-    }
+    content.appendChild(meta);
+    header.appendChild(content);
+    card.appendChild(header);
 
-    link.appendChild(meta);
-    body.appendChild(link);
-    card.appendChild(body);
+    // -----------------------------------------------------------------
+    // Actions – identical layout to the Personal‑Material widget
+    // -----------------------------------------------------------------
+    const actions = document.createElement("div");
+    actions.className = "pm-card__actions";
 
-    /* ---- Owner‑only actions --------------------------------------- */
+    // View (preview) button – points to the module detail page
+    const viewBtn = document.createElement("a");
+    viewBtn.href = `/slm/subjects/${mod.subject_id}/modules/${mod.id}/`;
+    viewBtn.className = "button button-plain";
+    viewBtn.textContent = "View";
+    viewBtn.title = "Open module preview";
+    actions.appendChild(viewBtn);
+
+    // Owner‑only edit / delete
     if (mod.is_owner) {
-      const actions = document.createElement("div");
-      actions.className = "module-card__actions";
-
-      // ✏️ Edit
+      // ---- Edit ---------------------------------------------------------
       const editBtn = document.createElement("button");
       editBtn.type = "button";
       editBtn.title = "Edit";
-      editBtn.className = "module-card__action";
+      editBtn.className = "pm-card__action";
+      /* ✅  Fixed SVG – the arc command now includes both radii (a1 1 …) */
       editBtn.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
       editBtn.addEventListener("click", (e) => {
@@ -148,11 +169,11 @@ export function initModuleWidget(rootEl) {
       });
       actions.appendChild(editBtn);
 
-      // 🗑️ Delete
+      // ---- Delete -------------------------------------------------------
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.title = "Delete";
-      delBtn.className = "module-card__action module-card__action--delete";
+      delBtn.className = "pm-card__action pm-card__action--delete";
       delBtn.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
       delBtn.addEventListener("click", (e) => {
@@ -161,11 +182,60 @@ export function initModuleWidget(rootEl) {
         deleteModule(mod.id);
       });
       actions.appendChild(delBtn);
-
-      body.appendChild(actions);
     }
 
+    card.appendChild(actions);
     return card;
+  }
+
+  /* -----------------------------------------------------------------
+   Helper – return the same icon markup that the PM widget uses
+   ----------------------------------------------------------------- */
+  function getModuleIconMarkup(fileUrl = "") {
+    const ext = (fileUrl || "")
+      .split("?")[0]
+      .split("#")[0]
+      .split(".")
+      .pop()
+      ?.toLowerCase();
+
+    switch (ext) {
+      case "pdf":
+        return '<i class="fas fa-file-pdf" aria-hidden="true"></i>';
+      case "doc":
+      case "docx":
+        return '<i class="fas fa-file-word" aria-hidden="true"></i>';
+      case "ppt":
+      case "pptx":
+        return '<i class="fas fa-file-powerpoint" aria-hidden="true"></i>';
+      default:
+        return '<i class="fas fa-file-alt" aria-hidden="true"></i>';
+    }
+  }
+
+  /* -----------------------------------------------------------------
+   Helper – CSS class for the coloured background of the icon
+   ----------------------------------------------------------------- */
+  function getModuleIconClass(fileUrl = "") {
+    const ext = (fileUrl || "")
+      .split("?")[0]
+      .split("#")[0]
+      .split(".")
+      .pop()
+      ?.toLowerCase();
+
+    switch (ext) {
+      case "pdf":
+        return "pm-card__icon--pdf";
+      case "doc":
+      case "docx":
+        return "pm-card__icon--doc";
+      case "ppt":
+      case "pptx":
+        return "pm-card__icon--ppt";
+      default:
+        return "";
+    }
   }
 
   /* -----------------------------------------------------------------
@@ -183,12 +253,18 @@ export function initModuleWidget(rootEl) {
     ul.className = "paginator__list";
     nav.appendChild(ul);
 
-    const makeItem = (label, targetPage = null, disabled = false, current = false, ellipsis = false) => {
+    const makeItem = (
+      label,
+      targetPage = null,
+      disabled = false,
+      current = false,
+      ellipsis = false,
+    ) => {
       const li = document.createElement("li");
       li.className = "paginator__item";
       if (disabled) li.classList.add("paginator__item--disabled");
-      if (current)   li.classList.add("paginator__item--current");
-      if (ellipsis)  li.classList.add("paginator__item--ellipsis");
+      if (current) li.classList.add("paginator__item--current");
+      if (ellipsis) li.classList.add("paginator__item--ellipsis");
 
       if (current || ellipsis) {
         const span = document.createElement("span");
@@ -212,21 +288,32 @@ export function initModuleWidget(rootEl) {
       return li;
     };
 
-    ul.appendChild(makeItem("←", meta.previous_page_number, !meta.has_previous));
+    ul.appendChild(
+      makeItem("←", meta.previous_page_number, !meta.has_previous),
+    );
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page - 2 > 2)
+      ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
-    const end   = Math.min(meta.total_pages - 1, meta.page + 1);
+    const end = Math.min(meta.total_pages - 1, meta.page + 1);
     for (let i = start; i <= end; i++) {
       if (i !== 1 && i !== meta.total_pages) {
         ul.appendChild(makeItem(String(i), null, false, meta.page === i));
       }
     }
 
-    if (meta.page + 2 < meta.total_pages - 1) ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page + 2 < meta.total_pages - 1)
+      ul.appendChild(makeItem("…", null, false, false, true));
     if (meta.total_pages > 1) {
-      ul.appendChild(makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages));
+      ul.appendChild(
+        makeItem(
+          String(meta.total_pages),
+          null,
+          false,
+          meta.page === meta.total_pages,
+        ),
+      );
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
 
@@ -295,7 +382,7 @@ export function initModuleWidget(rootEl) {
     if (file) {
       const ALLOWED_EXT = [".pdf", ".doc", ".docx", ".ppt", ".pptx"];
       const name = file.name.toLowerCase();
-      if (!ALLOWED_EXT.some(ext => name.endsWith(ext))) {
+      if (!ALLOWED_EXT.some((ext) => name.endsWith(ext))) {
         $status.textContent =
           "❌ Only PDF, Word (.doc/.docx) and PowerPoint (.ppt/.pptx) files are allowed.";
         return;
@@ -363,66 +450,68 @@ export function initModuleWidget(rootEl) {
       });
 
       // Submit handler
-      $modal.querySelector("#modal-edit-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const number = form.module_number.value.trim();
-        const name   = form.module_name.value.trim();
-        const file   = form.file.files[0];
+      $modal
+        .querySelector("#modal-edit-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const form = e.target;
+          const number = form.module_number.value.trim();
+          const name = form.module_name.value.trim();
+          const file = form.file.files[0];
 
-        const payload = {};
-        if (number) payload.module_number = number;
-        if (name)   payload.module_name   = name;
+          const payload = {};
+          if (number) payload.module_number = number;
+          if (name) payload.module_name = name;
 
-        const updateUrl = replaceId(updateTpl, mod.id);
-        try {
-          const resp = await fetch(updateUrl, {
-            method: "PUT",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": csrftoken,
-            },
-            body: JSON.stringify(payload),
-          });
-
-          if (!resp.ok) {
-            const err = await resp.json();
-            $status.textContent = `❌ ${err.error || resp.statusText}`;
-            return;
-          }
-
-          // If the user selected a new file, send it via the dedicated endpoint
-          if (file) {
-            const replaceUrl = replaceId(replaceFileTpl, mod.id);
-            const fileForm = new FormData();
-            fileForm.append("file", file);
-            const fileResp = await fetch(replaceUrl, {
-              method: "POST",
+          const updateUrl = replaceId(updateTpl, mod.id);
+          try {
+            const resp = await fetch(updateUrl, {
+              method: "PUT",
               credentials: "same-origin",
-              headers: { "X-CSRFToken": csrftoken },
-              body: fileForm,
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken,
+              },
+              body: JSON.stringify(payload),
             });
-            if (!fileResp.ok) {
-              const ferr = await fileResp.json();
-              $status.textContent = `❌ File replace failed – ${ferr.error || fileResp.statusText}`;
+
+            if (!resp.ok) {
+              const err = await resp.json();
+              $status.textContent = `❌ ${err.error || resp.statusText}`;
               return;
             }
-          }
 
-          $status.textContent = "✅ Module updated";
-          $modal.classList.add("hidden");
-          load();   // refresh the list
-        } catch (err) {
-          $status.textContent = `❌ ${err}`;
-        }
-      });
+            // If the user selected a new file, send it via the dedicated endpoint
+            if (file) {
+              const replaceUrl = replaceId(replaceFileTpl, mod.id);
+              const fileForm = new FormData();
+              fileForm.append("file", file);
+              const fileResp = await fetch(replaceUrl, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "X-CSRFToken": csrftoken },
+                body: fileForm,
+              });
+              if (!fileResp.ok) {
+                const ferr = await fileResp.json();
+                $status.textContent = `❌ File replace failed – ${ferr.error || fileResp.statusText}`;
+                return;
+              }
+            }
+
+            $status.textContent = "✅ Module updated";
+            $modal.classList.add("hidden");
+            load(); // refresh the list
+          } catch (err) {
+            $status.textContent = `❌ ${err}`;
+          }
+        });
     }
 
     // Pre‑fill fields with the current values
     const form = $modal.querySelector("#modal-edit-form");
     form.module_number.value = mod.module_number;
-    form.module_name.value   = mod.module_name;
+    form.module_name.value = mod.module_name;
     form.file.value = "";
     $modal.classList.remove("hidden");
   }
@@ -486,5 +575,5 @@ export function initModuleWidget(rootEl) {
   /* -----------------------------------------------------------------
    * 10️⃣  Initial load
    * ----------------------------------------------------------------- */
-  load();   // first page
+  load(); // first page
 }
