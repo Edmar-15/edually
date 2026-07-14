@@ -3,16 +3,16 @@
     <h3 class="sidebar-title">Categories</h3>
     <ul class="category-list">
         <li class="category-item{% if not active_category %} active{% endif %}">
-            <a href="{% url 'forum:feed' %}" class="category-link">
-                <span class="cat-dot"></span>
+            <a href="{% url 'forum:feed' %}" class="category-link" title="All categories — {{ categories_count|default:'0' }} posts" role="link" aria-current="{% if not active_category %}true{% else %}false{% endif %}" data-count="{{ categories_count|default:'0' }}">
+                <span class="cat-dot" aria-hidden="true"></span>
                 <span class="cat-name">All</span>
                 <span class="category-count">{{ categories_count|default:'' }}</span>
             </a>
         </li>
         {% for cat in categories %}
         <li class="category-item{% if active_category == cat.slug %} active{% endif %}">
-            <a href="{% url 'forum:feed' %}?cat={{ cat.slug }}" class="category-link">
-                <span class="cat-dot" data-slug="{{ cat.slug }}"></span>
+            <a href="{% url 'forum:feed' %}?cat={{ cat.slug }}" class="category-link" title="{{ cat.name }} — {{ cat.post_count|default:'0' }} posts" role="link" aria-current="{% if active_category == cat.slug %}true{% else %}false{% endif %}" data-count="{{ cat.post_count|default:'0' }}">
+                <span class="cat-dot" data-slug="{{ cat.slug }}" aria-hidden="true"></span>
                 <span class="cat-name">{{ cat.name }}</span>
                 <span class="category-count">{{ cat.post_count|default:'' }}</span>
             </a>

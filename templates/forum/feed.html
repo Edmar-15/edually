@@ -26,10 +26,12 @@
                         and get help from your peers and teachers.
                     </p>
                 </div>
-                <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                   class="button primary-button ajax-modal"
-                   data-ajax-url="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                   data-target="#global-modal">Ask a Question</a>
+                     <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+                         class="button primary-button ajax-modal"
+                         role="button"
+                         aria-label="Ask a Question"
+                         data-ajax-url="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+                         data-target="#global-modal">Ask a Question</a>
             </header>
 
             <!-- SEARCH & FILTERS -->
@@ -91,7 +93,7 @@
 </div>
 
 <!-- Global modal container (used for flagging, edit, etc.) -->
-<div id="global-modal" class="modal"></div>
+<div id="global-modal" class="modal" aria-hidden="true"></div>
 
 <script src="{% static 'js/forum-upvote.js' %}"></script>
 <script src="{% static 'js/forum_ajax.js' %}"></script>

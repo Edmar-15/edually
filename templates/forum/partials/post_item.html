@@ -16,13 +16,7 @@
                     {% endif %}
                     <span class="post-time">{{ post.created_at|timesince }} ago</span>
                 </div>
-                <h2 class="post-title">
-                    <!-- Load post detail into modal -->
-                    <a href="{% url 'forum:post_detail' post.pk %}"
-                       class="ajax-modal"
-                       data-ajax-url="{% url 'forum:post_detail' post.pk %}"
-                       data-target="#global-modal">{{ post.title }}</a>
-                </h2>
+                <h2 class="post-title">{{ post.title }}</h2>
                 <p class="post-author">by {{ post.author.get_full_name|default:post.author.username }}</p>
             </div>
         </div>
@@ -33,7 +27,7 @@
         {% if post.verified %}
             <span class="badge verified-badge">Teacher Verified</span>
         {% endif %}
-        <div class="stats-row">
+            <div class="stats-row">
             <button class="stat upvote-btn{% if post.pk in user_post_upvotes %} has-upvoted{% endif %}"
                     data-post-id="{{ post.pk }}"
                     data-endpoint="{% url 'forum:upvote' post.pk %}">
@@ -42,6 +36,9 @@
                 upvote{{ post.upvotes|pluralize }}
             </button>
             <span class="stat">{{ post.replies_cnt }} repl{{ post.replies_cnt|pluralize:"y,ies" }}</span>
+                <button class="button primary-button small-button ajax-modal reply-btn" data-ajax-url="{% url 'forum:post_detail' post.pk %}" data-target="#global-modal">
+                    <i class="fa-solid fa-reply"></i> Reply
+                </button>
         </div>
 
         {% if request.user == post.author %}

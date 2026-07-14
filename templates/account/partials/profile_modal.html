@@ -1,0 +1,28 @@
+{# Compact profile modal used in AJAX modal loads #}
+<div class="profile-modal card" role="dialog" aria-modal="true" aria-labelledby="profile-name-{{ user_obj.pk }}">
+    <div class="profile-top">
+        <button class="modal-close" aria-label="Close profile" onclick="document.querySelector('#global-modal').classList.remove('open')">×</button>
+        <div class="profile-avatar">
+            {% if user_obj.avatar %}
+                <img src="{{ user_obj.avatar.url }}" alt="{{ user_obj.get_full_name|default:user_obj.username }}">
+            {% else %}
+                <span class="avatar-fallback">{{ user_obj.get_full_name|default:user_obj.username|slice:":1"|upper }}</span>
+            {% endif %}
+        </div>
+        <div class="profile-meta">
+            <h2 class="profile-name" id="profile-name-{{ user_obj.pk }}">{{ user_obj.get_full_name|default:user_obj.username }}</h2>
+            <div class="profile-sub">{% if user_obj.program %}{{ user_obj.program }} • {% endif %}Joined {{ user_obj.date_joined|date:"M Y" }}</div>
+        </div>
+    </div>
+
+    <div class="profile-stats">
+        <div class="profile-stat">
+            <div class="profile-stat-number">{{ user_obj.karma|default:0 }}</div>
+            <div class="profile-stat-label">Karma</div>
+        </div>
+        <div class="profile-stat">
+            <div class="profile-stat-number">{{ user_obj.forum_posts_count|default:0 }}</div>
+            <div class="profile-stat-label">Posts</div>
+        </div>
+    </div>
+</div>

@@ -15,12 +15,13 @@ from django.contrib.auth import (
 )
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
+from django.template.loader import render_to_string
 from django.views.generic import TemplateView
 
 # --------------------------------------------------------------
@@ -29,6 +30,8 @@ from django.views.generic import TemplateView
 from .forms import PublicRegisterForm, ProfileForm
 from .models import UserConsent
 from slm.models import Module
+# For onboarding completion checks (ask one question)
+from aihelper.models import Conversation, Message
 
 User = get_user_model()
 
@@ -236,7 +239,11 @@ def dashboard(request):
         {
             "title": "Ask one question",
             "detail": "Share what you are stuck on and let the community or AI helper support you.",
-            "done": False,
+            # Mark done if the user has created any conversation or submitted any message
+            "done": (
+                Conversation.objects.filter(user=request.user).exists()
+                or Message.objects.filter(user=request.user, role="user").exists()
+            ),
         },
     ]
 
@@ -272,6 +279,23 @@ def profile(request):
         "profile_form": form,
     }
     return render(request, "account/profile.html", context)
+
+
+@login_required(login_url='account:login')
+def profile_modal(request, pk):
+    """Return a compact profile card as HTML for AJAX modal loads."""
+    user_obj = get_object_or_404(User, pk=pk)
+    # Lightweight counts – attempt to read attributes if present in queryset
+    # Fallbacks will be provided by the template filters/defaults
+    # Provide forum posts count if attribute not present
+    if not hasattr(user_obj, 'forum_posts_count'):
+        try:
+            user_obj.forum_posts_count = user_obj.forum_posts.count()
+        except Exception:
+            user_obj.forum_posts_count = 0
+
+    html = render_to_string('account/partials/profile_modal.html', {'user_obj': user_obj}, request=request)
+    return JsonResponse({'html': html})
 
 
 # -----------------------------------------------------------------

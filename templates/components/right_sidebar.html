@@ -22,22 +22,30 @@
         </ul>
     </section>
 
-    <section class="widget widget-recent card">
-        <h3 class="widget-title">Recent Posts</h3>
-        <ul class="recent-list">
-            {% for p in recent_posts %}
-                <li><a href="{% url 'forum:post_detail' p.pk %}">{{ p.title|truncatechars:60 }}</a><span class="meta"> • {{ p.created_at|timesince }} ago</span></li>
-            {% empty %}
-                <li class="muted">No recent posts.</li>
-            {% endfor %}
-        </ul>
-    </section>
+    {# Recent Posts removed as requested #}
 
     <section class="widget widget-top card">
         <h3 class="widget-title">Top Contributors</h3>
         <ul class="top-users">
             {% for u in top_users %}
-                <li><a href="#">{{ u.get_full_name|default:u.username }}</a><span class="meta"> • {{ u.karma }} pts</span></li>
+                <li class="top-user-item{% if forloop.counter0 == 0 %} top-user-item--gold{% elif forloop.counter0 == 1 %} top-user-item--silver{% elif forloop.counter0 == 2 %} top-user-item--bronze{% endif %}">
+                    <div class="top-user-rank">{{ forloop.counter }}</div>
+                    <div class="top-user-avatar">
+                        {% if u.avatar %}
+                            <a href="#" class="ajax-modal" data-ajax-url="{% url 'account:profile_modal' u.pk %}" title="View profile">
+                                <img src="{{ u.avatar.url }}" alt="{{ u.get_full_name|default:u.username }}">
+                            </a>
+                        {% else %}
+                            <a href="#" class="ajax-modal" data-ajax-url="{% url 'account:profile_modal' u.pk %}" title="View profile">
+                                <span class="avatar-fallback">{{ u.get_full_name|default:u.username|slice:":1"|upper }}</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="top-user-meta">
+                        <a href="#">{{ u.get_full_name|default:u.username }}</a>
+                        <div class="top-user-points">{{ u.karma }} pts</div>
+                    </div>
+                </li>
             {% empty %}
                 <li class="muted">No contributors yet.</li>
             {% endfor %}

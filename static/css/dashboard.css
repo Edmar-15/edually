@@ -200,6 +200,26 @@ body.sidebar-collapsed .sidebar {
     background: var(--bg);
 }
 
+/* Dashboard content container tweaks */
+.dashboard-content {
+    padding: 40px 0;
+}
+
+.dashboard-content .card {
+    padding: 28px;
+}
+
+/* Header tweaks for stronger hierarchy */
+.content-header {
+    padding: 20px 0;
+}
+
+.header-left h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+}
+
 .SidebarProvider .sidebar {
     transition: transform 0.25s ease, width 0.25s ease, padding 0.25s ease, opacity 0.25s ease;
 }
@@ -738,11 +758,24 @@ body.sidebar-collapsed .main-content {
 }
 
 .stat-number {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--primary);
+    font-size: 2.6rem;
+    font-weight: 900;
     margin-bottom: 8px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 28px 64px rgba(14,154,167,0.12);
+}
+
+/* Subtle animation staggering for cards */
+.card.animate-fade-up { animation-duration: 520ms; }
+.welcome-card.card { animation-delay: 80ms; }
+.journey-card.card { animation-delay: 140ms; }
+.onboarding-card.card { animation-delay: 200ms; }
 
 .stat-label {
     font-size: 0.9rem;
@@ -1109,7 +1142,7 @@ body.sidebar-collapsed .main-content {
 
 /* Content */
     .dashboard-content {
-        padding: 24px;
+        padding: 16px 0;
     }
 
     .quick-buttons {
@@ -1200,6 +1233,35 @@ body.sidebar-collapsed .main-content {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    /* Mobile card/padding reductions */
+    .dashboard-content .card {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .section-chip {
+        padding: 5px 8px;
+        font-size: 0.7rem;
+    }
+
+    .journey-step {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .activity-item {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-number {
+        font-size: 2.2rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1239,6 +1301,33 @@ body.sidebar-collapsed .main-content {
     .stats-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Extra-tight mobile spacing */
+    .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .content-header {
+        padding: 12px 0;
+    }
+
+    .header-left h1 {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .journey-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .welcome-card h2 {
+        font-size: 1.15rem;
+    }
+
+    .activity-icon { width: 44px; height: 44px; }
+    .activity-item { padding: 10px; }
 }
 
 

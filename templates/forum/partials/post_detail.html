@@ -1,4 +1,7 @@
 <section class="forum-page">
+    {% if in_modal %}
+        <button class="modal-close" aria-label="Close post" onclick="document.querySelector('#global-modal').classList.remove('open')">×</button>
+    {% endif %}
     <!-- THE QUESTION -->
     <article class="post-item card{% if post.verified %} verified{% endif %}"
              data-post-id="{{ post.pk }}" id="post-{{ post.pk }}">
@@ -81,11 +84,11 @@
     <!-- ADD REPLY FORM (AJAX) -->
     <section class="add-reply">
         <h3>Leave a Reply</h3>
-        <form method="post"
+          <form method="post"
               class="reply-form ajax-form"
-              data-target="#reply-list"
+              data-target="{% if in_modal %}#global-modal #reply-list{% else %}#reply-list{% endif %}"
               data-insert="append"
-              data-after="#reply-count"
+              data-after="{% if in_modal %}#global-modal #reply-count{% else %}#reply-count{% endif %}"
               data-close-modal="false">
             {% csrf_token %}
             {{ reply_form.as_p }}

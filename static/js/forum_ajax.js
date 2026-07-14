@@ -155,8 +155,107 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /** -----------------------------------------------------------------
-     *  4.  Load modal content (class .ajax-modal)
+     *  4.  Load modal content (class .ajax-modal) + accessibility
+     *      - focus trap
+     *      - restore focus on close
+     *      - close on Escape
      *  ----------------------------------------------------------------- */
+    let activeModal = null;
+    let lastFocused = null;
+    let modalObserver = null;
+
+    const focusableSelector = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    function getFocusable(container) {
+        if (!container) return [];
+        return Array.from(container.querySelectorAll(focusableSelector)).filter(el => el.offsetParent !== null);
+    }
+
+    function openModal(modal) {
+        if (!modal) return;
+        lastFocused = document.activeElement;
+        activeModal = modal;
+        // prevent background scroll
+        document.body.classList.add('modal-open');
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-hidden', 'false');
+
+        // focus first focusable element, or the modal itself
+        const focusables = getFocusable(modal);
+        if (focusables.length) focusables[0].focus();
+        else modal.focus();
+
+        // keydown handler for Tab / Escape
+        modal._keydownHandler = function (ev) {
+            if (ev.key === 'Escape') {
+                ev.preventDefault();
+                closeModal(modal);
+                return;
+            }
+            if (ev.key === 'Tab') {
+                const nodes = getFocusable(modal);
+                if (!nodes.length) {
+                    ev.preventDefault();
+                    return;
+                }
+                const first = nodes[0];
+                const last = nodes[nodes.length - 1];
+                if (ev.shiftKey && document.activeElement === first) {
+                    ev.preventDefault();
+                    last.focus();
+                } else if (!ev.shiftKey && document.activeElement === last) {
+                    ev.preventDefault();
+                    first.focus();
+                }
+            }
+        };
+        modal.addEventListener('keydown', modal._keydownHandler);
+
+        // MutationObserver to detect when modal is closed by other codepaths
+        modalObserver = new MutationObserver(mutations => {
+            mutations.forEach(m => {
+                if (m.attributeName === 'class') {
+                    const oldVal = m.oldValue || '';
+                    const wasOpen = oldVal.includes('open');
+                    const isOpen = modal.classList.contains('open');
+                    if (wasOpen && !isOpen) {
+                        closeModal(modal);
+                    }
+                }
+            });
+        });
+        modalObserver.observe(modal, { attributes: true, attributeOldValue: true, attributeFilter: ['class'] });
+    }
+
+    function closeModal(modal) {
+        if (!modal) return;
+        modal.setAttribute('aria-hidden', 'true');
+        modal.removeAttribute('aria-modal');
+        modal.removeAttribute('role');
+
+        if (modal._keydownHandler) {
+            modal.removeEventListener('keydown', modal._keydownHandler);
+            delete modal._keydownHandler;
+        }
+
+        if (modalObserver) {
+            modalObserver.disconnect();
+            modalObserver = null;
+        }
+
+        // Restore focus
+        try {
+            if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+        } catch (err) { /* ignore */ }
+
+        // restore body scrolling
+        document.body.classList.remove('modal-open');
+
+        activeModal = null;
+        lastFocused = null;
+    }
+
     document.body.addEventListener('click', async e => {
         const btn = e.target.closest('.ajax-modal');
         if (!btn) return;
@@ -176,6 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.html) {
                 modal.innerHTML = data.html;
                 modal.classList.add('open');
+                // ensure modal is focusable
+                modal.tabIndex = -1;
+                openModal(modal);
             }
         } catch (err) {
             console.error('AJAX modal load error:', err);

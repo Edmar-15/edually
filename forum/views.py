@@ -76,13 +76,16 @@ def feed(request):
         post_count=Count('posts', filter=Q(posts__is_deleted=False))
     )
 
+    # Exclude admin/staff users from the top contributors list
+    top_users = request.user.__class__.objects.filter(is_active=True, is_superuser=False, is_staff=False).order_by("-karma")[:6]
+
     context = {
         "posts": page_obj,
         "categories": categories,
         "categories_count": Post.objects.filter(is_deleted=False).count(),
         "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
         "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
-        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
+        "top_users": top_users,
         "search_query": query,
         "active_category": category_slug,
         "show_unanswered": show_unanswered,
@@ -184,6 +187,8 @@ def post_detail(request, pk):
         "user_post_upvotes": user_post_upvotes,
         "user_reply_upvotes": user_reply_upvotes,
     }
+    # If this is an AJAX modal request, tell the template it's rendered inside a modal
+    context['in_modal'] = is_ajax(request)
     html = render_to_string("forum/partials/post_detail.html", context, request=request)
     return JsonResponse({"html": html})
 
