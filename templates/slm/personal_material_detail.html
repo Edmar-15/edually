@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static "css/module_detail.css" %}">
-    <link rel="stylesheet" href="{% static 'css/highlight_ai.css' %}">   {# ← NEW #}
+    <link rel="stylesheet" href="{% static 'css/highlight_ai.css' %}">
 </head>
 <body>
     {% include "components/navigations.html" %}
@@ -26,7 +26,6 @@
                 {{ pm.title }}
             </i></p>
             <div class="header-actions">
-                <!-- 1️⃣  Download (icon only) -->
                 <a href="{{ pm.file.url }}" class="button download-btn"
                    download
                    aria-label="Download original file"

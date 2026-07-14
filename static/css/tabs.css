@@ -8,7 +8,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: .65rem;
-    margin-bottom: 1rem;
 }
 
 /* Base button styling – keep whatever you already have */
