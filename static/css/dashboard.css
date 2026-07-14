@@ -150,6 +150,60 @@ body.sidebar-collapsed .sidebar {
     overflow: visible;
 }
 
+.nav-badge {
+    display: inline-flex;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 8px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-left: auto;
+}
+
+.notification-list {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(14, 154, 167, 0.12);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.notification-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 30px rgba(14, 154, 167, 0.08);
+}
+
+.notification-item--new {
+    border-color: var(--primary);
+    background: rgba(14, 154, 167, 0.08);
+}
+
+.notification-copy {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.notification-time {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
 .sidebar-footer {
     padding-top: 16px;
     border-top: 1px solid var(--border);

@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAlly - Notifications</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+    <div class="dashboard-container">
+        {% include "components/navigations.html" %}
+
+        <main class="main-content">
+            <section class="profile-page profile-section">
+                <div class="content-header">
+                    <div class="header-left">
+                        <h1>Inbox</h1>
+                        <p class="user-info">Your recent activity and updates from the forum.</p>
+                    </div>
+                </div>
+
+                <div class="profile-grid">
+                    <section class="profile-details-card">
+                        <div class="details-header">
+                            <h2>Notifications</h2>
+                            <p>These are items that matter to you. New items are marked and auto-read when you view this page.</p>
+                        </div>
+
+                        {% if notifications %}
+                            <div class="notification-list">
+                                {% for notification in notifications %}
+                                    <a href="{{ notification.destination }}" class="notification-item{% if not notification.read %} notification-item--new{% endif %}">
+                                        <div class="notification-copy">
+                                            <strong>{{ notification.message }}</strong>
+                                            <span class="notification-time">{{ notification.created_at|date:"M d, Y H:i" }}</span>
+                                        </div>
+                                        <div class="notification-action">
+                                            <i class="fa-solid fa-chevron-right"></i>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state-card card">
+                                <h3>No notifications yet</h3>
+                                <p>When someone replies to your post or other activity happens, it will appear here.</p>
+                            </div>
+                        {% endif %}
+                    </section>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

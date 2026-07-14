@@ -105,3 +105,57 @@ class UserConsent(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.email} – v{self.version} ({self.accepted_at:%Y-%m-%d})"
+
+
+class Notification(models.Model):
+    """In-app notification for a user."""
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications_sent",
+        null=True,
+        blank=True,
+    )
+    verb = models.CharField(max_length=120)
+    target_post = models.ForeignKey(
+        "forum.Post",
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        null=True,
+        blank=True,
+    )
+    target_reply = models.ForeignKey(
+        "forum.Reply",
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        null=True,
+        blank=True,
+    )
+    url = models.CharField(max_length=255, blank=True)
+    read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+
+    def __str__(self) -> str:
+        recipient_name = self.recipient.get_short_name or str(self.recipient)
+        return f"Notification for {recipient_name}: {self.verb}"
+
+    @property
+    def message(self) -> str:
+        if self.actor:
+            actor_name = self.actor.get_short_name or str(self.actor)
+            return f"{actor_name} {self.verb}"
+        return self.verb
+
+    @property
+    def destination(self) -> str:
+        return self.url or "#"

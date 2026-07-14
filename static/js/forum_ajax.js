@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return cookieValue;
     };
 
+    const confirmAction = (message) => {
+        if (!message) return true;
+        return confirm(message);
+    };
+
     /** -----------------------------------------------------------------
      *  1.  Generic form submit (POST) – expects JSON {success, html, …}
      *  ----------------------------------------------------------------- */
@@ -107,7 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!btn) return;
         e.preventDefault();
 
-        if (!confirm('Are you sure you want to delete this?')) return;
+        const confirmMessage = btn.dataset.confirm || 'Are you sure you want to delete this?';
+        if (!confirmAction(confirmMessage)) return;
 
         const url = btn.dataset.url;
         const targetSel = btn.dataset.target;
@@ -163,8 +169,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeModal = null;
     let lastFocused = null;
     let modalObserver = null;
+    let originalBodyOverflow = '';
+    let originalBodyPaddingRight = '';
 
     const focusableSelector = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    function lockBodyScroll() {
+        originalBodyOverflow = document.body.style.overflow || '';
+        originalBodyPaddingRight = document.body.style.paddingRight || '';
+
+        document.body.style.overflow = 'hidden';
+    }
+
+    function unlockBodyScroll() {
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.paddingRight = originalBodyPaddingRight;
+    }
 
     function getFocusable(container) {
         if (!container) return [];
@@ -176,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lastFocused = document.activeElement;
         activeModal = modal;
         // prevent background scroll
+        lockBodyScroll();
         document.body.classList.add('modal-open');
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
@@ -230,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeModal(modal) {
         if (!modal) return;
+        modal.classList.remove('open');
         modal.setAttribute('aria-hidden', 'true');
         modal.removeAttribute('aria-modal');
         modal.removeAttribute('role');
@@ -251,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // restore body scrolling
         document.body.classList.remove('modal-open');
+        unlockBodyScroll();
 
         activeModal = null;
         lastFocused = null;
@@ -260,6 +283,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = e.target.closest('.ajax-modal');
         if (!btn) return;
         e.preventDefault();
+
+        const confirmMessage = btn.dataset.confirm;
+        if (confirmMessage && !confirmAction(confirmMessage)) return;
 
         const url = btn.dataset.ajaxUrl;
         const targetSel = btn.dataset.target || '#global-modal';
@@ -290,6 +316,30 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', e => {
         if (e.target.classList.contains('modal')) {
             e.target.classList.remove('open');
+            return;
         }
+
+        const toggle = e.target.closest('.action-menu-toggle');
+        if (toggle) {
+            const menu = toggle.closest('.action-menu');
+            if (!menu) return;
+            const panel = menu.querySelector('.action-menu-panel');
+            if (!panel) return;
+            const expanded = toggle.getAttribute('aria-expanded') === 'true';
+            menu.classList.toggle('open', !expanded);
+            panel.classList.toggle('open', !expanded);
+            toggle.setAttribute('aria-expanded', String(!expanded));
+            panel.setAttribute('aria-hidden', String(expanded));
+            return;
+        }
+
+        document.querySelectorAll('.action-menu.open').forEach(menu => {
+            const panel = menu.querySelector('.action-menu-panel');
+            const toggle = menu.querySelector('.action-menu-toggle');
+            menu.classList.remove('open');
+            if (panel) panel.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            if (panel) panel.setAttribute('aria-hidden', 'true');
+        });
     });
 });

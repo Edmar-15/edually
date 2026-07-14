@@ -55,12 +55,19 @@
 
                 <div class="filter-row">
                     <div class="filter-actions">
+                        {% if active_category_name %}
+                            <span class="filter-pill filter-pill--active">Category: {{ active_category_name }}</span>
+                            <a href="{% url 'forum:feed' %}{% if search_query %}?q={{ search_query }}{% endif %}"
+                               class="button secondary-button filter-pill filter-pill--muted">
+                                <i class="fa-solid fa-times"></i> Clear category
+                            </a>
+                        {% endif %}
                         {% if show_unanswered %}
-                            <a href="{% url 'forum:feed' %}{% if search_query %}?q={{ search_query }}{% endif %}{% if active_category %}{% if search_query %}&{% else %}?{% endif %}cat={{ active_category }}{% endif %}"
+                            <span class="filter-pill filter-pill--active">Unanswered only</span>
+                            <a href="{% url 'forum:feed' %}{% if active_category %}?cat={{ active_category }}{% if search_query %}&q={{ search_query }}{% endif %}{% elif search_query %}?q={{ search_query }}{% endif %}"
                                class="button secondary-button filter-pill filter-pill--muted">
                                 <i class="fa-solid fa-times"></i> Clear unanswered
                             </a>
-                            <span class="filter-pill filter-pill--active">Showing unanswered posts</span>
                         {% else %}
                             <a href="{% url 'forum:feed' %}?unanswered=1{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}"
                                class="button secondary-button filter-pill">

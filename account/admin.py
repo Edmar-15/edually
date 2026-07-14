@@ -6,7 +6,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import User
 from .forms import UserCreationForm, UserChangeForm
-from .models import UserConsent
+from .models import Notification, UserConsent
 
 
 @admin.register(User)
@@ -54,3 +54,11 @@ class UserConsentAdmin(admin.ModelAdmin):
     list_filter = ("version",)
     search_fields = ("user__email", "user__username")
     ordering = ("-accepted_at",)
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("recipient", "actor", "verb", "target_post", "target_reply", "read", "created_at")
+    list_filter = ("read", "created_at")
+    search_fields = ("recipient__email", "actor__email", "verb")
+    ordering = ("-created_at",)

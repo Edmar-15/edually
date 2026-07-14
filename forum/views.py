@@ -5,10 +5,12 @@ from django.db.models import Q, Count, F
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, Http404
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
 from .models import Category, Post, PostUpvote, Reply, ReplyUpvote, FlagReport
 from .forms import PostForm, ReplyForm
+from account.models import Notification
 
 # -------------------------------------------------------------------------
 # Helpers
@@ -79,6 +81,10 @@ def feed(request):
     # Exclude admin/staff users from the top contributors list
     top_users = request.user.__class__.objects.filter(is_active=True, is_superuser=False, is_staff=False).order_by("-karma")[:6]
 
+    active_category_name = None
+    if category_slug:
+        active_category_name = categories.filter(slug=category_slug).values_list('name', flat=True).first()
+
     context = {
         "posts": page_obj,
         "categories": categories,
@@ -88,6 +94,7 @@ def feed(request):
         "top_users": top_users,
         "search_query": query,
         "active_category": category_slug,
+        "active_category_name": active_category_name,
         "show_unanswered": show_unanswered,
         "sort_by": sort_by,
         "paginator": paginator,
@@ -136,6 +143,16 @@ def post_detail(request, pk):
             reply.author = request.user
             reply.post = post
             reply.save()                     # signals bump replies_cnt
+
+            if post.author != request.user:
+                Notification.objects.create(
+                    recipient=post.author,
+                    actor=request.user,
+                    verb="replied to your post",
+                    target_post=post,
+                    target_reply=reply,
+                    url=reverse("forum:post_detail", args=[post.pk]) + f"#reply-{reply.pk}",
+                )
 
             # Render the newly created reply item
             html = render_to_string(

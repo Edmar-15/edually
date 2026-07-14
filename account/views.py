@@ -28,7 +28,7 @@ from django.views.generic import TemplateView
 # Existing imports continued (forms, models, etc.)
 # --------------------------------------------------------------
 from .forms import PublicRegisterForm, ProfileForm
-from .models import UserConsent
+from .models import Notification, UserConsent
 from slm.models import Module
 # For onboarding completion checks (ask one question)
 from aihelper.models import Conversation, Message
@@ -256,6 +256,17 @@ def dashboard(request):
         "onboarding_steps": onboarding_steps,
     }
     return render(request, 'dashboard.html', context)
+
+
+@login_required(login_url="account:login")
+def notifications_inbox(request):
+    notifications = Notification.objects.filter(recipient=request.user).select_related("actor").order_by("-created_at")
+    # Mark notifications as read when viewing the inbox
+    notifications.filter(read=False).update(read=True)
+    context = {
+        "notifications": notifications,
+    }
+    return render(request, "account/notifications.html", context)
 
 @login_required(login_url="account:login")
 def profile(request):

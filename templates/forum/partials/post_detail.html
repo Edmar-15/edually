@@ -20,6 +20,11 @@
                             <span class="tag">{{ post.category.name }}</span>
                         {% endif %}
                         <span class="post-time">{{ post.created_at|timesince }} ago</span>
+                        {% if post.replies_cnt == 0 %}
+                            <span class="status-pill status-pill--unanswered">Unanswered</span>
+                        {% else %}
+                            <span class="status-pill status-pill--answered">Answered</span>
+                        {% endif %}
                         {% if post.verified %}
                             <span class="badge verified-badge">Teacher Verified</span>
                         {% endif %}
@@ -33,39 +38,51 @@
             </div>
         </div>
 
-        <div class="post-stats">
-            <div class="stats-row">
-                <button class="stat upvote-btn{% if post.pk in user_post_upvotes %} has-upvoted{% endif %}"
+        <div class="post-side">
+            <div class="side-upvote">
+                <button class="button upvote-circle upvote-btn{% if post.pk in user_post_upvotes %} has-upvoted{% endif %}"
                         data-post-id="{{ post.pk }}"
                         data-endpoint="{% url 'forum:upvote' post.pk %}">
-                    <i class="fa-solid fa-thumbs-up upvote-icon"></i>
-                    <span class="upvote-count">{{ post.upvotes }}</span>
-                    upvote{{ post.upvotes|pluralize }}
+                    <i class="fa-solid fa-thumbs-up"></i>
                 </button>
-                <span class="stat">{{ post.replies_cnt }} repl{{ post.replies_cnt|pluralize:"y,ies" }}</span>
+                <div class="upvote-num">{{ post.upvotes }}</div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                {% if user == post.author %}
-                    <a href="{% url 'forum:post_edit' post.pk %}"
-                       class="button secondary-button small-button ajax-modal"
-                       data-ajax-url="{% url 'forum:post_edit' post.pk %}"
-                       data-target="#global-modal">
-                        <i class="fa-solid fa-edit"></i> Edit
+            <button class="button primary-circle reply-btn ajax-modal" data-ajax-url="{% url 'forum:post_detail' post.pk %}" data-target="#global-modal" aria-label="Reply">
+                <i class="fa-solid fa-reply"></i>
+                <span class="reply-count-badge">{{ post.replies_cnt }}</span>
+            </button>
+
+            <div class="action-menu">
+                <button type="button" class="button secondary-circle small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Actions">
+                    <i class="fa-solid fa-ellipsis"></i>
+                </button>
+                <div class="action-menu-panel" role="menu" aria-hidden="true">
+                    {% if user == post.author %}
+                        <a href="{% url 'forum:post_edit' post.pk %}"
+                           class="button secondary-button small-button ajax-modal action-menu-item"
+                           data-ajax-url="{% url 'forum:post_edit' post.pk %}"
+                           data-target="#global-modal"
+                           role="menuitem">
+                            <i class="fa-solid fa-edit"></i> Edit
+                        </a>
+                        <button type="button"
+                                class="button secondary-button small-button ajax-delete-btn action-menu-item"
+                                data-url="{% url 'forum:post_delete' post.pk %}"
+                                data-target="#post-{{ post.pk }}"
+                                role="menuitem">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    {% endif %}
+                    <a href="{% url 'forum:flag_content' 'post' post.pk %}"
+                       class="button secondary-button small-button ajax-modal action-menu-item"
+                       data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
+                       data-target="#global-modal"
+                       data-confirm="Report this post?"
+                       role="menuitem">
+                        <i class="fa-solid fa-flag"></i> Report
                     </a>
-                    <button class="button secondary-button small-button ajax-delete-btn"
-                            data-url="{% url 'forum:post_delete' post.pk %}"
-                            data-target="#post-{{ post.pk }}">
-                        <i class="fa-solid fa-trash"></i> Delete
-                    </button>
-                {% endif %}
-                <a href="{% url 'forum:flag_content' 'post' post.pk %}"
-                   class="button secondary-button small-button ajax-modal"
-                   data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
-                   data-target="#global-modal">
-                    <i class="fa-solid fa-flag"></i> Report
-                </a>
+                </div>
             </div>
         </div>
     </article>
@@ -85,6 +102,7 @@
     <section class="add-reply">
         <h3>Leave a Reply</h3>
           <form method="post"
+              action="{% url 'forum:post_detail' post.pk %}"
               class="reply-form ajax-form"
               data-target="{% if in_modal %}#global-modal #reply-list{% else %}#reply-list{% endif %}"
               data-insert="append"
