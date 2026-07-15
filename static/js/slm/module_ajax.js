@@ -33,11 +33,66 @@ export function initModuleWidget(rootEl) {
   // `0` that could appear in a query‑string or elsewhere.
 
   /* -----------------------------------------------------------------
-   * 2️⃣  DOM shortcuts (all inside the widget)
+   * 2️⃣  Toast helper -------------------------------------------------
+   * ----------------------------------------------------------------- */
+  /**
+   * Lazily get (or create) the toast container element.
+   * The container lives in the corner of the page (see CSS) and has
+   * `aria-live="polite"` so screen‑readers announce its content.
+   */
+  const getToastContainer = () => {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast-container";
+      container.setAttribute("aria-live", "polite");
+      document.body.appendChild(container);
+    }
+    return container;
+  };
+  const $toastContainer = getToastContainer();
+
+  /**
+   * Show a toast.
+   *
+   * @param {string} message   Text to display.
+   * @param {'success'|'error'|'info'|'warning'} [type='info']   Visual variant.
+   * @param {number} [duration=4000]   How long the toast stays (ms).
+   */
+  const showToast = (message, type = "info", duration = 4000) => {
+    const toast = document.createElement("div");
+    toast.className = `toast toast--${type}`;
+    // CSS animation reads this custom property to know when to start fade‑out
+    toast.style.setProperty("--toast-life", `${duration}ms`);
+
+    // Use a tiny emoji as an icon – you could replace these with SVGs later.
+    const icon = document.createElement("span");
+    icon.className = "toast__icon";
+    if (type === "success") icon.textContent = "";
+    else if (type === "error") icon.textContent = "";
+    else if (type === "warning") icon.textContent = "";
+    else icon.textContent = "";
+
+    const msg = document.createElement("span");
+    msg.textContent = message;
+
+    toast.appendChild(icon);
+    toast.appendChild(msg);
+
+    // Clicking a toast dismisses it instantly.
+    toast.addEventListener("click", () => toast.remove());
+
+    $toastContainer.appendChild(toast);
+
+    // Auto‑remove after the requested lifetime plus a little extra for the fade‑out.
+    setTimeout(() => toast.remove(), duration + 500);
+  };
+
+  /* -----------------------------------------------------------------
+   * 3️⃣  DOM shortcuts (all inside the widget)
    * ----------------------------------------------------------------- */
   const $list = rootEl.querySelector("#module-list");
-  const $status = rootEl.querySelector("#module-status");
-
   if (!$list) {
     console.warn("Module widget is missing #module-list container.");
     return;
@@ -95,7 +150,7 @@ export function initModuleWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 3️⃣  Render a single module card – now mirrors the pm‑card UI
+   * 4️⃣  Render a single module card – mirrors the pm‑card UI
    * ----------------------------------------------------------------- */
   function renderCard(mod) {
     // ---- Card container -------------------------------------------------
@@ -141,7 +196,7 @@ export function initModuleWidget(rootEl) {
     const actions = document.createElement("div");
     actions.className = "pm-card__actions";
 
-    // View (preview) button – points to the module detail page
+    // View button – links to the module detail page
     const viewBtn = document.createElement("a");
     viewBtn.href = `/slm/subjects/${mod.subject_id}/modules/${mod.id}/`;
     viewBtn.className = "button button-plain";
@@ -185,7 +240,7 @@ export function initModuleWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 4️⃣  Paginator – unchanged copy‑paste from subject widget
+   * 5️⃣  Paginator – unchanged copy‑paste from subject widget
    * ----------------------------------------------------------------- */
   function renderPaginator(meta) {
     const old = rootEl.querySelector(".paginator");
@@ -264,7 +319,7 @@ export function initModuleWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 5️⃣  LOAD – fetch a page and render
+   * 6️⃣  LOAD – fetch a page and render
    * ----------------------------------------------------------------- */
   async function load(page = 1) {
     try {
@@ -307,12 +362,12 @@ export function initModuleWidget(rootEl) {
       // ---- paginator ----------------------------------------------------
       renderPaginator(payload);
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to load modules – ${e}`, "error");
     }
   }
 
   /* -----------------------------------------------------------------
-   * 6️⃣  CREATE – POST a new module (multipart/form‑data)
+   * 7️⃣  CREATE – POST a new module (multipart/form‑data)
    * ----------------------------------------------------------------- */
   async function create() {
     if (!$numInput || !$nameInput || !$fileInput) return;
@@ -326,8 +381,10 @@ export function initModuleWidget(rootEl) {
       const ALLOWED_EXT = [".pdf", ".doc", ".docx", ".ppt", ".pptx"];
       const name = file.name.toLowerCase();
       if (!ALLOWED_EXT.some((ext) => name.endsWith(ext))) {
-        $status.textContent =
-          "❌ Only PDF, Word (.doc/.docx) and PowerPoint (.ppt/.pptx) files are allowed.";
+        showToast(
+          "Only PDF, Word (.doc/.docx) and PowerPoint (.ppt/.pptx) files are allowed.",
+          "error",
+        );
         return;
       }
       form.append("file", file);
@@ -342,22 +399,22 @@ export function initModuleWidget(rootEl) {
       });
 
       if (resp.status === 201) {
-        $status.textContent = "✅ Module created";
+        showToast("Module created", "success");
         $numInput.value = "";
         $nameInput.value = "";
         $fileInput.value = "";
         load();
       } else {
         const err = await resp.json();
-        $status.textContent = `❌ ${err.error || resp.statusText}`;
+        showToast(err.error || resp.statusText, "error");
       }
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to create module – ${e}`, "error");
     }
   }
 
   /* -----------------------------------------------------------------
-   * 7️⃣  EDIT – open edit modal (HTML already lives in the template)
+   * 8️⃣  EDIT – open edit modal (HTML already lives in the template)
    * ----------------------------------------------------------------- */
   function openEditModal(mod) {
     // Store the id of the module we are editing – used by the submit handler
@@ -383,7 +440,7 @@ export function initModuleWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 8️⃣  DELETE – actually send the DELETE request.
+   * 9️⃣  DELETE – actually send the DELETE request.
    * ----------------------------------------------------------------- */
   async function performDelete(pk) {
     const url = replaceId(deleteTpl, pk);
@@ -394,19 +451,19 @@ export function initModuleWidget(rootEl) {
         headers: { "X-CSRFToken": csrftoken },
       });
       if (resp.status === 204) {
-        $status.textContent = "✅ Deleted";
+        showToast("Deleted", "success");
         load();
       } else {
         const err = await resp.json();
-        $status.textContent = `❌ ${err.error || resp.statusText}`;
+        showToast(err.error || resp.statusText, "error");
       }
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to delete module – ${e}`, "error");
     }
   }
 
   /* -----------------------------------------------------------------
-   * 9️⃣  UI bindings & modal handling
+   * 🔟  UI bindings & modal handling
    * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
@@ -429,7 +486,7 @@ export function initModuleWidget(rootEl) {
 
       const modId = $editModal.dataset.modId;
       if (!modId) {
-        $status.textContent = "❌ No module selected for update.";
+        showToast("No module selected for update.", "error");
         return;
       }
 
@@ -447,7 +504,7 @@ export function initModuleWidget(rootEl) {
 
         if (!resp.ok) {
           const err = await resp.json();
-          $status.textContent = `❌ ${err.error || resp.statusText}`;
+          showToast(err.error || resp.statusText, "error");
           return;
         }
 
@@ -464,16 +521,16 @@ export function initModuleWidget(rootEl) {
           });
           if (!fileResp.ok) {
             const ferr = await fileResp.json();
-            $status.textContent = `❌ File replace failed – ${ferr.error || fileResp.statusText}`;
+            showToast(`File replace failed – ${ferr.error || fileResp.statusText}`, "error");
             return;
           }
         }
 
-        $status.textContent = "✅ Module updated";
+        showToast("Module updated", "success");
         $editModal.classList.add("hidden");
         load(); // refresh the list
       } catch (err) {
-        $status.textContent = `❌ ${err}`;
+        showToast(`Failed to update module – ${err}`, "error");
       }
     });
   }
@@ -489,12 +546,15 @@ export function initModuleWidget(rootEl) {
       // Hide the modal right away
       $deleteModal.classList.add("hidden");
       if (!pk) {
-        $status.textContent = "❌ No module selected for deletion.";
+        showToast("No module selected for deletion.", "error");
         return;
       }
       await performDelete(pk);
     });
   }
 
-  load(); // first page
+  // -----------------------------------------------------------------
+  // Kick‑off – load the first page
+  // -----------------------------------------------------------------
+  load();
 }
