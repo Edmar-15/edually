@@ -8,83 +8,144 @@ import { csrftoken } from "./utils.js";
  *
  * Expected data‑attributes on the root element:
  *
- *   data-list-url           → "/slm/api/personal-materials/"
- *   data-create-url         → "/slm/api/personal-materials/create/"
- *   data-update-url         → "/slm/api/personal-materials/0/"
- *   data-delete-url         → "/slm/api/personal-materials/0/delete/"
- *   data-file-replace-url   → "/slm/api/personal-materials/0/file/"
+ *   data-list-url          → "/slm/api/personal-materials/"
+ *   data-create-url        → "/slm/api/personal-materials/create/"
+ *   data-update-url        → "/slm/api/personal-materials/0/"   (dummy 0)
+ *   data-delete-url        → "/slm/api/personal-materials/0/delete/"
+ *   data-file-replace-url  → "/slm/api/personal-materials/0/file/"
  *
- * Optional: `data-visibility="public"` – forces the list request to
- * return only public items (used by the “Public Learning Materials” tab).
+ * All user‑feedback (success, error, info) is now shown as toast
+ * notifications (the same style used for the Modules widget).
  */
 export function initPersonalMaterialWidget(rootEl) {
-  // -----------------------------------------------------------------
-  // URLs & helper to swap the dummy “0”
-  // -----------------------------------------------------------------
-  const listUrl = rootEl.dataset.listUrl;
-  const createUrl = rootEl.dataset.createUrl;
-  const updateTpl = rootEl.dataset.updateUrl;
-  const deleteTpl = rootEl.dataset.deleteUrl;
-  const replaceFileTpl = rootEl.dataset.fileReplaceUrl;
+  /* -----------------------------------------------------------------
+   * 1️⃣  URLs & helper to replace the dummy “0” with a real id.
+   * ----------------------------------------------------------------- */
+  const listUrl        = rootEl.dataset.listUrl;
+  const createUrl      = rootEl.dataset.createUrl;
+  const updateTpl      = rootEl.dataset.updateUrl;   // “…/0/”
+  const deleteTpl      = rootEl.dataset.deleteUrl;   // “…/0/delete/”
+  const replaceFileTpl = rootEl.dataset.fileReplaceUrl; // “…/0/file/”
 
   const replaceId = (tmpl, id) => tmpl.replace(/0(?=\/|$)/, id);
 
-  // -----------------------------------------------------------------
-  // DOM shortcuts
-  // -----------------------------------------------------------------
-  const $list = rootEl.querySelector("#personal-material-list");
-  const $status = rootEl.querySelector("#personal-material-status");
+  /* -----------------------------------------------------------------
+   * 2️⃣  Toast helper – identical to the one used in `module_ajax.js`.
+   * ----------------------------------------------------------------- */
+  const getToastContainer = () => {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast-container";
+      container.setAttribute("aria-live", "polite");
+      document.body.appendChild(container);
+    }
+    return container;
+  };
+  const $toastContainer = getToastContainer();
 
-  const $titleInput = rootEl.querySelector("#pm-title-input");
-  const $fileInput = rootEl.querySelector("#pm-file-input");
-  const $visibilitySelect = rootEl.querySelector("#pm-visibility-select");
-  const $filterVisibility = rootEl.querySelector("#pm-filter-visibility-select");
-  const $filterType = rootEl.querySelector("#pm-filter-type-select");
-  const $addBtn = rootEl.querySelector("#pm-add-btn");
-  const $modal = rootEl.querySelector("#pm-edit-modal");
+  /**
+   * Show a toast.
+   *
+   * @param {string} message   Message to display.
+   * @param {'success'|'error'|'info'|'warning'} [type='info'] Variant colour.
+   * @param {number} [duration=4000]   How long the toast stays (ms).
+   */
+  const showToast = (message, type = "info", duration = 4000) => {
+    const toast = document.createElement("div");
+    toast.className = `toast toast--${type}`;
+    toast.style.setProperty("--toast-life", `${duration}ms`);
 
-  const currentFilters = {
-    type: $filterType ? $filterType.value : "all",
-    visibility: rootEl.dataset.visibility || ($filterVisibility ? $filterVisibility.value : "own"),
+    const icon = document.createElement("span");
+    icon.className = "toast__icon";
+    if (type === "success") icon.textContent = "✅";
+    else if (type === "error") icon.textContent = "❌";
+    else if (type === "warning") icon.textContent = "⚠️";
+    else icon.textContent = "ℹ️";
+
+    const msg = document.createElement("span");
+    msg.textContent = message;
+
+    toast.appendChild(icon);
+    toast.appendChild(msg);
+    toast.addEventListener("click", () => toast.remove());
+
+    $toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), duration + 500);
   };
 
-  function getMaterialIconMarkup(fileUrl = "") {
-    const ext = (fileUrl || "").split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
-
-    switch (ext) {
-      case "pdf":
-        return '<i class="fas fa-file-pdf" aria-hidden="true"></i>';
-      case "doc":
-      case "docx":
-        return '<i class="fas fa-file-word" aria-hidden="true"></i>';
-      case "ppt":
-      case "pptx":
-        return '<i class="fas fa-file-powerpoint" aria-hidden="true"></i>';
-      default:
-        return '<i class="fas fa-file-alt" aria-hidden="true"></i>';
-    }
+  /* -----------------------------------------------------------------
+   * 3️⃣  DOM shortcuts (all inside the widget)
+   * ----------------------------------------------------------------- */
+  const $list           = rootEl.querySelector("#personal-material-list");
+  if (!$list) {
+    console.warn("Personal‑Material widget is missing #personal-material-list container.");
+    return;
   }
 
-  function getMaterialIconClass(fileUrl = "") {
-    const ext = (fileUrl || "").split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+  const $titleInput         = rootEl.querySelector("#pm-title-input");
+  const $fileInput          = rootEl.querySelector("#pm-file-input");
+  const $visibilitySelect   = rootEl.querySelector("#pm-visibility-select");
+  const $filterVisibility   = rootEl.querySelector("#pm-filter-visibility-select");
+  const $filterType         = rootEl.querySelector("#pm-filter-type-select");
+  const $addBtn             = rootEl.querySelector("#pm-add-btn");
+
+  // static modal placeholders
+  const $editModal   = rootEl.querySelector("#pm-edit-modal");
+  const $deleteModal = rootEl.querySelector("#pm-delete-modal");
+
+  /* -----------------------------------------------------------------
+   * 4️⃣  Current filter state (used on every load)
+   * ----------------------------------------------------------------- */
+  const currentFilters = {
+    type: $filterType ? $filterType.value : "all",
+    visibility:
+      rootEl.dataset.visibility ||
+      ($filterVisibility ? $filterVisibility.value : "own"),
+  };
+
+  /* -----------------------------------------------------------------
+   * 5️⃣  Icon helpers (same logic that the Modules widget uses)
+   * ----------------------------------------------------------------- */
+  const getMaterialIconMarkup = (fileUrl = "") => {
+    const ext = (fileUrl || "")
+      .split("?")[0]
+      .split("#")[0]
+      .split(".")
+      .pop()
+      ?.toLowerCase();
 
     switch (ext) {
-      case "pdf":
-        return "pm-card__icon--pdf";
+      case "pdf":   return '<i class="fas fa-file-pdf" aria-hidden="true"></i>';
       case "doc":
-      case "docx":
-        return "pm-card__icon--doc";
+      case "docx":  return '<i class="fas fa-file-word" aria-hidden="true"></i>';
       case "ppt":
-      case "pptx":
-        return "pm-card__icon--ppt";
-      default:
-        return "";
+      case "pptx": return '<i class="fas fa-file-powerpoint" aria-hidden="true"></i>';
+      default:      return '<i class="fas fa-file-alt" aria-hidden="true"></i>';
     }
-  }
+  };
+  const getMaterialIconClass = (fileUrl = "") => {
+    const ext = (fileUrl || "")
+      .split("?")[0]
+      .split("#")[0]
+      .split(".")
+      .pop()
+      ?.toLowerCase();
 
-  // -----------------------------------------------------------------
-  // Render a single material card
-  // -----------------------------------------------------------------
+    switch (ext) {
+      case "pdf":   return "pm-card__icon--pdf";
+      case "doc":
+      case "docx":  return "pm-card__icon--doc";
+      case "ppt":
+      case "pptx": return "pm-card__icon--ppt";
+      default:      return "";
+    }
+  };
+
+  /* -----------------------------------------------------------------
+   * 6️⃣  Render a single material card
+   * ----------------------------------------------------------------- */
   function renderCard(pm) {
     const card = document.createElement("div");
     card.className = "pm-card";
@@ -126,21 +187,22 @@ export function initPersonalMaterialWidget(rootEl) {
     header.appendChild(content);
     card.appendChild(header);
 
-    // actions – always show “Download” and a “View” button
+    // -----------------------------------------------------------------
+    // Actions – View always, Edit/Delete only for the owner
+    // -----------------------------------------------------------------
     const actions = document.createElement("div");
     actions.className = "pm-card__actions";
 
-    // --- View (preview page) ---------------------------------------
+    // View
     const viewBtn = document.createElement("a");
-    viewBtn.href = `/slm/personal-material/${pm.id}/`;   // matches the URL added in urls.py
+    viewBtn.href = `/slm/personal-material/${pm.id}/`;
     viewBtn.className = "button button-plain";
     viewBtn.textContent = "View";
     viewBtn.title = "Open preview page";
     actions.appendChild(viewBtn);
 
-    // owner‑only edit / delete
     if (pm.is_owner) {
-      // Edit -------------------------------------------------------
+      // Edit
       const editBtn = document.createElement("button");
       editBtn.type = "button";
       editBtn.title = "Edit";
@@ -154,7 +216,7 @@ export function initPersonalMaterialWidget(rootEl) {
       });
       actions.appendChild(editBtn);
 
-      // Delete -----------------------------------------------------
+      // Delete
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.title = "Delete";
@@ -164,7 +226,7 @@ export function initPersonalMaterialWidget(rootEl) {
       delBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        deleteMaterial(pm.id);
+        openDeleteModal(pm.id);
       });
       actions.appendChild(delBtn);
     }
@@ -173,9 +235,9 @@ export function initPersonalMaterialWidget(rootEl) {
     return card;
   }
 
-  // -----------------------------------------------------------------
-  // Paginator – same logic as the other widgets
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 7️⃣  Pagination – copy‑paste from the modules widget
+   * ----------------------------------------------------------------- */
   function renderPaginator(meta) {
     const old = rootEl.querySelector(".paginator");
     if (old) old.remove();
@@ -190,7 +252,7 @@ export function initPersonalMaterialWidget(rootEl) {
       const li = document.createElement("li");
       li.className = "paginator__item";
       if (disabled) li.classList.add("paginator__item--disabled");
-      if (current)   li.classList.add("paginator__item--current");
+      if (current) li.classList.add("paginator__item--current");
       if (ellipsis) li.classList.add("paginator__item--ellipsis");
 
       if (current || ellipsis) {
@@ -220,7 +282,7 @@ export function initPersonalMaterialWidget(rootEl) {
     if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
-    const end = Math.min(meta.total_pages - 1, meta.page + 1);
+    const end   = Math.min(meta.total_pages - 1, meta.page + 1);
     for (let i = start; i <= end; i++) {
       if (i !== 1 && i !== meta.total_pages) {
         ul.appendChild(makeItem(String(i), null, false, meta.page === i));
@@ -229,19 +291,23 @@ export function initPersonalMaterialWidget(rootEl) {
 
     if (meta.page + 2 < meta.total_pages - 1) ul.appendChild(makeItem("…", null, false, false, true));
     if (meta.total_pages > 1) {
-      ul.appendChild(makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages));
+      ul.appendChild(
+        makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages)
+      );
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
 
     $list.parentNode.appendChild(nav);
   }
 
-  // -----------------------------------------------------------------
-  // LOAD – GET a page and render the list
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 8️⃣  LOAD – GET a page and render the list
+   * ----------------------------------------------------------------- */
   async function load(page = 1) {
     try {
       const params = new URLSearchParams({ page });
+
+      // visibility can be forced from the template (e.g. owner‑only)
       if (rootEl.dataset.visibility) {
         params.set("visibility", rootEl.dataset.visibility);
       } else {
@@ -272,44 +338,45 @@ export function initPersonalMaterialWidget(rootEl) {
           row.appendChild(renderCard(pm));
         });
       }
+
       renderPaginator(payload);
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to load materials – ${e}`, "error");
     }
   }
 
+  /* -----------------------------------------------------------------
+   * 9️⃣  FILTER UI – visibility / type dropdowns
+   * ----------------------------------------------------------------- */
   function attachFilters() {
     if ($filterVisibility) {
-      $filterVisibility.addEventListener("change", (event) => {
-        currentFilters.visibility = event.target.value;
+      $filterVisibility.addEventListener("change", (e) => {
+        currentFilters.visibility = e.target.value;
         load(1);
       });
     }
-
     if ($filterType) {
-      $filterType.addEventListener("change", (event) => {
-        currentFilters.type = event.target.value;
+      $filterType.addEventListener("change", (e) => {
+        currentFilters.type = e.target.value;
         load(1);
       });
     }
   }
+  if ($filterVisibility || $filterType) attachFilters();
 
-  if ($filterVisibility || $filterType) {
-    attachFilters();
-  }
-
-  // -----------------------------------------------------------------
-  // CREATE – POST multipart
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 🔟  CREATE – multipart POST new material
+   * ----------------------------------------------------------------- */
   async function create() {
     if (!$titleInput || !$fileInput) return;
 
     const form = new FormData();
     form.append("title", $titleInput.value.trim());
     form.append("visibility", $visibilitySelect ? $visibilitySelect.value : "PR");
+
     const file = $fileInput.files[0];
     if (!file) {
-      $status.textContent = "❌ Choose a file to upload.";
+      showToast("Choose a file before uploading.", "error");
       return;
     }
     form.append("file", file);
@@ -323,69 +390,63 @@ export function initPersonalMaterialWidget(rootEl) {
       });
 
       if (resp.status === 201) {
-        $status.textContent = "✅ Material created";
+        showToast("Material created", "success");
         $titleInput.value = "";
         $fileInput.value = "";
         if ($visibilitySelect) $visibilitySelect.value = "PR";
         load();
       } else {
         const err = await resp.json();
-        $status.textContent = `❌ ${err.error || resp.statusText}`;
+        showToast(err.error || resp.statusText, "error");
       }
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to create material – ${e}`, "error");
     }
   }
 
-  // -----------------------------------------------------------------
-  // EDIT – open modal (metadata + optional file replace)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 1️⃣1️⃣  EDIT – open modal, pre‑fill, submit (PUT + optional file)
+   * ----------------------------------------------------------------- */
   function openEditModal(pm) {
-    // Build the modal only once
-    if ($modal.dataset.built !== "true") {
-      $modal.innerHTML = `
-        <div class="modal__backdrop"></div>
-        <div class="modal__content">
-          <h2>Edit material</h2>
-          <form id="pm-edit-form">
-            <label>
-              Title
-              <input type="text" name="title" required>
-            </label>
-            <label>
-              Visibility
-              <select name="visibility">
-                <option value="PR">Private</option>
-                <option value="PU">Public</option>
-              </select>
-            </label>
-            <label>
-              Replace file (optional)
-              <input type="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx">
-            </label>
-            <div class="modal__actions">
-              <button type="submit" class="button-primary">Save</button>
-              <button type="button" class="button-plain" id="pm-cancel">Cancel</button>
-            </div>
-          </form>
-        </div>`;
-      $modal.dataset.built = "true";
+    $editModal.dataset.pmId = pm.id;
 
-      $modal.querySelector("#pm-cancel").addEventListener("click", () => {
-        $modal.classList.add("hidden");
-      });
+    const form = $editModal.querySelector("#pm-edit-form");
+    if (form) {
+      form.title.value = pm.title;
+      form.visibility.value = pm.visibility;
+      form.file.value = ""; // clear any previous selection
+    }
 
-      $modal.querySelector("#pm-edit-form").addEventListener("submit", async (e) => {
+    $editModal.classList.remove("hidden");
+  }
+
+  // ---- Edit modal bindings -------------------------------------------------
+  if ($editModal) {
+    // Cancel button
+    const cancelBtn = $editModal.querySelector("#pm-cancel");
+    if (cancelBtn) cancelBtn.addEventListener("click", () => $editModal.classList.add("hidden"));
+
+    // Submit – PUT metadata, optional file replace
+    const editForm = $editModal.querySelector("#pm-edit-form");
+    if (editForm) {
+      editForm.addEventListener("submit", async (e) => {
         e.preventDefault();
+
         const form = e.target;
         const title = form.title.value.trim();
         const visibility = form.visibility.value;
         const file = form.file.files[0];
 
         const payload = { title, visibility };
+        const pmId = $editModal.dataset.pmId;
+        if (!pmId) {
+          showToast("No material selected for update.", "error");
+          return;
+        }
 
-        const updateUrl = replaceId(updateTpl, pm.id);
+        const updateUrl = replaceId(updateTpl, pmId);
         try {
+          // ---- metadata (title / visibility) ----
           const resp = await fetch(updateUrl, {
             method: "PUT",
             credentials: "same-origin",
@@ -395,16 +456,15 @@ export function initPersonalMaterialWidget(rootEl) {
             },
             body: JSON.stringify(payload),
           });
-
           if (!resp.ok) {
             const err = await resp.json();
-            $status.textContent = `❌ ${err.error || resp.statusText}`;
+            showToast(err.error || resp.statusText, "error");
             return;
           }
 
-          // If a new file was selected – upload it via the dedicated endpoint
+          // ---- optional file replace ----
           if (file) {
-            const replaceUrl = replaceId(replaceFileTpl, pm.id);
+            const replaceUrl = replaceId(replaceFileTpl, pmId);
             const fileForm = new FormData();
             fileForm.append("file", file);
             const fileResp = await fetch(replaceUrl, {
@@ -415,33 +475,33 @@ export function initPersonalMaterialWidget(rootEl) {
             });
             if (!fileResp.ok) {
               const ferr = await fileResp.json();
-              $status.textContent = `❌ File replace failed – ${ferr.error || fileResp.statusText}`;
+              showToast(`File replace failed – ${ferr.error || fileResp.statusText}`, "error");
               return;
             }
           }
 
-          $status.textContent = "✅ Material updated";
-          $modal.classList.add("hidden");
+          showToast("Material updated", "success");
+          $editModal.classList.add("hidden");
           load();
         } catch (err) {
-          $status.textContent = `❌ ${err}`;
+          showToast(`Failed to update material – ${err}`, "error");
         }
       });
     }
-
-    // Populate fields
-    const form = $modal.querySelector("#pm-edit-form");
-    form.title.value = pm.title;
-    form.visibility.value = pm.visibility;
-    form.file.value = "";
-    $modal.classList.remove("hidden");
   }
 
-  // -----------------------------------------------------------------
-  // DELETE – DELETE request
-  // -----------------------------------------------------------------
-  async function deleteMaterial(pk) {
-    if (!confirm("Delete this material?")) return;
+  /* -----------------------------------------------------------------
+   * 1️⃣2️⃣  DELETE – open confirmation modal
+   * ----------------------------------------------------------------- */
+  function openDeleteModal(pk) {
+    $deleteModal.dataset.pmId = pk;
+    $deleteModal.classList.remove("hidden");
+  }
+
+  /* -----------------------------------------------------------------
+   * 1️⃣3️⃣  DELETE request (called after the user clicks “Delete”)
+   * ----------------------------------------------------------------- */
+  async function performDelete(pk) {
     const url = replaceId(deleteTpl, pk);
     try {
       const resp = await fetch(url, {
@@ -450,49 +510,45 @@ export function initPersonalMaterialWidget(rootEl) {
         headers: { "X-CSRFToken": csrftoken },
       });
       if (resp.status === 204) {
-        $status.textContent = "✅ Deleted";
+        showToast("Deleted", "success");
         load();
       } else {
         const err = await resp.json();
-        $status.textContent = `❌ ${err.error || resp.statusText}`;
+        showToast(err.error || resp.statusText, "error");
       }
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to delete material – ${e}`, "error");
     }
   }
 
-  // -----------------------------------------------------------------
-  // UI bindings & minimal modal CSS (inject once)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 1️⃣4️⃣  Delete‑modal bindings (cancel / confirm)
+   * ----------------------------------------------------------------- */
+  if ($deleteModal) {
+    const cancelBtn = $deleteModal.querySelector("#pm-delete-cancel");
+    if (cancelBtn) cancelBtn.addEventListener("click", () => $deleteModal.classList.add("hidden"));
+
+    const confirmBtn = $deleteModal.querySelector("#pm-delete-confirm");
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", async () => {
+        const pk = $deleteModal.dataset.pmId;
+        $deleteModal.classList.add("hidden");
+        if (!pk) {
+          showToast("No material selected for deletion.", "error");
+          return;
+        }
+        await performDelete(pk);
+      });
+    }
+  }
+
+  /* -----------------------------------------------------------------
+   * 1️⃣5️⃣  UI bindings – Add‑material button
+   * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
-  const style = document.createElement("style");
-  style.textContent = `
-    #pm-edit-modal.hidden { display:none; }
-    #pm-edit-modal {
-      position:fixed; inset:0; z-index:1000;
-      display:flex; align-items:center; justify-content:center;
-    }
-    #pm-edit-modal .modal__backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.5); }
-    #pm-edit-modal .modal__content {
-      position:relative; background:#fff; padding:1.5rem;
-      border-radius:8px; max-width:420px; width:90%;
-      box-shadow:0 4px 12px rgba(0,0,0,0.15);
-    }
-    #pm-edit-modal label { display:block; margin-bottom:.75rem; }
-    #pm-edit-modal input[type=text],
-    #pm-edit-modal input[type=file],
-    #pm-edit-modal select {
-      width:100%; padding:.4rem .6rem; margin-top:.2rem;
-    }
-    .modal__actions { text-align:right; margin-top:1rem; }
-    .button-primary { background:#2563eb; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
-    .button-plain   { background:transparent; color:#555; border:none; margin-left:.5rem; cursor:pointer; }
-  `;
-  document.head.appendChild(style);
-
-  // -----------------------------------------------------------------
-  // Initial load
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 1️⃣6️⃣  Kick‑off – load the first page
+   * ----------------------------------------------------------------- */
   load();
 }

@@ -1200,7 +1200,8 @@
 
 .modal--edit .modal__content,
 #module-edit-modal .modal__content,
-#subject-edit-modal .modal__content {
+#subject-edit-modal .modal__content,
+#pm-edit-modal .modal__content {
   --modal-accent: #0E9AA7;
   border-color: var(--modal-accent);
   box-shadow:
@@ -1210,7 +1211,8 @@
 
 .modal--delete .modal__content,
 #module-delete-modal .modal__content,
-#subject-delete-modal .modal__content {
+#subject-delete-modal .modal__content,
+#pm-delete-modal .modal__content {
   --modal-accent: #ef4444;
   border-color: var(--modal-accent);
   box-shadow:
@@ -1218,14 +1220,20 @@
     0 4px 12px rgba(0, 0, 0, .15);
 }
 
-#module-edit-modal label {
+#module-edit-modal label,
+#subject-edit-modal label,
+#pm-edit-modal label {
   display: block;
   margin-bottom: .75rem;
 }
 
 #module-edit-modal input[type="text"],
+#pm-edit-modal input[type="text"],
 #module-edit-modal input[type="number"],
-#module-edit-modal input[type="file"] {
+#module-edit-modal input[type="file"],
+#pm-edit-modal input[type="file"],
+#subject-edit-modal select,
+#pm-edit-modal select {
   width: 100%;
   padding: .4rem .6rem;
   margin-top: .2rem;
@@ -1256,21 +1264,6 @@
   border: none;
   margin-left: .5rem;
   cursor: pointer;
-}
-
-#subject-edit-modal label,
-#subject-delete-modal label {
-  display: block;
-  margin-bottom: .75rem;
-}
-
-#subject-edit-modal input[type="text"],
-#subject-edit-modal select,
-#subject-delete-modal input[type="text"],
-#subject-delete-modal select {
-  width: 100%;
-  padding: .4rem .6rem;
-  margin-top: .2rem;
 }
 
 /* -------------------------------------------------
