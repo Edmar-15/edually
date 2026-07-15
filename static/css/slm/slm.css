@@ -1266,38 +1266,30 @@
   cursor: pointer;
 }
 
-/* -------------------------------------------------
+/* -----------------------------------------------------------------
    Toast notifications – scoped, top‑center, falling then rising
-   ------------------------------------------------- */
+   ----------------------------------------------------------------- */
 
-/* -------------------------------------------------
+/* -----------------------------------------------------------------
    1️⃣  Container – fixed at the top‑center of the viewport
-   ------------------------------------------------- */
-#toast-container.toast-container {
-  position: fixed;
-  top: 1rem;
-  /* distance from the top of the viewport            */
-  left: 50%;
-  /* centre horizontally (left edge)                 */
-  transform: translateX(-50%);
-  /* move the left edge left by half its own width    */
+   ----------------------------------------------------------------- */
+.toast-container {
+  position: fixed;            /* stay on screen while scrolling       */
+  top: 1rem;                 /* distance from top of viewport         */
+  left: 50%;                 /* centre horizontally (left edge)      */
+  transform: translateX(-50%);   /* shift left by half its own width   */
   display: flex;
-  flex-direction: column;
-  /* stack toasts vertically                        */
-  align-items: center;
-  /* centre each toast horizontally                  */
-  gap: 0.5rem;
-  /* space between stacked toasts                   */
-  z-index: 99999;
-  /* must be higher than modals, dropdowns, etc.     */
-  pointer-events: none;
-  /* clicks fall through the empty space              */
+  flex-direction: column;    /* stack toasts vertically               */
+  align-items: center;       /* centre each toast horizontally       */
+  gap: 0.5rem;               /* space between stacked toasts         */
+  z-index: 99999;            /* higher than modals, dropdowns, etc.  */
+  pointer-events: none;      /* clicks fall through the empty space    */
 }
 
-/* -------------------------------------------------
+/* -----------------------------------------------------------------
    2️⃣  Base toast – animation & look
-   ------------------------------------------------- */
-#toast-container .toast {
+   ----------------------------------------------------------------- */
+.toast-container .toast {
   min-width: 220px;
   max-width: 360px;
   padding: 0.75rem 1rem;
@@ -1308,9 +1300,9 @@
   display: flex;
   align-items: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
-  pointer-events: auto;
-  /* the toast itself can be clicked */
+  pointer-events: auto;               /* the toast itself can be clicked   */
   cursor: pointer;
+
   /* -------------------------------------------------
      Animation stack:
        1️⃣ toastIn – drops down (0.3 s)
@@ -1324,33 +1316,31 @@
 /* -------------------------------------------------
    3️⃣  Colour variants (feel free to adjust to your brand)
    ------------------------------------------------- */
-#toast-container .toast--success {
-  background: #28a745;
-}
-
-/* green  */
-#toast-container .toast--error {
-  background: #dc3545;
-}
-
-/* red    */
-#toast-container .toast--info {
-  background: #17a2b8;
-}
-
-/* blue   */
-#toast-container .toast--warning {
-  background: #ffc107;
-  color: #212529;
-}
+.toast-container .toast--success { background: #28a745; }   /* green  */
+.toast-container .toast--error   { background: #dc3545; }   /* red    */
+.toast-container .toast--info    { background: #17a2b8; }   /* blue   */
+.toast-container .toast--warning { background: #ffc107; color: #212529; } /* yellow */
 
 /* -------------------------------------------------
    4️⃣  Small optional icon (emoji) left of the text
    ------------------------------------------------- */
-#toast-container .toast__icon {
+.toast-container .toast__icon {
   margin-right: 0.5rem;
   flex-shrink: 0;
 }
+
+/* -----------------------------------------------------------------
+   5️⃣  Keyframes – the two tiny animations used above.
+   ----------------------------------------------------------------- */
+@keyframes toastIn {
+  0%   { opacity: 0; transform: translateY(-30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastOut {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
 
 /* -------------------------------------------------
    5️⃣  Animation keyframes

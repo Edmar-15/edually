@@ -21,10 +21,10 @@ export function initPersonalMaterialWidget(rootEl) {
   /* -----------------------------------------------------------------
    * 1️⃣  URLs & helper to replace the dummy “0” with a real id.
    * ----------------------------------------------------------------- */
-  const listUrl        = rootEl.dataset.listUrl;
-  const createUrl      = rootEl.dataset.createUrl;
-  const updateTpl      = rootEl.dataset.updateUrl;   // “…/0/”
-  const deleteTpl      = rootEl.dataset.deleteUrl;   // “…/0/delete/”
+  const listUrl = rootEl.dataset.listUrl;
+  const createUrl = rootEl.dataset.createUrl;
+  const updateTpl = rootEl.dataset.updateUrl; // “…/0/”
+  const deleteTpl = rootEl.dataset.deleteUrl; // “…/0/delete/”
   const replaceFileTpl = rootEl.dataset.fileReplaceUrl; // “…/0/file/”
 
   const replaceId = (tmpl, id) => tmpl.replace(/0(?=\/|$)/, id);
@@ -33,13 +33,14 @@ export function initPersonalMaterialWidget(rootEl) {
    * 2️⃣  Toast helper – identical to the one used in `module_ajax.js`.
    * ----------------------------------------------------------------- */
   const getToastContainer = () => {
-    let container = document.getElementById("toast-container");
+    // First try to reuse a container that lives inside this widget.
+    let container = rootEl.querySelector(".toast-container");
+    // If it does not exist, create it and attach it to the widget.
     if (!container) {
       container = document.createElement("div");
-      container.id = "toast-container";
       container.className = "toast-container";
       container.setAttribute("aria-live", "polite");
-      document.body.appendChild(container);
+      rootEl.appendChild(container);
     }
     return container;
   };
@@ -59,10 +60,10 @@ export function initPersonalMaterialWidget(rootEl) {
 
     const icon = document.createElement("span");
     icon.className = "toast__icon";
-    if (type === "success") icon.textContent = "✅";
-    else if (type === "error") icon.textContent = "❌";
-    else if (type === "warning") icon.textContent = "⚠️";
-    else icon.textContent = "ℹ️";
+    if (type === "success") icon.textContent = "";
+    else if (type === "error") icon.textContent = "";
+    else if (type === "warning") icon.textContent = "";
+    else icon.textContent = "";
 
     const msg = document.createElement("span");
     msg.textContent = message;
@@ -78,21 +79,25 @@ export function initPersonalMaterialWidget(rootEl) {
   /* -----------------------------------------------------------------
    * 3️⃣  DOM shortcuts (all inside the widget)
    * ----------------------------------------------------------------- */
-  const $list           = rootEl.querySelector("#personal-material-list");
+  const $list = rootEl.querySelector("#personal-material-list");
   if (!$list) {
-    console.warn("Personal‑Material widget is missing #personal-material-list container.");
+    console.warn(
+      "Personal‑Material widget is missing #personal-material-list container.",
+    );
     return;
   }
 
-  const $titleInput         = rootEl.querySelector("#pm-title-input");
-  const $fileInput          = rootEl.querySelector("#pm-file-input");
-  const $visibilitySelect   = rootEl.querySelector("#pm-visibility-select");
-  const $filterVisibility   = rootEl.querySelector("#pm-filter-visibility-select");
-  const $filterType         = rootEl.querySelector("#pm-filter-type-select");
-  const $addBtn             = rootEl.querySelector("#pm-add-btn");
+  const $titleInput = rootEl.querySelector("#pm-title-input");
+  const $fileInput = rootEl.querySelector("#pm-file-input");
+  const $visibilitySelect = rootEl.querySelector("#pm-visibility-select");
+  const $filterVisibility = rootEl.querySelector(
+    "#pm-filter-visibility-select",
+  );
+  const $filterType = rootEl.querySelector("#pm-filter-type-select");
+  const $addBtn = rootEl.querySelector("#pm-add-btn");
 
   // static modal placeholders
-  const $editModal   = rootEl.querySelector("#pm-edit-modal");
+  const $editModal = rootEl.querySelector("#pm-edit-modal");
   const $deleteModal = rootEl.querySelector("#pm-delete-modal");
 
   /* -----------------------------------------------------------------
@@ -117,12 +122,16 @@ export function initPersonalMaterialWidget(rootEl) {
       ?.toLowerCase();
 
     switch (ext) {
-      case "pdf":   return '<i class="fas fa-file-pdf" aria-hidden="true"></i>';
+      case "pdf":
+        return '<i class="fas fa-file-pdf" aria-hidden="true"></i>';
       case "doc":
-      case "docx":  return '<i class="fas fa-file-word" aria-hidden="true"></i>';
+      case "docx":
+        return '<i class="fas fa-file-word" aria-hidden="true"></i>';
       case "ppt":
-      case "pptx": return '<i class="fas fa-file-powerpoint" aria-hidden="true"></i>';
-      default:      return '<i class="fas fa-file-alt" aria-hidden="true"></i>';
+      case "pptx":
+        return '<i class="fas fa-file-powerpoint" aria-hidden="true"></i>';
+      default:
+        return '<i class="fas fa-file-alt" aria-hidden="true"></i>';
     }
   };
   const getMaterialIconClass = (fileUrl = "") => {
@@ -134,12 +143,16 @@ export function initPersonalMaterialWidget(rootEl) {
       ?.toLowerCase();
 
     switch (ext) {
-      case "pdf":   return "pm-card__icon--pdf";
+      case "pdf":
+        return "pm-card__icon--pdf";
       case "doc":
-      case "docx":  return "pm-card__icon--doc";
+      case "docx":
+        return "pm-card__icon--doc";
       case "ppt":
-      case "pptx": return "pm-card__icon--ppt";
-      default:      return "";
+      case "pptx":
+        return "pm-card__icon--ppt";
+      default:
+        return "";
     }
   };
 
@@ -155,7 +168,8 @@ export function initPersonalMaterialWidget(rootEl) {
     header.className = "pm-card__header";
 
     const iconWrap = document.createElement("div");
-    iconWrap.className = `pm-card__icon ${getMaterialIconClass(pm.file_url)}`.trim();
+    iconWrap.className =
+      `pm-card__icon ${getMaterialIconClass(pm.file_url)}`.trim();
     iconWrap.innerHTML = getMaterialIconMarkup(pm.file_url);
     header.appendChild(iconWrap);
 
@@ -172,9 +186,10 @@ export function initPersonalMaterialWidget(rootEl) {
     // visibility pill
     const visPill = document.createElement("span");
     visPill.className = "pm-card__pill pm-card__pill--visibility";
-    visPill.innerHTML = pm.visibility === "PU"
-      ? '<i class="fas fa-globe" aria-hidden="true" title="Public"></i>'
-      : '<i class="fas fa-lock" aria-hidden="true" title="Private"></i>';
+    visPill.innerHTML =
+      pm.visibility === "PU"
+        ? '<i class="fas fa-globe" aria-hidden="true" title="Public"></i>'
+        : '<i class="fas fa-lock" aria-hidden="true" title="Private"></i>';
     meta.appendChild(visPill);
 
     // author pill
@@ -248,7 +263,13 @@ export function initPersonalMaterialWidget(rootEl) {
     const ul = document.createElement("ul");
     ul.className = "paginator__list";
 
-    const makeItem = (label, targetPage = null, disabled = false, current = false, ellipsis = false) => {
+    const makeItem = (
+      label,
+      targetPage = null,
+      disabled = false,
+      current = false,
+      ellipsis = false,
+    ) => {
       const li = document.createElement("li");
       li.className = "paginator__item";
       if (disabled) li.classList.add("paginator__item--disabled");
@@ -277,22 +298,31 @@ export function initPersonalMaterialWidget(rootEl) {
       return li;
     };
 
-    ul.appendChild(makeItem("←", meta.previous_page_number, !meta.has_previous));
+    ul.appendChild(
+      makeItem("←", meta.previous_page_number, !meta.has_previous),
+    );
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page - 2 > 2)
+      ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
-    const end   = Math.min(meta.total_pages - 1, meta.page + 1);
+    const end = Math.min(meta.total_pages - 1, meta.page + 1);
     for (let i = start; i <= end; i++) {
       if (i !== 1 && i !== meta.total_pages) {
         ul.appendChild(makeItem(String(i), null, false, meta.page === i));
       }
     }
 
-    if (meta.page + 2 < meta.total_pages - 1) ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page + 2 < meta.total_pages - 1)
+      ul.appendChild(makeItem("…", null, false, false, true));
     if (meta.total_pages > 1) {
       ul.appendChild(
-        makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages)
+        makeItem(
+          String(meta.total_pages),
+          null,
+          false,
+          meta.page === meta.total_pages,
+        ),
       );
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
@@ -372,7 +402,10 @@ export function initPersonalMaterialWidget(rootEl) {
 
     const form = new FormData();
     form.append("title", $titleInput.value.trim());
-    form.append("visibility", $visibilitySelect ? $visibilitySelect.value : "PR");
+    form.append(
+      "visibility",
+      $visibilitySelect ? $visibilitySelect.value : "PR",
+    );
 
     const file = $fileInput.files[0];
     if (!file) {
@@ -424,7 +457,10 @@ export function initPersonalMaterialWidget(rootEl) {
   if ($editModal) {
     // Cancel button
     const cancelBtn = $editModal.querySelector("#pm-cancel");
-    if (cancelBtn) cancelBtn.addEventListener("click", () => $editModal.classList.add("hidden"));
+    if (cancelBtn)
+      cancelBtn.addEventListener("click", () =>
+        $editModal.classList.add("hidden"),
+      );
 
     // Submit – PUT metadata, optional file replace
     const editForm = $editModal.querySelector("#pm-edit-form");
@@ -475,7 +511,10 @@ export function initPersonalMaterialWidget(rootEl) {
             });
             if (!fileResp.ok) {
               const ferr = await fileResp.json();
-              showToast(`File replace failed – ${ferr.error || fileResp.statusText}`, "error");
+              showToast(
+                `File replace failed – ${ferr.error || fileResp.statusText}`,
+                "error",
+              );
               return;
             }
           }
@@ -526,7 +565,10 @@ export function initPersonalMaterialWidget(rootEl) {
    * ----------------------------------------------------------------- */
   if ($deleteModal) {
     const cancelBtn = $deleteModal.querySelector("#pm-delete-cancel");
-    if (cancelBtn) cancelBtn.addEventListener("click", () => $deleteModal.classList.add("hidden"));
+    if (cancelBtn)
+      cancelBtn.addEventListener("click", () =>
+        $deleteModal.classList.add("hidden"),
+      );
 
     const confirmBtn = $deleteModal.querySelector("#pm-delete-confirm");
     if (confirmBtn) {

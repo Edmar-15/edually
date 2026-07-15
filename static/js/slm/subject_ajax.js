@@ -21,7 +21,7 @@ export function initSubjectWidget(rootEl) {
   /* -----------------------------------------------------------------
    * 1️⃣  URLs – they come from data‑attributes on the root element.
    * ----------------------------------------------------------------- */
-  const listUrl   = rootEl.dataset.listUrl;
+  const listUrl = rootEl.dataset.listUrl;
   const createUrl = rootEl.dataset.createUrl;
   const updateTpl = rootEl.dataset.updateUrl; // “…/subjects/0/”
   const deleteTpl = rootEl.dataset.deleteUrl; // “…/subjects/0/delete/”
@@ -35,13 +35,13 @@ export function initSubjectWidget(rootEl) {
    * 3️⃣  Toast helper – identical to the one used in module_ajax.js.
    * ----------------------------------------------------------------- */
   const getToastContainer = () => {
-    let container = document.getElementById("toast-container");
+    // Find a container that belongs to this widget (or create one).
+    let container = rootEl.querySelector(".toast-container");
     if (!container) {
       container = document.createElement("div");
-      container.id = "toast-container";
       container.className = "toast-container";
       container.setAttribute("aria-live", "polite");
-      document.body.appendChild(container);
+      rootEl.appendChild(container);
     }
     return container;
   };
@@ -68,12 +68,12 @@ export function initSubjectWidget(rootEl) {
   /* -----------------------------------------------------------------
    * 4️⃣  DOM shortcuts (all inside the widget)
    * ----------------------------------------------------------------- */
-  const $list       = rootEl.querySelector("#subject-list");
-  const $codeInput  = rootEl.querySelector("#code-input");
-  const $nameInput  = rootEl.querySelector("#name-input");
+  const $list = rootEl.querySelector("#subject-list");
+  const $codeInput = rootEl.querySelector("#code-input");
+  const $nameInput = rootEl.querySelector("#name-input");
   const $yearSelect = rootEl.querySelector("#year-select");
-  const $addBtn     = rootEl.querySelector("#add-btn");
-  const $editModal  = rootEl.querySelector("#subject-edit-modal");
+  const $addBtn = rootEl.querySelector("#add-btn");
+  const $editModal = rootEl.querySelector("#subject-edit-modal");
   const $deleteModal = rootEl.querySelector("#subject-delete-modal");
 
   /* -----------------------------------------------------------------
@@ -186,7 +186,13 @@ export function initSubjectWidget(rootEl) {
     ul.className = "paginator__list";
     nav.appendChild(ul);
 
-    const makeItem = (label, targetPage = null, disabled = false, current = false, ellipsis = false) => {
+    const makeItem = (
+      label,
+      targetPage = null,
+      disabled = false,
+      current = false,
+      ellipsis = false,
+    ) => {
       const li = document.createElement("li");
       li.className = "paginator__item";
       if (disabled) li.classList.add("paginator__item--disabled");
@@ -215,22 +221,31 @@ export function initSubjectWidget(rootEl) {
       return li;
     };
 
-    ul.appendChild(makeItem("←", meta.previous_page_number, !meta.has_previous));
+    ul.appendChild(
+      makeItem("←", meta.previous_page_number, !meta.has_previous),
+    );
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page - 2 > 2)
+      ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
-    const end   = Math.min(meta.total_pages - 1, meta.page + 1);
+    const end = Math.min(meta.total_pages - 1, meta.page + 1);
     for (let i = start; i <= end; i++) {
       if (i !== 1 && i !== meta.total_pages) {
         ul.appendChild(makeItem(String(i), null, false, meta.page === i));
       }
     }
 
-    if (meta.page + 2 < meta.total_pages - 1) ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page + 2 < meta.total_pages - 1)
+      ul.appendChild(makeItem("…", null, false, false, true));
     if (meta.total_pages > 1) {
       ul.appendChild(
-        makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages)
+        makeItem(
+          String(meta.total_pages),
+          null,
+          false,
+          meta.page === meta.total_pages,
+        ),
       );
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
@@ -383,7 +398,9 @@ export function initSubjectWidget(rootEl) {
 
   // ---- Edit modal -------------------------------------------------
   const editCancel = $editModal.querySelector("#subject-cancel");
-  editCancel?.addEventListener("click", () => $editModal.classList.add("hidden"));
+  editCancel?.addEventListener("click", () =>
+    $editModal.classList.add("hidden"),
+  );
 
   const editForm = $editModal.querySelector("#subject-edit-form");
   editForm?.addEventListener("submit", async (e) => {
@@ -425,7 +442,9 @@ export function initSubjectWidget(rootEl) {
 
   // ---- Delete modal ------------------------------------------------
   const deleteCancel = $deleteModal.querySelector("#subject-delete-cancel");
-  deleteCancel?.addEventListener("click", () => $deleteModal.classList.add("hidden"));
+  deleteCancel?.addEventListener("click", () =>
+    $deleteModal.classList.add("hidden"),
+  );
 
   const deleteConfirm = $deleteModal.querySelector("#subject-delete-confirm");
   deleteConfirm?.addEventListener("click", async () => {
@@ -442,5 +461,5 @@ export function initSubjectWidget(rootEl) {
   // 1️⃣3️⃣  Initial load.
   // -----------------------------------------------------------------
   loadYearChoices(); // populate the year <select> used by both forms
-  load();            // fetch the first page of subjects
+  load(); // fetch the first page of subjects
 }

@@ -41,13 +41,14 @@ export function initModuleWidget(rootEl) {
    * `aria-live="polite"` so screen‑readers announce its content.
    */
   const getToastContainer = () => {
-    let container = document.getElementById("toast-container");
+    // 1️⃣  Look for a container that is a direct descendant of the widget.
+    let container = rootEl.querySelector(".toast-container");
+    // 2️⃣  If the developer omitted it, create a new one *inside* the widget.
     if (!container) {
       container = document.createElement("div");
-      container.id = "toast-container";
       container.className = "toast-container";
       container.setAttribute("aria-live", "polite");
-      document.body.appendChild(container);
+      rootEl.appendChild(container);
     }
     return container;
   };
@@ -163,7 +164,8 @@ export function initModuleWidget(rootEl) {
     header.className = "pm-card__header";
 
     const iconWrap = document.createElement("div");
-    iconWrap.className = `pm-card__icon ${getModuleIconClass(mod.file_url)}`.trim();
+    iconWrap.className =
+      `pm-card__icon ${getModuleIconClass(mod.file_url)}`.trim();
     iconWrap.innerHTML = getModuleIconMarkup(mod.file_url);
     header.appendChild(iconWrap);
 
@@ -289,9 +291,12 @@ export function initModuleWidget(rootEl) {
       return li;
     };
 
-    ul.appendChild(makeItem("←", meta.previous_page_number, !meta.has_previous));
+    ul.appendChild(
+      makeItem("←", meta.previous_page_number, !meta.has_previous),
+    );
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page - 2 > 2)
+      ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
     const end = Math.min(meta.total_pages - 1, meta.page + 1);
@@ -470,7 +475,9 @@ export function initModuleWidget(rootEl) {
   // ---- Edit modal – cancel & submit ----
   if ($editModal) {
     const cancelBtn = $editModal.querySelector("#modal-cancel");
-    cancelBtn?.addEventListener("click", () => $editModal.classList.add("hidden"));
+    cancelBtn?.addEventListener("click", () =>
+      $editModal.classList.add("hidden"),
+    );
 
     const editForm = $editModal.querySelector("#modal-edit-form");
     editForm?.addEventListener("submit", async (e) => {
@@ -521,7 +528,10 @@ export function initModuleWidget(rootEl) {
           });
           if (!fileResp.ok) {
             const ferr = await fileResp.json();
-            showToast(`File replace failed – ${ferr.error || fileResp.statusText}`, "error");
+            showToast(
+              `File replace failed – ${ferr.error || fileResp.statusText}`,
+              "error",
+            );
             return;
           }
         }
@@ -538,7 +548,9 @@ export function initModuleWidget(rootEl) {
   // ---- Delete modal – cancel & confirm ----
   if ($deleteModal) {
     const cancelBtn = $deleteModal.querySelector("#modal-delete-cancel");
-    cancelBtn?.addEventListener("click", () => $deleteModal.classList.add("hidden"));
+    cancelBtn?.addEventListener("click", () =>
+      $deleteModal.classList.add("hidden"),
+    );
 
     const confirmBtn = $deleteModal.querySelector("#modal-delete-confirm");
     confirmBtn?.addEventListener("click", async () => {

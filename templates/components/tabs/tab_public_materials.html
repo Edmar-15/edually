@@ -8,7 +8,7 @@
          data-file-replace-url="{% url 'slm:personalmaterial-file-replace' 0 %}"
          data-visibility="public"><!-- hint for the widget -->
 
-    <p id="public-material-status" aria-live="polite"></p>
+    <div class="toast-container" aria-live="polite"></div>
 
     <!-- No “add” form – public page is *read‑only* for non‑owners -->
     {% if request.user.is_authenticated %}
