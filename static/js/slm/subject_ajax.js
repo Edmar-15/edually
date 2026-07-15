@@ -1,6 +1,6 @@
-// -----------------------------------------------------------------
-// subject_ajax.js – Ajax widget for “Subjects”
-// -----------------------------------------------------------------
+// ---------------------------------------------------------------
+// subject_ajax.js – Ajax widget for “Subjects” (toast notifications)
+// ---------------------------------------------------------------
 import { csrftoken } from "./utils.js";
 
 /**
@@ -8,52 +8,84 @@ import { csrftoken } from "./utils.js";
  *
  * Expected data‑attributes on the root element:
  *
- *   data-list-url           → "/slm/api/subjects/"
- *   data-create-url         → "/slm/api/subjects/create/"
- *   data-update-url        → "/slm/api/subjects/0/"          (dummy 0)
- *   data-delete-url        → "/slm/api/subjects/0/delete/"   (dummy 0)
+ *   data-list-url   → "/slm/api/subjects/"
+ *   data-create-url → "/slm/api/subjects/create/"
+ *   data-update-url → "/slm/api/subjects/0/"   (dummy 0)
+ *   data-delete-url → "/slm/api/subjects/0/delete/"
  *
- * The edit UI is a modal (same pattern as in module_ajax.js).
+ * The edit UI lives in a static modal that is already present in the
+ * template (see `tab_self.html`).  A delete‑confirmation modal is also
+ * static.
  */
 export function initSubjectWidget(rootEl) {
-  // -----------------------------------------------------------------
-  // 1️⃣  URLs coming from the template (contain a dummy “0”)
-  // -----------------------------------------------------------------
-  const listUrl   = rootEl.dataset.listUrl;   // …?page=
+  /* -----------------------------------------------------------------
+   * 1️⃣  URLs – they come from data‑attributes on the root element.
+   * ----------------------------------------------------------------- */
+  const listUrl   = rootEl.dataset.listUrl;
   const createUrl = rootEl.dataset.createUrl;
   const updateTpl = rootEl.dataset.updateUrl; // “…/subjects/0/”
   const deleteTpl = rootEl.dataset.deleteUrl; // “…/subjects/0/delete/”
 
-  // -----------------------------------------------------------------
-  // Helper – replace the dummy “0” with a real id
-  // -----------------------------------------------------------------
-  // RegExp finds the first 0 that is either the end of the string
-  // or followed by a slash – exactly what the module widget does.
+  /* -----------------------------------------------------------------
+   * 2️⃣  Helper – replace the dummy “0” with a real id.
+   * ----------------------------------------------------------------- */
   const replaceId = (template, id) => template.replace(/0(?=\/|$)/, id);
 
-  // -----------------------------------------------------------------
-  // 2️⃣  DOM shortcuts (all inside the widget)
-  // -----------------------------------------------------------------
-  const $list   = rootEl.querySelector("#subject-list");
-  const $status = rootEl.querySelector("#status");
+  /* -----------------------------------------------------------------
+   * 3️⃣  Toast helper – identical to the one used in module_ajax.js.
+   * ----------------------------------------------------------------- */
+  const getToastContainer = () => {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast-container";
+      container.setAttribute("aria-live", "polite");
+      document.body.appendChild(container);
+    }
+    return container;
+  };
+  const $toastContainer = getToastContainer();
 
-  const $codeInput   = rootEl.querySelector("#code-input");
-  const $nameInput   = rootEl.querySelector("#name-input");
-  const $yearSelect  = rootEl.querySelector("#year-select");
-  const $addBtn      = rootEl.querySelector("#add-btn");
+  const showToast = (message, type = "info", duration = 4000) => {
+    const toast = document.createElement("div");
+    toast.className = `toast toast--${type}`;
+    toast.style.setProperty("--toast-life", `${duration}ms`);
 
-  // Modal placeholder – the widget will inject the modal the first time
-  const $modal = rootEl.querySelector("#subject-edit-modal");
+    const icon = document.createElement("span");
+    icon.className = "toast__icon";
+    toast.appendChild(icon);
 
-  // -----------------------------------------------------------------
-  // 3️⃣  Load the YEAR <select> (same as before)
-  // -----------------------------------------------------------------
+    const msg = document.createElement("span");
+    msg.textContent = message;
+    toast.appendChild(msg);
+
+    toast.addEventListener("click", () => toast.remove());
+    $toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), duration + 500);
+  };
+
+  /* -----------------------------------------------------------------
+   * 4️⃣  DOM shortcuts (all inside the widget)
+   * ----------------------------------------------------------------- */
+  const $list       = rootEl.querySelector("#subject-list");
+  const $codeInput  = rootEl.querySelector("#code-input");
+  const $nameInput  = rootEl.querySelector("#name-input");
+  const $yearSelect = rootEl.querySelector("#year-select");
+  const $addBtn     = rootEl.querySelector("#add-btn");
+  const $editModal  = rootEl.querySelector("#subject-edit-modal");
+  const $deleteModal = rootEl.querySelector("#subject-delete-modal");
+
+  /* -----------------------------------------------------------------
+   * 5️⃣  Load the YEAR <select> with choices from the API.
+   * ----------------------------------------------------------------- */
   async function loadYearChoices() {
     try {
       const resp = await fetch("/slm/api/subjects/year-choices/", {
         credentials: "same-origin",
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
       const data = await resp.json(); // {choices: [{value, label}, …]}
 
       $yearSelect.innerHTML = "";
@@ -65,12 +97,13 @@ export function initSubjectWidget(rootEl) {
       });
     } catch (e) {
       console.error("Failed to load year choices:", e);
+      showToast(`Failed to load year choices – ${e}`, "error");
     }
   }
 
-  // -----------------------------------------------------------------
-  // 4️⃣  Render a **single** subject card (clickable, with actions)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 6️⃣  Render a single subject card (incl. edit / delete actions).
+   * ----------------------------------------------------------------- */
   function renderCard(subject) {
     const card = document.createElement("div");
     card.className = "subject-card";
@@ -85,28 +118,26 @@ export function initSubjectWidget(rootEl) {
     h1.textContent = subject.subject_code;
     link.appendChild(h1);
 
-    const p = document.createElement("p");
-    p.textContent = subject.subject_name;
-    link.appendChild(p);
+    const pName = document.createElement("p");
+    pName.textContent = subject.subject_name;
+    link.appendChild(pName);
 
-    const year = document.createElement("p");
-    year.textContent = `Year: ${subject.year_display}`;
-    link.appendChild(year);
+    const pYear = document.createElement("p");
+    pYear.textContent = `Year: ${subject.year_display}`;
+    link.appendChild(pYear);
 
-    const author = document.createElement("i");
-    author.textContent = `By ${subject.author_name}`;
-    link.appendChild(author);
+    const pAuthor = document.createElement("i");
+    pAuthor.textContent = `By ${subject.author_name}`;
+    link.appendChild(pAuthor);
 
     card.appendChild(link);
 
-    // -------------------------------------------------------------
-    // Owner‑only actions (edit / delete)
-    // -------------------------------------------------------------
+    // Owner‑only actions
     if (subject.is_owner) {
       const actions = document.createElement("div");
       actions.className = "subject-card__actions";
 
-      // ----- Edit -------------------------------------------------
+      // Edit button -------------------------------------------------
       const editBtn = document.createElement("button");
       editBtn.type = "button";
       editBtn.title = "Edit";
@@ -116,11 +147,11 @@ export function initSubjectWidget(rootEl) {
       editBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        openEditModal(subject);               // ← modal version
+        openEditModal(subject);
       });
       actions.appendChild(editBtn);
 
-      // ----- Delete -----------------------------------------------
+      // Delete button ------------------------------------------------
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.title = "Delete";
@@ -130,7 +161,7 @@ export function initSubjectWidget(rootEl) {
       delBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        deleteSubject(subject.id);
+        openDeleteModal(subject.id);
       });
       actions.appendChild(delBtn);
 
@@ -140,9 +171,9 @@ export function initSubjectWidget(rootEl) {
     return card;
   }
 
-  // -----------------------------------------------------------------
-  // 5️⃣  Paginator UI (exact copy of the module widget’s paginator)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 7️⃣  Paginator – same layout as the module widget.
+   * ----------------------------------------------------------------- */
   function renderPaginator(meta) {
     const old = rootEl.querySelector(".paginator");
     if (old) old.remove();
@@ -155,13 +186,7 @@ export function initSubjectWidget(rootEl) {
     ul.className = "paginator__list";
     nav.appendChild(ul);
 
-    const makeItem = (
-      label,
-      targetPage = null,
-      disabled = false,
-      current = false,
-      ellipsis = false,
-    ) => {
+    const makeItem = (label, targetPage = null, disabled = false, current = false, ellipsis = false) => {
       const li = document.createElement("li");
       li.className = "paginator__item";
       if (disabled) li.classList.add("paginator__item--disabled");
@@ -204,16 +229,18 @@ export function initSubjectWidget(rootEl) {
 
     if (meta.page + 2 < meta.total_pages - 1) ul.appendChild(makeItem("…", null, false, false, true));
     if (meta.total_pages > 1) {
-      ul.appendChild(makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages));
+      ul.appendChild(
+        makeItem(String(meta.total_pages), null, false, meta.page === meta.total_pages)
+      );
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
 
     $list.parentNode.appendChild(nav);
   }
 
-  // -----------------------------------------------------------------
-  // 6️⃣  LOAD – GET a page and render the list
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 8️⃣  LOAD – GET a page and render the list.
+   * ----------------------------------------------------------------- */
   async function load(page = 1) {
     try {
       const resp = await fetch(`${listUrl}?page=${page}`, {
@@ -223,7 +250,6 @@ export function initSubjectWidget(rootEl) {
 
       const payload = await resp.json();
 
-      // ---- render cards -------------------------------------------------
       $list.innerHTML = "";
       const data = payload.results;
       if (data.length === 0) {
@@ -240,16 +266,15 @@ export function initSubjectWidget(rootEl) {
         });
       }
 
-      // ---- paginator ----------------------------------------------------
       renderPaginator(payload);
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to load subjects – ${e}`, "error");
     }
   }
 
-  // -----------------------------------------------------------------
-  // 7️⃣  CREATE – POST a new subject (unchanged)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 9️⃣  CREATE – POST a new subject.
+   * ----------------------------------------------------------------- */
   async function create() {
     if (!$codeInput || !$nameInput) return;
 
@@ -258,8 +283,9 @@ export function initSubjectWidget(rootEl) {
       subject_name: $nameInput.value.trim(),
       year: $yearSelect.value,
     };
+
     if (!payload.subject_code || !payload.subject_name) {
-      alert("Both fields are required");
+      showToast("Both Subject code and Subject name are required.", "error");
       return;
     }
 
@@ -276,114 +302,60 @@ export function initSubjectWidget(rootEl) {
 
       if (resp.status === 201) {
         const created = await resp.json();
-        $status.textContent = `✅ Created #${created.id}`;
+        showToast(`Subject ${created.subject_name} created`, "success");
         $codeInput.value = "";
         $nameInput.value = "";
         load(); // stay on page 1
       } else {
         const err = await resp.json();
-        $status.textContent = `❌ ${err.error || resp.statusText}`;
+        showToast(err.error || resp.statusText, "error");
       }
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to create subject – ${e}`, "error");
     }
   }
 
-  // -----------------------------------------------------------------
-  // 8️⃣  EDIT – modal (mirrors the module widget)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 🔟  OPEN EDIT MODAL – fill the static form.
+   * ----------------------------------------------------------------- */
   function openEditModal(subject) {
-    // -------------------------------------------------
-    // Build the modal **fresh** each time it is opened
-    // -------------------------------------------------
-    $modal.innerHTML = `
-        <div class="modal__backdrop"></div>
-        <div class="modal__content">
-            <h2>Edit subject</h2>
-            <form id="subject-edit-form">
-                <input type="hidden" name="subject_id" value="${subject.id}">
-                <label>
-                    Subject code
-                    <input type="text" name="subject_code" value="${subject.subject_code}" required>
-                </label>
-                <label>
-                    Subject name
-                    <input type="text" name="subject_name" value="${subject.subject_name}" required>
-                </label>
-                <label>
-                    Year
-                    <select name="year">
-                        ${[...$yearSelect.options]
-                          .map(
-                            (opt) =>
-                              `<option value="${opt.value}" ${
-                                opt.value === subject.year ? "selected" : ""
-                              }>${opt.textContent}</option>`
-                          )
-                          .join("")}
-                    </select>
-                </label>
+    $editModal.dataset.subjectId = subject.id;
 
-                <div class="modal__actions">
-                    <button type="submit" class="button-primary">Save</button>
-                    <button type="button" class="button-plain" id="subject-cancel">Cancel</button>
-                </div>
-            </form>
-        </div>
-    `;
+    const form = $editModal.querySelector("#subject-edit-form");
 
-    // ----- cancel button -------------------------------------------------
-    $modal.querySelector("#subject-cancel").addEventListener("click", () => {
-      $modal.classList.add("hidden");
+    // hidden field
+    form.subject_id.value = subject.id;
+
+    // basic inputs
+    form.subject_code.value = subject.subject_code;
+    form.subject_name.value = subject.subject_name;
+
+    // year <select> – copy the options from the add‑form
+    const yearSel = form.year;
+    yearSel.innerHTML = "";
+    [...$yearSelect.options].forEach((opt) => {
+      const newOpt = document.createElement("option");
+      newOpt.value = opt.value;
+      newOpt.textContent = opt.textContent;
+      if (opt.value === subject.year) newOpt.selected = true;
+      yearSel.appendChild(newOpt);
     });
 
-    // ----- submit handler ------------------------------------------------
-    $modal.querySelector("#subject-edit-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const sid  = form.subject_id.value;
-
-      const payload = {
-        subject_code: form.subject_code.value.trim(),
-        subject_name: form.subject_name.value.trim(),
-        year: form.year.value,
-      };
-
-      const url = replaceId(updateTpl, sid); // <-- correct URL
-      try {
-        const resp = await fetch(url, {
-          method: "PUT",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!resp.ok) {
-          const err = await resp.json();
-          $status.textContent = `❌ ${err.error || resp.statusText}`;
-          return;
-        }
-
-        $status.textContent = "✅ Subject updated";
-        $modal.classList.add("hidden");
-        load(); // refresh list
-      } catch (err) {
-        $status.textContent = `❌ ${err}`;
-      }
-    });
-
-    // show modal
-    $modal.classList.remove("hidden");
+    $editModal.classList.remove("hidden");
   }
 
-  // -----------------------------------------------------------------
-  // 9️⃣  DELETE – DELETE a subject (uses replaceId helper)
-  // -----------------------------------------------------------------
-  async function deleteSubject(pk) {
-    if (!confirm("Delete this subject?")) return;
+  /* -----------------------------------------------------------------
+   * 🗑️  OPEN DELETE MODAL
+   * ----------------------------------------------------------------- */
+  function openDeleteModal(pk) {
+    $deleteModal.dataset.subjectId = pk;
+    $deleteModal.classList.remove("hidden");
+  }
+
+  /* -----------------------------------------------------------------
+   * 1️⃣1️⃣  PERFORM DELETE – called from the delete‑confirmation modal.
+   * ----------------------------------------------------------------- */
+  async function performDelete(pk) {
     const url = replaceId(deleteTpl, pk);
     try {
       const resp = await fetch(url, {
@@ -393,52 +365,82 @@ export function initSubjectWidget(rootEl) {
       });
 
       if (resp.status === 204) {
-        $status.textContent = "✅ Deleted";
-        load(); // refresh current page
+        showToast("Deleted", "success");
+        load();
       } else {
         const err = await resp.json();
-        $status.textContent = `❌ ${err.error || resp.statusText}`;
+        showToast(err.error || resp.statusText, "error");
       }
     } catch (e) {
-      $status.textContent = `❌ ${e}`;
+      showToast(`Failed to delete subject – ${e}`, "error");
     }
   }
 
-  // -----------------------------------------------------------------
-  // 10️⃣  UI bindings & minimal modal CSS (exactly as in module_ajax.js)
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 1️⃣2️⃣  UI bindings & modal handling
+   * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
-  // inject tiny CSS for the modal (you can move it to a static file)
-  const style = document.createElement("style");
-  style.textContent = `
-    #subject-edit-modal.hidden { display: none; }
-    #subject-edit-modal {
-      position: fixed; inset: 0; z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
+  // ---- Edit modal -------------------------------------------------
+  const editCancel = $editModal.querySelector("#subject-cancel");
+  editCancel?.addEventListener("click", () => $editModal.classList.add("hidden"));
+
+  const editForm = $editModal.querySelector("#subject-edit-form");
+  editForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const sid = form.subject_id.value;
+
+    const payload = {
+      subject_code: form.subject_code.value.trim(),
+      subject_name: form.subject_name.value.trim(),
+      year: form.year.value,
+    };
+
+    const url = replaceId(updateTpl, sid);
+    try {
+      const resp = await fetch(url, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        showToast(err.error || resp.statusText, "error");
+        return;
+      }
+
+      showToast("Subject updated", "success");
+      $editModal.classList.add("hidden");
+      load(); // refresh the list
+    } catch (err) {
+      showToast(`Failed to update subject – ${err}`, "error");
     }
-    #subject-edit-modal .modal__backdrop {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+  });
+
+  // ---- Delete modal ------------------------------------------------
+  const deleteCancel = $deleteModal.querySelector("#subject-delete-cancel");
+  deleteCancel?.addEventListener("click", () => $deleteModal.classList.add("hidden"));
+
+  const deleteConfirm = $deleteModal.querySelector("#subject-delete-confirm");
+  deleteConfirm?.addEventListener("click", async () => {
+    const pk = $deleteModal.dataset.subjectId;
+    $deleteModal.classList.add("hidden");
+    if (!pk) {
+      showToast("No subject selected for deletion.", "error");
+      return;
     }
-    #subject-edit-modal .modal__content {
-      position: relative; background:#fff; padding:1.5rem;
-      border-radius:8px; max-width:460px; width:90%;
-      box-shadow:0 4px 12px rgba(0,0,0,0.15);
-    }
-    #subject-edit-modal label { display:block; margin-bottom:.75rem; }
-    #subject-edit-modal input[type="text"],
-    #subject-edit-modal select {
-      width:100%; padding:.4rem .6rem; margin-top:.2rem;
-    }
-    .modal__actions { text-align:right; margin-top:1rem; }
-    .button-primary { background:#2563eb; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
-    .button-plain   { background:transparent; color:#555; border:none; margin-left:.5rem; cursor:pointer; }
-  `;
-  document.head.appendChild(style);
+    await performDelete(pk);
+  });
 
   // -----------------------------------------------------------------
-  // 11️⃣  Initial load
+  // 1️⃣3️⃣  Initial load.
   // -----------------------------------------------------------------
-  loadYearChoices();   // fills the year <select>
-  load();              // first page
+  loadYearChoices(); // populate the year <select> used by both forms
+  load();            // fetch the first page of subjects
 }

@@ -1199,7 +1199,8 @@
 }
 
 .modal--edit .modal__content,
-#module-edit-modal .modal__content {
+#module-edit-modal .modal__content,
+#subject-edit-modal .modal__content {
   --modal-accent: #0E9AA7;
   border-color: var(--modal-accent);
   box-shadow:
@@ -1208,7 +1209,8 @@
 }
 
 .modal--delete .modal__content,
-#module-delete-modal .modal__content {
+#module-delete-modal .modal__content,
+#subject-delete-modal .modal__content {
   --modal-accent: #ef4444;
   border-color: var(--modal-accent);
   box-shadow:
@@ -1256,6 +1258,21 @@
   cursor: pointer;
 }
 
+#subject-edit-modal label,
+#subject-delete-modal label {
+  display: block;
+  margin-bottom: .75rem;
+}
+
+#subject-edit-modal input[type="text"],
+#subject-edit-modal select,
+#subject-delete-modal input[type="text"],
+#subject-delete-modal select {
+  width: 100%;
+  padding: .4rem .6rem;
+  margin-top: .2rem;
+}
+
 /* -------------------------------------------------
    Toast notifications – scoped, top‑center, falling then rising
    ------------------------------------------------- */
@@ -1265,15 +1282,23 @@
    ------------------------------------------------- */
 #toast-container.toast-container {
   position: fixed;
-  top: 1rem;                     /* distance from the top of the viewport            */
-  left: 50%;                     /* centre horizontally (left edge)                 */
-  transform: translateX(-50%);   /* move the left edge left by half its own width    */
+  top: 1rem;
+  /* distance from the top of the viewport            */
+  left: 50%;
+  /* centre horizontally (left edge)                 */
+  transform: translateX(-50%);
+  /* move the left edge left by half its own width    */
   display: flex;
-  flex-direction: column;       /* stack toasts vertically                        */
-  align-items: center;            /* centre each toast horizontally                  */
-  gap: 0.5rem;                   /* space between stacked toasts                   */
-  z-index: 99999;                /* must be higher than modals, dropdowns, etc.     */
-  pointer-events: none;          /* clicks fall through the empty space              */
+  flex-direction: column;
+  /* stack toasts vertically                        */
+  align-items: center;
+  /* centre each toast horizontally                  */
+  gap: 0.5rem;
+  /* space between stacked toasts                   */
+  z-index: 99999;
+  /* must be higher than modals, dropdowns, etc.     */
+  pointer-events: none;
+  /* clicks fall through the empty space              */
 }
 
 /* -------------------------------------------------
@@ -1289,8 +1314,9 @@
   color: #fff;
   display: flex;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,.2);
-  pointer-events: auto;               /* the toast itself can be clicked */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+  pointer-events: auto;
+  /* the toast itself can be clicked */
   cursor: pointer;
   /* -------------------------------------------------
      Animation stack:
@@ -1305,10 +1331,25 @@
 /* -------------------------------------------------
    3️⃣  Colour variants (feel free to adjust to your brand)
    ------------------------------------------------- */
-#toast-container .toast--success { background: #28a745; }   /* green  */
-#toast-container .toast--error   { background: #dc3545; }   /* red    */
-#toast-container .toast--info    { background: #17a2b8; }   /* blue   */
-#toast-container .toast--warning { background: #ffc107; color:#212529; }
+#toast-container .toast--success {
+  background: #28a745;
+}
+
+/* green  */
+#toast-container .toast--error {
+  background: #dc3545;
+}
+
+/* red    */
+#toast-container .toast--info {
+  background: #17a2b8;
+}
+
+/* blue   */
+#toast-container .toast--warning {
+  background: #ffc107;
+  color: #212529;
+}
 
 /* -------------------------------------------------
    4️⃣  Small optional icon (emoji) left of the text
@@ -1322,10 +1363,25 @@
    5️⃣  Animation keyframes
    ------------------------------------------------- */
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(-120%); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-120%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes toastOut {
-  from { opacity: 1; transform: translateY(0); }
-  to   { opacity: 0; transform: translateY(-120%); }
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-120%);
+  }
 }
