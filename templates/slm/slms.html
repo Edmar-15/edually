@@ -15,19 +15,15 @@
 <body>
     <div class="dashboard-container">
         {% include "components/navigations.html" %}
-
         <main class="main-content">
             <div class="tabs">
                 <header class="tab-header">
                         {% include "components/tabs/tab_list.html" with tabs=tabs %}
-        
                 </header>
-
                 {% include "components/tabs/tab_panels.html" with tabs=tabs %}
-
             </div>
         </main>
     </div>
-    <script src="{% static "js/tab_switching.js" %}"></script>
+    <script src="{% static "js/slm/tab_switching.js" %}"></script>
 </body>
 </html>

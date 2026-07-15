@@ -15,6 +15,13 @@
       <i class="fas fa-home nav-icon"></i>
       <span class="nav-label">Dashboard</span>
     </a>
+    <a href="{% url 'account:notifications' %}" class="nav-item {% if request.resolver_match.view_name == 'account:notifications' %}active{% endif %}">
+      <i class="fas fa-inbox nav-icon"></i>
+      <span class="nav-label">Inbox</span>
+      {% if unread_notification_count and unread_notification_count > 0 %}
+        <span class="nav-badge">{{ unread_notification_count }}</span>
+      {% endif %}
+    </a>
     <a href="{% url 'aihelper:helper' %}" class="nav-item {% if request.resolver_match.view_name == 'aihelper:helper' %}active{% endif %}">
       <i class="fas fa-brain nav-icon"></i>
       <span class="nav-label">AI Helper</span>
@@ -22,13 +29,6 @@
     <a href="{% url 'forum:feed' %}" class="nav-item {% if request.resolver_match.view_name == 'forum:feed' %}active{% endif %}">
       <i class="fas fa-comments nav-icon"></i>
       <span class="nav-label">Forum</span>
-    </a>
-    <a href="{% url 'account:notifications' %}" class="nav-item {% if request.resolver_match.view_name == 'account:notifications' %}active{% endif %}">
-      <i class="fas fa-inbox nav-icon"></i>
-      <span class="nav-label">Inbox</span>
-      {% if unread_notification_count and unread_notification_count > 0 %}
-        <span class="nav-badge">{{ unread_notification_count }}</span>
-      {% endif %}
     </a>
     <a href="{% url 'slm:slmlists' %}" class="nav-item {% if request.resolver_match.view_name == 'slm:slmlists' %}active{% endif %}">
       <i class="fas fa-book nav-icon"></i>

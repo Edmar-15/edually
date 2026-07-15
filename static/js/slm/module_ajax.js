@@ -47,7 +47,8 @@ export function initModuleWidget(rootEl) {
   const $nameInput = rootEl.querySelector("#module-name-input");
   const $fileInput = rootEl.querySelector("#module-file-input");
   const $addBtn = rootEl.querySelector("#module-add-btn");
-  const $modal = rootEl.querySelector("#module-edit-modal");
+  const $editModal = rootEl.querySelector("#module-edit-modal");
+  const $deleteModal = rootEl.querySelector("#module-delete-modal");
 
   function getModuleIconMarkup(fileUrl = "") {
     const ext = (fileUrl || "")
@@ -81,28 +82,25 @@ export function initModuleWidget(rootEl) {
 
     switch (ext) {
       case "pdf":
-        return "module-card__preview--pdf";
+        return "pm-card__icon--pdf";
       case "doc":
       case "docx":
-        return "module-card__preview--doc";
+        return "pm-card__icon--doc";
       case "ppt":
       case "pptx":
-        return "module-card__preview--ppt";
+        return "pm-card__icon--ppt";
       default:
         return "";
     }
   }
 
   /* -----------------------------------------------------------------
-   3️⃣  Render a single module card – now mirrors the pm‑card UI
-   ----------------------------------------------------------------- */
-  /* -----------------------------------------------------------------
-   3️⃣  Render a single module card – now mirrors the pm‑card UI
-   ----------------------------------------------------------------- */
+   * 3️⃣  Render a single module card – now mirrors the pm‑card UI
+   * ----------------------------------------------------------------- */
   function renderCard(mod) {
     // ---- Card container -------------------------------------------------
     const card = document.createElement("div");
-    card.className = "pm-card"; // use the unified class
+    card.className = "pm-card";
     card.dataset.id = mod.id;
 
     // ---- Header (icon + title) -----------------------------------------
@@ -110,8 +108,7 @@ export function initModuleWidget(rootEl) {
     header.className = "pm-card__header";
 
     const iconWrap = document.createElement("div");
-    iconWrap.className =
-      `pm-card__icon ${getModuleIconClass(mod.file_url)}`.trim();
+    iconWrap.className = `pm-card__icon ${getModuleIconClass(mod.file_url)}`.trim();
     iconWrap.innerHTML = getModuleIconMarkup(mod.file_url);
     header.appendChild(iconWrap);
 
@@ -159,7 +156,6 @@ export function initModuleWidget(rootEl) {
       editBtn.type = "button";
       editBtn.title = "Edit";
       editBtn.className = "pm-card__action";
-      /* ✅  Fixed SVG – the arc command now includes both radii (a1 1 …) */
       editBtn.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
       editBtn.addEventListener("click", (e) => {
@@ -179,63 +175,13 @@ export function initModuleWidget(rootEl) {
       delBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        deleteModule(mod.id);
+        openDeleteModal(mod.id);
       });
       actions.appendChild(delBtn);
     }
 
     card.appendChild(actions);
     return card;
-  }
-
-  /* -----------------------------------------------------------------
-   Helper – return the same icon markup that the PM widget uses
-   ----------------------------------------------------------------- */
-  function getModuleIconMarkup(fileUrl = "") {
-    const ext = (fileUrl || "")
-      .split("?")[0]
-      .split("#")[0]
-      .split(".")
-      .pop()
-      ?.toLowerCase();
-
-    switch (ext) {
-      case "pdf":
-        return '<i class="fas fa-file-pdf" aria-hidden="true"></i>';
-      case "doc":
-      case "docx":
-        return '<i class="fas fa-file-word" aria-hidden="true"></i>';
-      case "ppt":
-      case "pptx":
-        return '<i class="fas fa-file-powerpoint" aria-hidden="true"></i>';
-      default:
-        return '<i class="fas fa-file-alt" aria-hidden="true"></i>';
-    }
-  }
-
-  /* -----------------------------------------------------------------
-   Helper – CSS class for the coloured background of the icon
-   ----------------------------------------------------------------- */
-  function getModuleIconClass(fileUrl = "") {
-    const ext = (fileUrl || "")
-      .split("?")[0]
-      .split("#")[0]
-      .split(".")
-      .pop()
-      ?.toLowerCase();
-
-    switch (ext) {
-      case "pdf":
-        return "pm-card__icon--pdf";
-      case "doc":
-      case "docx":
-        return "pm-card__icon--doc";
-      case "ppt":
-      case "pptx":
-        return "pm-card__icon--ppt";
-      default:
-        return "";
-    }
   }
 
   /* -----------------------------------------------------------------
@@ -288,12 +234,9 @@ export function initModuleWidget(rootEl) {
       return li;
     };
 
-    ul.appendChild(
-      makeItem("←", meta.previous_page_number, !meta.has_previous),
-    );
+    ul.appendChild(makeItem("←", meta.previous_page_number, !meta.has_previous));
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-    if (meta.page - 2 > 2)
-      ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
     const end = Math.min(meta.total_pages - 1, meta.page + 1);
@@ -339,7 +282,7 @@ export function initModuleWidget(rootEl) {
         if (!existingEmpty) {
           $list.innerHTML = `
             <section class="module-empty-state" aria-live="polite">
-              <div class="module-empty-state__icon">📚</div>
+              <div class="module-empty-state__icon"><i class="fa-solid fa-book"></i></div>
               <h3>No modules here yet</h3>
               <p>Share your first learning material and make this subject feel ready to study.</p>
             </section>
@@ -414,113 +357,35 @@ export function initModuleWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 7️⃣  EDIT – open modal form (no more `prompt()`)
+   * 7️⃣  EDIT – open edit modal (HTML already lives in the template)
    * ----------------------------------------------------------------- */
   function openEditModal(mod) {
-    // Build the modal only once – reuse it on subsequent edits
-    if ($modal.dataset.built !== "true") {
-      $modal.innerHTML = `
-        <div class="modal__backdrop"></div>
-        <div class="modal__content">
-          <h2>Edit module</h2>
-          <form id="modal-edit-form">
-            <label>
-              Module number
-              <input type="number" name="module_number" min="1" required>
-            </label>
-            <label>
-              Module name
-              <input type="text" name="module_name" required>
-            </label>
-            <label>
-              Replace file (optional)
-              <input type="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx">
-            </label>
-            <div class="modal__actions">
-              <button type="submit" class="button-primary">Save</button>
-              <button type="button" class="button-plain" id="modal-cancel">Cancel</button>
-            </div>
-          </form>
-        </div>`;
-      $modal.dataset.built = "true";
+    // Store the id of the module we are editing – used by the submit handler
+    $editModal.dataset.modId = mod.id;
 
-      // Cancel button
-      $modal.querySelector("#modal-cancel").addEventListener("click", () => {
-        $modal.classList.add("hidden");
-      });
-
-      // Submit handler
-      $modal
-        .querySelector("#modal-edit-form")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const form = e.target;
-          const number = form.module_number.value.trim();
-          const name = form.module_name.value.trim();
-          const file = form.file.files[0];
-
-          const payload = {};
-          if (number) payload.module_number = number;
-          if (name) payload.module_name = name;
-
-          const updateUrl = replaceId(updateTpl, mod.id);
-          try {
-            const resp = await fetch(updateUrl, {
-              method: "PUT",
-              credentials: "same-origin",
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrftoken,
-              },
-              body: JSON.stringify(payload),
-            });
-
-            if (!resp.ok) {
-              const err = await resp.json();
-              $status.textContent = `❌ ${err.error || resp.statusText}`;
-              return;
-            }
-
-            // If the user selected a new file, send it via the dedicated endpoint
-            if (file) {
-              const replaceUrl = replaceId(replaceFileTpl, mod.id);
-              const fileForm = new FormData();
-              fileForm.append("file", file);
-              const fileResp = await fetch(replaceUrl, {
-                method: "POST",
-                credentials: "same-origin",
-                headers: { "X-CSRFToken": csrftoken },
-                body: fileForm,
-              });
-              if (!fileResp.ok) {
-                const ferr = await fileResp.json();
-                $status.textContent = `❌ File replace failed – ${ferr.error || fileResp.statusText}`;
-                return;
-              }
-            }
-
-            $status.textContent = "✅ Module updated";
-            $modal.classList.add("hidden");
-            load(); // refresh the list
-          } catch (err) {
-            $status.textContent = `❌ ${err}`;
-          }
-        });
+    // Pre‑fill the fields
+    const form = $editModal.querySelector("#modal-edit-form");
+    if (form) {
+      form.module_number.value = mod.module_number;
+      form.module_name.value = mod.module_name;
+      form.file.value = "";
     }
 
-    // Pre‑fill fields with the current values
-    const form = $modal.querySelector("#modal-edit-form");
-    form.module_number.value = mod.module_number;
-    form.module_name.value = mod.module_name;
-    form.file.value = "";
-    $modal.classList.remove("hidden");
+    $editModal.classList.remove("hidden");
   }
 
   /* -----------------------------------------------------------------
-   * 8️⃣  DELETE – DELETE a module (still uses the replaceId helper)
+   * NEW – open delete confirmation modal
    * ----------------------------------------------------------------- */
-  async function deleteModule(pk) {
-    if (!confirm("Delete this module?")) return;
+  function openDeleteModal(pk) {
+    $deleteModal.dataset.modId = pk;
+    $deleteModal.classList.remove("hidden");
+  }
+
+  /* -----------------------------------------------------------------
+   * 8️⃣  DELETE – actually send the DELETE request.
+   * ----------------------------------------------------------------- */
+  async function performDelete(pk) {
     const url = replaceId(deleteTpl, pk);
     try {
       const resp = await fetch(url, {
@@ -541,39 +406,95 @@ export function initModuleWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 9️⃣  UI bindings & minimal modal CSS (injected once)
+   * 9️⃣  UI bindings & modal handling
    * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
-  const style = document.createElement("style");
-  style.textContent = `
-    #module-edit-modal.hidden { display: none; }
-    #module-edit-modal {
-      position: fixed; inset: 0; z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
-    }
-    #module-edit-modal .modal__backdrop {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.5);
-    }
-    #module-edit-modal .modal__content {
-      position: relative; background: #fff; padding: 1.5rem;
-      border-radius: 8px; max-width: 420px; width: 90%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    #module-edit-modal label { display: block; margin-bottom: .75rem; }
-    #module-edit-modal input[type="text"],
-    #module-edit-modal input[type="number"],
-    #module-edit-modal input[type="file"] {
-      width: 100%; padding: .4rem .6rem; margin-top: .2rem;
-    }
-    .modal__actions { text-align: right; margin-top: 1rem; }
-    .button-primary { background: #2563eb; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer;}
-    .button-plain   { background: transparent; color:#555; border:none; margin-left:.5rem; cursor:pointer;}
-  `;
-  document.head.appendChild(style);
+  // ---- Edit modal – cancel & submit ----
+  if ($editModal) {
+    const cancelBtn = $editModal.querySelector("#modal-cancel");
+    cancelBtn?.addEventListener("click", () => $editModal.classList.add("hidden"));
 
-  /* -----------------------------------------------------------------
-   * 10️⃣  Initial load
-   * ----------------------------------------------------------------- */
+    const editForm = $editModal.querySelector("#modal-edit-form");
+    editForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const number = form.module_number.value.trim();
+      const name = form.module_name.value.trim();
+      const file = form.file.files[0];
+
+      const payload = {};
+      if (number) payload.module_number = number;
+      if (name) payload.module_name = name;
+
+      const modId = $editModal.dataset.modId;
+      if (!modId) {
+        $status.textContent = "❌ No module selected for update.";
+        return;
+      }
+
+      const updateUrl = replaceId(updateTpl, modId);
+      try {
+        const resp = await fetch(updateUrl, {
+          method: "PUT",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          $status.textContent = `❌ ${err.error || resp.statusText}`;
+          return;
+        }
+
+        // If a new file was provided, upload it via the dedicated endpoint
+        if (file) {
+          const replaceUrl = replaceId(replaceFileTpl, modId);
+          const fileForm = new FormData();
+          fileForm.append("file", file);
+          const fileResp = await fetch(replaceUrl, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "X-CSRFToken": csrftoken },
+            body: fileForm,
+          });
+          if (!fileResp.ok) {
+            const ferr = await fileResp.json();
+            $status.textContent = `❌ File replace failed – ${ferr.error || fileResp.statusText}`;
+            return;
+          }
+        }
+
+        $status.textContent = "✅ Module updated";
+        $editModal.classList.add("hidden");
+        load(); // refresh the list
+      } catch (err) {
+        $status.textContent = `❌ ${err}`;
+      }
+    });
+  }
+
+  // ---- Delete modal – cancel & confirm ----
+  if ($deleteModal) {
+    const cancelBtn = $deleteModal.querySelector("#modal-delete-cancel");
+    cancelBtn?.addEventListener("click", () => $deleteModal.classList.add("hidden"));
+
+    const confirmBtn = $deleteModal.querySelector("#modal-delete-confirm");
+    confirmBtn?.addEventListener("click", async () => {
+      const pk = $deleteModal.dataset.modId;
+      // Hide the modal right away
+      $deleteModal.classList.add("hidden");
+      if (!pk) {
+        $status.textContent = "❌ No module selected for deletion.";
+        return;
+      }
+      await performDelete(pk);
+    });
+  }
+
   load(); // first page
 }
