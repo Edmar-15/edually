@@ -1,5 +1,5 @@
 # forum/views.py
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, F
 from django.shortcuts import render, get_object_or_404, redirect
@@ -499,10 +499,8 @@ def flag_content(request, content_type, content_id):
 # Moderation Dashboard (staff only – unchanged)
 # -------------------------------------------------------------------------
 @login_required(login_url="account:login")
+@user_passes_test(lambda u:  u.is_authenticated and u.is_teacher_member)
 def moderation_dashboard(request):
-    if not request.user.is_staff:
-        raise Http404("Access denied.")
-
     unresolved_reports = FlagReport.objects.filter(resolved=False).select_related("reporter", "post", "reply")
     report_count = unresolved_reports.count()
     unverified_posts = Post.objects.filter(flag_reports__resolved=False).distinct()
@@ -518,10 +516,8 @@ def moderation_dashboard(request):
 
 
 @login_required(login_url="account:login")
+@user_passes_test(lambda u:  u.is_authenticated and u.is_teacher_member)
 def resolve_report(request, report_id):
-    if not request.user.is_staff:
-        raise Http404("Access denied.")
-
     report = get_object_or_404(FlagReport, pk=report_id)
     report.resolved = True
     report.action_taken = "Reviewed by moderator"

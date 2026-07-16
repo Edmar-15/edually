@@ -3,6 +3,7 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.deprecation import MiddlewareMixin
+from .models import UserConsent
 
 
 def _is_exempt(request):

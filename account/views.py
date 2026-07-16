@@ -83,7 +83,7 @@ class RoleBasedLoginView(TemplateView):
 
         if user_is_in_group(user, GROUP_TEACHER):
             # You need to have a URL named "teacher:dashboard"
-            return reverse("teacher:dashboard")
+            return reverse("account:dashboard")
 
         # Default → student dashboard
         return reverse("account:dashboard")

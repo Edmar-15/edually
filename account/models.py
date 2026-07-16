@@ -108,6 +108,25 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.student_profile.year_level
         except StudentProfile.DoesNotExist:
             return ""
+        
+    def has_group(self, group_name: str) -> bool:
+        """Checks if a user belongs to a specific group name."""
+        return self.groups.filter(name=group_name).exists()
+
+    @property
+    def is_student_member(self) -> bool:
+        """Returns True if user is in the Student group."""
+        return self.has_group("Student")
+
+    @property
+    def is_teacher_member(self) -> bool:
+        """Returns True if user is in the Teacher group."""
+        return self.has_group("Teacher")
+
+    @property
+    def is_admin_member(self) -> bool:
+        """Returns True if user is Admin, superuser, or staff."""
+        return self.has_group("Admin") or self.is_superuser or self.is_staff
 
 
 # -----------------------------------------------------------------
