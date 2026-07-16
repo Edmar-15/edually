@@ -2,20 +2,24 @@
 from __future__ import annotations
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.conf import settings
 
 from .managers import UserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """
+    Core authentication model – **only** authentication‑related fields.
+    All role‑specific data lives in the one‑to‑one profile tables below.
+    """
     email = models.EmailField("email address", unique=True)
+
     username = models.CharField(
         "username",
         max_length=150,
         blank=True,
-        null=True,
         help_text="Optional – for display or alternative login.",
     )
 
@@ -23,24 +27,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField("last name", max_length=150, blank=True)
 
     avatar = models.ImageField(
-        "profile picture", upload_to="avatars/", blank=True, null=True
-    )
-    
-    student_id   = models.CharField(
-        "Student ID",
-        max_length=30,
+        "profile picture",
+        upload_to="avatars/%Y/%m/%d/",
         blank=True,
-        help_text="University‑assigned identifier (optional).",
-    )
-    program      = models.CharField(
-        "Program / Course",
-        max_length=100,
-        blank=True,
-    )
-    year_level   = models.CharField(
-        "Year Level",
-        max_length=20,
-        blank=True,
+        null=True,
     )
 
     is_staff = models.BooleanField(
@@ -54,43 +44,117 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text="Unselect this instead of deleting accounts.",
     )
     date_joined = models.DateTimeField("date joined", default=timezone.now)
-    
-    # Reputation system
+
+    # Reputation system – kept unchanged
     karma = models.IntegerField(
         default=0,
-        help_text="Points earned from helpful posts and replies. Starts at 0."
+        help_text="Points earned from helpful posts and replies. Starts at 0.",
     )
 
     objects = UserManager()
 
-    USERNAME_FIELD = "email"  
-    REQUIRED_FIELDS = []
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []  # only email & password are required
 
     class Meta:
+        ordering = ["-date_joined"]
         verbose_name = "user"
         verbose_name_plural = "users"
-        ordering = ["-date_joined"]
 
     def __str__(self) -> str:
         return self.email
 
     @property
-    def get_full_name(self) -> str:
+    def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}".strip() or self.email
 
     @property
-    def get_short_name(self) -> str:
+    def short_name(self) -> str:
         return self.first_name or self.email
 
+    # -----------------------------------------------------------------
+    # Convenience read‑only properties that forward to the profile.
+    # They let existing templates keep using {{ user.student_id }} etc.
+    # -----------------------------------------------------------------
+    @property
+    def student_id(self):
+        return getattr(self.student_profile, "student_id", "")
 
+    @property
+    def program(self):
+        return getattr(self.student_profile, "program", "")
+
+    @property
+    def year_level(self):
+        return getattr(self.student_profile, "year_level", "")
+
+
+# -----------------------------------------------------------------
+#   ONE‑TO‑ONE PROFILE MODELS
+# -----------------------------------------------------------------
+class StudentProfile(models.Model):
+    """All data that only makes sense for a student."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="student_profile",
+    )
+    student_id = models.CharField(
+        "Student ID",
+        max_length=30,
+        blank=True,
+        help_text="University‑assigned identifier.",
+    )
+    program = models.CharField(
+        "Program / Course",
+        max_length=100,
+        blank=True,
+    )
+    year_level = models.CharField(
+        "Year Level",
+        max_length=20,
+        blank=True,
+    )
+
+    def __str__(self) -> str:
+        return f"StudentProfile({self.user.email})"
+
+
+class TeacherProfile(models.Model):
+    """Optional profile for staff / teachers."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="teacher_profile",
+    )
+    employee_id = models.CharField(
+        "Employee ID",
+        max_length=30,
+        blank=True,
+        help_text="Internal staff identifier.",
+    )
+    department = models.CharField(
+        "Department",
+        max_length=100,
+        blank=True,
+    )
+
+    def __str__(self) -> str:
+        return f"TeacherProfile({self.user.email})"
+
+
+# -----------------------------------------------------------------
+#   CONSENT & NOTIFICATIONS (unchanged)
+# -----------------------------------------------------------------
 class UserConsent(models.Model):
     """
-    Records each time a user accepts the latest Terms & Conditions & Privacy Notice.
+    Records each time a user accepts the latest Terms & Conditions &
+    Privacy Notice.
     """
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='consent',
+        related_name="consent",
         primary_key=True,
     )
     version = models.CharField(
@@ -108,7 +172,7 @@ class UserConsent(models.Model):
 
 
 class Notification(models.Model):
-    """In-app notification for a user."""
+    """In‑app notification for a user."""
     recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

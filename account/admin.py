@@ -4,13 +4,19 @@ from __future__ import annotations
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User
 from .forms import UserCreationForm, UserChangeForm
-from .models import Notification, UserConsent
+from .models import (
+    User,
+    StudentProfile,
+    TeacherProfile,
+    Notification,
+    UserConsent,
+)
 
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
+    """Admin for the core User model – authentication fields only."""
     add_form = UserCreationForm
     form = UserChangeForm
     model = User
@@ -29,23 +35,32 @@ class UserAdmin(BaseUserAdmin):
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-
         ("Personal info", {"fields": ("username", "first_name", "last_name", "avatar")}),
-
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
-
         ("Important dates", {"fields": ("last_login", "date_joined")}),
-
-        # New extra fields specific to EduAlly
-        ("Student data", {"fields": ("student_id", "program", "year_level")}),
     )
 
     add_fieldsets = (
-        (None, {
-            "classes": ("wide",),
-            "fields": ("email", "username", "password1", "password2", "is_staff", "is_active"),
-        }),
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "username", "password1", "password2", "is_staff", "is_active"),
+            },
+        ),
     )
+
+
+@admin.register(StudentProfile)
+class StudentProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "student_id", "program", "year_level")
+    search_fields = ("user__email", "student_id", "program")
+
+
+@admin.register(TeacherProfile)
+class TeacherProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "employee_id", "department")
+    search_fields = ("user__email", "employee_id", "department")
 
 
 @admin.register(UserConsent)

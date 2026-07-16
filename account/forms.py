@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import (
     AuthenticationForm,
@@ -9,13 +10,20 @@ from django.contrib.auth.forms import (
     UserChangeForm as DjangoUserChangeForm,
 )
 from django.utils import timezone
-from django.conf import settings
-from .models import UserConsent
+
+from .models import UserConsent, StudentProfile
+from .utils import add_user_to_group
+from .constants import GROUP_STUDENT
 
 User = get_user_model()
 
 
 class LoginForm(AuthenticationForm):
+    """
+    The default authentication form, but we replace the username widget with an
+    EmailInput so the placeholder reads “Email address”.  The backend that
+    authenticates will still accept username or email.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["username"].widget = forms.EmailInput(
@@ -27,28 +35,28 @@ class LoginForm(AuthenticationForm):
 
 
 class UserCreationForm(DjangoUserCreationForm):
+    """
+    Admin‑side form – only the core authentication fields are exposed.
+    """
     class Meta(DjangoUserCreationForm.Meta):
         model = User
-        fields = (
-            "email",
-            "username",
-            "first_name",
-            "last_name",
-            "avatar",
-            "student_id",
-            "program",
-            "year_level",
-        )
+        fields = ("email", "username", "first_name", "last_name", "avatar")
 
 
 class UserChangeForm(DjangoUserChangeForm):
+    """
+    Admin‑side change form – again only core fields.
+    """
     class Meta(DjangoUserChangeForm.Meta):
         model = User
         fields = "__all__"
 
 
 class PublicRegisterForm(forms.ModelForm):
-
+    """
+    Public registration form that creates a **User** *and* a related
+    ``StudentProfile``, then adds the user to the ``Student`` group.
+    """
     password1 = forms.CharField(
         label="Password",
         strip=False,
@@ -59,12 +67,12 @@ class PublicRegisterForm(forms.ModelForm):
         strip=False,
         widget=forms.PasswordInput(attrs={"placeholder": "Confirm your password"}),
     )
-
     accept_terms = forms.BooleanField(
         label=(
             "I have read and agree to the "
-            "<a href=\"{% url 'account:terms' %}\" target=\"_blank\">Terms &amp; Conditions</a> "
-            "and the <a href=\"{% url 'account:privacy' %}\" target=\"_blank\">Privacy Notice</a>."
+            '<a href="{% url "account:terms" %}" target="_blank">Terms &amp; Conditions</a> '
+            "and the "
+            '<a href="{% url "account:privacy" %}" target="_blank">Privacy Notice</a>.'
         ),
         required=True,
     )
@@ -86,6 +94,14 @@ class PublicRegisterForm(forms.ModelForm):
             "username": forms.TextInput(attrs={"placeholder": "Optional username"}),
         }
 
+    # -----------------------------------------------------------------
+    # The three student‑specific fields are **not** on the User model
+    # any more, but we keep them in the form so we can capture them.
+    # -----------------------------------------------------------------
+    student_id = forms.CharField(required=False, max_length=30, label="Student ID")
+    program = forms.CharField(required=False, max_length=100, label="Program / Course")
+    year_level = forms.CharField(required=False, max_length=20, label="Year Level")
+
     def clean_email(self):
         email = self.cleaned_data["email"].lower()
         if User.objects.filter(email__iexact=email).exists():
@@ -102,13 +118,33 @@ class PublicRegisterForm(forms.ModelForm):
 
     def save(self, commit=True):
         """
-        Save the user and also create a UserConsent record with the current policy version.
+        Create the ``User`` and the related ``StudentProfile``,
+        add the user to the ``Student`` group, and create the initial
+        ``UserConsent`` record.
         """
+        # Grab the student‑specific data **before** we pop them from cleaned_data.
+        student_id = self.cleaned_data.pop("student_id", "")
+        program = self.cleaned_data.pop("program", "")
+        year_level = self.cleaned_data.pop("year_level", "")
+
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
+
         if commit:
             user.save()
-            # Record consent
+
+            # ---- 1️⃣  Create the StudentProfile ----
+            StudentProfile.objects.create(
+                user=user,
+                student_id=student_id,
+                program=program,
+                year_level=year_level,
+            )
+
+            # ---- 2️⃣  Assign the Student group ----
+            add_user_to_group(user, GROUP_STUDENT)
+
+            # ---- 3️⃣  Record consent ----
             UserConsent.objects.create(
                 user=user,
                 version=settings.POLICY_VERSION,
@@ -118,30 +154,39 @@ class PublicRegisterForm(forms.ModelForm):
 
 
 # -----------------------------------------------------------------
-# NEW – PROFILE FORM (used on the profile page)
+#   PROFILE FORM – used on the “My profile” page.  It edits both the
+#   core User fields *and* the related StudentProfile fields.
 # -----------------------------------------------------------------
 class ProfileForm(forms.ModelForm):
     """Form displayed on the profile page for editing allowed fields."""
+
+    # Extra fields that belong to the StudentProfile
+    student_id = forms.CharField(required=False, max_length=30, label="Student ID")
+    program = forms.CharField(required=False, max_length=100, label="Program / Course")
+    year_level = forms.CharField(required=False, max_length=20, label="Year Level")
+
     class Meta:
         model = User
-        fields = (
-            "first_name",
-            "last_name",
-            "avatar",
-            "student_id",
-            "program",
-            "year_level",
-        )
-        widgets = {
-            "first_name": forms.TextInput(attrs={"placeholder": "First name"}),
-            "last_name": forms.TextInput(attrs={"placeholder": "Last name"}),
-            "avatar": forms.ClearableFileInput(),
-            "student_id": forms.TextInput(attrs={"placeholder": "e.g. 0323‑4526"}),
-            "program": forms.TextInput(attrs={"placeholder": "e.g. Information Technology"}),
-            "year_level": forms.TextInput(attrs={"placeholder": "e.g. 3rd Year"}),
-        }
+        fields = ("first_name", "last_name", "avatar")  # core fields only
 
-    def clean(self):
-        cleaned = super().clean()
-        # No special validation needed now, but you can add checks here.
-        return cleaned
+    def __init__(self, *args, **kwargs):
+        """Populate the extra profile fields if they exist."""
+        super().__init__(*args, **kwargs)
+
+        if self.instance.pk and hasattr(self.instance, "student_profile"):
+            profile = self.instance.student_profile
+            self.fields["student_id"].initial = profile.student_id
+            self.fields["program"].initial = profile.program
+            self.fields["year_level"].initial = profile.year_level
+
+    def save(self, commit=True):
+        """Save core user fields **and** the linked StudentProfile."""
+        user = super().save(commit=commit)
+
+        profile, _ = StudentProfile.objects.get_or_create(user=user)
+        profile.student_id = self.cleaned_data["student_id"]
+        profile.program = self.cleaned_data["program"]
+        profile.year_level = self.cleaned_data["year_level"]
+        if commit:
+            profile.save()
+        return user

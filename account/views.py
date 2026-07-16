@@ -1,10 +1,10 @@
 # account/views.py
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from urllib.parse import urlencode
 
-import json
 import requests
 from django.conf import settings as django_settings
 from django.contrib import messages
@@ -14,199 +14,92 @@ from django.contrib.auth import (
     login as auth_login,
 )
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
-from django.template.loader import render_to_string
 from django.views.generic import TemplateView
 
 # --------------------------------------------------------------
-# Existing imports continued (forms, models, etc.)
+# Local imports
 # --------------------------------------------------------------
-from .forms import PublicRegisterForm, ProfileForm
-from .models import Notification, UserConsent
+from .forms import PublicRegisterForm, ProfileForm, LoginForm
+from .models import Notification, UserConsent, User
+from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
+from .utils import user_is_in_group, add_user_to_group
+
+# Other apps used in the dashboard
 from slm.models import Module
-# For onboarding completion checks (ask one question)
 from aihelper.models import Conversation, Message
 
-User = get_user_model()
+
+# -----------------------------------------------------------------
+#   ROLE‑BASED LOGIN VIEW
+# -----------------------------------------------------------------
+class RoleBasedLoginView(TemplateView):
+    """
+    Sub‑class of Django's LoginView that redirects users to the dashboard
+    that matches their group membership.
+    """
+    template_name = "account/login.html"
+    form_class = LoginForm
+    redirect_authenticated_user = True
+
+    def get(self, request, *args, **kwargs):
+        # Let the regular LoginView handle GET (display the form)
+        from django.contrib.auth.views import LoginView
+        return LoginView.as_view(
+            template_name=self.template_name,
+            authentication_form=self.form_class,
+            redirect_authenticated_user=self.redirect_authenticated_user,
+        )(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        # Let the regular LoginView handle POST (authenticate)
+        from django.contrib.auth.views import LoginView
+        response = LoginView.as_view(
+            template_name=self.template_name,
+            authentication_form=self.form_class,
+            redirect_authenticated_user=self.redirect_authenticated_user,
+        )(request, *args, **kwargs)
+
+        # If the login succeeded, ``LoginView`` will have already set
+        # request.user. We simply decide where to go next.
+        if request.user.is_authenticated:
+            return redirect(self.get_success_url())
+        return response
+
+    def get_success_url(self):
+        """Inspect groups and decide the final dashboard."""
+        user = self.request.user
+
+        # Superusers / staff → Django admin (or a staff‑specific view)
+        if user.is_superuser or user.is_staff:
+            return reverse("admin:index")
+
+        if user_is_in_group(user, GROUP_TEACHER):
+            # You need to have a URL named "teacher:dashboard"
+            return reverse("teacher:dashboard")
+
+        # Default → student dashboard
+        return reverse("account:dashboard")
 
 
 # -----------------------------------------------------------------
-# NEW – GOOGLE OAUTH HELPERS
+#   LANDING / DASHBOARD / PROFILE etc.
 # -----------------------------------------------------------------
-def _build_google_auth_url(state: str | None = None) -> str:
-    """
-    Build the Google OAuth2 authorization URL.
-
-    Parameters
-    ----------
-    state: optional string – can be used to carry the original URL the
-           user wanted to visit (e.g. ``request.GET.get('next')``).
-
-    Returns
-    -------
-    Fully‑qualified URL that the user should be redirected to.
-    """
-    base_url = "https://accounts.google.com/o/oauth2/v2/auth"
-    params = {
-        "client_id": django_settings.GOOGLE_CLIENT_ID,
-        "redirect_uri": django_settings.GOOGLE_OAUTH_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "openid email profile",
-        "access_type": "offline",
-        "prompt": "select_account",  # always show account picker
-    }
-    if state:
-        params["state"] = state
-    return f"{base_url}?{urlencode(params)}"
-
-
-def _exchange_code_for_tokens(code: str) -> dict:
-    """
-    Exchange the ``code`` received from Google for an ``access_token``
-    (and an ``id_token``).  Raises ``requests.HTTPError`` on failure.
-    """
-    token_url = "https://oauth2.googleapis.com/token"
-    data = {
-        "code": code,
-        "client_id": django_settings.GOOGLE_CLIENT_ID,
-        "client_secret": django_settings.GOOGLE_CLIENT_SECRET,
-        "redirect_uri": django_settings.GOOGLE_OAUTH_REDIRECT_URI,
-        "grant_type": "authorization_code",
-    }
-    resp = requests.post(token_url, data=data, timeout=10)
-    resp.raise_for_status()
-    return resp.json()   # contains access_token, id_token, refresh_token, expires_in
-
-
-def _fetch_google_userinfo(access_token: str) -> dict:
-    """
-    Retrieve basic user info (email, name, picture) from Google.
-    """
-    userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    resp = requests.get(userinfo_url, headers=headers, timeout=10)
-    resp.raise_for_status()
-    return resp.json()
-
-
-# -----------------------------------------------------------------
-# NEW – VIEW: start the OAuth flow
-# -----------------------------------------------------------------
-def google_login(request):
-    """
-    Redirect the user to Google’s OAuth consent screen.
-
-    If the current request contains a ``next`` GET param we store it in the
-    ``state`` parameter so we can return the user after a successful login.
-    """
-    # Preserve where the user originally wanted to go
-    next_url = request.GET.get("next")
-    auth_url = _build_google_auth_url(state=next_url)
-    return redirect(auth_url)
-
-
-# -----------------------------------------------------------------
-# NEW – VIEW: handle Google’s redirect back to us
-# -----------------------------------------------------------------
-def google_callback(request):
-    """
-    Google sends us ``?code=...`` (or ``?error=...``).  We:
-
-    1. Exchange the code for an access token.
-    2. Pull the user's profile (email, name, picture).
-    3. Find or create a ``User`` instance.
-    4. Record consent (since this path bypasses the normal registration form).
-    5. Log the user in and send them to the original ``next`` URL (or dashboard).
-    """
-    error = request.GET.get("error")
-    if error:
-        # Something went wrong on Google’s side (e.g. user denied consent)
-        messages.error(request, "Google sign‑in failed – please try again.")
-        return redirect(reverse("account:login"))
-
-    code = request.GET.get("code")
-    if not code:
-        return HttpResponseBadRequest("Missing code parameter.")
-
-    try:
-        token_data = _exchange_code_for_tokens(code)
-        access_token = token_data["access_token"]
-        userinfo = _fetch_google_userinfo(access_token)
-    except Exception as exc:   # pragma: no cover – defensive
-        messages.error(request, "Unable to verify Google credentials.")
-        return redirect(reverse("account:login"))
-
-    # -------------------------------------------------------------
-    # Extract the fields we need
-    # -------------------------------------------------------------
-    email = userinfo.get("email")
-    full_name = userinfo.get("name", "")
-    picture = userinfo.get("picture")  # optional – we just ignore it for now
-
-    if not email:
-        messages.error(request, "Google account did not return an email address.")
-        return redirect(reverse("account:login"))
-
-    # -------------------------------------------------------------
-    # Find an existing user – or create a brand‑new one.
-    # -------------------------------------------------------------
-    user, created = User.objects.get_or_create(
-        email=email,
-        defaults={
-            "first_name": full_name.split(" ")[0] if full_name else "",
-            "last_name": " ".join(full_name.split(" ")[1:]) if full_name else "",
-            # ``username`` is optional – we leave it blank.
-            "is_active": True,
-        },
-    )
-    if created:
-        # No password – set unusable so the user can still login via Google
-        user.set_unusable_password()
-        user.save()
-        # Record consent immediately (the user is effectively “registering”)
-        UserConsent.objects.create(
-            user=user,
-            version=django_settings.POLICY_VERSION,
-            accepted_at=timezone.now(),
-        )
-        messages.success(request, "Your EduAlly account was created via Google.")
-    else:
-        # Existing user – ensure they have a consent record.
-        if not hasattr(user, "consent"):
-            UserConsent.objects.create(
-                user=user,
-                version=django_settings.POLICY_VERSION,
-                accepted_at=timezone.now(),
-            )
-
-    # -------------------------------------------------------------
-    # Log the user in – we use ``backend`` explicitly because the
-    # ``EmailOrUsernameModelBackend`` expects a password.
-    # -------------------------------------------------------------
-    user.backend = "django.contrib.auth.backends.ModelBackend"
-    auth_login(request, user)
-
-    # -------------------------------------------------------------
-    # Redirect to the original destination (if present)
-    # -------------------------------------------------------------
-    next_url = request.GET.get("state") or request.session.get(
-        "post_consent_redirect", reverse("account:dashboard")
-    )
-    return redirect(next_url)
-
 def landing(request):
     return render(request, "account/landing.html")
+
 
 @login_required(login_url='account:login')
 def dashboard(request):
     subjects = request.user.subjects.all()[:3]
     modules = Module.objects.filter(subject__author=request.user).select_related("subject")[:3]
+
     recent_activity = [
         {
             "title": "Continue where you left off",
@@ -239,7 +132,6 @@ def dashboard(request):
         {
             "title": "Ask one question",
             "detail": "Share what you are stuck on and let the community or AI helper support you.",
-            # Mark done if the user has created any conversation or submitted any message
             "done": (
                 Conversation.objects.filter(user=request.user).exists()
                 or Message.objects.filter(user=request.user, role="user").exists()
@@ -255,25 +147,22 @@ def dashboard(request):
         "subject_count": subjects.count(),
         "onboarding_steps": onboarding_steps,
     }
-    return render(request, 'dashboard.html', context)
+    return render(request, "dashboard.html", context)
 
 
 @login_required(login_url="account:login")
 def notifications_inbox(request):
     notifications = Notification.objects.filter(recipient=request.user).select_related("actor").order_by("-created_at")
-    # Mark notifications as read when viewing the inbox
     notifications.filter(read=False).update(read=True)
-    context = {
-        "notifications": notifications,
-    }
-    return render(request, "account/notifications.html", context)
+    return render(request, "account/notifications.html", {"notifications": notifications})
+
 
 @login_required(login_url="account:login")
 def profile(request):
     """
     Render the profile page.
-    GET  – show the read‑only overview + edit form (collapsed).
-    POST – validate & save changes, then redirect back.
+    GET → show form with current data.
+    POST → validate, save and redirect back to the same page.
     """
     if request.method == "POST":
         form = ProfileForm(request.POST, request.FILES, instance=request.user)
@@ -285,21 +174,16 @@ def profile(request):
     else:
         form = ProfileForm(instance=request.user)
 
-    context = {
-        "user_obj": request.user,
-        "profile_form": form,
-    }
-    return render(request, "account/profile.html", context)
+    return render(request, "account/profile.html", {"user_obj": request.user, "profile_form": form})
 
 
 @login_required(login_url='account:login')
 def profile_modal(request, pk):
     """Return a compact profile card as HTML for AJAX modal loads."""
     user_obj = get_object_or_404(User, pk=pk)
-    # Lightweight counts – attempt to read attributes if present in queryset
-    # Fallbacks will be provided by the template filters/defaults
-    # Provide forum posts count if attribute not present
-    if not hasattr(user_obj, 'forum_posts_count'):
+
+    # Light‑weight counts for forum posts (if they exist)
+    if not hasattr(user_obj, "forum_posts_count"):
         try:
             user_obj.forum_posts_count = user_obj.forum_posts.count()
         except Exception:
@@ -309,21 +193,21 @@ def profile_modal(request, pk):
     return JsonResponse({'html': html})
 
 
-# -----------------------------------------------------------------
-# REGISTER – unchanged except it now uses the trimmed PublicRegisterForm
-# -----------------------------------------------------------------
 def register(request):
+    """
+    Public registration – uses ``PublicRegisterForm`` which handles
+    creation of the StudentProfile and group assignment.
+    """
     policy_context = {
         "policy_version": django_settings.POLICY_VERSION,
-        "effective_date": datetime.strptime(
-            django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
-        ),
+        "effective_date": datetime.strptime(django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"),
     }
 
     if request.method == "POST":
         form = PublicRegisterForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
+            # Auto‑login after successful registration
             raw_password = form.cleaned_data["password1"]
             user = authenticate(request, email=user.email, password=raw_password)
             if user is not None:
@@ -332,36 +216,34 @@ def register(request):
                 return redirect(reverse_lazy("account:dashboard"))
             messages.warning(request, "Account created but auto‑login failed. Please log in.")
             return redirect(reverse_lazy("account:login"))
-
         messages.error(request, "Please fix the errors below.")
     else:
         form = PublicRegisterForm()
 
     return render(request, "account/register.html", {"form": form, **policy_context})
 
+
 @login_required(login_url='account:login')
 @ensure_csrf_cookie
 def settings(request):
+    """Simple settings page – kept unchanged."""
     return render(request, 'account/settings.html')
+
 
 @login_required(login_url='account:login')
 def logout_confirm(request):
     """
     AJAX view for logout confirmation.
-    GET – returns the logout confirmation modal
-    POST – logs out the user
+    GET → return the modal HTML for the frontend.
+    POST → actually log the user out.
     """
     if request.method == 'POST':
         from django.contrib.auth import logout
         logout(request)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'success': True,
-                'redirect': reverse('account:landing'),
-            })
+            return JsonResponse({'success': True, 'redirect': reverse('account:landing')})
         return redirect('account:landing')
 
-    # GET – return confirmation modal content as JSON
     html = render_to_string(
         'account/logout_confirm.html',
         {'request': request},
@@ -369,8 +251,12 @@ def logout_confirm(request):
     )
     return JsonResponse({'html': html})
 
+
 @require_POST
 def api_set_theme(request):
+    """
+    Called by the front‑end to persist a light/dark theme choice in a cookie.
+    """
     theme = request.POST.get('theme')
     if theme is None:
         try:
@@ -388,18 +274,32 @@ def api_set_theme(request):
     return response
 
 
+# -----------------------------------------------------------------
+#   POLICY VIEWS (terms / privacy) – tiny wrappers that render the same
+#   content as the modal but give a proper URL for SEO / accessibility.
+# -----------------------------------------------------------------
 class PolicyBaseView(TemplateView):
-    """Common base for both policies – inject version & effective date."""
+    """Inject policy version & effective date into all policy templates."""
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["policy_version"] = django_settings.POLICY_VERSION
-        # Convert string → date for nicer display
         context["effective_date"] = datetime.strptime(
             django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
         )
         return context
-    
 
+
+class TermsView(PolicyBaseView):
+    template_name = "account/terms.html"
+
+
+class PrivacyView(PolicyBaseView):
+    template_name = "account/privacy.html"
+
+
+# -----------------------------------------------------------------
+#   CONSENT REQUIRED VIEW
+# -----------------------------------------------------------------
 class ConsentRequiredView(TemplateView):
     template_name = "account/consent_required.html"
 
@@ -408,22 +308,146 @@ class ConsentRequiredView(TemplateView):
         return super().dispatch(*args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        # User clicked the "I Agree" button
+        # Record the user’s acceptance of the latest policy
         UserConsent.objects.update_or_create(
             user=request.user,
-            defaults={
-                "version": django_settings.POLICY_VERSION,
-                "accepted_at": timezone.now(),
-            },
+            defaults={"version": django_settings.POLICY_VERSION, "accepted_at": timezone.now()},
         )
-        # Redirect back to where they originally wanted to go
+        # Send them back to where they originally wanted to go
         next_url = request.session.pop("post_consent_redirect", reverse("account:dashboard"))
         return redirect(next_url)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["policy_version"] = django_settings.POLICY_VERSION
-        ctx["effective_date"] = datetime.strptime(
-            django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
+        ctx.update(
+            policy_version=django_settings.POLICY_VERSION,
+            effective_date=datetime.strptime(
+                django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
+            ),
         )
         return ctx
+
+
+# -----------------------------------------------------------------
+#   GOOGLE OAUTH – unchanged except for group assignment (see code
+#   block a few lines down where the user is created).
+# -----------------------------------------------------------------
+def _build_google_auth_url(state: str | None = None) -> str:
+    base_url = "https://accounts.google.com/o/oauth2/v2/auth"
+    params = {
+        "client_id": django_settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": django_settings.GOOGLE_OAUTH_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "select_account",
+    }
+    if state:
+        params["state"] = state
+    return f"{base_url}?{urlencode(params)}"
+
+
+def _exchange_code_for_tokens(code: str) -> dict:
+    token_url = "https://oauth2.googleapis.com/token"
+    data = {
+        "code": code,
+        "client_id": django_settings.GOOGLE_CLIENT_ID,
+        "client_secret": django_settings.GOOGLE_CLIENT_SECRET,
+        "redirect_uri": django_settings.GOOGLE_OAUTH_REDIRECT_URI,
+        "grant_type": "authorization_code",
+    }
+    resp = requests.post(token_url, data=data, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _fetch_google_userinfo(access_token: str) -> dict:
+    userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    resp = requests.get(userinfo_url, headers=headers, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def google_login(request):
+    """
+    Kick‑off the Google OAuth flow.  Preserve a ``next`` GET param so we can
+    send the user back after they approve.
+    """
+    next_url = request.GET.get("next")
+    auth_url = _build_google_auth_url(state=next_url)
+    return redirect(auth_url)
+
+
+def google_callback(request):
+    """
+    Handles the redirect back from Google, creates (or fetches) a User,
+    assigns the Student group, records consent and logs the user in.
+    """
+    error = request.GET.get("error")
+    if error:
+        messages.error(request, "Google sign‑in failed – please try again.")
+        return redirect(reverse("account:login"))
+
+    code = request.GET.get("code")
+    if not code:
+        return HttpResponseBadRequest("Missing code parameter.")
+
+    try:
+        token_data = _exchange_code_for_tokens(code)
+        access_token = token_data["access_token"]
+        userinfo = _fetch_google_userinfo(access_token)
+    except Exception:   # pragma: no cover – defensive
+        messages.error(request, "Unable to verify Google credentials.")
+        return redirect(reverse("account:login"))
+
+    email = userinfo.get("email")
+    full_name = userinfo.get("name", "")
+
+    if not email:
+        messages.error(request, "Google account did not return an email address.")
+        return redirect(reverse("account:login"))
+
+    user, created = User.objects.get_or_create(
+        email=email,
+        defaults={
+            "first_name": full_name.split(" ")[0] if full_name else "",
+            "last_name": " ".join(full_name.split(" ")[1:]) if full_name else "",
+            "is_active": True,
+        },
+    )
+    if created:
+        user.set_unusable_password()
+        user.save()
+
+        # -------------------------------------------------------------
+        # New user → treat as a Student, create empty profile & consent.
+        # -------------------------------------------------------------
+        add_user_to_group(user, GROUP_STUDENT)
+        StudentProfile.objects.get_or_create(user=user)  # empty profile
+        UserConsent.objects.create(
+            user=user,
+            version=django_settings.POLICY_VERSION,
+            accepted_at=timezone.now(),
+        )
+        messages.success(request, "Your EduAlly account was created via Google.")
+    else:
+        # Existing user – make sure they have a consent record.
+        if not hasattr(user, "consent"):
+            UserConsent.objects.create(
+                user=user,
+                version=django_settings.POLICY_VERSION,
+                accepted_at=timezone.now(),
+            )
+
+    # -------------------------------------------------------------
+    # Log the user in – we use ``ModelBackend`` because the password‑less
+    # Google flow bypasses the EmailOrUsername backend.
+    # -------------------------------------------------------------
+    user.backend = "django.contrib.auth.backends.ModelBackend"
+    auth_login(request, user)
+
+    next_url = request.GET.get("state") or request.session.get(
+        "post_consent_redirect", reverse("account:dashboard")
+    )
+    return redirect(next_url)
