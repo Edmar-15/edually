@@ -304,19 +304,13 @@ def post_delete(request, pk):
             return JsonResponse({"success": True, "deleted_id": post.pk})
         return redirect("forum:feed")
 
-    # Non‑AJAX fallback – render confirmation page
-    categories = Category.objects.annotate(
-        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    # GET – return confirmation modal content as JSON
+    html = render_to_string(
+        "forum/post_delete.html",
+        {"post": post, "request": request},
+        request=request,
     )
-    context = {
-        "post": post,
-        "categories": categories,
-        "categories_count": Post.objects.filter(is_deleted=False).count(),
-        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
-        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
-        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
-    }
-    return render(request, "forum/post_delete.html", context)
+    return JsonResponse({"html": html})
 
 
 # -------------------------------------------------------------------------
@@ -378,19 +372,13 @@ def reply_delete(request, reply_id):
             return JsonResponse({"success": True, "deleted_id": reply.pk})
         return redirect("forum:post_detail", pk=reply.post.pk)
 
-    # Non‑AJAX fallback – render confirmation page
-    categories = Category.objects.annotate(
-        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    # GET – return confirmation modal content as JSON
+    html = render_to_string(
+        "forum/reply_delete.html",
+        {"reply": reply, "request": request},
+        request=request,
     )
-    context = {
-        "reply": reply,
-        "categories": categories,
-        "categories_count": Post.objects.filter(is_deleted=False).count(),
-        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
-        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
-        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
-    }
-    return render(request, "forum/reply_delete.html", context)
+    return JsonResponse({"html": html})
 
 
 # -------------------------------------------------------------------------

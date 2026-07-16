@@ -26,6 +26,7 @@ urlpatterns = [
     path("logout/", auth_views.LogoutView.as_view(
             next_page=reverse_lazy("landing")
         ), name="logout"),
+    path("logout-confirm/", views.logout_confirm, name="logout_confirm"),
     path("consent-required/", ConsentRequiredView.as_view(), name="consent_required"),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("profile/", views.profile, name='profile'),

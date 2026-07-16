@@ -24,7 +24,7 @@
 
             <div class="action-menu reply-action-menu">
                 <button type="button" class="button secondary-button small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false">
-                    <i class="fa-solid fa-ellipsis"></i> Actions
+                    <i class="fa-solid fa-ellipsis"></i>
                 </button>
                 <div class="action-menu-panel" role="menu" aria-hidden="true">
                     {% if request.user == reply.author %}
@@ -35,19 +35,18 @@
                            role="menuitem">
                             <i class="fa-solid fa-edit"></i> Edit
                         </a>
-                        <button type="button"
-                                class="button secondary-button small-button ajax-delete-btn action-menu-item"
-                                data-url="{% url 'forum:reply_delete' reply.pk %}"
-                                data-target="#reply-{{ reply.pk }}"
-                                role="menuitem">
+                            <a href="{% url 'forum:reply_delete' reply.pk %}"
+                               class="button secondary-button small-button ajax-modal action-menu-item"
+                               data-ajax-url="{% url 'forum:reply_delete' reply.pk %}"
+                               data-target="#global-modal"
+                               role="menuitem">
                             <i class="fa-solid fa-trash"></i> Delete
-                        </button>
+                        </a>
                     {% endif %}
                     <a href="{% url 'forum:flag_content' 'reply' reply.pk %}"
                        class="button secondary-button small-button ajax-modal action-menu-item"
                        data-ajax-url="{% url 'forum:flag_content' 'reply' reply.pk %}"
                        data-target="#global-modal"
-                       data-confirm="Report this reply?"
                        role="menuitem">
                         <i class="fa-solid fa-flag"></i> Report
                     </a>

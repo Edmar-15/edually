@@ -39,5 +39,12 @@
       <span class="nav-label">Profile</span>
     </a>
   </nav>
+
+  <div class="sidebar-footer">
+    <button type="button" class="nav-item logout ajax-modal" data-ajax-url="{% url 'account:logout_confirm' %}" data-target="#global-modal" aria-label="Logout">
+      <i class="fas fa-sign-out-alt nav-icon"></i>
+      <span class="nav-label">Logout</span>
+    </button>
+  </div>
 </aside>
 <script src="{% static 'js/sidebar-toggle.js' %}" defer></script>

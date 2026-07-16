@@ -344,6 +344,31 @@ def register(request):
 def settings(request):
     return render(request, 'account/settings.html')
 
+@login_required(login_url='account:login')
+def logout_confirm(request):
+    """
+    AJAX view for logout confirmation.
+    GET – returns the logout confirmation modal
+    POST – logs out the user
+    """
+    if request.method == 'POST':
+        from django.contrib.auth import logout
+        logout(request)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'redirect': reverse('account:landing'),
+            })
+        return redirect('account:landing')
+
+    # GET – return confirmation modal content as JSON
+    html = render_to_string(
+        'account/logout_confirm.html',
+        {'request': request},
+        request=request,
+    )
+    return JsonResponse({'html': html})
+
 @require_POST
 def api_set_theme(request):
     theme = request.POST.get('theme')

@@ -32,10 +32,9 @@
                     <div class="profile-top">
                         <div class="profile-avatar">
                             {% if user_obj.avatar %}
-                                <img src="{{ user_obj.avatar.url }}" alt="Avatar"
-                                     style="border-radius:50%;width:80px;height:80px;">
+                                <img src="{{ user_obj.avatar.url }}" alt="Avatar">
                             {% else %}
-                                {{ user_obj.get_short_name|slice:":1"|default:"U" }}
+                                <span class="avatar-fallback">{{ user_obj.get_short_name|slice:":1"|default:"U" }}</span>
                             {% endif %}
                         </div>
                         <div>

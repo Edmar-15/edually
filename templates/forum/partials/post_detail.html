@@ -48,8 +48,8 @@
                 <div class="upvote-num">{{ post.upvotes }}</div>
             </div>
 
-            <button class="button primary-circle reply-btn ajax-modal" data-ajax-url="{% url 'forum:post_detail' post.pk %}" data-target="#global-modal" aria-label="Reply">
-                <i class="fa-solid fa-reply"></i>
+            <button class="button reply-btn ajax-modal" data-ajax-url="{% url 'forum:post_detail' post.pk %}" data-target="#global-modal" aria-label="Reply">
+                <i class="fas fa-comments"></i>
                 <span class="reply-count-badge">{{ post.replies_cnt }}</span>
             </button>
 
@@ -66,19 +66,18 @@
                            role="menuitem">
                             <i class="fa-solid fa-edit"></i> Edit
                         </a>
-                        <button type="button"
-                                class="button secondary-button small-button ajax-delete-btn action-menu-item"
-                                data-url="{% url 'forum:post_delete' post.pk %}"
-                                data-target="#post-{{ post.pk }}"
-                                role="menuitem">
+                        <a href="{% url 'forum:post_delete' post.pk %}"
+                           class="button secondary-button small-button ajax-modal action-menu-item"
+                           data-ajax-url="{% url 'forum:post_delete' post.pk %}"
+                           data-target="#global-modal"
+                           role="menuitem">
                             <i class="fa-solid fa-trash"></i> Delete
-                        </button>
+                        </a>
                     {% endif %}
                     <a href="{% url 'forum:flag_content' 'post' post.pk %}"
                        class="button secondary-button small-button ajax-modal action-menu-item"
                        data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
                        data-target="#global-modal"
-                       data-confirm="Report this post?"
                        role="menuitem">
                         <i class="fa-solid fa-flag"></i> Report
                     </a>

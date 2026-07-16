@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Insert / replace HTML according to data-* attributes
             // -----------------------------------------------------------------
             const targetSel = form.dataset.target;
-            if (targetSel) {
+            if (targetSel && data.html !== undefined) {
                 const container = document.querySelector(targetSel);
                 if (!container) return;
 
@@ -87,12 +87,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            if (data.deleted_id) {
+                const deletedPost = document.querySelector(`#post-${data.deleted_id}`);
+                const deletedReply = document.querySelector(`#reply-${data.deleted_id}`);
+                const deletedEl = deletedPost || deletedReply;
+                if (deletedEl) deletedEl.remove();
+            }
+
             // If a heading (like the reply count) should be updated
             if (form.dataset.after && data.replies_cnt !== undefined) {
                 const heading = document.querySelector(form.dataset.after);
                 if (heading) {
                     heading.textContent = `${data.replies_cnt} Reply${data.replies_cnt === 1 ? '' : 's'}`;
                 }
+            }
+
+            // Redirect if requested by the server
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
             }
 
             // Close modal if the form lives inside one
