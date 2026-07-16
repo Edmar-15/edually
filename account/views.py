@@ -22,12 +22,13 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
+from django.template.loader import render_to_string
 
 # --------------------------------------------------------------
 # Local imports
 # --------------------------------------------------------------
 from .forms import PublicRegisterForm, ProfileForm, LoginForm
-from .models import Notification, UserConsent, User
+from .models import Notification, UserConsent, User, StudentProfile
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
@@ -195,12 +196,16 @@ def profile_modal(request, pk):
 
 def register(request):
     """
-    Public registration – uses ``PublicRegisterForm`` which handles
-    creation of the StudentProfile and group assignment.
+    Public registration – uses ``PublicRegisterForm`` which now knows whether
+    the user wants to be a Student or a Teacher.
     """
     policy_context = {
         "policy_version": django_settings.POLICY_VERSION,
-        "effective_date": datetime.strptime(django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"),
+        "effective_date": datetime.strptime(
+            django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
+        ),
+        "GROUP_STUDENT": GROUP_STUDENT,
+        "GROUP_TEACHER": GROUP_TEACHER,
     }
 
     if request.method == "POST":
@@ -214,13 +219,17 @@ def register(request):
                 auth_login(request, user)
                 messages.success(request, "Welcome! Your account has been created.")
                 return redirect(reverse_lazy("account:dashboard"))
-            messages.warning(request, "Account created but auto‑login failed. Please log in.")
+            messages.warning(
+                request,
+                "Account created but auto‑login failed. Please log in.",
+            )
             return redirect(reverse_lazy("account:login"))
         messages.error(request, "Please fix the errors below.")
     else:
         form = PublicRegisterForm()
 
     return render(request, "account/register.html", {"form": form, **policy_context})
+
 
 
 @login_required(login_url='account:login')

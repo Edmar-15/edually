@@ -78,15 +78,36 @@ class User(AbstractBaseUser, PermissionsMixin):
     # -----------------------------------------------------------------
     @property
     def student_id(self):
-        return getattr(self.student_profile, "student_id", "")
+        """
+        Return the StudentProfile.student_id if a StudentProfile exists,
+        otherwise return an empty string.
+        """
+        try:
+            return self.student_profile.student_id
+        except StudentProfile.DoesNotExist:      # <-- safe fallback
+            return ""
 
     @property
     def program(self):
-        return getattr(self.student_profile, "program", "")
+        """
+        Return the StudentProfile.program if a StudentProfile exists,
+        otherwise return an empty string.
+        """
+        try:
+            return self.student_profile.program
+        except StudentProfile.DoesNotExist:
+            return ""
 
     @property
     def year_level(self):
-        return getattr(self.student_profile, "year_level", "")
+        """
+        Return the StudentProfile.year_level if a StudentProfile exists,
+        otherwise return an empty string.
+        """
+        try:
+            return self.student_profile.year_level
+        except StudentProfile.DoesNotExist:
+            return ""
 
 
 # -----------------------------------------------------------------
