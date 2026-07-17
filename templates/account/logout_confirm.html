@@ -1,17 +1,29 @@
-{% load static %}
-<div class="create-post-container">
-    <h2>Logout?</h2>
-    <p class="intro-text">Are you sure you want to logout from your account?</p>
+{# templates/account/logout_confirm.html #}
+<div class="modal__dialog" role="document" aria-labelledby="logout-modal-title">
+    <header class="modal__header">
+        <h2 id="logout-modal-title" class="modal__title">Confirm Logout</h2>
+        <button type="button"
+                class="modal__close"
+                aria-label="Close"
+                data-close-modal>&times;</button>
+    </header>
 
-    <form method="post" action="{% url 'account:logout_confirm' %}" class="ajax-form" data-target="#global-modal">
-        {% csrf_token %}
-        <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-            <button type="button" class="button secondary-button" onclick="document.getElementById('global-modal').classList.remove('open');">
-                Cancel
-            </button>
-            <button type="submit" class="button" style="background-color: #d32f2f; color: white;">
-                <i class="fa-solid fa-sign-out-alt"></i> Logout
-            </button>
-        </div>
-    </form>
+    <section class="modal__body">
+        <p>Are you sure you want to log out of your EduAlly account?</p>
+    </section>
+
+    <footer class="modal__footer">
+        <button type="button"
+                class="btn btn--secondary"
+                data-close-modal>Cancel</button>
+
+        <form method="post"
+              action="{% url 'account:logout_confirm' %}"
+              class="modal__form"
+              data-modal-form>
+            {% csrf_token %}
+            <button type="submit"
+                    class="btn btn--primary">Yes, log me out</button>
+        </form>
+    </footer>
 </div>

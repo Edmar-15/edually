@@ -72,16 +72,14 @@
               </div>
             </section>
           </div>
-          <form method="post" action="{% url 'account:logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="nav-item logout">
-              <i class="fas fa-sign-out-alt nav-icon"></i>
-              <span class="nav-label">Logout</span>
-            </button>
-          </form>
         </section>
       </main>
     </div>
+    {# 1️⃣ Global modal placeholder – only once per page #}
+    {% include "components/global_modal.html" %}
+
+    {# 2️⃣ Modal JS – load after the DOM #}
+    <script src="{% static 'js/modal.js' %}" defer></script>
     <script>
       (function () {
         const key = "eduallyDarkMode";

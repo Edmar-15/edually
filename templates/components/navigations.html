@@ -56,10 +56,24 @@
   </nav>
 
   <div class="sidebar-footer">
-    <button type="button" class="nav-item logout ajax-modal" data-ajax-url="{% url 'account:logout_confirm' %}" data-target="#global-modal" aria-label="Logout">
-      <i class="fas fa-sign-out-alt nav-icon"></i>
-      <span class="nav-label">Logout</span>
-    </button>
+    {# ---------- 1️⃣ JavaScript‑enabled trigger ---------- #}
+        <button type="button"
+                class="nav-item logout js-modal-trigger"
+                data-url="{% url 'account:logout_confirm' %}">
+            <i class="fas fa-sign-out-alt nav-icon"></i>
+            <span class="nav-label">Logout</span>
+        </button>
+
+        {# ---------- 2️⃣ Fallback when JS is disabled ---------- #}
+        <noscript>
+            <form method="post" action="{% url 'account:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="nav-item logout">
+                    <i class="fas fa-sign-out-alt nav-icon"></i>
+                    <span class="nav-label">Logout</span>
+                </button>
+            </form>
+        </noscript>
   </div>
 </aside>
 <script src="{% static 'js/sidebar-toggle.js' %}" defer></script>

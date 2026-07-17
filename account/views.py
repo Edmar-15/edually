@@ -240,19 +240,20 @@ def settings(request):
 
 
 @login_required(login_url='account:login')
+@ensure_csrf_cookie     # ← makes sure the GET includes a CSRF cookie
 def logout_confirm(request):
-    """
-    AJAX view for logout confirmation.
-    GET → return the modal HTML for the frontend.
-    POST → actually log the user out.
-    """
+    """GET → modal HTML, POST → log the user out."""
     if request.method == 'POST':
         from django.contrib.auth import logout
         logout(request)
+        # AJAX response (the JS will redirect)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'redirect': reverse('account:landing')})
+            return JsonResponse({'success': True,
+                                 'redirect': reverse('account:landing')})
+        # Non‑AJAX fallback (keep old behaviour)
         return redirect('account:landing')
 
+    # GET → return modal markup
     html = render_to_string(
         'account/logout_confirm.html',
         {'request': request},

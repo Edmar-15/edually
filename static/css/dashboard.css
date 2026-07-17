@@ -1415,3 +1415,99 @@ body.sidebar-collapsed .main-content {
 .sidebar::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.2);
 }
+
+/* --------------------------------------------------------------
+   Simple, accessible modal – works with the markup above
+   -------------------------------------------------------------- */
+.modal {
+    display: none;                /* hidden until we add .open */
+    position: fixed;
+    inset: 0;
+    z-index: 9999;                /* above everything else */
+    overflow-y: auto;
+    background: rgba(0,0,0,.5);   /* semi‑transparent backdrop */
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* When we want it visible */
+.modal.open {
+    display: flex;                /* Flexbox to center the dialog */
+}
+
+/* Dialog box */
+.modal__dialog {
+    background: #fff;
+    border-radius: .5rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 4px 18px rgba(0,0,0,.15);
+    animation: fadeIn .15s ease-out forwards;
+}
+
+/* Header */
+.modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem 0;
+}
+.modal__title {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+/* Close icon */
+.modal__close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* Body */
+.modal__body {
+    padding: 1rem;
+    font-size: 1rem;
+}
+
+/* Footer (buttons) */
+.modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: .75rem;
+    padding: .75rem 1rem 1rem;
+}
+
+/* Button utilities – you can replace them with your UI framework */
+.btn {
+    font-family: inherit;
+    font-size: .95rem;
+    padding: .45rem .9rem;
+    border: none;
+    border-radius: .3rem;
+    cursor: pointer;
+}
+.btn--primary {
+    background: #d32f2f;   /* red – matches your existing logout button */
+    color: #fff;
+}
+.btn--secondary {
+    background: #e0e0e0;
+    color: #222;
+}
+
+/* Simple fade‑in for the dialog */
+@keyframes fadeIn {
+    from { opacity: .4; transform: translateY(-10px); }
+    to   { opacity: 1;   transform: translateY(0); }
+}
+
+/* Ensure focus outline is visible (accessibility) */
+.modal button:focus,
+.modal a:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+}

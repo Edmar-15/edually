@@ -24,6 +24,11 @@
             </div>
         </main>
     </div>
+    {# 1️⃣ Global modal placeholder – only once per page #}
+    {% include "components/global_modal.html" %}
+
+    {# 2️⃣ Modal JS – load after the DOM #}
+    <script src="{% static 'js/modal.js' %}" defer></script>
     <script src="{% static "js/slm/tab_switching.js" %}"></script>
 </body>
 </html>

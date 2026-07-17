@@ -102,6 +102,12 @@
 <!-- Global modal container (used for flagging, edit, etc.) -->
 <div id="global-modal" class="modal" aria-hidden="true"></div>
 
+{# 1️⃣ Global modal placeholder – only once per page #}
+    {% include "components/global_modal.html" %}
+
+    {# 2️⃣ Modal JS – load after the DOM #}
+    <script src="{% static 'js/modal.js' %}" defer></script>
+
 <script src="{% static 'js/forum-upvote.js' %}"></script>
 <script src="{% static 'js/forum_ajax.js' %}"></script>
 </body>
