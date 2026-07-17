@@ -1,12 +1,13 @@
 {# forum/partials/_post_item.html #}
+{% load account_extras %}
 <article class="post-item card{% if post.verified %} verified{% endif %}" data-post-id="{{ post.pk }}" id="post-{{ post.pk }}">
     <div class="post-main">
         <div class="post-header">
             <div class="avatar">
-                {% if post.author.avatar %}
+                    {% if post.author.avatar %}
                     <img src="{{ post.author.avatar.url }}" alt="{{ post.author.get_full_name|default:post.author.username }}">
                 {% else %}
-                    <span class="avatar-fallback">{{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}</span>
+                    <span class="avatar-fallback">{{ post.author|initials }}</span>
                 {% endif %}
             </div>
             <div>
@@ -41,10 +42,12 @@
             <div class="upvote-num">{{ post.upvotes }}</div>
         </div>
 
-        <button class="button reply-btn ajax-modal" data-ajax-url="{% url 'forum:post_detail' post.pk %}" data-target="#global-modal" aria-label="Reply">
+        <a href="{% url 'forum:post_detail' post.pk %}"
+           class="button reply-btn"
+           aria-label="View thread">
             <i class="fas fa-comments"></i>
             <span class="reply-count-badge">{{ post.replies_cnt }}</span>
-        </button>
+        </a>
 
         <div class="action-menu">
             <button type="button" class="button secondary-circle small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Actions">

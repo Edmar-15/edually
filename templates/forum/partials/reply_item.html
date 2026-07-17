@@ -1,57 +1,63 @@
 {# forum/partials/_reply_item.html #}
+{% load account_extras %}
 <div class="reply-item card" data-reply-id="{{ reply.pk }}" id="reply-{{ reply.pk }}">
-    <div class="avatar avatar--sm">
-        {% if reply.author.avatar %}
-            <img src="{{ reply.author.avatar.url }}" alt="{{ reply.author.get_full_name|default:reply.author.username }}">
-        {% else %}
-            <span class="avatar-fallback">{{ reply.author.get_full_name|default:reply.author.username|slice:":1"|upper }}</span>
-        {% endif %}
-    </div>
-    <div class="reply-body">
-        <p class="reply-author">
-            <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
-            • {{ reply.created_at|timesince }} ago
-        </p>
-        <div class="reply-content">{{ reply.content|linebreaks }}</div>
-
-        <div class="reply-upvote-section">
-            <button class="reply-upvote-btn{% if reply.pk in user_reply_upvotes %} has-upvoted{% endif %}"
-                    data-reply-id="{{ reply.pk }}"
-                    data-endpoint="{% url 'forum:reply_upvote' reply.pk %}">
-                <i class="fa-solid fa-thumbs-up"></i>
-                <span class="reply-upvote-count">{{ reply.upvotes }}</span>
-            </button>
-
-            <div class="action-menu reply-action-menu">
-                <button type="button" class="button secondary-button small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false">
-                    <i class="fa-solid fa-ellipsis"></i>
-                </button>
-                <div class="action-menu-panel" role="menu" aria-hidden="true">
-                    {% if request.user == reply.author %}
-                        <a href="{% url 'forum:reply_edit' reply.pk %}"
-                           class="button secondary-button small-button ajax-modal action-menu-item"
-                           data-ajax-url="{% url 'forum:reply_edit' reply.pk %}"
-                           data-target="#global-modal"
-                           role="menuitem">
-                            <i class="fa-solid fa-edit"></i> Edit
-                        </a>
-                            <a href="{% url 'forum:reply_delete' reply.pk %}"
-                               class="button secondary-button small-button ajax-modal action-menu-item"
-                               data-ajax-url="{% url 'forum:reply_delete' reply.pk %}"
-                               data-target="#global-modal"
-                               role="menuitem">
-                            <i class="fa-solid fa-trash"></i> Delete
-                        </a>
-                    {% endif %}
-                    <a href="{% url 'forum:flag_content' 'reply' reply.pk %}"
-                       class="button secondary-button small-button ajax-modal action-menu-item"
-                       data-ajax-url="{% url 'forum:flag_content' 'reply' reply.pk %}"
-                       data-target="#global-modal"
-                       role="menuitem">
-                        <i class="fa-solid fa-flag"></i> Report
-                    </a>
-                </div>
+    <div class="reply-item__header">
+        <div class="reply-author-info">
+            <div class="avatar avatar--sm">
+                {% if reply.author.avatar %}
+                    <img src="{{ reply.author.avatar.url }}" alt="{{ reply.author.get_full_name|default:reply.author.username }}">
+                {% else %}
+                    <span class="avatar-fallback">{{ reply.author|initials }}</span>
+                {% endif %}
+            </div>
+            <div class="reply-meta">
+                <p class="reply-author">
+                    <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
+                </p>
+                <p class="reply-time">{{ reply.created_at|timesince }} ago</p>
             </div>
         </div>
+
+        <div class="action-menu reply-action-menu">
+            <button type="button" class="button secondary-button small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false">
+                <i class="fa-solid fa-ellipsis"></i>
+            </button>
+            <div class="action-menu-panel" role="menu" aria-hidden="true">
+                {% if request.user == reply.author %}
+                    <a href="{% url 'forum:reply_edit' reply.pk %}"
+                       class="button secondary-button small-button ajax-modal action-menu-item"
+                       data-ajax-url="{% url 'forum:reply_edit' reply.pk %}"
+                       data-target="#global-modal"
+                       role="menuitem">
+                        <i class="fa-solid fa-edit"></i> Edit
+                    </a>
+                    <a href="{% url 'forum:reply_delete' reply.pk %}"
+                       class="button secondary-button small-button ajax-modal action-menu-item"
+                       data-ajax-url="{% url 'forum:reply_delete' reply.pk %}"
+                       data-target="#global-modal"
+                       role="menuitem">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </a>
+                {% endif %}
+                <a href="{% url 'forum:flag_content' 'reply' reply.pk %}"
+                   class="button secondary-button small-button ajax-modal action-menu-item"
+                   data-ajax-url="{% url 'forum:flag_content' 'reply' reply.pk %}"
+                   data-target="#global-modal"
+                   role="menuitem">
+                    <i class="fa-solid fa-flag"></i> Report
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="reply-content">{{ reply.content|linebreaks }}</div>
+
+    <div class="reply-footer">
+        <button class="reply-upvote-btn{% if reply.pk in user_reply_upvotes %} has-upvoted{% endif %}"
+                data-reply-id="{{ reply.pk }}"
+                data-endpoint="{% url 'forum:reply_upvote' reply.pk %}">
+            <i class="fa-solid fa-thumbs-up"></i>
+            <span class="reply-upvote-count">{{ reply.upvotes }}</span>
+        </button>
     </div>
 </div>

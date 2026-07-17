@@ -31,10 +31,11 @@
                 <aside class="profile-overview-card">
                     <div class="profile-top">
                         <div class="profile-avatar">
+                            {% load account_extras %}
                             {% if user_obj.avatar %}
                                 <img src="{{ user_obj.avatar.url }}" alt="Avatar">
                             {% else %}
-                                <span class="avatar-fallback">{{ user_obj.get_short_name|slice:":1"|default:"U" }}</span>
+                                <span class="avatar-fallback avatar-fallback--large">{{ user_obj|initials }}</span>
                             {% endif %}
                         </div>
                         <div>

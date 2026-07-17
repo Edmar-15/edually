@@ -16,16 +16,17 @@
 
     <main class="main-content">
         <section class="forum-page">
-            <div style="max-width: 600px; margin: 3rem auto; padding: 2rem; border: 1px solid #c8e6c9; background-color: #f1f8e9; border-radius: 8px; text-align: center;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">✓</div>
-                <h2 style="color: #2e7d32;">Thank You!</h2>
-                <p style="margin: 1rem 0; font-size: 1.1rem;">Your report has been submitted successfully.</p>
-                <p style="color: #666; margin: 1rem 0;">Our moderation team will review this content shortly and take appropriate action.</p>
-
-                <div style="margin-top: 2rem;">
-                    <a href="{% url 'forum:feed' %}" class="button primary-button">
-                        Return to Forum
-                    </a>
+            <div class="flag-success-card">
+                <div class="flag-success-card__icon">✓</div>
+                <h2>Thank You!</h2>
+                {% if already_reported %}
+                    <p class="flag-success-text">This content has already been reported. Our moderation team is reviewing it.</p>
+                {% else %}
+                    <p class="flag-success-text">Your report has been submitted successfully.</p>
+                {% endif %}
+                <p class="flag-success-text-muted">Our moderation team will review this content shortly and take appropriate action.</p>
+                <div class="flag-success-actions">
+                    <a href="{% url 'forum:feed' %}" class="button primary-button">Return to Forum</a>
                 </div>
             </div>
         </section>

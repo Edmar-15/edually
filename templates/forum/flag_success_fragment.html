@@ -1,0 +1,14 @@
+{% load static %}
+<div class="flag-success-card">
+    <div class="flag-success-card__icon">✓</div>
+    <h2>Report Submitted</h2>
+    {% if already_reported %}
+        <p class="flag-success-text">This content has already been reported. Our moderation team is reviewing it.</p>
+    {% else %}
+        <p class="flag-success-text">Your report has been submitted successfully.</p>
+    {% endif %}
+    <p class="flag-success-text-muted">Our moderation team will review this content shortly and take appropriate action.</p>
+    <div class="flag-success-actions">
+        <button type="button" class="button secondary-button" onclick="document.querySelector('#global-modal').classList.remove('open');">Close</button>
+    </div>
+</div>

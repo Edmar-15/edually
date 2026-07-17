@@ -31,13 +31,14 @@
                 <li class="top-user-item{% if forloop.counter0 == 0 %} top-user-item--gold{% elif forloop.counter0 == 1 %} top-user-item--silver{% elif forloop.counter0 == 2 %} top-user-item--bronze{% endif %}">
                     <div class="top-user-rank">{{ forloop.counter }}</div>
                     <div class="top-user-avatar">
+                        {% load account_extras %}
                         {% if u.avatar %}
                             <a href="#" class="ajax-modal" data-ajax-url="{% url 'account:profile_modal' u.pk %}" title="View profile">
                                 <img src="{{ u.avatar.url }}" alt="{{ u.get_full_name|default:u.username }}">
                             </a>
                         {% else %}
                             <a href="#" class="ajax-modal" data-ajax-url="{% url 'account:profile_modal' u.pk %}" title="View profile">
-                                <span class="avatar-fallback">{{ u.get_full_name|default:u.username|slice:":1"|upper }}</span>
+                                <span class="avatar-fallback">{{ u|initials }}</span>
                             </a>
                         {% endif %}
                     </div>

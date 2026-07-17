@@ -81,7 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (insertMode === 'append') {
                     container.insertAdjacentHTML('beforeend', data.html);
                 } else if (insertMode === 'replace') {
-                    container.outerHTML = data.html;
+                    if (container.classList.contains('modal')) {
+                        container.innerHTML = data.html;
+                    } else {
+                        container.outerHTML = data.html;
+                    }
                 } else {
                     container.innerHTML = data.html;
                 }
@@ -339,6 +343,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const panel = menu.querySelector('.action-menu-panel');
             if (!panel) return;
             const expanded = toggle.getAttribute('aria-expanded') === 'true';
+            if (!expanded) {
+                const toggleRect = toggle.getBoundingClientRect();
+                const prevDisplay = panel.style.display;
+                const prevVisibility = panel.style.visibility;
+                panel.style.display = 'block';
+                panel.style.visibility = 'hidden';
+                const panelHeight = panel.offsetHeight || panel.scrollHeight || 200;
+                panel.style.display = prevDisplay;
+                panel.style.visibility = prevVisibility;
+
+                const hasRoomBelow = window.innerHeight - toggleRect.bottom >= panelHeight + 20;
+                const hasRoomAbove = toggleRect.top >= panelHeight + 20;
+                panel.classList.toggle('up', !hasRoomBelow && hasRoomAbove);
+            } else {
+                panel.classList.remove('up');
+            }
             menu.classList.toggle('open', !expanded);
             panel.classList.toggle('open', !expanded);
             toggle.setAttribute('aria-expanded', String(!expanded));

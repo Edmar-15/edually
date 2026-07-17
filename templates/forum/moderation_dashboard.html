@@ -81,69 +81,66 @@
                     <p>Unresolved Reports</p>
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <h3>{{ unverified_posts.count }}</h3>
+                    <h3>{{ flagged_posts_count }}</h3>
                     <p>Flagged Posts</p>
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <h3>{{ top_users.count }}</h3>
-                    <p>Top Contributors</p>
+                    <h3>{{ flagged_replies_count }}</h3>
+                    <p>Flagged Replies</p>
                 </div>
             </div>
 
             <!-- Unresolved Reports -->
             <section style="margin-bottom: 3rem;">
                 <h2 style="margin-bottom: 1.5rem;">
-                    <i class="fa-solid fa-exclamation-circle"></i> Unresolved Reports ({{ unresolved_reports.count }})
+                    <i class="fa-solid fa-exclamation-circle"></i> Unresolved Reports ({{ report_count }})
                 </h2>
-                
-                {% if unresolved_reports %}
-                    {% for report in unresolved_reports %}
+
+                {% if reported_items %}
+                    {% for item in reported_items %}
                     <div class="report-item">
                         <div class="report-header">
                             <div>
                                 <p style="margin: 0 0 0.5rem; font-weight: 600;">
-                                    <strong>{{ report.get_reason_display }}</strong> • 
-                                    {% if report.content_type == 'post' %}
-                                        <span style="color: #0066cc;">Post</span>
-                                    {% else %}
-                                        <span style="color: #009933;">Reply</span>
-                                    {% endif %}
+                                    <strong>{{ item.content_type|title }} Report</strong>
+                                    • {{ item.reports|length }} report{{ item.reports|length|pluralize }}
                                 </p>
                                 <p style="margin: 0; color: #666; font-size: 0.9rem;">
-                                    Reported by <strong>{{ report.reporter.email }}</strong> • 
-                                    {{ report.created_at|timesince }} ago
+                                    Reported by {{ item.reporters|join:", " }} •
+                                    {{ item.latest_report.created_at|timesince }} ago
                                 </p>
                             </div>
                             <span class="report-status status-unresolved">Pending</span>
                         </div>
-                        
+
                         <div style="background: white; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
-                            <p style="margin: 0 0 0.5rem; font-weight: 600;">
-                                {% if report.content_type == 'post' %}
-                                    Post by <strong>{{ report.post.author.email }}</strong>
-                                {% else %}
-                                    Reply by <strong>{{ report.reply.author.email }}</strong>
-                                {% endif %}
-                            </p>
-                            <p style="margin: 0; color: #333;">
-                                {% if report.content_type == 'post' %}
-                                    {{ report.post.title }}
-                                {% else %}
-                                    {{ report.reply.content|truncatewords:20 }}
-                                {% endif %}
-                            </p>
+                            {% if item.content_type == 'post' and item.post %}
+                                <p style="margin: 0 0 0.5rem; font-weight: 600;">Post by <strong>{{ item.post.author.get_full_name|default:item.post.author.username }}</strong></p>
+                                <p style="margin: 0; color: #333;">{{ item.post.title }}</p>
+                                <p style="margin: 0.75rem 0 0; color: #555;">{{ item.post.content|striptags|truncatechars:160 }}</p>
+                            {% elif item.content_type == 'reply' and item.reply %}
+                                <p style="margin: 0 0 0.5rem; font-weight: 600;">Reply by <strong>{{ item.reply.author.get_full_name|default:item.reply.author.username }}</strong></p>
+                                <p style="margin: 0; color: #333;">{{ item.reply.content|striptags|truncatechars:160 }}</p>
+                                <p style="margin: 0.75rem 0 0; color: #555;">In thread: <strong>{{ item.reply.post.title }}</strong></p>
+                            {% endif %}
                         </div>
-                        
-                        {% if report.description %}
+
+                        {% if item.latest_report.description %}
                         <p style="margin: 1rem 0; padding: 0.8rem; background: #fff9c4; border-radius: 4px; color: #666;">
-                            <strong>Reporter's notes:</strong> {{ report.description }}
+                            <strong>Reporter note:</strong> {{ item.latest_report.description }}
                         </p>
                         {% endif %}
-                        
-                        <div>
-                            <a href="{% url 'forum:resolve_report' report.id %}" class="button primary-button" style="font-size: 0.9rem;">
-                                <i class="fa-solid fa-check"></i> Review & Resolve
-                            </a>
+
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                            <span class="tag">Reasons: {{ item.reasons|join:", " }}</span>
+                            <form method="post" action="{% url 'forum:resolve_report' item.latest_report.id %}" style="display:inline-flex; gap: 0.5rem; align-items:center;">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="dismiss" class="button secondary-button small-button">Dismiss</button>
+                                <button type="submit" name="action" value="delete" class="button danger-button small-button">Remove Content</button>
+                                {% if item.content_type == 'post' %}
+                                    <button type="submit" name="action" value="verify" class="button primary-button small-button">Verify Post</button>
+                                {% endif %}
+                            </form>
                         </div>
                     </div>
                     {% endfor %}

@@ -72,6 +72,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     def short_name(self) -> str:
         return self.first_name or self.email
 
+    def get_full_name(self) -> str:
+        return self.full_name
+
+    def get_short_name(self) -> str:
+        return self.short_name
+
     # -----------------------------------------------------------------
     # Convenience read‑only properties that forward to the profile.
     # They let existing templates keep using {{ user.student_id }} etc.

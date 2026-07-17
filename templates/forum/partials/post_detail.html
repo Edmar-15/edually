@@ -1,6 +1,12 @@
 <section class="forum-page">
     {% if in_modal %}
         <button class="modal-close" aria-label="Close post" onclick="document.querySelector('#global-modal').classList.remove('open')">×</button>
+    {% else %}
+        <div class="thread-topbar">
+            <a href="{% url 'forum:feed' %}" class="button secondary-button small-button thread-back-button">
+                <i class="fa-solid fa-arrow-left"></i> Back to Forum
+            </a>
+        </div>
     {% endif %}
     <!-- THE QUESTION -->
     <article class="post-item card{% if post.verified %} verified{% endif %}"
@@ -8,10 +14,11 @@
         <div class="post-main">
             <div class="post-header">
                 <div class="avatar">
+                    {% load account_extras %}
                     {% if post.author.avatar %}
                         <img src="{{ post.author.avatar.url }}" alt="{{ post.author.get_full_name|default:post.author.username }}">
                     {% else %}
-                        <span class="avatar-fallback">{{ post.author.get_full_name|default:post.author.username|slice:":1"|upper }}</span>
+                        <span class="avatar-fallback">{{ post.author|initials }}</span>
                     {% endif %}
                 </div>
                 <div>
@@ -48,10 +55,17 @@
                 <div class="upvote-num">{{ post.upvotes }}</div>
             </div>
 
-            <button class="button reply-btn ajax-modal" data-ajax-url="{% url 'forum:post_detail' post.pk %}" data-target="#global-modal" aria-label="Reply">
-                <i class="fas fa-comments"></i>
-                <span class="reply-count-badge">{{ post.replies_cnt }}</span>
-            </button>
+            {% if in_modal %}
+                <button class="button reply-btn ajax-modal" data-ajax-url="{% url 'forum:post_detail' post.pk %}" data-target="#global-modal" aria-label="Reply">
+                    <i class="fas fa-comments"></i>
+                    <span class="reply-count-badge">{{ post.replies_cnt }}</span>
+                </button>
+            {% else %}
+                <a href="#reply-list" class="button reply-btn" aria-label="Jump to replies">
+                    <i class="fas fa-comments"></i>
+                    <span class="reply-count-badge">{{ post.replies_cnt }}</span>
+                </a>
+            {% endif %}
 
             <div class="action-menu">
                 <button type="button" class="button secondary-circle small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Actions">

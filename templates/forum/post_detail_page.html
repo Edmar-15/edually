@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAlly – Discussion Thread</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+    <link rel="stylesheet" href="{% static 'css/helper.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        {% include "forum/partials/post_detail.html" %}
+    </main>
+</div>
+
+<div id="global-modal" class="modal" aria-hidden="true"></div>
+{% include "components/global_modal.html" %}
+
+<script src="{% static 'js/modal.js' %}" defer></script>
+<script src="{% static 'js/forum-upvote.js' %}"></script>
+<script src="{% static 'js/forum_ajax.js' %}"></script>
+</body>
+</html>

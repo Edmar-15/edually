@@ -10,19 +10,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!passwordInput) return;
             
-            // Get the eye icons
-            const eyeIcon = this.querySelector('.eye-icon');
-            const eyeOffIcon = this.querySelector('.eye-off-icon');
-            
-            // Toggle the input type
+            // Toggle the input type and a wrapper class to drive CSS transitions
+            const wrapper = this.closest('.password-input-wrapper');
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                eyeIcon.style.display = 'none';
-                eyeOffIcon.style.display = 'block';
+                if (wrapper) wrapper.classList.add('password-visible');
             } else {
                 passwordInput.type = 'password';
-                eyeIcon.style.display = 'block';
-                eyeOffIcon.style.display = 'none';
+                if (wrapper) wrapper.classList.remove('password-visible');
             }
         });
     });

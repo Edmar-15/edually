@@ -3,10 +3,11 @@
     <div class="profile-top">
         <button class="modal-close" aria-label="Close profile" onclick="document.querySelector('#global-modal').classList.remove('open')">×</button>
         <div class="profile-avatar">
+            {% load account_extras %}
             {% if user_obj.avatar %}
                 <img src="{{ user_obj.avatar.url }}" alt="{{ user_obj.get_full_name|default:user_obj.username }}">
             {% else %}
-                <span class="avatar-fallback">{{ user_obj.get_full_name|default:user_obj.username|slice:":1"|upper }}</span>
+                <span class="avatar-fallback avatar-fallback--large">{{ user_obj|initials }}</span>
             {% endif %}
         </div>
         <div class="profile-meta">

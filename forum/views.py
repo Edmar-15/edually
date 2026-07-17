@@ -1,6 +1,7 @@
 # forum/views.py
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
+from collections import defaultdict
 from django.db.models import Q, Count, F
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, Http404
@@ -204,10 +205,12 @@ def post_detail(request, pk):
         "user_post_upvotes": user_post_upvotes,
         "user_reply_upvotes": user_reply_upvotes,
     }
-    # If this is an AJAX modal request, tell the template it's rendered inside a modal
-    context['in_modal'] = is_ajax(request)
-    html = render_to_string("forum/partials/post_detail.html", context, request=request)
-    return JsonResponse({"html": html})
+    # If this is an AJAX modal request, render the fragment for the modal.
+    context["in_modal"] = is_ajax(request)
+    if context["in_modal"]:
+        html = render_to_string("forum/partials/post_detail.html", context, request=request)
+        return JsonResponse({"html": html})
+    return render(request, "forum/post_detail_page.html", context)
 
 
 # -------------------------------------------------------------------------
@@ -461,25 +464,32 @@ def flag_content(request, content_type, content_id):
             )
             return JsonResponse({"success": False, "html": html}, status=400)
 
-        FlagReport.objects.get_or_create(
+        report, created = FlagReport.objects.get_or_create(
             reporter=request.user,
             content_type=content_type,
             post=post,
             reply=reply,
             defaults={"reason": reason, "description": description},
         )
+
+        if content_type == "post" and post:
+            post.flagged = True
+            post.flag_reason = reason
+            post.save(update_fields=["flagged", "flag_reason"])
+
         if is_ajax(request):
             html = render_to_string(
-                "forum/flag_success.html",
-                {"content": content, "request": request},
+                "forum/flag_success_fragment.html",
+                {"content": content, "request": request, "already_reported": not created},
                 request=request,
             )
             return JsonResponse({"success": True, "html": html})
+
         # non‑AJAX fallback – render success page
         categories = Category.objects.annotate(
             post_count=Count('posts', filter=Q(posts__is_deleted=False))
         )
-        return render(request, "forum/flag_success.html", {"content": content, "categories": categories})
+        return render(request, "forum/flag_success.html", {"content": content, "categories": categories, "already_reported": not created})
 
     # GET – just return the form fragment (for modal)
     html = render_to_string(
@@ -501,14 +511,45 @@ def flag_content(request, content_type, content_id):
 @login_required(login_url="account:login")
 @user_passes_test(lambda u:  u.is_authenticated and u.is_teacher_member)
 def moderation_dashboard(request):
-    unresolved_reports = FlagReport.objects.filter(resolved=False).select_related("reporter", "post", "reply")
+    unresolved_reports = FlagReport.objects.filter(resolved=False).select_related("reporter", "post", "reply").order_by("-created_at")
     report_count = unresolved_reports.count()
+    flagged_posts_count = unresolved_reports.filter(content_type="post").values("post").distinct().count()
+    flagged_replies_count = unresolved_reports.filter(content_type="reply").values("reply").distinct().count()
     unverified_posts = Post.objects.filter(flag_reports__resolved=False).distinct()
     top_users = request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6]
 
+    grouped = defaultdict(lambda: {
+        "content_type": None,
+        "post": None,
+        "reply": None,
+        "reports": [],
+        "latest_report": None,
+        "reasons": [],
+        "reporters": [],
+    })
+    for report in unresolved_reports:
+        key = (report.content_type, report.post_id or report.reply_id)
+        item = grouped[key]
+        if item["content_type"] is None:
+            item["content_type"] = report.content_type
+            item["post"] = report.post
+            item["reply"] = report.reply
+        item["reports"].append(report)
+        item["latest_report"] = report
+        reason_display = report.get_reason_display()
+        if reason_display not in item["reasons"]:
+            item["reasons"].append(reason_display)
+        reporter_name = report.reporter.get_full_name() or report.reporter.email
+        if reporter_name not in item["reporters"]:
+            item["reporters"].append(reporter_name)
+
+    reported_items = sorted(grouped.values(), key=lambda item: item["latest_report"].created_at if item["latest_report"] else None, reverse=True)
+
     context = {
         "report_count": report_count,
-        "unresolved_reports": unresolved_reports,
+        "flagged_posts_count": flagged_posts_count,
+        "flagged_replies_count": flagged_replies_count,
+        "reported_items": reported_items,
         "unverified_posts": unverified_posts,
         "top_users": top_users,
     }
@@ -519,9 +560,42 @@ def moderation_dashboard(request):
 @user_passes_test(lambda u:  u.is_authenticated and u.is_teacher_member)
 def resolve_report(request, report_id):
     report = get_object_or_404(FlagReport, pk=report_id)
-    report.resolved = True
-    report.action_taken = "Reviewed by moderator"
-    report.save(update_fields=["resolved", "action_taken"])
+    action = request.POST.get("action", "dismiss") if request.method == "POST" else "dismiss"
+    content_type = report.content_type
+    post = report.post
+    reply = report.reply
+
+    if content_type == "post":
+        report_qs = FlagReport.objects.filter(resolved=False, post=post)
+    else:
+        report_qs = FlagReport.objects.filter(resolved=False, reply=reply)
+
+    if request.method == "POST":
+        if action == "delete":
+            if content_type == "post" and post:
+                post.is_deleted = True
+                post.save(update_fields=["is_deleted"])
+                action_taken = "Content removed by moderator"
+            elif content_type == "reply" and reply:
+                reply.is_deleted = True
+                reply.save(update_fields=["is_deleted"])
+                action_taken = "Reply removed by moderator"
+            else:
+                action_taken = "Reviewed by moderator"
+        elif action == "verify" and content_type == "post" and post:
+            post.verified = True
+            post.flagged = False
+            post.flag_reason = ""
+            post.save(update_fields=["verified", "flagged", "flag_reason"])
+            action_taken = "Post verified by moderator"
+        else:
+            action_taken = "Report dismissed by moderator"
+
+        report_qs.update(resolved=True, action_taken=action_taken)
+    else:
+        report.resolved = True
+        report.action_taken = "Reviewed by moderator"
+        report.save(update_fields=["resolved", "action_taken"])
 
     if is_ajax(request):
         return JsonResponse({"success": True, "resolved_id": report.pk})

@@ -9,7 +9,12 @@
         </div>
     {% endif %}
 
-    <form method="post" class="ajax-form" data-target="#global-modal" data-replace="true">
+    <form method="post"
+          action="{% url 'forum:flag_content' content_type content.pk %}"
+          class="ajax-form"
+          data-target="#global-modal"
+          data-replace="true"
+          data-close-modal="false">
         {% csrf_token %}
 
         <div>
