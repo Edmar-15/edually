@@ -1,4 +1,5 @@
 {% load static %}
+{% load account_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +19,11 @@
         <header class="content-header">
             <!-- Breadcrumb on the left -->
             <p class="breadcrumb"><i>
-                <a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+                {% if request.user|has_group:'Teacher' %}
+                <i><a href="{% url "slm:management" %}">Module Management</a> &gt;
+                {% else %}
+                <i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+                {% endif %}
                 <a href="{% url "slm:subject-modules" subject.id %}">{{ subject.subject_code }} – {{ subject.subject_name }}</a>
                 &gt; {{ module.module_name }}
             </i></p>
@@ -34,7 +39,8 @@
                 </a>
 
                 <!-- 2️⃣  Highlight‑history toggle (icon only) -->
-                <button type="button"
+                 {% if request.user|has_group:'Student' %}
+                 <button type="button"
                         class="module-content-history__toggle"
                         id="highlight-history-toggle"
                         aria-label="Highlight history"
@@ -45,6 +51,7 @@
                     <!-- Small badge that still shows the number of history items -->
                     <span id="highlight-history-count" class="badge">0</span>
                 </button>
+                 {% endif %}
             </div>
         </header>
 
@@ -129,6 +136,7 @@
         })();
     </script>
 
+    {% if request.user|has_group:'Student' %}
     <script type="module">
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
         const toolbar   = document.getElementById('selection-toolbar');
@@ -138,5 +146,6 @@
         // default apiBase = '/slm/api/modules/'
         initHighlightAI(toolbar, moduleId, contentRoot);
     </script>
+    {% endif %}
 </body>
 </html>

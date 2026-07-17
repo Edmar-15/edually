@@ -1,6 +1,6 @@
 import json
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.template.loader import render_to_string
@@ -136,6 +136,7 @@ def api_subject_list(request):
 # 2️⃣  POST – create a new subject (logged‑in users only)
 # -----------------------------------------------------------------
 @login_required
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
 @require_POST
 def api_subject_create(request):
     try:
@@ -171,6 +172,7 @@ def api_subject_create(request):
 # 3️⃣  PUT – update a subject (owner only)
 # -----------------------------------------------------------------
 @login_required
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
 @require_http_methods(["PUT", "PATCH"])
 def api_subject_update(request, pk):
     try:
@@ -206,6 +208,7 @@ def api_subject_update(request, pk):
 # 4️⃣  DELETE – remove a subject (owner only)
 # -----------------------------------------------------------------
 @login_required
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
 @require_http_methods(["DELETE"])
 def api_subject_delete(request, pk):
     try:
@@ -331,6 +334,7 @@ def api_module_list(request, subject_id):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
 @require_http_methods(["POST"])
 def api_module_create(request, subject_id):
     """POST /slm/api/subjects/<subject_id>/modules/  (multipart/form-data)"""
@@ -392,6 +396,7 @@ def api_module_create(request, subject_id):
 # 6️⃣  UPDATE – PUT a module (JSON only – no file change)
 # -----------------------------------------------------------------
 @login_required
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
 @require_http_methods(["PUT", "PATCH"])
 def api_module_update(request, pk):
     """PUT /slm/api/modules/<pk>/  (JSON payload)"""
@@ -462,6 +467,7 @@ def api_module_update(request, pk):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
 @require_http_methods(["DELETE"])
 def api_module_delete(request, pk):
     """DELETE /slm/api/modules/<pk>/delete/"""
@@ -479,6 +485,7 @@ def api_module_delete(request, pk):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
 @require_http_methods(["POST"])
 def api_module_file_replace(request, pk):
     """
@@ -928,3 +935,14 @@ def api_highlight(request, pk, target_type):
         {"query": raw_query, "answer": answer_body, "cached": False},
         status=200,
     )
+
+
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)    
+def management(request):
+    """
+    Render a dedicated page that contains the full CRUD UI for
+    subjects (and, via the normal subject‑detail view, for modules).
+    Regular students do not have access – they continue using the
+    original SLM tabs (read‑only).
+    """
+    return render(request, "slm/management.html")

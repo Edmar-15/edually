@@ -80,6 +80,14 @@ export function initSubjectWidget(rootEl) {
    * 5️⃣  Load the YEAR <select> with choices from the API.
    * ----------------------------------------------------------------- */
   async function loadYearChoices() {
+    // -----------------------------------------------------------------
+    // 1️⃣  Guard – if the element is missing, do nothing.
+    // -----------------------------------------------------------------
+    if (!$yearSelect) {
+      // No UI to populate → nothing to do.
+      return;
+    }
+
     try {
       const resp = await fetch("/slm/api/subjects/year-choices/", {
         credentials: "same-origin",
@@ -345,16 +353,27 @@ export function initSubjectWidget(rootEl) {
     form.subject_code.value = subject.subject_code;
     form.subject_name.value = subject.subject_name;
 
-    // year <select> – copy the options from the add‑form
+    // year <select> – copy the options from the add‑form if it exists.
     const yearSel = form.year;
     yearSel.innerHTML = "";
-    [...$yearSelect.options].forEach((opt) => {
-      const newOpt = document.createElement("option");
-      newOpt.value = opt.value;
-      newOpt.textContent = opt.textContent;
-      if (opt.value === subject.year) newOpt.selected = true;
-      yearSel.appendChild(newOpt);
-    });
+
+    if ($yearSelect) {
+      // Normal case: we have the original list of YEAR choices.
+      [...$yearSelect.options].forEach((opt) => {
+        const newOpt = document.createElement("option");
+        newOpt.value = opt.value;
+        newOpt.textContent = opt.textContent;
+        if (opt.value === subject.year) newOpt.selected = true;
+        yearSel.appendChild(newOpt);
+      });
+    } else {
+      // Fallback – show only the subject’s current year.
+      const fallback = document.createElement("option");
+      fallback.value = subject.year;
+      fallback.textContent = subject.year_display || subject.year;
+      fallback.selected = true;
+      yearSel.appendChild(fallback);
+    }
 
     $editModal.classList.remove("hidden");
   }

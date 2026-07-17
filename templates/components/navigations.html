@@ -39,7 +39,7 @@
       <span class="nav-label">Forum</span>
     </a>
     {% if request.user|has_group:"Teacher" %}
-      <a href="#" class="nav-item">
+      <a href="{% url 'slm:management' %}" class="nav-item {% if request.resolver_match.view_name == 'slm:management' %}active{% endif %}">
         <i class="fas fa-book nav-icon"></i>
         <span class="nav-label">Module Management</span>
       </a>

@@ -1,4 +1,5 @@
 {% load static %}
+{% load account_extras %}
 
 <div id="subject-widget"
      class="subject-widget"
@@ -10,7 +11,7 @@
     <!-- Toast container – the script will also create it automatically if you delete this line -->
     <div class="toast-container" aria-live="polite"></div>
 
-    <!-- Optional “Add subject” form – only visible to the *owner* -->
+    {% if request.user|has_group:'Teacher' %}
     <section class="subject-form-card" aria-label="Add subject form">
         <div class="subject-form-card__header">
             <div>
@@ -25,11 +26,13 @@
             <button type="button" id="add-btn">Add subject</button>
         </div>
     </section>
+    {% endif %}
 
     <!-- The list that the widget will fill -->
     <div id="subject-list"></div>
 
     <!-- ==== EDIT MODAL (static, copy‑paste from the module widget) ==== -->
+     {% if request.user|has_group:'Teacher' %}
     <div id="subject-edit-modal" class="modal modal--edit hidden">
         <div class="modal__backdrop"></div>
         <div class="modal__content">
@@ -74,7 +77,7 @@
             </div>
         </div>
     </div>
-
+    {% endif %}
 </div>
 
 <script type="module">

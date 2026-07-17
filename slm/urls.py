@@ -106,4 +106,5 @@ urlpatterns = [
         {"target_type": "module"},
         name="module-highlight",
     ),
+    path('module-management/', views.management, name='management'),
 ]
