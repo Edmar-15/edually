@@ -342,6 +342,7 @@ export function initSubjectWidget(rootEl) {
    * 🔟  OPEN EDIT MODAL – fill the static form.
    * ----------------------------------------------------------------- */
   function openEditModal(subject) {
+    if (!$editModal) return;
     $editModal.dataset.subjectId = subject.id;
 
     const form = $editModal.querySelector("#subject-edit-form");
@@ -382,6 +383,7 @@ export function initSubjectWidget(rootEl) {
    * 🗑️  OPEN DELETE MODAL
    * ----------------------------------------------------------------- */
   function openDeleteModal(pk) {
+    if (!$deleteModal) return;
     $deleteModal.dataset.subjectId = pk;
     $deleteModal.classList.remove("hidden");
   }
@@ -416,65 +418,70 @@ export function initSubjectWidget(rootEl) {
   if ($addBtn) $addBtn.addEventListener("click", create);
 
   // ---- Edit modal -------------------------------------------------
-  const editCancel = $editModal.querySelector("#subject-cancel");
-  editCancel?.addEventListener("click", () =>
-    $editModal.classList.add("hidden"),
-  );
+  if ($editModal) {
+    // <‑‑ NEW wrapper
+    const editCancel = $editModal.querySelector("#subject-cancel");
+    editCancel?.addEventListener("click", () =>
+      $editModal.classList.add("hidden"),
+    );
 
-  const editForm = $editModal.querySelector("#subject-edit-form");
-  editForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const sid = form.subject_id.value;
+    const editForm = $editModal.querySelector("#subject-edit-form");
+    editForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const sid = form.subject_id.value;
 
-    const payload = {
-      subject_code: form.subject_code.value.trim(),
-      subject_name: form.subject_name.value.trim(),
-      year: form.year.value,
-    };
+      const payload = {
+        subject_code: form.subject_code.value.trim(),
+        subject_name: form.subject_name.value.trim(),
+        year: form.year.value,
+      };
 
-    const url = replaceId(updateTpl, sid);
-    try {
-      const resp = await fetch(url, {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken,
-        },
-        body: JSON.stringify(payload),
-      });
+      const url = replaceId(updateTpl, sid);
+      try {
+        const resp = await fetch(url, {
+          method: "PUT",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+          },
+          body: JSON.stringify(payload),
+        });
 
-      if (!resp.ok) {
-        const err = await resp.json();
-        showToast(err.error || resp.statusText, "error");
+        if (!resp.ok) {
+          const err = await resp.json();
+          showToast(err.error || resp.statusText, "error");
+          return;
+        }
+
+        showToast("Subject updated", "success");
+        $editModal.classList.add("hidden");
+        load(); // refresh the list
+      } catch (err) {
+        showToast(`Failed to update subject – ${err}`, "error");
+      }
+    });
+  }
+  // ---- Delete modal ------------------------------------------------
+  if ($deleteModal) {
+    // <‑‑ NEW wrapper
+    const deleteCancel = $deleteModal.querySelector("#subject-delete-cancel");
+    deleteCancel?.addEventListener("click", () =>
+      $deleteModal.classList.add("hidden"),
+    );
+
+    const deleteConfirm = $deleteModal.querySelector("#subject-delete-confirm");
+    deleteConfirm?.addEventListener("click", async () => {
+      const pk = $deleteModal.dataset.subjectId;
+      $deleteModal.classList.add("hidden");
+      if (!pk) {
+        showToast("No subject selected for deletion.", "error");
         return;
       }
-
-      showToast("Subject updated", "success");
-      $editModal.classList.add("hidden");
-      load(); // refresh the list
-    } catch (err) {
-      showToast(`Failed to update subject – ${err}`, "error");
-    }
-  });
-
-  // ---- Delete modal ------------------------------------------------
-  const deleteCancel = $deleteModal.querySelector("#subject-delete-cancel");
-  deleteCancel?.addEventListener("click", () =>
-    $deleteModal.classList.add("hidden"),
-  );
-
-  const deleteConfirm = $deleteModal.querySelector("#subject-delete-confirm");
-  deleteConfirm?.addEventListener("click", async () => {
-    const pk = $deleteModal.dataset.subjectId;
-    $deleteModal.classList.add("hidden");
-    if (!pk) {
-      showToast("No subject selected for deletion.", "error");
-      return;
-    }
-    await performDelete(pk);
-  });
+      await performDelete(pk);
+    });
+  }
 
   // -----------------------------------------------------------------
   // 1️⃣3️⃣  Initial load.

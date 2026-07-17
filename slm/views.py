@@ -1,5 +1,5 @@
 import json
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -13,6 +13,34 @@ from .content_extractor import extract_content
 import logging as logger
 from .ai_bridge import ask_ai_one_level
 from .file_utils import delete_file, replace_file
+from functools import wraps
+
+# Decorators
+def teacher_required_for_mutation(view_func):
+    """
+    *GET* requests are allowed for any authenticated user.
+    All other HTTP verbs (POST, PUT, PATCH, DELETE) are allowed **only**
+    for users that belong to the *Teacher* group.
+    """
+    @wraps(view_func)
+    @login_required                     # always require a logged‑in user
+    def _wrapped(request, *args, **kwargs):
+        # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
+        # 1️⃣  GET → public read‑only
+        # -----------------------------------------------------------------
+        if request.method == "GET":
+            return view_func(request, *args, **kwargs)
+
+        # -----------------------------------------------------------------
+        # 2️⃣  Anything else → must be a teacher
+        # -----------------------------------------------------------------
+        if getattr(request.user, "is_teacher_member", False):
+            return view_func(request, *args, **kwargs)
+
+        return HttpResponseForbidden(
+            "Only teachers may create / edit / delete resources."
+        )
+    return _wrapped
 
 # Create your views here.
 @login_required(login_url='account:login')
@@ -136,7 +164,7 @@ def api_subject_list(request):
 # 2️⃣  POST – create a new subject (logged‑in users only)
 # -----------------------------------------------------------------
 @login_required
-@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
+@teacher_required_for_mutation
 @require_POST
 def api_subject_create(request):
     try:
@@ -172,7 +200,7 @@ def api_subject_create(request):
 # 3️⃣  PUT – update a subject (owner only)
 # -----------------------------------------------------------------
 @login_required
-@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
+@teacher_required_for_mutation
 @require_http_methods(["PUT", "PATCH"])
 def api_subject_update(request, pk):
     try:
@@ -208,7 +236,7 @@ def api_subject_update(request, pk):
 # 4️⃣  DELETE – remove a subject (owner only)
 # -----------------------------------------------------------------
 @login_required
-@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
+@teacher_required_for_mutation
 @require_http_methods(["DELETE"])
 def api_subject_delete(request, pk):
     try:
@@ -334,7 +362,7 @@ def api_module_list(request, subject_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
+@teacher_required_for_mutation
 @require_http_methods(["POST"])
 def api_module_create(request, subject_id):
     """POST /slm/api/subjects/<subject_id>/modules/  (multipart/form-data)"""
@@ -396,7 +424,7 @@ def api_module_create(request, subject_id):
 # 6️⃣  UPDATE – PUT a module (JSON only – no file change)
 # -----------------------------------------------------------------
 @login_required
-@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
+@teacher_required_for_mutation
 @require_http_methods(["PUT", "PATCH"])
 def api_module_update(request, pk):
     """PUT /slm/api/modules/<pk>/  (JSON payload)"""
@@ -467,7 +495,7 @@ def api_module_update(request, pk):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
+@teacher_required_for_mutation
 @require_http_methods(["DELETE"])
 def api_module_delete(request, pk):
     """DELETE /slm/api/modules/<pk>/delete/"""
@@ -485,7 +513,6 @@ def api_module_delete(request, pk):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
 @require_http_methods(["POST"])
 def api_module_file_replace(request, pk):
     """
@@ -937,7 +964,7 @@ def api_highlight(request, pk, target_type):
     )
 
 
-@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)    
+@teacher_required_for_mutation    
 def management(request):
     """
     Render a dedicated page that contains the full CRUD UI for
