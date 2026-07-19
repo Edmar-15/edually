@@ -1265,6 +1265,105 @@ body {
     transition: transform 0.25s ease, background 0.25s ease;
 }
 
+.moderation-stats {
+    gap: 18px;
+    margin-bottom: 2rem;
+}
+
+.moderation-section {
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    margin-bottom: 1.5rem;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text);
+}
+
+.report-card {
+    border: 1px solid rgba(15,23,42,0.08);
+    border-radius: 24px;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 18px 46px rgba(15,23,42,0.06);
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.report-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.report-card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.report-card-meta {
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: 1px solid rgba(14,154,167,0.16);
+    background: rgba(14,154,167,0.12);
+    color: var(--primary);
+}
+
+.status-pill--pending {
+    background: rgba(251,191,36,0.12);
+    color: #b45309;
+    border-color: rgba(251,191,36,0.24);
+}
+
+.report-card-body {
+    background: #fff;
+    border-radius: 18px;
+    padding: 1.5rem;
+    border: 1px solid rgba(14,154,167,0.08);
+    margin-bottom: 1.25rem;
+}
+
+.report-note {
+    margin: 0 0 1.5rem;
+    padding: 1rem 1.2rem;
+    background: rgba(254,243,199,0.9);
+    border-radius: 18px;
+    border: 1px solid rgba(245,158,11,0.2);
+    color: #92400e;
+}
+
+.report-actions {
+    display: grid;
+    gap: 1rem;
+    align-items: center;
+}
+
+.report-actions form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.report-actions .tag {
+    margin-right: auto;
+}
+
 .tag:hover {
     background: linear-gradient(135deg, rgba(14,154,167,0.2), rgba(14,154,167,0.15));
 }

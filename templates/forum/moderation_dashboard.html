@@ -9,56 +9,6 @@
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/feed.css' %}">
     <link rel="stylesheet" href="{% static 'css/helper.css' %}">
-    <style>
-        .mod-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .stat-card {
-            padding: 1.5rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .stat-card h3 {
-            margin: 0;
-            font-size: 2rem;
-        }
-        .stat-card p {
-            margin: 0.5rem 0 0;
-            opacity: 0.9;
-        }
-        .report-item {
-            padding: 1.5rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            background: #fafafa;
-        }
-        .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        .report-status {
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        .status-unresolved {
-            background: #ffcdd2;
-            color: #c62828;
-        }
-        .status-resolved {
-            background: #c8e6c9;
-            color: #2e7d32;
-        }
-    </style>
 </head>
 <body>
 <div class="dashboard-container">
@@ -75,65 +25,64 @@
             </header>
 
             <!-- Statistics -->
-            <div class="mod-stats">
+            <div class="stats-grid moderation-stats">
                 <div class="stat-card">
-                    <h3>{{ report_count }}</h3>
-                    <p>Unresolved Reports</p>
+                    <div class="stat-number">{{ report_count }}</div>
+                    <div class="stat-label">Unresolved Reports</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <h3>{{ flagged_posts_count }}</h3>
-                    <p>Flagged Posts</p>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; color: white;">
+                    <div class="stat-number">{{ flagged_posts_count }}</div>
+                    <div class="stat-label">Flagged Posts</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <h3>{{ flagged_replies_count }}</h3>
-                    <p>Flagged Replies</p>
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border: none; color: white;">
+                    <div class="stat-number">{{ flagged_replies_count }}</div>
+                    <div class="stat-label">Flagged Replies</div>
                 </div>
             </div>
 
             <!-- Unresolved Reports -->
-            <section style="margin-bottom: 3rem;">
-                <h2 style="margin-bottom: 1.5rem;">
+            <section class="moderation-section">
+                <h2 class="section-title">
                     <i class="fa-solid fa-exclamation-circle"></i> Unresolved Reports ({{ report_count }})
                 </h2>
 
                 {% if reported_items %}
                     {% for item in reported_items %}
-                    <div class="report-item">
-                        <div class="report-header">
+                    <article class="report-card">
+                        <div class="report-card-header">
                             <div>
-                                <p style="margin: 0 0 0.5rem; font-weight: 600;">
+                                <p class="report-card-title">
                                     <strong>{{ item.content_type|title }} Report</strong>
                                     • {{ item.reports|length }} report{{ item.reports|length|pluralize }}
                                 </p>
-                                <p style="margin: 0; color: #666; font-size: 0.9rem;">
-                                    Reported by {{ item.reporters|join:", " }} •
-                                    {{ item.latest_report.created_at|timesince }} ago
+                                <p class="report-card-meta">
+                                    Reported by {{ item.reporters|join:", " }} • {{ item.latest_report.created_at|timesince }} ago
                                 </p>
                             </div>
-                            <span class="report-status status-unresolved">Pending</span>
+                            <span class="status-pill status-pill--pending">Pending</span>
                         </div>
 
-                        <div style="background: white; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                        <div class="report-card-body">
                             {% if item.content_type == 'post' and item.post %}
-                                <p style="margin: 0 0 0.5rem; font-weight: 600;">Post by <strong>{{ item.post.author.get_full_name|default:item.post.author.username }}</strong></p>
-                                <p style="margin: 0; color: #333;">{{ item.post.title }}</p>
-                                <p style="margin: 0.75rem 0 0; color: #555;">{{ item.post.content|striptags|truncatechars:160 }}</p>
+                                <p style="font-weight: 700; margin-bottom: 0.75rem;">Post by <strong>{{ item.post.author.get_full_name|default:item.post.author.username }}</strong></p>
+                                <p style="margin-bottom: 0.75rem; color: var(--text);">{{ item.post.title }}</p>
+                                <p style="color: var(--muted);">{{ item.post.content|striptags|truncatechars:160 }}</p>
                             {% elif item.content_type == 'reply' and item.reply %}
-                                <p style="margin: 0 0 0.5rem; font-weight: 600;">Reply by <strong>{{ item.reply.author.get_full_name|default:item.reply.author.username }}</strong></p>
-                                <p style="margin: 0; color: #333;">{{ item.reply.content|striptags|truncatechars:160 }}</p>
-                                <p style="margin: 0.75rem 0 0; color: #555;">In thread: <strong>{{ item.reply.post.title }}</strong></p>
+                                <p style="font-weight: 700; margin-bottom: 0.75rem;">Reply by <strong>{{ item.reply.author.get_full_name|default:item.reply.author.username }}</strong></p>
+                                <p style="margin-bottom: 0.75rem; color: var(--text);">{{ item.reply.content|striptags|truncatechars:160 }}</p>
+                                <p style="color: var(--muted);">In thread: <strong>{{ item.reply.post.title }}</strong></p>
                             {% endif %}
                         </div>
 
                         {% if item.latest_report.description %}
-                        <p style="margin: 1rem 0; padding: 0.8rem; background: #fff9c4; border-radius: 4px; color: #666;">
+                        <p class="report-note">
                             <strong>Reporter note:</strong> {{ item.latest_report.description }}
                         </p>
                         {% endif %}
 
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                        <div class="report-actions">
                             <span class="tag">Reasons: {{ item.reasons|join:", " }}</span>
-                            <form method="post" action="{% url 'forum:resolve_report' item.latest_report.id %}" style="display:inline-flex; gap: 0.5rem; align-items:center;">
+                            <form method="post" action="{% url 'forum:resolve_report' item.latest_report.id %}">
                                 {% csrf_token %}
                                 <button type="submit" name="action" value="dismiss" class="button secondary-button small-button">Dismiss</button>
                                 <button type="submit" name="action" value="delete" class="button danger-button small-button">Remove Content</button>
@@ -142,41 +91,16 @@
                                 {% endif %}
                             </form>
                         </div>
-                    </div>
+                    </article>
                     {% endfor %}
                 {% else %}
-                    <div style="padding: 2rem; text-align: center; color: #999;">
-                        <i class="fa-solid fa-check-circle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <div class="forum-empty-state">
+                        <div class="forum-empty-state__icon"><i class="fa-solid fa-check-circle"></i></div>
                         <p>No unresolved reports. Great job!</p>
                     </div>
                 {% endif %}
             </section>
 
-            <!-- Top Contributors -->
-            <section>
-                <h2 style="margin-bottom: 1.5rem;">
-                    <i class="fa-solid fa-star"></i> Top Contributors
-                </h2>
-                
-                {% if top_users %}
-                    <div style="background: white; border-radius: 8px; overflow: hidden;">
-                        {% for user in top_users %}
-                        <div style="padding: 1rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <p style="margin: 0; font-weight: 600;">{{ user.get_full_name|default:user.email }}</p>
-                                <p style="margin: 0.3rem 0 0; font-size: 0.9rem; color: #666;">{{ user.email }}</p>
-                            </div>
-                            <div style="text-align: right;">
-                                <p style="margin: 0; font-weight: 600; font-size: 1.2rem; color: #667eea;">{{ user.karma }}</p>
-                                <p style="margin: 0.3rem 0 0; font-size: 0.85rem; color: #999;">karma points</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p style="color: #999;">No user data available yet.</p>
-                {% endif %}
-            </section>
         </section>
     </main>
     {# 1️⃣ Global modal placeholder – only once per page #}
@@ -184,7 +108,6 @@
 
     {# 2️⃣ Modal JS – load after the DOM #}
     <script src="{% static 'js/modal.js' %}" defer></script>
-    <aside class="forum-sidebar">{% include 'components/right_sidebar.html' %}</aside>
 </div>
 </body>
 </html>
