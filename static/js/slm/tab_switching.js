@@ -1,3 +1,6 @@
+// ---------------------------------------------------------------
+// tab_switching.js – remember the active tab via URL hash
+// ---------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   // One handler per .tabs container (you can have many on a page)
   document.querySelectorAll('.tabs').forEach(container => {
@@ -5,7 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const panels = container.querySelectorAll('[role="tabpanel"]');
 
     // -----------------------------------------------------------------
-    // Helper – set the UI for a given index (same as before)
+    // A stable key for local‑storage (in case a page has more than one
+    // tab‑set).  You can also drop the localStorage part if you only
+    // care about the hash.
+    // -----------------------------------------------------------------
+    const storageKey = `activeTab_${container.id || 'default'}`;
+
+    // -----------------------------------------------------------------
+    // Activate a tab – also writes the hash and stores the index.
     // -----------------------------------------------------------------
     const activate = (newIdx) => {
       tabs.forEach((t, i) => {
@@ -23,28 +33,40 @@ document.addEventListener('DOMContentLoaded', () => {
         p.setAttribute('aria-hidden', !show);
       });
 
+      // ---- 1) write a hash so it survives a page‑reload -------------
+      const newHash = `#${tabs[newIdx].id}`;
+      if (window.location.hash !== newHash) {
+        // replaceState prevents an extra history entry
+        history.replaceState(null, '', newHash);
+      }
+
+      // ---- 2) store the index for the fallback when no hash is set --
+      localStorage.setItem(storageKey, newIdx);
+
       // Give keyboard focus to the newly‑selected tab
       tabs[newIdx].focus();
     };
 
     // -----------------------------------------------------------------
-    // New: activate the tab that matches the current URL hash (if any)
+    // Activate the tab that matches the current URL hash (if any)
     // -----------------------------------------------------------------
     const activateFromHash = () => {
       const hash = window.location.hash;               // e.g. "#tab-1"
-      if (!hash) return;                               // no hash → keep default
+      if (!hash) return false;
 
-      // Find the tab button whose id matches the hash (strip the leading “#”)
       const targetTab = container.querySelector(`button${hash}`);
-      if (!targetTab) return;                         // unknown hash → ignore
+      if (!targetTab) return false;
 
-      // Compute its index among all tabs and activate it
       const idx = Array.from(tabs).indexOf(targetTab);
-      if (idx >= 0) activate(idx);
+      if (idx >= 0) {
+        activate(idx);
+        return true;
+      }
+      return false;
     };
 
     // -----------------------------------------------------------------
-    // Click → activate (unchanged)
+    // Click → activate (unchanged logic)
     // -----------------------------------------------------------------
     tabs.forEach((tab, idx) => tab.addEventListener('click', () => activate(idx)));
 
@@ -66,8 +88,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -----------------------------------------------------------------
-    // **Run the hash‑based activation **as the very first step
+    // ----  Initial activation  ---------------------------------------
+    // 1️⃣  Try hash first
+    // 2️⃣  If there is *no* hash, fall back to the saved index
+    // 3️⃣  If nothing was saved, keep the server‑rendered default (first tab)
     // -----------------------------------------------------------------
-    activateFromHash();           // <‑‑ this line makes the hash work
+    if (!activateFromHash()) {
+      const saved = localStorage.getItem(storageKey);
+      const idx   = Number(saved);
+      if (!isNaN(idx) && idx >= 0 && idx < tabs.length) {
+        activate(idx);
+      }
+    }
   });
 });

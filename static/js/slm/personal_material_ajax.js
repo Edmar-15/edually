@@ -33,9 +33,7 @@ export function initPersonalMaterialWidget(rootEl) {
    * 2️⃣  Toast helper – identical to the one used in `module_ajax.js`.
    * ----------------------------------------------------------------- */
   const getToastContainer = () => {
-    // First try to reuse a container that lives inside this widget.
     let container = rootEl.querySelector(".toast-container");
-    // If it does not exist, create it and attach it to the widget.
     if (!container) {
       container = document.createElement("div");
       container.className = "toast-container";
@@ -46,13 +44,6 @@ export function initPersonalMaterialWidget(rootEl) {
   };
   const $toastContainer = getToastContainer();
 
-  /**
-   * Show a toast.
-   *
-   * @param {string} message   Message to display.
-   * @param {'success'|'error'|'info'|'warning'} [type='info'] Variant colour.
-   * @param {number} [duration=4000]   How long the toast stays (ms).
-   */
   const showToast = (message, type = "info", duration = 4000) => {
     const toast = document.createElement("div");
     toast.className = `toast toast--${type}`;
@@ -60,10 +51,7 @@ export function initPersonalMaterialWidget(rootEl) {
 
     const icon = document.createElement("span");
     icon.className = "toast__icon";
-    if (type === "success") icon.textContent = "";
-    else if (type === "error") icon.textContent = "";
-    else if (type === "warning") icon.textContent = "";
-    else icon.textContent = "";
+    // (add icons / emojis if you wish)
 
     const msg = document.createElement("span");
     msg.textContent = message;
@@ -82,7 +70,7 @@ export function initPersonalMaterialWidget(rootEl) {
   const $list = rootEl.querySelector("#personal-material-list");
   if (!$list) {
     console.warn(
-      "Personal‑Material widget is missing #personal-material-list container.",
+      "Personal‑Material widget is missing #personal-material-list container."
     );
     return;
   }
@@ -91,14 +79,10 @@ export function initPersonalMaterialWidget(rootEl) {
   const $fileInput = rootEl.querySelector("#pm-file-input");
   const $visibilitySelect = rootEl.querySelector("#pm-visibility-select");
   const $filterVisibility = rootEl.querySelector(
-    "#pm-filter-visibility-select",
+    "#pm-filter-visibility-select"
   );
   const $filterType = rootEl.querySelector("#pm-filter-type-select");
   const $addBtn = rootEl.querySelector("#pm-add-btn");
-
-  // static modal placeholders
-  const $editModal = rootEl.querySelector("#pm-edit-modal");
-  const $deleteModal = rootEl.querySelector("#pm-delete-modal");
 
   /* -----------------------------------------------------------------
    * 4️⃣  Current filter state (used on every load)
@@ -111,7 +95,7 @@ export function initPersonalMaterialWidget(rootEl) {
   };
 
   /* -----------------------------------------------------------------
-   * 5️⃣  Icon helpers (same logic that the Modules widget uses)
+   * 5️⃣  Icon helpers (same as Modules widget)
    * ----------------------------------------------------------------- */
   const getMaterialIconMarkup = (fileUrl = "") => {
     const ext = (fileUrl || "")
@@ -168,8 +152,7 @@ export function initPersonalMaterialWidget(rootEl) {
     header.className = "pm-card__header";
 
     const iconWrap = document.createElement("div");
-    iconWrap.className =
-      `pm-card__icon ${getMaterialIconClass(pm.file_url)}`.trim();
+    iconWrap.className = `pm-card__icon ${getMaterialIconClass(pm.file_url)}`.trim();
     iconWrap.innerHTML = getMaterialIconMarkup(pm.file_url);
     header.appendChild(iconWrap);
 
@@ -202,13 +185,11 @@ export function initPersonalMaterialWidget(rootEl) {
     header.appendChild(content);
     card.appendChild(header);
 
-    // -----------------------------------------------------------------
-    // Actions – View always, Edit/Delete only for the owner
-    // -----------------------------------------------------------------
+    // ---- Actions -------------------------------------------------
     const actions = document.createElement("div");
     actions.className = "pm-card__actions";
 
-    // View
+    // View (always present)
     const viewBtn = document.createElement("a");
     viewBtn.href = `/slm/personal-material/${pm.id}/`;
     viewBtn.className = "button button-plain";
@@ -216,34 +197,27 @@ export function initPersonalMaterialWidget(rootEl) {
     viewBtn.title = "Open preview page";
     actions.appendChild(viewBtn);
 
+    // Owner‑only actions – edit / delete via global modal
     if (pm.is_owner) {
-      // Edit
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.title = "Edit";
-      editBtn.className = "pm-card__action";
-      editBtn.innerHTML =
+      // ---- Edit (global modal) ---------------------------------
+      const editLink = document.createElement("a");
+      editLink.href = "#";
+      editLink.title = "Edit";
+      editLink.className = "pm-card__action js-modal-trigger";
+      editLink.dataset.url = `/slm/api/personal-materials/${pm.id}/edit-modal/`;
+      editLink.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
-      editBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openEditModal(pm);
-      });
-      actions.appendChild(editBtn);
+      actions.appendChild(editLink);
 
-      // Delete
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.title = "Delete";
-      delBtn.className = "pm-card__action pm-card__action--delete";
-      delBtn.innerHTML =
+      // ---- Delete (global modal) -------------------------------
+      const delLink = document.createElement("a");
+      delLink.href = "#";
+      delLink.title = "Delete";
+      delLink.className = "pm-card__action pm-card__action--delete js-modal-trigger";
+      delLink.dataset.url = `/slm/api/personal-materials/${pm.id}/delete-modal/`;
+      delLink.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
-      delBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openDeleteModal(pm.id);
-      });
-      actions.appendChild(delBtn);
+      actions.appendChild(delLink);
     }
 
     card.appendChild(actions);
@@ -299,11 +273,10 @@ export function initPersonalMaterialWidget(rootEl) {
     };
 
     ul.appendChild(
-      makeItem("←", meta.previous_page_number, !meta.has_previous),
+      makeItem("←", meta.previous_page_number, !meta.has_previous)
     );
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-    if (meta.page - 2 > 2)
-      ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
     const end = Math.min(meta.total_pages - 1, meta.page + 1);
@@ -321,8 +294,8 @@ export function initPersonalMaterialWidget(rootEl) {
           String(meta.total_pages),
           null,
           false,
-          meta.page === meta.total_pages,
-        ),
+          meta.page === meta.total_pages
+        )
       );
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
@@ -404,7 +377,7 @@ export function initPersonalMaterialWidget(rootEl) {
     form.append("title", $titleInput.value.trim());
     form.append(
       "visibility",
-      $visibilitySelect ? $visibilitySelect.value : "PR",
+      $visibilitySelect ? $visibilitySelect.value : "PR"
     );
 
     const file = $fileInput.files[0];
@@ -438,159 +411,12 @@ export function initPersonalMaterialWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 1️⃣1️⃣  EDIT – open modal, pre‑fill, submit (PUT + optional file)
-   * ----------------------------------------------------------------- */
-  function openEditModal(pm) {
-    $editModal.dataset.pmId = pm.id;
-
-    const form = $editModal.querySelector("#pm-edit-form");
-    if (form) {
-      form.title.value = pm.title;
-      form.visibility.value = pm.visibility;
-      form.file.value = ""; // clear any previous selection
-    }
-
-    $editModal.classList.remove("hidden");
-  }
-
-  // ---- Edit modal bindings -------------------------------------------------
-  if ($editModal) {
-    // Cancel button
-    const cancelBtn = $editModal.querySelector("#pm-cancel");
-    if (cancelBtn)
-      cancelBtn.addEventListener("click", () =>
-        $editModal.classList.add("hidden"),
-      );
-
-    // Submit – PUT metadata, optional file replace
-    const editForm = $editModal.querySelector("#pm-edit-form");
-    if (editForm) {
-      editForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const form = e.target;
-        const title = form.title.value.trim();
-        const visibility = form.visibility.value;
-        const file = form.file.files[0];
-
-        const payload = { title, visibility };
-        const pmId = $editModal.dataset.pmId;
-        if (!pmId) {
-          showToast("No material selected for update.", "error");
-          return;
-        }
-
-        const updateUrl = replaceId(updateTpl, pmId);
-        try {
-          // ---- metadata (title / visibility) ----
-          const resp = await fetch(updateUrl, {
-            method: "PUT",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": csrftoken,
-            },
-            body: JSON.stringify(payload),
-          });
-          if (!resp.ok) {
-            const err = await resp.json();
-            showToast(err.error || resp.statusText, "error");
-            return;
-          }
-
-          // ---- optional file replace ----
-          if (file) {
-            const replaceUrl = replaceId(replaceFileTpl, pmId);
-            const fileForm = new FormData();
-            fileForm.append("file", file);
-            const fileResp = await fetch(replaceUrl, {
-              method: "POST",
-              credentials: "same-origin",
-              headers: { "X-CSRFToken": csrftoken },
-              body: fileForm,
-            });
-            if (!fileResp.ok) {
-              const ferr = await fileResp.json();
-              showToast(
-                `File replace failed – ${ferr.error || fileResp.statusText}`,
-                "error",
-              );
-              return;
-            }
-          }
-
-          showToast("Material updated", "success");
-          $editModal.classList.add("hidden");
-          load();
-        } catch (err) {
-          showToast(`Failed to update material – ${err}`, "error");
-        }
-      });
-    }
-  }
-
-  /* -----------------------------------------------------------------
-   * 1️⃣2️⃣  DELETE – open confirmation modal
-   * ----------------------------------------------------------------- */
-  function openDeleteModal(pk) {
-    $deleteModal.dataset.pmId = pk;
-    $deleteModal.classList.remove("hidden");
-  }
-
-  /* -----------------------------------------------------------------
-   * 1️⃣3️⃣  DELETE request (called after the user clicks “Delete”)
-   * ----------------------------------------------------------------- */
-  async function performDelete(pk) {
-    const url = replaceId(deleteTpl, pk);
-    try {
-      const resp = await fetch(url, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "X-CSRFToken": csrftoken },
-      });
-      if (resp.status === 204) {
-        showToast("Deleted", "success");
-        load();
-      } else {
-        const err = await resp.json();
-        showToast(err.error || resp.statusText, "error");
-      }
-    } catch (e) {
-      showToast(`Failed to delete material – ${e}`, "error");
-    }
-  }
-
-  /* -----------------------------------------------------------------
-   * 1️⃣4️⃣  Delete‑modal bindings (cancel / confirm)
-   * ----------------------------------------------------------------- */
-  if ($deleteModal) {
-    const cancelBtn = $deleteModal.querySelector("#pm-delete-cancel");
-    if (cancelBtn)
-      cancelBtn.addEventListener("click", () =>
-        $deleteModal.classList.add("hidden"),
-      );
-
-    const confirmBtn = $deleteModal.querySelector("#pm-delete-confirm");
-    if (confirmBtn) {
-      confirmBtn.addEventListener("click", async () => {
-        const pk = $deleteModal.dataset.pmId;
-        $deleteModal.classList.add("hidden");
-        if (!pk) {
-          showToast("No material selected for deletion.", "error");
-          return;
-        }
-        await performDelete(pk);
-      });
-    }
-  }
-
-  /* -----------------------------------------------------------------
-   * 1️⃣5️⃣  UI bindings – Add‑material button
+   * 1️⃣1️⃣  UI bindings – Add‑material button
    * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
   /* -----------------------------------------------------------------
-   * 1️⃣6️⃣  Kick‑off – load the first page
+   * 1️⃣2️⃣  Kick‑off – load the first page
    * ----------------------------------------------------------------- */
   load();
 }

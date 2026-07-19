@@ -107,4 +107,38 @@ urlpatterns = [
         name="module-highlight",
     ),
     path('module-management/', views.management, name='management'),
+    
+    # ----- modal endpoints -------------------------------------------------
+    path(
+        "api/subjects/<int:pk>/edit-modal/",
+        views.subject_edit_modal,
+        name="subject-edit-modal",
+    ),
+    path(
+        "api/subjects/<int:pk>/delete-modal/",
+        views.subject_delete_modal,
+        name="subject-delete-modal",
+    ),
+
+    path(
+        "api/modules/<int:pk>/edit-modal/",
+        views.module_edit_modal,
+        name="module-edit-modal",
+    ),
+    path(
+        "api/modules/<int:pk>/delete-modal/",
+        views.module_delete_modal,
+        name="module-delete-modal",
+    ),
+
+    path(
+        "api/personal-materials/<int:pk>/edit-modal/",
+        views.personal_material_edit_modal,
+        name="personalmaterial-edit-modal",
+    ),
+    path(
+        "api/personal-materials/<int:pk>/delete-modal/",
+        views.personal_material_delete_modal,
+        name="personalmaterial-delete-modal",
+    ),
 ]

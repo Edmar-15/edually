@@ -1,0 +1,13 @@
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <h2>Delete subject</h2>
+    <p>Are you sure you want to delete <strong>{{ subject.subject_code }} – {{ subject.subject_name }}</strong>? This action cannot be undone.</p>
+
+    <form method="post" action="{% url 'slm:subject-delete-modal' subject.id %}" data-modal-form>
+        {% csrf_token %}
+        <div class="modal__actions">
+            <button type="submit" class="button-primary button--danger">Delete</button>
+            <button type="button" class="button-plain" data-close-modal>Cancel</button>
+        </div>
+    </form>
+</div>

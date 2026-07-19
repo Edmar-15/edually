@@ -1,0 +1,32 @@
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <h2>Edit subject</h2>
+    <form method="post" action="{% url 'slm:subject-edit-modal' subject.id %}" data-modal-form>
+        {% csrf_token %}
+        <input type="hidden" name="subject_id" value="{{ subject.id }}">
+
+        <label>
+            Subject code
+            <input type="text" name="subject_code" value="{{ subject.subject_code }}" required>
+        </label>
+
+        <label>
+            Subject name
+            <input type="text" name="subject_name" value="{{ subject.subject_name }}" required>
+        </label>
+
+        <label>
+            Year
+            <select name="year">
+                {% for value, label in subject.YEAR_CHOICES %}
+                <option value="{{ value }}" {% if value == subject.year %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <div class="modal__actions">
+            <button type="submit" class="button-primary">Save</button>
+            <button type="button" class="button-plain" data-close-modal>Cancel</button>
+        </div>
+    </form>
+</div>

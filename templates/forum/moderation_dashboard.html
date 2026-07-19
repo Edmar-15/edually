@@ -179,7 +179,11 @@
             </section>
         </section>
     </main>
+    {# 1️⃣ Global modal placeholder – only once per page #}
+    {% include "components/global_modal.html" %}
 
+    {# 2️⃣ Modal JS – load after the DOM #}
+    <script src="{% static 'js/modal.js' %}" defer></script>
     <aside class="forum-sidebar">{% include 'components/right_sidebar.html' %}</aside>
 </div>
 </body>

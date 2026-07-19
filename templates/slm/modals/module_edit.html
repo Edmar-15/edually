@@ -1,0 +1,31 @@
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <h2>Edit module</h2>
+    <form method="post"
+          enctype="multipart/form-data"
+          action="{% url 'slm:module-edit-modal' module.id %}"
+          data-modal-form>
+        {% csrf_token %}
+        <input type="hidden" name="module_id" value="{{ module.id }}">
+
+        <label>
+            Module number
+            <input type="number" name="module_number" min="1" value="{{ module.module_number }}" required>
+        </label>
+
+        <label>
+            Module name
+            <input type="text" name="module_name" value="{{ module.module_name }}" required>
+        </label>
+
+        <label>
+            Replace file (optional)
+            <input type="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx">
+        </label>
+
+        <div class="modal__actions">
+            <button type="submit" class="button-primary">Save</button>
+            <button type="button" class="button-plain" data-close-modal>Cancel</button>
+        </div>
+    </form>
+</div>

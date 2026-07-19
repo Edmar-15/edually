@@ -35,7 +35,6 @@ export function initSubjectWidget(rootEl) {
    * 3️⃣  Toast helper – identical to the one used in module_ajax.js.
    * ----------------------------------------------------------------- */
   const getToastContainer = () => {
-    // Find a container that belongs to this widget (or create one).
     let container = rootEl.querySelector(".toast-container");
     if (!container) {
       container = document.createElement("div");
@@ -80,13 +79,7 @@ export function initSubjectWidget(rootEl) {
    * 5️⃣  Load the YEAR <select> with choices from the API.
    * ----------------------------------------------------------------- */
   async function loadYearChoices() {
-    // -----------------------------------------------------------------
-    // 1️⃣  Guard – if the element is missing, do nothing.
-    // -----------------------------------------------------------------
-    if (!$yearSelect) {
-      // No UI to populate → nothing to do.
-      return;
-    }
+    if (!$yearSelect) return; // no UI to populate
 
     try {
       const resp = await fetch("/slm/api/subjects/year-choices/", {
@@ -140,38 +133,30 @@ export function initSubjectWidget(rootEl) {
 
     card.appendChild(link);
 
-    // Owner‑only actions
+    // Owner‑only actions – now via global modal
     if (subject.is_owner) {
       const actions = document.createElement("div");
       actions.className = "subject-card__actions";
 
-      // Edit button -------------------------------------------------
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.title = "Edit";
-      editBtn.className = "subject-card__action";
-      editBtn.innerHTML =
+      // ---- Edit (global modal) ---------------------------------
+      const editLink = document.createElement("a");
+      editLink.href = "#";
+      editLink.title = "Edit";
+      editLink.className = "subject-card__action js-modal-trigger";
+      editLink.dataset.url = `/slm/api/subjects/${subject.id}/edit-modal/`;
+      editLink.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
-      editBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openEditModal(subject);
-      });
-      actions.appendChild(editBtn);
+      actions.appendChild(editLink);
 
-      // Delete button ------------------------------------------------
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.title = "Delete";
-      delBtn.className = "subject-card__action subject-card__action--delete";
-      delBtn.innerHTML =
+      // ---- Delete (global modal) --------------------------------
+      const delLink = document.createElement("a");
+      delLink.href = "#";
+      delLink.title = "Delete";
+      delLink.className = "subject-card__action subject-card__action--delete js-modal-trigger";
+      delLink.dataset.url = `/slm/api/subjects/${subject.id}/delete-modal/`;
+      delLink.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
-      delBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openDeleteModal(subject.id);
-      });
-      actions.appendChild(delBtn);
+      actions.appendChild(delLink);
 
       card.appendChild(actions);
     }
@@ -230,11 +215,10 @@ export function initSubjectWidget(rootEl) {
     };
 
     ul.appendChild(
-      makeItem("←", meta.previous_page_number, !meta.has_previous),
+      makeItem("←", meta.previous_page_number, !meta.has_previous)
     );
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-    if (meta.page - 2 > 2)
-      ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
     const end = Math.min(meta.total_pages - 1, meta.page + 1);
@@ -252,8 +236,8 @@ export function initSubjectWidget(rootEl) {
           String(meta.total_pages),
           null,
           false,
-          meta.page === meta.total_pages,
-        ),
+          meta.page === meta.total_pages
+        )
       );
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
@@ -304,7 +288,7 @@ export function initSubjectWidget(rootEl) {
     const payload = {
       subject_code: $codeInput.value.trim(),
       subject_name: $nameInput.value.trim(),
-      year: $yearSelect.value,
+      year: $yearSelect ? $yearSelect.value : undefined,
     };
 
     if (!payload.subject_code || !payload.subject_name) {
@@ -339,153 +323,13 @@ export function initSubjectWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 🔟  OPEN EDIT MODAL – fill the static form.
-   * ----------------------------------------------------------------- */
-  function openEditModal(subject) {
-    if (!$editModal) return;
-    $editModal.dataset.subjectId = subject.id;
-
-    const form = $editModal.querySelector("#subject-edit-form");
-
-    // hidden field
-    form.subject_id.value = subject.id;
-
-    // basic inputs
-    form.subject_code.value = subject.subject_code;
-    form.subject_name.value = subject.subject_name;
-
-    // year <select> – copy the options from the add‑form if it exists.
-    const yearSel = form.year;
-    yearSel.innerHTML = "";
-
-    if ($yearSelect) {
-      // Normal case: we have the original list of YEAR choices.
-      [...$yearSelect.options].forEach((opt) => {
-        const newOpt = document.createElement("option");
-        newOpt.value = opt.value;
-        newOpt.textContent = opt.textContent;
-        if (opt.value === subject.year) newOpt.selected = true;
-        yearSel.appendChild(newOpt);
-      });
-    } else {
-      // Fallback – show only the subject’s current year.
-      const fallback = document.createElement("option");
-      fallback.value = subject.year;
-      fallback.textContent = subject.year_display || subject.year;
-      fallback.selected = true;
-      yearSel.appendChild(fallback);
-    }
-
-    $editModal.classList.remove("hidden");
-  }
-
-  /* -----------------------------------------------------------------
-   * 🗑️  OPEN DELETE MODAL
-   * ----------------------------------------------------------------- */
-  function openDeleteModal(pk) {
-    if (!$deleteModal) return;
-    $deleteModal.dataset.subjectId = pk;
-    $deleteModal.classList.remove("hidden");
-  }
-
-  /* -----------------------------------------------------------------
-   * 1️⃣1️⃣  PERFORM DELETE – called from the delete‑confirmation modal.
-   * ----------------------------------------------------------------- */
-  async function performDelete(pk) {
-    const url = replaceId(deleteTpl, pk);
-    try {
-      const resp = await fetch(url, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "X-CSRFToken": csrftoken },
-      });
-
-      if (resp.status === 204) {
-        showToast("Deleted", "success");
-        load();
-      } else {
-        const err = await resp.json();
-        showToast(err.error || resp.statusText, "error");
-      }
-    } catch (e) {
-      showToast(`Failed to delete subject – ${e}`, "error");
-    }
-  }
-
-  /* -----------------------------------------------------------------
-   * 1️⃣2️⃣  UI bindings & modal handling
+   * 🔟  UI bindings – Add button
    * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
-  // ---- Edit modal -------------------------------------------------
-  if ($editModal) {
-    // <‑‑ NEW wrapper
-    const editCancel = $editModal.querySelector("#subject-cancel");
-    editCancel?.addEventListener("click", () =>
-      $editModal.classList.add("hidden"),
-    );
-
-    const editForm = $editModal.querySelector("#subject-edit-form");
-    editForm?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const sid = form.subject_id.value;
-
-      const payload = {
-        subject_code: form.subject_code.value.trim(),
-        subject_name: form.subject_name.value.trim(),
-        year: form.year.value,
-      };
-
-      const url = replaceId(updateTpl, sid);
-      try {
-        const resp = await fetch(url, {
-          method: "PUT",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!resp.ok) {
-          const err = await resp.json();
-          showToast(err.error || resp.statusText, "error");
-          return;
-        }
-
-        showToast("Subject updated", "success");
-        $editModal.classList.add("hidden");
-        load(); // refresh the list
-      } catch (err) {
-        showToast(`Failed to update subject – ${err}`, "error");
-      }
-    });
-  }
-  // ---- Delete modal ------------------------------------------------
-  if ($deleteModal) {
-    // <‑‑ NEW wrapper
-    const deleteCancel = $deleteModal.querySelector("#subject-delete-cancel");
-    deleteCancel?.addEventListener("click", () =>
-      $deleteModal.classList.add("hidden"),
-    );
-
-    const deleteConfirm = $deleteModal.querySelector("#subject-delete-confirm");
-    deleteConfirm?.addEventListener("click", async () => {
-      const pk = $deleteModal.dataset.subjectId;
-      $deleteModal.classList.add("hidden");
-      if (!pk) {
-        showToast("No subject selected for deletion.", "error");
-        return;
-      }
-      await performDelete(pk);
-    });
-  }
-
-  // -----------------------------------------------------------------
-  // 1️⃣3️⃣  Initial load.
-  // -----------------------------------------------------------------
-  loadYearChoices(); // populate the year <select> used by both forms
+  /* -----------------------------------------------------------------
+   * 1️⃣1️⃣  Initialisation
+   * ----------------------------------------------------------------- */
+  loadYearChoices(); // populate the <select> used by both forms
   load(); // fetch the first page of subjects
 }

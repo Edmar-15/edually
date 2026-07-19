@@ -28,22 +28,12 @@ export function initModuleWidget(rootEl) {
    * Helper – replace the dummy “0” with a real id
    * ----------------------------------------------------------------- */
   const replaceId = (template, id) => template.replace(/0(?=\/|$)/, id);
-  // The RegExp looks for a `0` that is either at the very end of the string
-  // or just before a slash – this prevents accidental replacement of a
-  // `0` that could appear in a query‑string or elsewhere.
 
   /* -----------------------------------------------------------------
    * 2️⃣  Toast helper -------------------------------------------------
    * ----------------------------------------------------------------- */
-  /**
-   * Lazily get (or create) the toast container element.
-   * The container lives in the corner of the page (see CSS) and has
-   * `aria-live="polite"` so screen‑readers announce its content.
-   */
   const getToastContainer = () => {
-    // 1️⃣  Look for a container that is a direct descendant of the widget.
     let container = rootEl.querySelector(".toast-container");
-    // 2️⃣  If the developer omitted it, create a new one *inside* the widget.
     if (!container) {
       container = document.createElement("div");
       container.className = "toast-container";
@@ -54,39 +44,23 @@ export function initModuleWidget(rootEl) {
   };
   const $toastContainer = getToastContainer();
 
-  /**
-   * Show a toast.
-   *
-   * @param {string} message   Text to display.
-   * @param {'success'|'error'|'info'|'warning'} [type='info']   Visual variant.
-   * @param {number} [duration=4000]   How long the toast stays (ms).
-   */
   const showToast = (message, type = "info", duration = 4000) => {
     const toast = document.createElement("div");
     toast.className = `toast toast--${type}`;
-    // CSS animation reads this custom property to know when to start fade‑out
     toast.style.setProperty("--toast-life", `${duration}ms`);
 
-    // Use a tiny emoji as an icon – you could replace these with SVGs later.
     const icon = document.createElement("span");
     icon.className = "toast__icon";
-    if (type === "success") icon.textContent = "";
-    else if (type === "error") icon.textContent = "";
-    else if (type === "warning") icon.textContent = "";
-    else icon.textContent = "";
+    // (you can add emojis / SVGs here if you like)
 
     const msg = document.createElement("span");
     msg.textContent = message;
 
     toast.appendChild(icon);
     toast.appendChild(msg);
-
-    // Clicking a toast dismisses it instantly.
     toast.addEventListener("click", () => toast.remove());
 
     $toastContainer.appendChild(toast);
-
-    // Auto‑remove after the requested lifetime plus a little extra for the fade‑out.
     setTimeout(() => toast.remove(), duration + 500);
   };
 
@@ -103,9 +77,10 @@ export function initModuleWidget(rootEl) {
   const $nameInput = rootEl.querySelector("#module-name-input");
   const $fileInput = rootEl.querySelector("#module-file-input");
   const $addBtn = rootEl.querySelector("#module-add-btn");
-  const $editModal = rootEl.querySelector("#module-edit-modal");
-  const $deleteModal = rootEl.querySelector("#module-delete-modal");
 
+  /* -----------------------------------------------------------------
+   * Helper – icons based on file extension
+   * ----------------------------------------------------------------- */
   function getModuleIconMarkup(fileUrl = "") {
     const ext = (fileUrl || "")
       .split("?")[0]
@@ -154,18 +129,15 @@ export function initModuleWidget(rootEl) {
    * 4️⃣  Render a single module card – mirrors the pm‑card UI
    * ----------------------------------------------------------------- */
   function renderCard(mod) {
-    // ---- Card container -------------------------------------------------
     const card = document.createElement("div");
     card.className = "pm-card";
     card.dataset.id = mod.id;
 
-    // ---- Header (icon + title) -----------------------------------------
     const header = document.createElement("div");
     header.className = "pm-card__header";
 
     const iconWrap = document.createElement("div");
-    iconWrap.className =
-      `pm-card__icon ${getModuleIconClass(mod.file_url)}`.trim();
+    iconWrap.className = `pm-card__icon ${getModuleIconClass(mod.file_url)}`.trim();
     iconWrap.innerHTML = getModuleIconMarkup(mod.file_url);
     header.appendChild(iconWrap);
 
@@ -182,9 +154,7 @@ export function initModuleWidget(rootEl) {
     const typePill = document.createElement("span");
     typePill.className = "pm-card__pill";
     const fileName = mod.file_url ? mod.file_url.split("/").pop() : "Document";
-    const ext = fileName.includes(".")
-      ? fileName.split(".").pop().toUpperCase()
-      : "FILE";
+    const ext = fileName.includes(".") ? fileName.split(".").pop().toUpperCase() : "FILE";
     typePill.textContent = ext;
     meta.appendChild(typePill);
 
@@ -192,13 +162,11 @@ export function initModuleWidget(rootEl) {
     header.appendChild(content);
     card.appendChild(header);
 
-    // -----------------------------------------------------------------
-    // Actions – identical layout to the Personal‑Material widget
-    // -----------------------------------------------------------------
+    // ---- Actions -------------------------------------------------
     const actions = document.createElement("div");
     actions.className = "pm-card__actions";
 
-    // View button – links to the module detail page
+    // View button – links to the module‑detail page
     const viewBtn = document.createElement("a");
     viewBtn.href = `/slm/subjects/${mod.subject_id}/modules/${mod.id}/`;
     viewBtn.className = "button button-plain";
@@ -206,35 +174,27 @@ export function initModuleWidget(rootEl) {
     viewBtn.title = "Open module preview";
     actions.appendChild(viewBtn);
 
-    // Owner‑only edit / delete
+    // Owner‑only edit / delete – use global modal
     if (mod.is_owner) {
-      // ---- Edit ---------------------------------------------------------
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.title = "Edit";
-      editBtn.className = "pm-card__action";
-      editBtn.innerHTML =
+      // ---- Edit (global modal) ---------------------------------
+      const editLink = document.createElement("a");
+      editLink.href = "#";
+      editLink.title = "Edit";
+      editLink.className = "pm-card__action js-modal-trigger";
+      editLink.dataset.url = `/slm/api/modules/${mod.id}/edit-modal/`;
+      editLink.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
-      editBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openEditModal(mod);
-      });
-      actions.appendChild(editBtn);
+      actions.appendChild(editLink);
 
-      // ---- Delete -------------------------------------------------------
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.title = "Delete";
-      delBtn.className = "pm-card__action pm-card__action--delete";
-      delBtn.innerHTML =
+      // ---- Delete (global modal) -------------------------------
+      const delLink = document.createElement("a");
+      delLink.href = "#";
+      delLink.title = "Delete";
+      delLink.className = "pm-card__action pm-card__action--delete js-modal-trigger";
+      delLink.dataset.url = `/slm/api/modules/${mod.id}/delete-modal/`;
+      delLink.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
-      delBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openDeleteModal(mod.id);
-      });
-      actions.appendChild(delBtn);
+      actions.appendChild(delLink);
     }
 
     card.appendChild(actions);
@@ -292,11 +252,10 @@ export function initModuleWidget(rootEl) {
     };
 
     ul.appendChild(
-      makeItem("←", meta.previous_page_number, !meta.has_previous),
+      makeItem("←", meta.previous_page_number, !meta.has_previous)
     );
     ul.appendChild(makeItem("1", null, false, meta.page === 1));
-    if (meta.page - 2 > 2)
-      ul.appendChild(makeItem("…", null, false, false, true));
+    if (meta.page - 2 > 2) ul.appendChild(makeItem("…", null, false, false, true));
 
     const start = Math.max(2, meta.page - 1);
     const end = Math.min(meta.total_pages - 1, meta.page + 1);
@@ -314,8 +273,8 @@ export function initModuleWidget(rootEl) {
           String(meta.total_pages),
           null,
           false,
-          meta.page === meta.total_pages,
-        ),
+          meta.page === meta.total_pages
+        )
       );
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
@@ -335,7 +294,6 @@ export function initModuleWidget(rootEl) {
 
       const payload = await resp.json();
 
-      // ---- render cards -------------------------------------------------
       const data = payload.results;
       if (!data.length) {
         const existingEmpty = $list.querySelector(".module-empty-state");
@@ -364,7 +322,6 @@ export function initModuleWidget(rootEl) {
         row.appendChild(renderCard(mod));
       });
 
-      // ---- paginator ----------------------------------------------------
       renderPaginator(payload);
     } catch (e) {
       showToast(`Failed to load modules – ${e}`, "error");
@@ -388,7 +345,7 @@ export function initModuleWidget(rootEl) {
       if (!ALLOWED_EXT.some((ext) => name.endsWith(ext))) {
         showToast(
           "Only PDF, Word (.doc/.docx) and PowerPoint (.ppt/.pptx) files are allowed.",
-          "error",
+          "error"
         );
         return;
       }
@@ -419,154 +376,14 @@ export function initModuleWidget(rootEl) {
   }
 
   /* -----------------------------------------------------------------
-   * 8️⃣  EDIT – open edit modal (HTML already lives in the template)
-   * ----------------------------------------------------------------- */
-  function openEditModal(mod) {
-    // Store the id of the module we are editing – used by the submit handler
-    $editModal.dataset.modId = mod.id;
-
-    // Pre‑fill the fields
-    const form = $editModal.querySelector("#modal-edit-form");
-    if (form) {
-      form.module_number.value = mod.module_number;
-      form.module_name.value = mod.module_name;
-      form.file.value = "";
-    }
-
-    $editModal.classList.remove("hidden");
-  }
-
-  /* -----------------------------------------------------------------
-   * NEW – open delete confirmation modal
-   * ----------------------------------------------------------------- */
-  function openDeleteModal(pk) {
-    $deleteModal.dataset.modId = pk;
-    $deleteModal.classList.remove("hidden");
-  }
-
-  /* -----------------------------------------------------------------
-   * 9️⃣  DELETE – actually send the DELETE request.
-   * ----------------------------------------------------------------- */
-  async function performDelete(pk) {
-    const url = replaceId(deleteTpl, pk);
-    try {
-      const resp = await fetch(url, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "X-CSRFToken": csrftoken },
-      });
-      if (resp.status === 204) {
-        showToast("Deleted", "success");
-        load();
-      } else {
-        const err = await resp.json();
-        showToast(err.error || resp.statusText, "error");
-      }
-    } catch (e) {
-      showToast(`Failed to delete module – ${e}`, "error");
-    }
-  }
-
-  /* -----------------------------------------------------------------
-   * 🔟  UI bindings & modal handling
+   * 8️⃣  UI bindings & modal handling
    * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
-  // ---- Edit modal – cancel & submit ----
-  if ($editModal) {
-    const cancelBtn = $editModal.querySelector("#modal-cancel");
-    cancelBtn?.addEventListener("click", () =>
-      $editModal.classList.add("hidden"),
-    );
+  // No longer need local edit / delete modals – the global modal handles them.
 
-    const editForm = $editModal.querySelector("#modal-edit-form");
-    editForm?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const number = form.module_number.value.trim();
-      const name = form.module_name.value.trim();
-      const file = form.file.files[0];
-
-      const payload = {};
-      if (number) payload.module_number = number;
-      if (name) payload.module_name = name;
-
-      const modId = $editModal.dataset.modId;
-      if (!modId) {
-        showToast("No module selected for update.", "error");
-        return;
-      }
-
-      const updateUrl = replaceId(updateTpl, modId);
-      try {
-        const resp = await fetch(updateUrl, {
-          method: "PUT",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!resp.ok) {
-          const err = await resp.json();
-          showToast(err.error || resp.statusText, "error");
-          return;
-        }
-
-        // If a new file was provided, upload it via the dedicated endpoint
-        if (file) {
-          const replaceUrl = replaceId(replaceFileTpl, modId);
-          const fileForm = new FormData();
-          fileForm.append("file", file);
-          const fileResp = await fetch(replaceUrl, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "X-CSRFToken": csrftoken },
-            body: fileForm,
-          });
-          if (!fileResp.ok) {
-            const ferr = await fileResp.json();
-            showToast(
-              `File replace failed – ${ferr.error || fileResp.statusText}`,
-              "error",
-            );
-            return;
-          }
-        }
-
-        showToast("Module updated", "success");
-        $editModal.classList.add("hidden");
-        load(); // refresh the list
-      } catch (err) {
-        showToast(`Failed to update module – ${err}`, "error");
-      }
-    });
-  }
-
-  // ---- Delete modal – cancel & confirm ----
-  if ($deleteModal) {
-    const cancelBtn = $deleteModal.querySelector("#modal-delete-cancel");
-    cancelBtn?.addEventListener("click", () =>
-      $deleteModal.classList.add("hidden"),
-    );
-
-    const confirmBtn = $deleteModal.querySelector("#modal-delete-confirm");
-    confirmBtn?.addEventListener("click", async () => {
-      const pk = $deleteModal.dataset.modId;
-      // Hide the modal right away
-      $deleteModal.classList.add("hidden");
-      if (!pk) {
-        showToast("No module selected for deletion.", "error");
-        return;
-      }
-      await performDelete(pk);
-    });
-  }
-
-  // -----------------------------------------------------------------
-  // Kick‑off – load the first page
-  // -----------------------------------------------------------------
+  /* -----------------------------------------------------------------
+   * 9️⃣ Kick‑off – load the first page
+   * ----------------------------------------------------------------- */
   load();
 }

@@ -1511,3 +1511,165 @@ body.sidebar-collapsed .main-content {
     outline: 2px solid #0066cc;
     outline-offset: 2px;
 }
+
+.modal__backdrop {
+    position: absolute;            /* stretch over the whole viewport */
+    inset: 0;                     /* top / right / bottom / left = 0 */
+    cursor: pointer;              /* makes it obvious it’s clickable */
+    /* we keep the background transparent – the outer .modal gives the
+       dimmed overlay.  If you want a second overlay, uncomment the line
+       below and remove the background on .modal. */
+    /* background: rgba(0,0,0,.5); */
+    z-index: 0;                   /* behind the dialog */
+}
+
+/* -----------------------------------------------------------------
+   Dialog box – the visible white panel
+   ----------------------------------------------------------------- */
+.modal__content,
+.modal__dialog {                /* .modal__dialog is the original name,
+                                   we style both so you can keep either. */
+    background: #fff;
+    border-radius: .5rem;
+    max-width: 420px;           /* same as the original .modal__dialog */
+    width: 100%;
+    padding: 1rem;
+    box-shadow: 0 4px 18px rgba(0,0,0,.15);
+    animation: fadeIn .15s ease-out forwards;
+    position: relative;
+    z-index: 1;                  /* above the backdrop */
+}
+
+/* -----------------------------------------------------------------
+   Optional header – if you ever want <h2 class="modal__title"> … </h2>
+   ----------------------------------------------------------------- */
+.modal__content h2,
+.modal__dialog .modal__title {
+    margin: 0 0 .75rem;
+    font-size: 1.25rem;
+}
+
+/* -----------------------------------------------------------------
+   Footer / action bar – the “Save / Delete / Cancel” buttons
+   ----------------------------------------------------------------- */
+.modal__actions,
+.modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: .75rem;
+    margin-top: 1rem;            /* space above the button row */
+}
+
+/* -----------------------------------------------------------------
+   Buttons – unify the “button‑primary / button‑plain” that the
+   templates already use with the .btn utilities you have elsewhere.
+   ----------------------------------------------------------------- */
+.modal__actions .button-primary,
+.modal__footer .button-primary,
+button.button-primary,
+a.button-primary {
+    font-family: inherit;
+    font-size: .95rem;
+    padding: .45rem .9rem;
+    border: none;
+    border-radius: .3rem;
+    cursor: pointer;
+    background: #d32f2f;        /* same red you use for logout */
+    color: #fff;
+}
+
+.modal__actions .button-plain,
+.modal__footer .button-plain,
+button.button-plain,
+a.button-plain {
+    font-family: inherit;
+    font-size: .95rem;
+    padding: .45rem .9rem;
+    border: none;
+    border-radius: .3rem;
+    cursor: pointer;
+    background: #e0e0e0;
+    color: #222;
+}
+
+/* Danger variant that the delete modals use */
+.button-primary.button--danger,
+button.button-primary.button--danger,
+a.button-primary.button--danger {
+    background: #c62828;        /* a slightly darker red */
+}
+
+/* --------------------------------------------------------------
+   Form fields inside the modal – keep them readable
+   -------------------------------------------------------------- */
+.modal__content label,
+.modal__dialog label {
+    display: block;
+    margin-bottom: .4rem;
+    font-weight: 600;
+}
+
+.modal__content input[type="text"],
+.modal__content input[type="number"],
+.modal__content input[type="file"],
+.modal__content select,
+.modal__dialog input[type="text"],
+.modal__dialog input[type="number"],
+.modal__dialog input[type="file"],
+.modal__dialog select {
+    width: 100%;
+    margin-bottom: .75rem;
+    padding: .45rem .75rem;
+    border: 1px solid #ccc;
+    border-radius: .3rem;
+    font-size: .95rem;
+    background: #fff;
+}
+
+/* Give the fields a focus outline (important for accessibility) */
+.modal__content input:focus,
+.modal__content select:focus,
+.modal__dialog input:focus,
+.modal__dialog select:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+}
+
+/* -----------------------------------------------------------------
+   Close icon – you already have .modal__close in the base CSS,
+   but if you ever need it inside the injected markup it will work.
+   ----------------------------------------------------------------- */
+.modal__close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* -----------------------------------------------------------------
+   Make sure the modal itself stays centered even when the inner
+   content has a height that exceeds the viewport – allow scrolling.
+   ----------------------------------------------------------------- */
+.modal {
+    overflow-y: auto;   /* already set, just reminding */
+}
+
+/* --------------------------------------------------------------
+   Keep the fade‑in you already defined
+   -------------------------------------------------------------- */
+@keyframes fadeIn {
+    from { opacity: .4; transform: translateY(-10px); }
+    to   { opacity: 1;   transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------
+   Accessibility – focus outlines for everything inside the modal
+   -------------------------------------------------------------- */
+.modal button:focus,
+.modal a:focus,
+.modal input:focus,
+.modal select:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+}

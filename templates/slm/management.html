@@ -17,5 +17,11 @@
         <!-- Re‑use the full subject‑widget (with add / edit / delete) -->
         {% include "components/tabs/tab_self.html" %}
     </main>
+
+    {# 1️⃣ Global modal placeholder – only once per page #}
+    {% include "components/global_modal.html" %}
+
+    {# 2️⃣ Modal JS – load after the DOM #}
+    <script src="{% static 'js/modal.js' %}" defer></script>
 </body>
 </html>

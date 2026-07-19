@@ -973,3 +973,213 @@ def management(request):
     original SLM tabs (read‑only).
     """
     return render(request, "slm/management.html")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def subject_edit_modal(request, pk):
+    """
+    GET → return the edit‑form HTML.
+    POST → validate, save and return JSON {success:true, redirect:''}.
+    """
+    subject = get_object_or_404(Subject, pk=pk)
+
+    # Permission – only the author (teacher) may edit
+    if subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    if request.method == "POST":
+        code = request.POST.get("subject_code", "").strip()
+        name = request.POST.get("subject_name", "").strip()
+        year = request.POST.get("year")
+
+        if not code or not name:
+            return JsonResponse({"error": "Both code and name are required"}, status=400)
+
+        try:
+            year = validate_year_choice(year)
+        except ValidationError as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+
+        subject.subject_code = code
+        subject.subject_name = name
+        subject.year = year
+        subject.save()
+        return JsonResponse({"success": True, "redirect": ""})
+
+    # GET – render the modal fragment (no outer <div class="modal">!)
+    html = render_to_string("slm/modals/subject_edit.html", {"subject": subject})
+    return JsonResponse({"html": html})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def subject_delete_modal(request, pk):
+    """
+    GET → confirm‑delete modal.
+    POST → delete object and return JSON.
+    """
+    subject = get_object_or_404(Subject, pk=pk)
+
+    if subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    if request.method == "POST":
+        subject.delete()
+        return JsonResponse({"success": True, "redirect": ""})
+
+    html = render_to_string("slm/modals/subject_delete.html", {"subject": subject})
+    return JsonResponse({"html": html})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def module_edit_modal(request, pk):
+    module = get_object_or_404(Module, pk=pk)
+
+    # Permission – only the owner of the subject (teacher) may edit
+    if module.subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    if request.method == "POST":
+        # ----- fields -----
+        number = request.POST.get("module_number")
+        name = request.POST.get("module_name")
+        file_obj = request.FILES.get("file")
+
+        # ---- module_number validation and uniqueness ----
+        if number:
+            try:
+                number_i = int(number)
+                if number_i <= 0:
+                    raise ValueError
+            except (TypeError, ValueError):
+                return JsonResponse(
+                    {"error": "module_number must be a positive integer"},
+                    status=400,
+                )
+            if Module.objects.filter(subject=module.subject,
+                                     module_number=number_i).exclude(pk=module.pk).exists():
+                return JsonResponse(
+                    {"error": "module_number already exists for this subject"},
+                    status=400,
+                )
+            module.module_number = number_i
+
+        # ---- module_name validation ----
+        if name is not None:
+            name = name.strip()
+            if not name:
+                return JsonResponse(
+                    {"error": "module_name cannot be blank"},
+                    status=400,
+                )
+            module.module_name = name
+
+        # ---- optional file replace ----
+        if file_obj:
+            try:
+                validate_module_file(file_obj)
+            except ValidationError as exc:
+                return JsonResponse({"error": str(exc)}, status=400)
+
+            replace_file(module, "file", file_obj)
+
+            # re‑run the extractor
+            try:
+                html = extract_content(module.file)
+                module.extracted_html = html
+            except ValueError as exc:
+                logger.warning(
+                    "Extraction failed after file replace for module %s: %s",
+                    module.id,
+                    exc,
+                )
+        # ---- save everything ----
+        module.save()
+        return JsonResponse({"success": True, "redirect": ""})
+
+    # GET → render modal fragment
+    html = render_to_string("slm/modals/module_edit.html", {"module": module})
+    return JsonResponse({"html": html})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def module_delete_modal(request, pk):
+    module = get_object_or_404(Module, pk=pk)
+
+    if module.subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    if request.method == "POST":
+        delete_file(module.file)
+        module.delete()
+        return JsonResponse({"success": True, "redirect": ""})
+
+    html = render_to_string("slm/modals/module_delete.html", {"module": module})
+    return JsonResponse({"html": html})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def personal_material_edit_modal(request, pk):
+    pm = get_object_or_404(PersonalMaterial, pk=pk)
+
+    if pm.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        visibility = request.POST.get("visibility")
+        file_obj = request.FILES.get("file")
+
+        if not title:
+            return JsonResponse({"error": "Title is required"}, status=400)
+
+        if visibility not in dict(PersonalMaterial.Visibility.choices):
+            return JsonResponse({"error": "Invalid visibility"}, status=400)
+
+        pm.title = title
+        pm.visibility = visibility
+
+        if file_obj:
+            try:
+                validate_module_file(file_obj)
+            except ValidationError as exc:
+                return JsonResponse({"error": str(exc)}, status=400)
+
+            replace_file(pm, "file", file_obj)
+
+            # re‑run extraction
+            try:
+                pm.extracted_html = extract_content(pm.file)
+            except ValueError as exc:
+                logger.warning(
+                    "Extraction failed after file replace for PersonalMaterial %s: %s",
+                    pm.id,
+                    exc,
+                )
+
+        pm.save()
+        return JsonResponse({"success": True, "redirect": ""})
+
+    html = render_to_string("slm/modals/personal_material_edit.html", {"pm": pm})
+    return JsonResponse({"html": html})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def personal_material_delete_modal(request, pk):
+    pm = get_object_or_404(PersonalMaterial, pk=pk)
+
+    if pm.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    if request.method == "POST":
+        delete_file(pm.file)
+        pm.delete()
+        return JsonResponse({"success": True, "redirect": ""})
+
+    html = render_to_string("slm/modals/personal_material_delete.html", {"pm": pm})
+    return JsonResponse({"html": html})
