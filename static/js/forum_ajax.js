@@ -99,11 +99,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // If a heading (like the reply count) should be updated
-            if (form.dataset.after && data.replies_cnt !== undefined) {
-                const heading = document.querySelector(form.dataset.after);
-                if (heading) {
-                    heading.textContent = `${data.replies_cnt} Reply${data.replies_cnt === 1 ? '' : 's'}`;
+            if (data.replies_cnt !== undefined) {
+                const headingSelector = form.dataset.after;
+                if (headingSelector) {
+                    const heading = document.querySelector(headingSelector);
+                    if (heading) {
+                        heading.textContent = `${data.replies_cnt} Reply${data.replies_cnt === 1 ? '' : 's'}`;
+                    }
                 }
+
+                const postId = form.dataset.postId || form.closest('.post-item')?.dataset.postId;
+                const badgeTargets = postId
+                    ? Array.from(document.querySelectorAll(`.post-item[data-post-id="${postId}"] .reply-count-badge`))
+                    : Array.from(document.querySelectorAll('.reply-count-badge'));
+
+                badgeTargets.forEach(badge => {
+                    if (badge) badge.textContent = data.replies_cnt;
+                });
             }
 
             // Redirect if requested by the server
