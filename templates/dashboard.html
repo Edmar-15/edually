@@ -82,6 +82,28 @@
                     </div>
                 </section>
 
+                <section class="learning-stats">
+                    <h3>Your progress</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-number">{{ module_count }}</span>
+                            <span class="stat-label">Modules available</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">{{ subject_count }}</span>
+                            <span class="stat-label">Subjects in your space</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">{{ modules|length }}</span>
+                            <span class="stat-label">Recently added modules</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number">{{ subjects|length }}</span>
+                            <span class="stat-label">Active study tracks</span>
+                        </div>
+                    </div>
+                </section>
+
                 <section class="onboarding-section">
                     <div class="onboarding-card card animate-fade-up">
                         <div class="onboarding-card__header">
@@ -123,28 +145,6 @@
                             </div>
                         </div>
                         {% endfor %}
-                    </div>
-                </section>
-
-                <section class="learning-stats">
-                    <h3>Your progress</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <span class="stat-number">{{ module_count }}</span>
-                            <span class="stat-label">Modules available</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-number">{{ subject_count }}</span>
-                            <span class="stat-label">Subjects in your space</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-number">{{ modules|length }}</span>
-                            <span class="stat-label">Recently added modules</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-number">{{ subjects|length }}</span>
-                            <span class="stat-label">Active study tracks</span>
-                        </div>
                     </div>
                 </section>
                 </div> <!-- /.container -->

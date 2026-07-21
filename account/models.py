@@ -256,13 +256,13 @@ class Notification(models.Model):
         verbose_name_plural = "Notifications"
 
     def __str__(self) -> str:
-        recipient_name = self.recipient.get_short_name or str(self.recipient)
+        recipient_name = self.recipient.get_short_name() if callable(getattr(self.recipient, 'get_short_name', None)) else str(self.recipient)
         return f"Notification for {recipient_name}: {self.verb}"
 
     @property
     def message(self) -> str:
         if self.actor:
-            actor_name = self.actor.get_short_name or str(self.actor)
+            actor_name = self.actor.get_short_name() if callable(getattr(self.actor, 'get_short_name', None)) else str(self.actor)
             return f"{actor_name} {self.verb}"
         return self.verb
 

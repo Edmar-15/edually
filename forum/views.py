@@ -340,7 +340,7 @@ def reply_edit(request, reply_id):
                     request=request,
                 )
                 return JsonResponse({"success": True, "html": html})
-            return redirect("forum:post_detail", pk=reply.post.pk)
+            return redirect(reverse("forum:post_detail", args=[reply.post.pk]) + f"#reply-{reply.pk}")
     else:
         form = ReplyForm(instance=reply)
 

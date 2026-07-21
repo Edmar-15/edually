@@ -191,6 +191,40 @@
             });
         });
     });
+
+    (function () {
+        const STORAGE_KEY = 'forum-return-to-post-id';
+
+        function restoreScrollPosition() {
+            const postId = sessionStorage.getItem(STORAGE_KEY);
+            if (!postId) return;
+            const post = document.getElementById(postId);
+            if (post) {
+                post.scrollIntoView({ behavior: 'auto', block: 'center' });
+            }
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function saveReturnPostId(event) {
+            const button = event.target.closest('.post-item');
+            if (!button || !button.id) return;
+            sessionStorage.setItem(STORAGE_KEY, button.id);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            restoreScrollPosition();
+            document.querySelectorAll('.post-item a').forEach(function (link) {
+                const href = link.getAttribute('href') || '';
+                if (href.includes('/forum/post/')) {
+                    link.addEventListener('click', saveReturnPostId);
+                }
+            });
+        });
+
+        window.addEventListener('pageshow', function () {
+            restoreScrollPosition();
+        });
+    })();
 </script>
 </body>
 </html>

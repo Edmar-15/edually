@@ -88,6 +88,14 @@
                             </svg>
                         </button>
                     </div>
+                    <div class="password-strength-wrapper">
+                        <div class="password-strength-bar">
+                            <span class="strength-meter" id="password-strength-meter"></span>
+                        </div>
+                        <div class="password-strength-info">
+                            <span class="strength-label">Security level: <strong id="password-strength-label">Very weak</strong></span>
+                        </div>
+                    </div>
                     {% if form.password1.errors %}
                         <div class="errorlist">{{ form.password1.errors }}</div>
                     {% endif %}

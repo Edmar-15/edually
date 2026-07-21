@@ -309,7 +309,7 @@
         radial-gradient(circle at top left, rgba(14, 154, 167, 0.06), transparent 40%),
         #ffffff;
     scroll-behavior: smooth;
-    scrollbar-gutter: stable both-edges;
+    scrollbar-gutter: auto;
 }
 
 .chat-window::-webkit-scrollbar,

@@ -1,6 +1,8 @@
 # account/forms.py
 from __future__ import annotations
 
+import re
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -162,6 +164,24 @@ class PublicRegisterForm(forms.ModelForm):
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError("A user with that email already exists.")
         return email
+
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1")
+        if not password:
+            return password
+
+        if len(password) < 12:
+            raise forms.ValidationError("Password must be at least 12 characters long.")
+
+        first_letters = re.findall(r"[A-Za-z]", password)
+        if not first_letters or not first_letters[0].isupper():
+            raise forms.ValidationError("Password must contain an uppercase letter as the first alphabetic character.")
+        if not re.search(r"\d", password):
+            raise forms.ValidationError("Password must include at least one number.")
+        if not re.search(r"[!@#$%^&*()_+\-=[\]{};':\\\|,.<>\/?~`]", password):
+            raise forms.ValidationError("Password must include at least one special character.")
+
+        return password
 
     def clean(self):
         cleaned = super().clean()
