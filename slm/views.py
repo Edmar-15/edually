@@ -14,6 +14,7 @@ import logging as logger
 from .ai_bridge import ask_ai_one_level
 from .file_utils import delete_file, replace_file
 from functools import wraps
+from django.db import transaction
 
 # Decorators
 def teacher_required_for_mutation(view_func):
@@ -498,7 +499,7 @@ def api_module_update(request, pk):
 @teacher_required_for_mutation
 @require_http_methods(["DELETE"])
 def api_module_delete(request, pk):
-    """DELETE /slm/api/modules/<pk>/delete/"""
+    """DELETE /api/modules/<pk>/delete/"""
     try:
         module = Module.objects.select_related("subject").get(pk=pk)
     except Module.DoesNotExist:
@@ -507,8 +508,18 @@ def api_module_delete(request, pk):
     if module.subject.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 
-    delete_file(module.file)
-    module.delete()
+    try:
+        # Wrap DB‑delete + FS‑delete in one atomic block.
+        with transaction.atomic():
+            # The post_delete signal will fire *after* the row is gone,
+            # but we also call delete_file here so that if the signal
+            # fails we can roll back the DB delete.
+            delete_file(module.file)
+            module.delete()
+    except Exception as exc:  # pragma: no cover – only triggered on FS failure
+        logger.error("Failed to delete module %s: %s", pk, exc)
+        return JsonResponse({"error": f"Failed to delete file: {exc}"}, status=500)
+
     return JsonResponse({}, status=204)
 
 
@@ -787,14 +798,20 @@ def api_personal_material_update(request, pk):
 @login_required
 @require_http_methods(["DELETE"])
 def api_personal_material_delete(request, pk):
-    """DELETE /slm/api/personal-materials/<pk>/delete/"""
+    """DELETE /api/personal-materials/<pk>/delete/"""
     pm = get_object_or_404(PersonalMaterial, pk=pk)
 
     if pm.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 
-    delete_file(pm.file)
-    pm.delete()
+    try:
+        with transaction.atomic():
+            delete_file(pm.file)
+            pm.delete()
+    except Exception as exc:  # pragma: no cover
+        logger.error("Failed to delete personal material %s: %s", pk, exc)
+        return JsonResponse({"error": f"File deletion failed: {exc}"}, status=500)
+
     return JsonResponse({}, status=204)
 
 
