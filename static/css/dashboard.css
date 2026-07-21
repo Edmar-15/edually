@@ -17,6 +17,53 @@ body {
 .dashboard-container {
     display: flex;
     min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.48);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+body.sidebar-mobile-open .sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-sidebar-trigger {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 1200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    border: 1px solid rgba(14, 154, 167, 0.18);
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--primary);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+    cursor: pointer;
+}
+
+.mobile-sidebar-trigger:hover,
+.mobile-sidebar-trigger:focus-visible {
+    background: rgba(14, 154, 167, 0.08);
+    outline: none;
+}
+
+.mobile-sidebar-trigger svg.sidebar-trigger-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
 }
 
 
@@ -252,26 +299,35 @@ body.sidebar-collapsed .sidebar {
     min-height: 100vh;
     padding: 0;
     background: var(--bg);
+    width: calc(100% - var(--sidebar-width));
+    min-width: 0;
 }
 
 /* Dashboard content container tweaks */
 .dashboard-content {
-    padding: 40px 0;
+    padding: 24px 0;
 }
 
 .dashboard-content .card {
-    padding: 28px;
+    padding: 24px;
 }
 
 /* Header tweaks for stronger hierarchy */
 .content-header {
-    padding: 20px 0;
+    padding: 10px 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .header-left h1 {
     font-size: 2rem;
     font-weight: 800;
     color: var(--text);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .SidebarProvider .sidebar {
@@ -476,11 +532,11 @@ body.sidebar-collapsed .main-content {
 
 /* Welcome */
 .welcome-section {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .journey-section {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .journey-card {
@@ -590,7 +646,7 @@ body.sidebar-collapsed .main-content {
 
 /* Quick */
 .quick-access {
-    margin-bottom: 40px;
+    margin-bottom: 28px;
 }
 
 .quick-access h3 {
@@ -644,7 +700,7 @@ body.sidebar-collapsed .main-content {
 
 /* Activity */
 .onboarding-section {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .onboarding-card {
@@ -719,7 +775,7 @@ body.sidebar-collapsed .main-content {
 }
 
 .recent-activity {
-    margin-bottom: 40px;
+    margin-bottom: 28px;
 }
 
 .recent-activity h3 {
@@ -777,7 +833,7 @@ body.sidebar-collapsed .main-content {
 
 
 .learning-stats {
-    margin-bottom: 40px;
+    margin-bottom: 28px;
 }
 
 .learning-stats h3 {
@@ -837,7 +893,7 @@ body.sidebar-collapsed .main-content {
 }
 
 .profile-section {
-    padding: 32px;
+    padding: 24px;
 }
 
 .profile-grid {
@@ -1227,71 +1283,116 @@ body.sidebar-collapsed .main-content {
         flex-wrap: wrap;
     }
 
+    .sidebar {
+        width: min(86vw, 320px);
+        padding: 14px 10px;
+    }
+
+    .sidebar-header {
+        margin-bottom: 18px;
+        padding: 0 6px;
+    }
+
+    .sidebar-logo {
+        font-size: 1.16rem;
+    }
+
+    .nav-item {
+        padding: 11px 12px;
+        font-size: 0.92rem;
+    }
+
+    .nav-label {
+        white-space: nowrap;
+    }
+
     .profile-actions .button {
         flex: 1 1 calc(50% - 6px);
     }
 
-/* Layout */
+    .mobile-sidebar-trigger {
+        display: inline-flex;
+    }
+
+    body.sidebar-mobile-open {
+        overflow: hidden;
+    }
+
+    body.sidebar-mobile-open .main-content {
+        pointer-events: none;
+    }
+
     .dashboard-container {
         flex-direction: column;
     }
 
-/* Sidebar */
     .sidebar {
-        width: 100%;
-        height: auto;
-        position: static;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        flex-direction: row;
-        padding: 16px;
+        width: min(84vw, 320px);
+        max-width: 320px;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1100;
+        border-right: 1px solid rgba(14, 154, 167, 0.16);
+        border-bottom: none;
+        padding: 18px 12px;
+        transform: translateX(-100%);
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+    }
+
+    .sidebar.is-open {
+        transform: translateX(0);
     }
 
     .sidebar-header {
-        margin-bottom: 0;
-        margin-right: 24px;
+        margin-bottom: 24px;
+        padding: 0 6px;
     }
 
     .sidebar-nav {
-        flex-direction: row;
-        flex: 1;
-        gap: 4px;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .nav-item {
-        padding: 10px 12px;
-        font-size: 0.85rem;
+        padding: 12px 14px;
+        font-size: 0.95rem;
     }
 
     .nav-label {
-        display: none;
+        display: inline;
     }
 
     .sidebar-footer {
-        border-top: none;
-        border-left: 1px solid var(--border);
-        padding-left: 16px;
-        padding-top: 0;
-        margin-left: 16px;
-    }
-
-/* Main */
-    .main-content {
+        border-top: 1px solid var(--border);
+        border-left: none;
+        padding-left: 0;
+        padding-top: 16px;
         margin-left: 0;
     }
 
-/* Header */
+    .main-content {
+        margin-left: 0;
+        min-width: 0;
+    }
+
     .content-header {
-        padding: 16px;
+        padding: 18px 16px 18px 72px;
+        border-radius: 0 0 20px 20px;
     }
 
     .header-left h1 {
-        font-size: 1.3rem;
+        font-size: 1.28rem;
+        line-height: 1.3;
     }
 
-/* Content */
+    .header-right {
+        display: none;
+    }
+
     .dashboard-content {
-        padding: 16px;
+        padding: 16px 0 24px;
     }
 
     .quick-buttons {
@@ -1302,7 +1403,6 @@ body.sidebar-collapsed .main-content {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* Mobile card/padding reductions */
     .dashboard-content .card {
         padding: 16px;
         border-radius: 14px;
@@ -1330,6 +1430,31 @@ body.sidebar-collapsed .main-content {
     .stat-number {
         font-size: 2.2rem;
     }
+
+    .profile-grid,
+    .name-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .content-header {
+        padding: 14px 14px 14px 56px;
+        align-items: flex-start;
+    }
+
+    .header-left h1 {
+        font-size: 1.05rem;
+    }
+
+    .dashboard-content {
+        padding: 12px 0 20px;
+    }
+
+    .dashboard-content .card {
+        padding: 14px;
+        border-radius: 14px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1337,33 +1462,54 @@ body.sidebar-collapsed .main-content {
         --sidebar-width: auto;
     }
 
-/* Header */
+    .mobile-sidebar-trigger {
+        top: 10px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .sidebar {
+        width: min(88vw, 300px);
+        padding: 12px 8px;
+    }
+
     .content-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
+        gap: 10px;
+        padding: 12px 12px 12px 52px;
     }
 
     .header-left h1 {
-        font-size: 1.1rem;
+        font-size: 0.98rem;
+        line-height: 1.35;
+    }
+
+    .header-right {
+        display: none;
     }
 
     .nav-icon {
         font-size: 1rem;
     }
 
-    .welcome-card {
-        padding: 20px;
+    .welcome-card,
+    .journey-card,
+    .onboarding-card {
+        padding: 18px;
+        border-radius: 18px;
     }
 
     .welcome-card h2 {
-        font-size: 1.3rem;
+        font-size: 1.24rem;
     }
 
     .quick-access h3,
     .recent-activity h3,
     .learning-stats h3 {
-        font-size: 1.1rem;
+        font-size: 1.08rem;
+        margin-bottom: 12px;
     }
 
     .stats-grid {
@@ -1377,7 +1523,14 @@ body.sidebar-collapsed .main-content {
     }
 
     .content-header {
-        padding: 12px 0;
+        padding: 14px 14px 14px 60px;
+    }
+
+    .mobile-sidebar-trigger {
+        top: 12px;
+        left: 12px;
+        width: 40px;
+        height: 40px;
     }
 
     .header-left h1 {
@@ -1387,15 +1540,25 @@ body.sidebar-collapsed .main-content {
 
     .journey-card {
         padding: 16px;
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     .welcome-card h2 {
         font-size: 1.15rem;
     }
 
+    .quick-btn {
+        padding: 16px;
+    }
+
     .activity-icon { width: 44px; height: 44px; }
     .activity-item { padding: 10px; }
+
+    .journey-step,
+    .onboarding-step {
+        padding: 10px 12px;
+        border-radius: 12px;
+    }
 }
 
 

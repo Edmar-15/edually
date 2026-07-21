@@ -333,11 +333,38 @@
   .module-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .module-card,
+  .pm-card {
+    padding: 0.95rem;
+  }
+
+  .module-card__actions,
+  .pm-card__actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 540px) {
   .module-row {
     grid-template-columns: 1fr;
+  }
+
+  .module-card__header,
+  .pm-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .module-card__actions,
+  .pm-card__actions {
+    gap: 0.35rem;
+  }
+
+  .module-card__action,
+  .pm-card__action {
+    width: 34px;
+    height: 34px;
   }
 }
 

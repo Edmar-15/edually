@@ -17,23 +17,6 @@
 
     <main class="main-content">
         <section class="forum-page">
-            <header class="forum-header">
-                <div>
-                    <p class="eyebrow">Peer Discussion Forum</p>
-                    <h1>Ask questions and learn from classmates.</h1>
-                    <p class="intro-text">
-                        Browse recent posts, filter by subject or keyword,
-                        and get help from your peers and teachers.
-                    </p>
-                </div>
-                     <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                         class="button primary-button ajax-modal"
-                         role="button"
-                         aria-label="Ask a Question"
-                         data-ajax-url="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                         data-target="#global-modal">Ask a Question</a>
-            </header>
-
             <!-- SEARCH & FILTERS -->
             <section class="forum-search">
                 <form method="get" action="{% url 'forum:feed' %}" class="search-form">
@@ -47,45 +30,118 @@
                         {% if active_category %}
                             <input type="hidden" name="cat" value="{{ active_category }}">
                         {% endif %}
-                        <button type="submit" class="button search-button">
-                            <i class="fa-solid fa-magnifying-glass"></i> Search
-                        </button>
+                        <div class="sort-group">
+                            <button type="button" class="button secondary-button sort-trigger" aria-expanded="false" aria-controls="sort-options">
+                                <i class="fa-solid fa-arrow-down-wide-narrow"></i>
+                                <span>
+                                    {% if sort_by == 'latest' %}Latest{% elif sort_by == 'upvotes' %}Most Upvoted{% elif sort_by == 'replies' %}Most Replied{% else %}Sort by{% endif %}
+                                </span>
+                                <i class="fa-solid fa-chevron-down sort-icon"></i>
+                            </button>
+                            <div class="sort-options" id="sort-options">
+                                <a href="{% url 'forum:feed' %}?sort=latest{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}"
+                                   class="sort-option {% if sort_by == 'latest' %}active{% endif %}">Latest</a>
+                                <a href="{% url 'forum:feed' %}?sort=upvotes{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}"
+                                   class="sort-option {% if sort_by == 'upvotes' %}active{% endif %}">Most Upvoted</a>
+                                <a href="{% url 'forum:feed' %}?sort=replies{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}"
+                                   class="sort-option {% if sort_by == 'replies' %}active{% endif %}">Most Replied</a>
+                                {% if show_unanswered %}
+                                    <a href="{% url 'forum:feed' %}{% if active_category %}?cat={{ active_category }}{% if search_query %}&q={{ search_query }}{% endif %}{% elif search_query %}?q={{ search_query }}{% endif %}"
+                                       class="sort-option">Clear unanswered</a>
+                                {% else %}
+                                    <a href="{% url 'forum:feed' %}?unanswered=1{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}"
+                                       class="sort-option">Show unanswered</a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </form>
 
-                <div class="filter-row">
-                    <div class="filter-actions">
-                        {% if active_category_name %}
-                            <span class="filter-pill filter-pill--active">Category: {{ active_category_name }}</span>
-                            <a href="{% url 'forum:feed' %}{% if search_query %}?q={{ search_query }}{% endif %}"
-                               class="button secondary-button filter-pill filter-pill--muted">
-                                <i class="fa-solid fa-times"></i> Clear category
-                            </a>
-                        {% endif %}
-                        {% if show_unanswered %}
-                            <span class="filter-pill filter-pill--active">Unanswered only</span>
-                            <a href="{% url 'forum:feed' %}{% if active_category %}?cat={{ active_category }}{% if search_query %}&q={{ search_query }}{% endif %}{% elif search_query %}?q={{ search_query }}{% endif %}"
-                               class="button secondary-button filter-pill filter-pill--muted">
-                                <i class="fa-solid fa-times"></i> Clear unanswered
-                            </a>
-                        {% else %}
-                            <a href="{% url 'forum:feed' %}?unanswered=1{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}"
-                               class="button secondary-button filter-pill">
-                                <i class="fa-solid fa-filter"></i> Show unanswered
-                            </a>
-                        {% endif %}
-                    </div>
-                    <div class="sort-group">
-                        <span class="sort-label">Sort by:</span>
-                        <a href="{% url 'forum:feed' %}?sort=latest{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}"
-                           class="button {% if sort_by == 'latest' %}primary-button{% else %}secondary-button{% endif %} sort-pill">Latest</a>
-                        <a href="{% url 'forum:feed' %}?sort=upvotes{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}"
-                           class="button {% if sort_by == 'upvotes' %}primary-button{% else %}secondary-button{% endif %} sort-pill">Most Upvoted</a>
-                        <a href="{% url 'forum:feed' %}?sort=replies{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}"
-                           class="button {% if sort_by == 'replies' %}primary-button{% else %}secondary-button{% endif %} sort-pill">Most Replied</a>
+                <div class="forum-mobile-actions" aria-label="Mobile forum widgets">
+                    <div class="mobile-action-row">
+                        <button type="button" class="mobile-widget-toggle" data-target="mobile-categories-panel">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>Categories</span>
+                        </button>
+                        <button type="button" class="mobile-widget-toggle" data-target="mobile-top-contributors-panel">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Top Contributors</span>
+                        </button>
                     </div>
                 </div>
+
+                <div id="mobile-categories-panel" class="mobile-widget-panel">
+                    <section class="widget widget-categories card">
+                        <h3 class="widget-title">Categories</h3>
+                        <ul class="category-list">
+                            <li class="category-item{% if not active_category %} active{% endif %}">
+                                <a href="{% url 'forum:feed' %}" class="category-link">
+                                    <span class="cat-dot"></span>
+                                    <span class="cat-name">All</span>
+                                    <span class="category-count">{{ categories_count|default:'' }}</span>
+                                </a>
+                            </li>
+                            {% for cat in categories %}
+                                <li class="category-item{% if active_category == cat.slug %} active{% endif %}">
+                                    <a href="{% url 'forum:feed' %}?cat={{ cat.slug }}" class="category-link">
+                                        <span class="cat-dot" data-slug="{{ cat.slug }}"></span>
+                                        <span class="cat-name">{{ cat.name }}</span>
+                                        <span class="category-count">{{ cat.post_count|default:'' }}</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                </div>
+
+                <div id="mobile-top-contributors-panel" class="mobile-widget-panel">
+                    <section class="widget widget-top card">
+                        <h3 class="widget-title">Top Contributors</h3>
+                        <ul class="top-users">
+                            {% for u in top_users %}
+                                <li class="top-user-item{% if forloop.counter0 == 0 %} top-user-item--gold{% elif forloop.counter0 == 1 %} top-user-item--silver{% elif forloop.counter0 == 2 %} top-user-item--bronze{% endif %}">
+                                    <div class="top-user-rank">{{ forloop.counter }}</div>
+                                    <div class="top-user-avatar">
+                                        {% load account_extras %}
+                                        {% if u.avatar %}
+                                            <a href="#" class="ajax-modal" data-ajax-url="{% url 'account:profile_modal' u.pk %}" title="View profile">
+                                                <img src="{{ u.avatar.url }}" alt="{{ u.get_full_name|default:u.username }}">
+                                            </a>
+                                        {% else %}
+                                            <a href="#" class="ajax-modal" data-ajax-url="{% url 'account:profile_modal' u.pk %}" title="View profile">
+                                                <span class="avatar-fallback">{{ u|initials }}</span>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                    <div class="top-user-meta">
+                                        <a href="#">{{ u.get_full_name|default:u.username }}</a>
+                                        <div class="top-user-points">{{ u.karma }} pts</div>
+                                    </div>
+                                </li>
+                            {% empty %}
+                                <li class="muted">No contributors yet.</li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                </div>
             </section>
+
+            <header class="forum-header">
+                <div>
+                    <p class="eyebrow">Peer Discussion Forum</p>
+                    <h1>Ask questions and learn from classmates.</h1>
+                    <p class="intro-text">
+                        Browse recent posts, filter by subject or keyword,
+                        and get help from your peers and teachers.
+                    </p>
+                </div>
+                <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+                   class="button primary-button ajax-modal"
+                   role="button"
+                   aria-label="Ask a Question"
+                   data-ajax-url="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+                   data-target="#global-modal">Ask a Question</a>
+            </header>
 
             <!-- POST LIST (now a partial) -->
             <section class="post-list" id="post-list">
@@ -110,5 +166,31 @@
 
 <script src="{% static 'js/forum-upvote.js' %}"></script>
 <script src="{% static 'js/forum_ajax.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.mobile-widget-toggle').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const target = document.getElementById(targetId);
+
+                if (!target) return;
+
+                const isActive = this.classList.contains('active');
+
+                document.querySelectorAll('.mobile-widget-toggle').forEach(function (toggle) {
+                    toggle.classList.remove('active');
+                });
+                document.querySelectorAll('.mobile-widget-panel').forEach(function (panel) {
+                    panel.classList.remove('open');
+                });
+
+                if (!isActive) {
+                    this.classList.add('active');
+                    target.classList.add('open');
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>

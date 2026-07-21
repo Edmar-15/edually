@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
   body.classList.add('SidebarProvider');
   mainContent.classList.add('SidebarInset');
 
+  const mobileBreakpoint = 768;
+  const STORAGE_KEY = 'eduallySidebarState';
+  let isAnimating = false;
+
   let trigger = document.querySelector('.sidebar-trigger');
   if (!trigger) {
     const sidebarHeader = document.querySelector('.sidebar-header');
@@ -27,29 +31,82 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarHeader.insertBefore(trigger, sidebarHeader.firstChild);
   }
 
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sidebar-backdrop';
+  body.appendChild(backdrop);
+
+  const mobileTrigger = document.createElement('button');
+  mobileTrigger.type = 'button';
+  mobileTrigger.className = 'mobile-sidebar-trigger';
+  mobileTrigger.setAttribute('aria-controls', 'sidebar');
+  mobileTrigger.setAttribute('aria-expanded', 'false');
+  mobileTrigger.setAttribute('aria-label', 'Open navigation sidebar');
+  mobileTrigger.innerHTML = '<span class="sr-only">Toggle sidebar</span><svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  body.appendChild(mobileTrigger);
+
   const setExpandedState = (isExpanded) => {
     trigger.setAttribute('aria-expanded', String(isExpanded));
     trigger.setAttribute('aria-label', isExpanded ? 'Collapse navigation sidebar' : 'Expand navigation sidebar');
   };
 
-  const STORAGE_KEY = 'eduallySidebarState';
-  let isAnimating = false;
+  const saveDesktopState = (isCollapsed) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, isCollapsed ? 'collapsed' : 'expanded');
+    } catch (error) {
+      // Ignore storage errors.
+    }
+  };
 
-  const applyState = (isCollapsed) => {
+  const applyDesktopState = (isCollapsed) => {
     body.classList.toggle('sidebar-collapsed', isCollapsed);
     setExpandedState(!isCollapsed);
   };
 
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'collapsed') {
-      applyState(true);
-    }
-  } catch (error) {
-    // Ignore storage errors in restricted environments.
-  }
+  const closeMobileSidebar = () => {
+    body.classList.remove('sidebar-mobile-open');
+    sidebar.classList.remove('is-open');
+    mobileTrigger.classList.remove('is-active');
+    mobileTrigger.setAttribute('aria-expanded', 'false');
+    mobileTrigger.setAttribute('aria-label', 'Open navigation sidebar');
+    body.style.overflow = '';
+  };
 
-  const handleToggle = () => {
+  const openMobileSidebar = () => {
+    body.classList.add('sidebar-mobile-open');
+    sidebar.classList.add('is-open');
+    mobileTrigger.classList.add('is-active');
+    mobileTrigger.setAttribute('aria-expanded', 'true');
+    mobileTrigger.setAttribute('aria-label', 'Close navigation sidebar');
+    body.style.overflow = 'hidden';
+  };
+
+  const syncLayout = () => {
+    const isMobile = window.innerWidth < mobileBreakpoint;
+
+    if (isMobile) {
+      body.classList.remove('sidebar-collapsed');
+      sidebar.classList.remove('is-open');
+      mobileTrigger.style.display = 'inline-flex';
+      backdrop.style.display = 'block';
+      if (!body.classList.contains('sidebar-mobile-open')) {
+        closeMobileSidebar();
+      }
+      return;
+    }
+
+    mobileTrigger.style.display = 'none';
+    backdrop.style.display = 'none';
+    closeMobileSidebar();
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      applyDesktopState(saved === 'collapsed');
+    } catch (error) {
+      applyDesktopState(false);
+    }
+  };
+
+  const toggleDesktopSidebar = () => {
     if (isAnimating) {
       return;
     }
@@ -59,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     body.classList.add('sidebar-animating');
 
     const shouldCollapse = !body.classList.contains('sidebar-collapsed');
-    applyState(shouldCollapse);
+    applyDesktopState(shouldCollapse);
 
     const onEnd = (event) => {
       if (event.target !== sidebar) {
@@ -92,12 +149,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 350);
 
-    try {
-      localStorage.setItem(STORAGE_KEY, shouldCollapse ? 'collapsed' : 'expanded');
-    } catch (error) {
-      // Ignore storage errors.
+    saveDesktopState(shouldCollapse);
+  };
+
+  const handleToggle = () => {
+    if (window.innerWidth < mobileBreakpoint) {
+      if (body.classList.contains('sidebar-mobile-open')) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
+      return;
     }
+
+    toggleDesktopSidebar();
   };
 
   trigger.addEventListener('click', handleToggle);
+  mobileTrigger.addEventListener('click', handleToggle);
+  backdrop.addEventListener('click', closeMobileSidebar);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && body.classList.contains('sidebar-mobile-open')) {
+      closeMobileSidebar();
+    }
+  });
+
+  window.addEventListener('resize', syncLayout);
+  syncLayout();
 });

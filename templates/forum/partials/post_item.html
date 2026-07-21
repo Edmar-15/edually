@@ -1,9 +1,10 @@
 {# forum/partials/_post_item.html #}
 {% load account_extras %}
 <article class="post-item card{% if post.verified %} verified{% endif %}" data-post-id="{{ post.pk }}" id="post-{{ post.pk }}">
-    <div class="post-main">
-        <div class="post-header">
-            <div class="avatar">
+    <a href="{% url 'forum:post_detail' post.pk %}" class="post-card-link" aria-label="Open post: {{ post.title }}">
+        <div class="post-main">
+            <div class="post-header">
+                <div class="avatar">
                     {% if post.author.avatar %}
                     <img src="{{ post.author.avatar.url }}" alt="{{ post.author.get_full_name|default:post.author.username }}">
                 {% else %}
@@ -30,7 +31,8 @@
             </div>
         </div>
         <p class="post-excerpt">{{ post.content|striptags|truncatechars:180 }}</p>
-    </div>
+        </div>
+    </a>
 
     <div class="post-side">
         <div class="side-upvote">

@@ -201,6 +201,12 @@ button,
 }
 
 button,
+.button {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+button,
 input,
 select,
 textarea {
@@ -322,19 +328,51 @@ input[type="checkbox"] {
   .logo .logo-text { font-size: 1rem; }
 }
 
+@media (max-width: 768px) {
+  .container, .header-inner, .landing-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container, .header-inner, .landing-container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .button {
+    padding: 0.8rem 1rem;
+  }
+}
+
 /* Consistent container used across pages */
 .container, .header-inner, .landing-container {
+  width: 100%;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: clamp(14px, 3vw, 24px);
+  padding-right: clamp(14px, 3vw, 24px);
+}
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.card, .widget, .auth-card, .hero-card, .home-item, .benefit-item, .step-card, .testimonial-card, .project-overview, .info-section, .overview-item {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Typography refinement */
 html, body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   font-size: 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 h1,h2,h3,h4,h5,h6 { color: var(--text); margin: 0 0 0.45rem 0; line-height: 1.15; }
@@ -373,14 +411,56 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
   backdrop-filter: blur(8px);
 }
 .page-header .header-inner {
-  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
 }
-.main-nav { display:flex; gap:16px; align-items:center; }
-.main-nav a { color:var(--text); text-decoration:none; }
+.main-nav { display:flex; gap:8px; align-items:center; }
+.main-nav a { color:var(--text); text-decoration:none; padding: 4px 7px; border-radius:999px; }
+
+@media (max-width: 900px) {
+  .page-header .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .main-nav {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  .page-header {
+    padding: 12px 14px;
+  }
+  .page-header .header-inner {
+    gap: 8px;
+  }
+  .main-nav {
+    gap: 6px;
+  }
+  .main-nav a {
+    padding: 5px 7px;
+    font-size: 0.8rem;
+  }
+  .card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+  h1 {
+    font-size: clamp(1.25rem, 6.2vw, 1.7rem);
+  }
+  h2 {
+    font-size: 1.08rem;
+  }
+}
 
 @media (max-width: var(--bp-sm)) {
   .main-nav { width:100%; display:flex; flex-wrap:wrap; gap:10px; }
   .page-header .header-inner { flex-direction:column; align-items:flex-start; gap:8px; }
+  .page-header { padding: 14px 16px; }
 }
 
 /* Subtle page texture and soft accents */
