@@ -50,17 +50,17 @@ def slmlists(request):
         {
             "title": "Self Learning Modules",
             "description":'All public modules you can enrol in',
-            "content": render_to_string("components/tabs/tab_self.html"),
+            "content": render_to_string("slm/tabs/tab_self.html"),
         },
         {
             "title": "My Learning Materials",
             "description":'Notes, PDFs, videos you uploaded',
-            "content": render_to_string("components/tabs/tab_learning_materials.html"),
+            "content": render_to_string("slm/tabs/tab_learning_materials.html"),
         },
         {
             "title": "Public Learning Materials",
             "description":'Resources shared by the community',
-            "content": render_to_string("components/tabs/tab_public_materials.html"),
+            "content": render_to_string("slm/tabs/tab_public_materials.html"),
         },
     ]
     

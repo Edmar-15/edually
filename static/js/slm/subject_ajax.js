@@ -286,7 +286,7 @@ export function initSubjectWidget(rootEl) {
     if (!$codeInput || !$nameInput) return;
 
     const payload = {
-      subject_code: $codeInput.value.trim(),
+      subject_code: $codeInput.value.trim().toUpperCase(),
       subject_name: $nameInput.value.trim(),
       year: $yearSelect ? $yearSelect.value : undefined,
     };
