@@ -1,3 +1,5 @@
+@import "../base.css";
+
 /* -------------------- 1️⃣ Root variables (from slm.css) -------------------- */
 :root {
   --module-surface: var(--surface);
