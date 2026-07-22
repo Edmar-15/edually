@@ -47,6 +47,15 @@
                             <p>Here’s a simple view of your study space so you can jump back in with confidence.</p>
                         </div>
                         <div class="journey-steps">
+                            {% if request.user|has_group:'Teacher' %}
+                            <a href="{% url 'slm:management' %}" class="journey-step">
+                                <span class="step-badge">1</span>
+                                <div>
+                                    <strong>Manage your modules</strong>
+                                    <p>{{ module_count }} module{{ module_count|pluralize }} ready to review or continue.</p>
+                                </div>
+                            </a>
+                            {% else %}
                             <a href="{% url 'slm:slmlists' %}" class="journey-step">
                                 <span class="step-badge">1</span>
                                 <div>
@@ -54,6 +63,7 @@
                                     <p>{{ module_count }} module{{ module_count|pluralize }} ready to review or continue.</p>
                                 </div>
                             </a>
+                            {% endif %}
                             <a href="{% url 'forum:feed' %}" class="journey-step">
                                 <span class="step-badge">2</span>
                                 <div>
