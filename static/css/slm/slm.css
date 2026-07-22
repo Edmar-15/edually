@@ -1,7 +1,3 @@
-/* --------------------------------------------------------------
-   COMBINED STYLES – slm.css + tabs.css
-   -------------------------------------------------------------- */
-
 /* -------------------- 1️⃣ Root variables (from slm.css) -------------------- */
 :root {
   --module-surface: var(--surface);
@@ -56,13 +52,14 @@
   color: var(--muted-slm);
 }
 
-.module-form {
+.module-form, .subject-form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.8rem;
 }
 
 .module-form input[type="text"],
+.subject-form input[type="text"],
 .module-form input[type="number"],
 .module-form input[type="file"] {
   width: 100%;
@@ -75,7 +72,8 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.module-form input:focus {
+.module-form input:focus,
+.subject-form input:focus {
   outline: none;
   border-color: var(--module-accent);
   box-shadow: 0 0 0 4px rgba(14, 154, 167, 0.12);
@@ -86,7 +84,8 @@
   background: var(--module-surface-soft);
 }
 
-.module-form button {
+.module-form button,
+.subject-form button {
   border: none;
   border-radius: 12px;
   padding: 0.9rem 1rem;
@@ -98,7 +97,8 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.module-form button:hover {
+.module-form button:hover,
+.subject-form button:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 26px rgba(14, 154, 167, 0.24);
 }
