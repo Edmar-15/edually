@@ -165,8 +165,8 @@
     {# 2️⃣ Modal JS – load after the DOM #}
     <script src="{% static 'js/modal.js' %}" defer></script>
 
-<script src="{% static 'js/forum-upvote.js' %}"></script>
-<script src="{% static 'js/forum_ajax.js' %}"></script>
+<script src="{% static 'js/forum/forum-upvote.js' %}"></script>
+<script src="{% static 'js/forum/forum_ajax.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.mobile-widget-toggle').forEach(function (button) {
