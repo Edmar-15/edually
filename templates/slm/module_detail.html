@@ -12,71 +12,77 @@
     <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
 </head>
 <body>
-    {% include "components/navigations.html" %}
+    <div class="dashboard-container">
+        {% include "components/navigations.html" %}
+        <main class="main-content">
+            <header class="content-header">
+                <!-- Breadcrumb on the left -->
+                <p class="breadcrumb"><i>
+                    {% if request.user|has_group:'Teacher' %}
+                    <i><a href="{% url "slm:management" %}">Module Management</a> &gt;
+                    {% else %}
+                    <i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+                    {% endif %}
+                    <a href="{% url "slm:subject-modules" subject.id %}">{{ subject.subject_code }} – {{ subject.subject_name }}</a>
+                    &gt; {{ module.module_name }}
+                </i></p>
 
-    <main class="main-content">
-        <header class="content-header">
-            <!-- Breadcrumb on the left -->
-            <p class="breadcrumb"><i>
-                {% if request.user|has_group:'Teacher' %}
-                <i><a href="{% url "slm:management" %}">Module Management</a> &gt;
-                {% else %}
-                <i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
-                {% endif %}
-                <a href="{% url "slm:subject-modules" subject.id %}">{{ subject.subject_code }} – {{ subject.subject_name }}</a>
-                &gt; {{ module.module_name }}
-            </i></p>
+                <!-- Action icons on the right -->
+                <div class="header-actions">
+                    <!-- 1️⃣  Download (icon only) -->
+                    <a href="{{ module.file.url }}" class="button download-btn"
+                    download
+                    aria-label="Download original file"
+                    title="Download original file">
+                        <i class="fa-solid fa-download" aria-hidden="true"></i>
+                    </a>
 
-            <!-- Action icons on the right -->
-            <div class="header-actions">
-                <!-- 1️⃣  Download (icon only) -->
-                <a href="{{ module.file.url }}" class="button download-btn"
-                   download
-                   aria-label="Download original file"
-                   title="Download original file">
-                    <i class="fa-solid fa-download" aria-hidden="true"></i>
-                </a>
-
-                <!-- 2️⃣  Highlight‑history toggle (icon only) -->
-                 {% if request.user|has_group:'Student' %}
-                 <button type="button"
-                        class="module-content-history__toggle"
-                        id="highlight-history-toggle"
-                        aria-label="Highlight history"
-                        title="Highlight history"
-                        aria-expanded="false"
-                        aria-controls="highlight-history-list">
-                    <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                    <!-- Small badge that still shows the number of history items -->
-                    <span id="highlight-history-count" class="badge">0</span>
-                </button>
-                 {% endif %}
-            </div>
-        </header>
-
-        <section class="module-content-card" aria-labelledby="module-content-title">
-            <div class="module-content-card__header">
-                <h2 id="module-content-title">Module Content</h2>
-                <p>Preview of the uploaded material.</p>
-            </div>
-            <div class="module-content-history" aria-label="Highlight history">
-                <div class="module-content-history__popover" id="highlight-history-popover" hidden>
-                    <ul id="highlight-history-list" class="module-content-history__list"></ul>
+                    <!-- 2️⃣  Highlight‑history toggle (icon only) -->
+                    {% if request.user|has_group:'Student' %}
+                    <button type="button"
+                            class="module-content-history__toggle"
+                            id="highlight-history-toggle"
+                            aria-label="Highlight history"
+                            title="Highlight history"
+                            aria-expanded="false"
+                            aria-controls="highlight-history-list">
+                        <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                        <!-- Small badge that still shows the number of history items -->
+                        <span id="highlight-history-count" class="badge">0</span>
+                    </button>
+                    {% endif %}
                 </div>
-            </div>
-            <div class="module-content">
-                {% if module.extracted_html %}
-                    {{ module.extracted_html|safe }}
-                {% else %}
-                    <p><em>No extracted preview is available for this file.</em></p>
-                {% endif %}
-            </div>
-        </section>
-    </main>
+            </header>
+
+            <section class="module-content-card" aria-labelledby="module-content-title">
+                <div class="module-content-card__header">
+                    <h2 id="module-content-title">Module Content</h2>
+                    <p>Preview of the uploaded material.</p>
+                </div>
+                <div class="module-content-history" aria-label="Highlight history">
+                    <div class="module-content-history__popover" id="highlight-history-popover" hidden>
+                        <ul id="highlight-history-list" class="module-content-history__list"></ul>
+                    </div>
+                </div>
+                <div class="module-content">
+                    {% if module.extracted_html %}
+                        {{ module.extracted_html|safe }}
+                    {% else %}
+                        <p><em>No extracted preview is available for this file.</em></p>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+    </div>
 
     <div id="selection-toolbar" class="selection-toolbar"
         role="toolbar" aria-label="Selection actions">
     </div>
+
+    {% include "components/global_modal.html" %}
+
+    {# 2️⃣ Modal JS – load after the DOM #}
+    <script src="{% static 'js/modal.js' %}" defer></script>
 
     <script>
         (function () {

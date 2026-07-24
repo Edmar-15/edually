@@ -78,13 +78,19 @@ export function initSubjectWidget(rootEl) {
   const $codeInput   = rootEl.querySelector("#code-input");
   const $nameInput   = rootEl.querySelector("#name-input");
   const $yearSelect  = rootEl.querySelector("#year-select");
-  const $subjectForm = rootEl.querySelector("#subject-form"); // ← new
+  const $subjectForm = rootEl.querySelector("#subject-form"); // ← may be missing for students
 
-  // If the form isn’t in the DOM something went seriously wrong – abort.
+    // --------------------------------------------------------------
+    // The add‑subject form is only present for teachers.  If it’s
+    // missing we **don’t abort** – we still want to load and render the
+    // list of subjects.  We just skip the create‑subject wiring.
+   // --------------------------------------------------------------
   if (!$subjectForm) {
-    console.warn("Subject widget: <form id='subject-form'> not found – aborting init.");
-    return;
-  }
+        console.info(
+            "Subject widget: <form id='subject-form'> not found – " +
+            "running in read‑only mode (student view)."
+        );
+    }
 
   /* -----------------------------------------------------------------
    * 5️⃣  Load the YEAR <select> options from the API.
@@ -335,17 +341,20 @@ export function initSubjectWidget(rootEl) {
     }
   }
 
-  /* -----------------------------------------------------------------
-   * 🔟  Bind the **only** event we now care about – the form submit.
-   * ----------------------------------------------------------------- */
-  $subjectForm.addEventListener("submit", e => {
-    e.preventDefault(); // stop the native page‑reload
-    create();          // run the AJAX routine
-  });
+  // --------------------------------------------------------------
+    // Attach the submit‑handler **only if the form exists**.
+    // --------------------------------------------------------------
+    if ($subjectForm) {
+        $subjectForm.addEventListener("submit", e => {
+            e.preventDefault(); // stop the native page‑reload
+            create();          // run the AJAX routine
+        });
+    }
 
-  /* -----------------------------------------------------------------
-   * 1️⃣1️⃣  Initialise the widget.
-   * ----------------------------------------------------------------- */
-  loadYearChoices(); // populate the Year <select>
-  load();            // fetch the first page of subjects
+    // --------------------------------------------------------------
+    // Initialise the widget (fetch subjects, populate year choices if
+    // the <select> is present, etc.).
+    // --------------------------------------------------------------
+    loadYearChoices(); // will be a no‑op when $yearSelect is undefined
+    load();          // fetch the first page of subjects
 }

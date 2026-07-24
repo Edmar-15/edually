@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
 </head>
 <body>
+    <div class="dashboard-container">
     {% include "components/navigations.html" %}
 
     <main class="main-content">
@@ -68,10 +69,16 @@
             </div>
         </section>
     </main>
+</div>
 
     <div id="selection-toolbar" class="selection-toolbar"
         role="toolbar" aria-label="Selection actions">
     </div>
+
+    {% include "components/global_modal.html" %}
+
+    {# 2️⃣ Modal JS – load after the DOM #}
+    <script src="{% static 'js/modal.js' %}" defer></script>
 
 
     <script>
