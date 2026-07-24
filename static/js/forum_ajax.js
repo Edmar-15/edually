@@ -356,18 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!panel) return;
             const expanded = toggle.getAttribute('aria-expanded') === 'true';
             if (!expanded) {
-                const toggleRect = toggle.getBoundingClientRect();
-                const prevDisplay = panel.style.display;
-                const prevVisibility = panel.style.visibility;
-                panel.style.display = 'block';
-                panel.style.visibility = 'hidden';
-                const panelHeight = panel.offsetHeight || panel.scrollHeight || 200;
-                panel.style.display = prevDisplay;
-                panel.style.visibility = prevVisibility;
-
-                const hasRoomBelow = window.innerHeight - toggleRect.bottom >= panelHeight + 20;
-                const hasRoomAbove = toggleRect.top >= panelHeight + 20;
-                panel.classList.toggle('up', !hasRoomBelow && hasRoomAbove);
+                panel.classList.add('up');
             } else {
                 panel.classList.remove('up');
             }

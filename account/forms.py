@@ -170,12 +170,11 @@ class PublicRegisterForm(forms.ModelForm):
         if not password:
             return password
 
-        if len(password) < 12:
-            raise forms.ValidationError("Password must be at least 12 characters long.")
+        if len(password) < 8:
+            raise forms.ValidationError("Password must be at least 8 characters long.")
 
-        first_letters = re.findall(r"[A-Za-z]", password)
-        if not first_letters or not first_letters[0].isupper():
-            raise forms.ValidationError("Password must contain an uppercase letter as the first alphabetic character.")
+        if not re.search(r"[A-Z]", password):
+            raise forms.ValidationError("Password must include at least one uppercase letter.")
         if not re.search(r"\d", password):
             raise forms.ValidationError("Password must include at least one number.")
         if not re.search(r"[!@#$%^&*()_+\-=[\]{};':\\\|,.<>\/?~`]", password):

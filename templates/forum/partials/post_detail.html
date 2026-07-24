@@ -9,6 +9,12 @@
         </div>
     {% endif %}
     <!-- THE QUESTION -->
+    {% if request.user == post.author and post.flagged %}
+        <div class="reported-warning-banner">
+            <strong>Your post has been reported.</strong>
+            Our moderation team is reviewing it and will take action if needed.
+        </div>
+    {% endif %}
     <article class="post-item card{% if post.verified %} verified{% endif %}"
              data-post-id="{{ post.pk }}" id="post-{{ post.pk }}">
         <div class="post-main">
@@ -88,13 +94,23 @@
                             <i class="fa-solid fa-trash"></i> Delete
                         </a>
                     {% endif %}
-                    <a href="{% url 'forum:flag_content' 'post' post.pk %}"
-                       class="button secondary-button small-button ajax-modal action-menu-item"
-                       data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
-                       data-target="#global-modal"
-                       role="menuitem">
-                        <i class="fa-solid fa-flag"></i> Report
-                    </a>
+                    {% if request.user.is_authenticated and request.user.is_teacher_member and not post.verified %}
+                        <form method="post" action="{% url 'forum:verify_post' post.pk %}" class="action-menu-item" role="menuitem">
+                            {% csrf_token %}
+                            <button type="submit" class="button primary-button small-button" style="width:100%; text-align:left;">
+                                <i class="fa-solid fa-check"></i> Verify Post
+                            </button>
+                        </form>
+                    {% endif %}
+                    {% if not request.user.is_authenticated or not request.user.is_teacher_member %}
+                        <a href="{% url 'forum:flag_content' 'post' post.pk %}"
+                           class="button secondary-button small-button ajax-modal action-menu-item"
+                           data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
+                           data-target="#global-modal"
+                           role="menuitem">
+                            <i class="fa-solid fa-flag"></i> Report
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

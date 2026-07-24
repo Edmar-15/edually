@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from collections import defaultdict
 from django.db.models import Q, Count, F
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponseForbidden
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
@@ -316,6 +316,26 @@ def post_delete(request, pk):
     return JsonResponse({"html": html})
 
 
+@login_required(login_url="account:login")
+@user_passes_test(lambda u: u.is_authenticated and u.is_teacher_member)
+@require_http_methods(["POST"])
+def verify_post(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    post.verified = True
+    post.flagged = False
+    post.flag_reason = ""
+    post.save(update_fields=["verified", "flagged", "flag_reason"])
+
+    FlagReport.objects.filter(resolved=False, post=post).update(
+        resolved=True,
+        action_taken="Verified by teacher",
+    )
+
+    if is_ajax(request):
+        return JsonResponse({"success": True, "post_id": post.pk, "verified": True})
+    return redirect(request.META.get("HTTP_REFERER", reverse("forum:post_detail", args=[post.pk])))
+
+
 # -------------------------------------------------------------------------
 # Edit a reply (standard page – fallback)
 # -------------------------------------------------------------------------
@@ -446,6 +466,9 @@ def flag_content(request, content_type, content_id):
     else:
         raise Http404("Invalid content type.")
 
+    if request.user.is_authenticated and request.user.is_teacher_member and content_type == "post":
+        return HttpResponseForbidden("Teachers cannot report posts.")
+
     if request.method == "POST":
         reason = request.POST.get("reason")
         description = request.POST.get("description", "")
@@ -554,6 +577,56 @@ def moderation_dashboard(request):
         "top_users": top_users,
     }
     return render(request, "forum/moderation_dashboard.html", context)
+
+
+@login_required(login_url="account:login")
+@user_passes_test(lambda u:  u.is_authenticated and u.is_teacher_member)
+def moderation_deleted_history(request):
+    deleted_posts = (
+        Post.objects.filter(is_deleted=True)
+        .select_related("author", "category")
+        .order_by("-updated_at")
+    )
+    deleted_replies = (
+        Reply.objects.filter(is_deleted=True)
+        .select_related("author", "post__author", "post__category")
+        .order_by("-updated_at")
+    )
+
+    context = {
+        "deleted_posts": deleted_posts,
+        "deleted_replies": deleted_replies,
+        "deleted_posts_count": deleted_posts.count(),
+        "deleted_replies_count": deleted_replies.count(),
+    }
+    return render(request, "forum/moderation_deleted_history.html", context)
+
+
+@login_required(login_url="account:login")
+@user_passes_test(lambda u:  u.is_authenticated and u.is_teacher_member)
+def moderation_deleted_content_detail(request, content_type, pk):
+    if content_type == "post":
+        deleted_item = get_object_or_404(Post, pk=pk, is_deleted=True)
+        related_reports = FlagReport.objects.filter(post=deleted_item).order_by("-created_at")
+    elif content_type == "reply":
+        deleted_item = get_object_or_404(Reply, pk=pk, is_deleted=True)
+        related_reports = FlagReport.objects.filter(reply=deleted_item).order_by("-created_at")
+    else:
+        raise Http404("Invalid content type")
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "restore":
+            deleted_item.is_deleted = False
+            deleted_item.save(update_fields=["is_deleted"])
+            return redirect("forum:moderation_deleted_history")
+
+    context = {
+        "content_type": content_type,
+        "deleted_item": deleted_item,
+        "related_reports": related_reports,
+    }
+    return render(request, "forum/moderation_deleted_content_detail.html", context)
 
 
 @login_required(login_url="account:login")

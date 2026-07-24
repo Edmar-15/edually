@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Deleted Content Review – EduAlly Moderation</title>
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include 'components/navigations.html' %}
+    <main class="main-content">
+        <section class="forum-page">
+            <header class="forum-header">
+                <div>
+                    <p class="eyebrow">Admin Panel</p>
+                    <h1>Deleted Content Review</h1>
+                    <p class="intro-text">Inspect the removed content, review related reports, and restore if needed.</p>
+                </div>
+                <div>
+                    <a href="{% url 'forum:moderation_deleted_history' %}" class="button secondary-button">Back to Deleted History</a>
+                </div>
+            </header>
+
+            <article class="report-card">
+                <div class="report-card-header">
+                    <div>
+                        {% if content_type == 'post' %}
+                            <p class="report-card-title"><strong>Deleted Post</strong></p>
+                            <p class="report-card-meta">Post ID {{ deleted_item.pk }}</p>
+                        {% else %}
+                            <p class="report-card-title"><strong>Deleted Reply</strong></p>
+                            <p class="report-card-meta">Reply ID {{ deleted_item.pk }} in {{ deleted_item.post.title }}</p>
+                        {% endif %}
+                    </div>
+                    <span class="status-pill status-pill--danger">Deleted</span>
+                </div>
+
+                <div class="report-card-body">
+                    <p class="report-card-author">
+                        By <strong>{{ deleted_item.author.get_full_name|default:deleted_item.author.username }}</strong>
+                        • {{ deleted_item.updated_at|timesince }} ago
+                    </p>
+                    {% if content_type == 'post' %}
+                        <p class="report-card-subject">{{ deleted_item.title }}</p>
+                    {% endif %}
+                    <p class="report-card-excerpt">{{ deleted_item.content|striptags|linebreaks }}</p>
+                </div>
+
+                <div class="report-actions">
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="restore" class="button primary-button small-button">Restore Content</button>
+                        <a href="{% url 'forum:moderation_deleted_history' %}" class="button secondary-button small-button">Back to Deleted History</a>
+                    </form>
+                </div>
+            </article>
+
+            <section class="moderation-section">
+                <h2 class="section-title"><i class="fa-solid fa-clipboard-list"></i> Related Reports</h2>
+                {% if related_reports %}
+                    {% for report in related_reports %}
+                        <article class="report-card report-card--compact">
+                            <div class="report-card-body">
+                                <p><strong>{{ report.reporter.get_full_name|default:report.reporter.username }}</strong> reported this {{ report.content_type }} {{ report.created_at|timesince }} ago.</p>
+                                <p><strong>Reason:</strong> {{ report.get_reason_display }}</p>
+                                {% if report.description %}
+                                    <p><strong>Note:</strong> {{ report.description }}</p>
+                                {% endif %}
+                                <p><strong>Action:</strong> {{ report.action_taken|default:'Pending' }}</p>
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="forum-empty-state">
+                        <div class="forum-empty-state__icon"><i class="fa-solid fa-check-circle"></i></div>
+                        <p>No reports were found for this deleted item.</p>
+                    </div>
+                {% endif %}
+            </section>
+        </section>
+    </main>
+    {% include 'components/global_modal.html' %}
+    <script src="{% static 'js/modal.js' %}" defer></script>
+</div>
+</body>
+</html>

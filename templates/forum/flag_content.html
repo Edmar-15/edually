@@ -18,9 +18,9 @@
         {% csrf_token %}
 
         <div>
-            <label for="id_reason">Reason for report:</label>
+            <label for="id_reason">Report category:</label>
             <select id="id_reason" name="reason" required>
-                <option value="">-- Select a reason --</option>
+                <option value="">-- Select a category --</option>
                 {% for value, label in reason_choices %}
                     <option value="{{ value }}">{{ label }}</option>
                 {% endfor %}

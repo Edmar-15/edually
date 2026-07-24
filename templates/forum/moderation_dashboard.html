@@ -44,9 +44,12 @@
 
             <!-- Unresolved Reports -->
             <section class="moderation-section">
-                <h2 class="section-title">
-                    <i class="fa-solid fa-exclamation-circle"></i> Unresolved Reports ({{ report_count }})
-                </h2>
+                <div class="moderation-section__header">
+                    <h2 class="section-title">
+                        <i class="fa-solid fa-exclamation-circle"></i> Unresolved Reports ({{ report_count }})
+                    </h2>
+                    <a href="{% url 'forum:moderation_deleted_history' %}" class="button secondary-button">Deleted Content History</a>
+                </div>
 
                 {% if reported_items %}
                     {% for item in reported_items %}
@@ -60,19 +63,22 @@
                                 <p class="report-card-meta">
                                     Reported by {{ item.reporters|join:", " }} • {{ item.latest_report.created_at|timesince }} ago
                                 </p>
+                                <p class="report-card-category">
+                                    <strong>Category:</strong> {{ item.reasons|join:", " }}
+                                </p>
                             </div>
                             <span class="status-pill status-pill--pending">Pending</span>
                         </div>
 
                         <div class="report-card-body">
                             {% if item.content_type == 'post' and item.post %}
-                                <p style="font-weight: 700; margin-bottom: 0.75rem;">Post by <strong>{{ item.post.author.get_full_name|default:item.post.author.username }}</strong></p>
-                                <p style="margin-bottom: 0.75rem; color: var(--text);">{{ item.post.title }}</p>
-                                <p style="color: var(--muted);">{{ item.post.content|striptags|truncatechars:160 }}</p>
+                                <p class="report-card-author">Post by <strong>{{ item.post.author.get_full_name|default:item.post.author.username }}</strong></p>
+                                <p class="report-card-subject">{{ item.post.title }}</p>
+                                <p class="report-card-excerpt">{{ item.post.content|striptags|truncatechars:160 }}</p>
                             {% elif item.content_type == 'reply' and item.reply %}
-                                <p style="font-weight: 700; margin-bottom: 0.75rem;">Reply by <strong>{{ item.reply.author.get_full_name|default:item.reply.author.username }}</strong></p>
-                                <p style="margin-bottom: 0.75rem; color: var(--text);">{{ item.reply.content|striptags|truncatechars:160 }}</p>
-                                <p style="color: var(--muted);">In thread: <strong>{{ item.reply.post.title }}</strong></p>
+                                <p class="report-card-author">Reply by <strong>{{ item.reply.author.get_full_name|default:item.reply.author.username }}</strong></p>
+                                <p class="report-card-excerpt">{{ item.reply.content|striptags|truncatechars:160 }}</p>
+                                <p class="report-card-source">In thread: <strong>{{ item.reply.post.title }}</strong></p>
                             {% endif %}
                         </div>
 
@@ -83,7 +89,6 @@
                         {% endif %}
 
                         <div class="report-actions">
-                            <span class="tag">Reasons: {{ item.reasons|join:", " }}</span>
                             <form method="post" action="{% url 'forum:resolve_report' item.latest_report.id %}">
                                 {% csrf_token %}
                                 <button type="submit" name="action" value="dismiss" class="button secondary-button small-button">Dismiss</button>

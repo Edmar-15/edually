@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorText = 'Password is required';
             } else if (input.name === 'password1' && !isPasswordStrong(input.value)) {
                 isValid = false;
-                errorText = 'Password must be at least 12 characters, include a number, a special character, and have the first letter uppercase.';
+                errorText = 'Password must be exactly 8 characters, include a number, a special character, and start with an uppercase letter.';
             }
 
             // Check if confirm password matches
@@ -119,8 +119,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const strengthMeter = form.querySelector('.strength-meter');
         const strengthLabel = form.querySelector('#password-strength-label');
         const passed = [
-            value.length >= 12,
-            /^[A-Z]/.test(value),
+            value.length >= 8,
+            /[A-Z]/.test(value),
             /\d/.test(value),
             /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/\?~`]/.test(value),
         ].filter(Boolean).length;
@@ -148,8 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function isPasswordStrong(value) {
-        return value.length >= 12 &&
-            isFirstAlphabeticUppercase(value) &&
+        return value.length >= 8 &&
+            /[A-Z]/.test(value) &&
             /\d/.test(value) &&
             /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/\?~`]/.test(value);
     }

@@ -22,6 +22,9 @@
                     {% else %}
                         <span class="status-pill status-pill--answered">Answered</span>
                     {% endif %}
+                    {% if request.user == post.author and post.flagged %}
+                        <span class="status-pill status-pill--flagged">Reported</span>
+                    {% endif %}
                     {% if post.verified %}
                         <span class="badge verified-badge">Teacher Verified</span>
                     {% endif %}
@@ -72,13 +75,23 @@
                         <i class="fa-solid fa-trash"></i> Delete
                     </a>
                 {% endif %}
-                <a href="{% url 'forum:flag_content' 'post' post.pk %}"
-                   class="button secondary-button small-button ajax-modal action-menu-item"
-                   data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
-                   data-target="#global-modal"
-                   role="menuitem">
-                    <i class="fa-solid fa-flag"></i> Report
-                </a>
+                {% if request.user.is_authenticated and request.user.is_teacher_member and not post.verified %}
+                    <form method="post" action="{% url 'forum:verify_post' post.pk %}" class="action-menu-item" role="menuitem">
+                        {% csrf_token %}
+                        <button type="submit" class="button primary-button small-button" style="width:100%; text-align:left;">
+                            <i class="fa-solid fa-check"></i> Verify Post
+                        </button>
+                    </form>
+                {% endif %}
+                {% if not request.user.is_authenticated or not request.user.is_teacher_member %}
+                    <a href="{% url 'forum:flag_content' 'post' post.pk %}"
+                       class="button secondary-button small-button ajax-modal action-menu-item"
+                       data-ajax-url="{% url 'forum:flag_content' 'post' post.pk %}"
+                       data-target="#global-modal"
+                       role="menuitem">
+                        <i class="fa-solid fa-flag"></i> Report
+                    </a>
+                {% endif %}
             </div>
         </div>
     </div>

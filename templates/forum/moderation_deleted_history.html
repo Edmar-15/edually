@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Deleted Content History – EduAlly Moderation</title>
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include 'components/navigations.html' %}
+    <main class="main-content">
+        <section class="forum-page">
+            <header class="forum-header">
+                <div>
+                    <p class="eyebrow">Admin Panel</p>
+                    <h1>Deleted Content History</h1>
+                    <p class="intro-text">Review and restore removed posts and replies.</p>
+                </div>
+                <div>
+                    <a href="{% url 'forum:moderation_dashboard' %}" class="button secondary-button">Back to Moderation</a>
+                </div>
+            </header>
+
+            <div class="stats-grid moderation-stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ deleted_posts_count }}</div>
+                    <div class="stat-label">Deleted Posts</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; color: white;">
+                    <div class="stat-number">{{ deleted_replies_count }}</div>
+                    <div class="stat-label">Deleted Replies</div>
+                </div>
+            </div>
+
+            <section class="moderation-section">
+                <h2 class="section-title"><i class="fa-solid fa-trash-can"></i> Deleted Posts</h2>
+                {% if deleted_posts %}
+                    {% for post in deleted_posts %}
+                        <article class="report-card">
+                            <div class="report-card-header">
+                                <div>
+                                    <p class="report-card-title"><strong>{{ post.title }}</strong></p>
+                                    <p class="report-card-meta">Deleted by moderator • {{ post.updated_at|timesince }} ago</p>
+                                    <p class="report-card-category">Category: {{ post.category.name|default:'Uncategorized' }}</p>
+                                </div>
+                                <span class="status-pill status-pill--danger">Deleted</span>
+                            </div>
+                            <div class="report-card-body">
+                                <p class="report-card-author">Post by <strong>{{ post.author.get_full_name|default:post.author.username }}</strong></p>
+                                <p class="report-card-excerpt">{{ post.content|striptags|truncatechars:180 }}</p>
+                            </div>
+                            <div class="report-actions">
+                                <a href="{% url 'forum:moderation_deleted_content_detail' 'post' post.pk %}" class="button secondary-button small-button">View History</a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="forum-empty-state">
+                        <div class="forum-empty-state__icon"><i class="fa-solid fa-check-circle"></i></div>
+                        <p>No deleted posts found.</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <section class="moderation-section">
+                <h2 class="section-title"><i class="fa-solid fa-comments-slash"></i> Deleted Replies</h2>
+                {% if deleted_replies %}
+                    {% for reply in deleted_replies %}
+                        <article class="report-card">
+                            <div class="report-card-header">
+                                <div>
+                                    <p class="report-card-title"><strong>Reply in {{ reply.post.title }}</strong></p>
+                                    <p class="report-card-meta">Deleted by moderator • {{ reply.updated_at|timesince }} ago</p>
+                                </div>
+                                <span class="status-pill status-pill--danger">Deleted</span>
+                            </div>
+                            <div class="report-card-body">
+                                <p class="report-card-author">Reply by <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong></p>
+                                <p class="report-card-excerpt">{{ reply.content|striptags|truncatechars:180 }}</p>
+                            </div>
+                            <div class="report-actions">
+                                <a href="{% url 'forum:moderation_deleted_content_detail' 'reply' reply.pk %}" class="button secondary-button small-button">View History</a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="forum-empty-state">
+                        <div class="forum-empty-state__icon"><i class="fa-solid fa-check-circle"></i></div>
+                        <p>No deleted replies found.</p>
+                    </div>
+                {% endif %}
+            </section>
+        </section>
+    </main>
+    {% include 'components/global_modal.html' %}
+    <script src="{% static 'js/modal.js' %}" defer></script>
+</div>
+</body>
+</html>

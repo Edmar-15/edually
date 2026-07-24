@@ -1219,9 +1219,9 @@ body {
 }
 
 .action-menu-panel {
-    display: none;
     position: absolute;
-    top: calc(100% + 0.5rem);
+    top: auto;
+    bottom: calc(100% + 0.5rem);
     right: 0;
     min-width: 180px;
     background: #fff;
@@ -1230,11 +1230,20 @@ body {
     border-radius: 16px;
     padding: 0.5rem;
     z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transform-origin: bottom right;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
 }
 
 .action-menu.open .action-menu-panel,
 .action-menu-panel.open {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
 .action-menu-panel.up {
@@ -1520,12 +1529,90 @@ body {
     border-color: rgba(251,191,36,0.24);
 }
 
+.status-pill--flagged {
+    background: rgba(220, 38, 38, 0.12);
+    color: #b91c1c;
+    border-color: rgba(220, 38, 38, 0.24);
+}
+
+.status-pill--danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #991b1b;
+    border-color: rgba(239, 68, 68, 0.24);
+}
+
+.report-card--compact {
+    padding: 1rem;
+    background: rgba(248,250,252,0.92);
+    border: 1px solid rgba(148,163,184,0.16);
+}
+
+.moderation-section__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.report-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.report-actions .button {
+    min-width: 140px;
+}
+
+.reported-warning-banner {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 1rem 1.15rem;
+    margin-bottom: 1rem;
+    border-radius: 18px;
+    background: rgba(254, 226, 226, 0.8);
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    color: #991b1b;
+    font-weight: 600;
+}
+
+.reported-warning-banner strong {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: #7f1d1d;
+}
+
 .report-card-body {
     background: #fff;
     border-radius: 18px;
     padding: 1.5rem;
     border: 1px solid rgba(14,154,167,0.08);
     margin-bottom: 1.25rem;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.report-card-author {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.report-card-subject {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.98rem;
+    line-height: 1.5;
+}
+
+.report-card-excerpt,
+.report-card-source {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
 }
 
 .report-note {
@@ -1538,23 +1625,20 @@ body {
 }
 
 .report-actions {
-    display: grid;
-    gap: 1rem;
-    align-items: center;
-}
-
-.report-actions form {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+    justify-content: flex-end;
 }
 
-.report-actions .tag {
-    margin-right: auto;
+.report-card-category {
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
 }
 
-.tag:hover {
-    background: linear-gradient(135deg, rgba(14,154,167,0.2), rgba(14,154,167,0.15));
+.report-card-category strong {
+    font-weight: 700;
 }
 
 .status-pill {
@@ -1566,7 +1650,6 @@ body {
     font-size: 0.8rem;
     font-weight: 700;
     line-height: 1;
-    margin-left: 0.5rem;
     text-transform: capitalize;
 }
 
