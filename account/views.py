@@ -599,8 +599,12 @@ def archive_module_detail(request, pk):
             messages.success(request, 'Module has been restored.')
             return redirect('account:archive-modules')
         elif action == 'delete':
-            # delete the file first (uses the same helper you already have)
-            delete_file(module.file)
+            # ---------------------------  DELETE FILE  ---------------------------
+            # If a file is attached, remove it from storage before deleting the DB row.
+            if module.file:
+                # ``save=False`` prevents a second ``save()`` on the now‑deleted model.
+                module.file.delete(save=False)
+            # --------------------------------------------------------------------
             module.delete()
             messages.success(request, 'Module permanently deleted.')
             return redirect('account:archive-modules')
@@ -643,7 +647,10 @@ def archive_personal_material_detail(request, pk):
             messages.success(request, 'Material has been restored.')
             return redirect('account:archive-personal-materials')
         elif action == 'delete':
-            delete_file(pm.file)
+            # ---------------------------  DELETE FILE  ---------------------------
+            if pm.file:
+                pm.file.delete(save=False)
+            # --------------------------------------------------------------------
             pm.delete()
             messages.success(request, 'Material permanently deleted.')
             return redirect('account:archive-personal-materials')
