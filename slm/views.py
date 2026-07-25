@@ -130,7 +130,7 @@ def api_subject_list(request):
         "next_page_number": 2
     }
     """
-    qs = Subject.objects.select_related("author").all()
+    qs = Subject.objects.select_related("author").filter(is_archived=False)
 
     paginator = Paginator(qs, PAGE_SIZE)
     page_number = request.GET.get("page", 1)
@@ -335,7 +335,7 @@ def api_module_list(request, subject_id):
     Returns the same pagination meta‑structure that the subject list does.
     """
     subject = get_object_or_404(Subject, pk=subject_id)
-    qs = Module.objects.filter(subject=subject).order_by("module_number")
+    qs = Module.objects.filter(subject=subject, is_archived=False).order_by("module_number")
 
     paginator = Paginator(qs, PAGE_SIZE)          # reuse PAGE_SIZE from above
     page_number = request.GET.get("page", 1)
@@ -652,20 +652,19 @@ def api_personal_material_list(request):
     # -----------------------------------------------------------------
     visibility = request.GET.get("visibility", "own")   # own | public | all
     qs = PersonalMaterial.objects.all().select_related("author")
-
     if request.user.is_authenticated:
         if visibility == "own":
-            qs = qs.filter(author=request.user)                 # only mine
+            qs = qs.filter(author=request.user, is_archived=False)
         elif visibility == "public":
-            qs = qs.filter(visibility=PersonalMaterial.Visibility.PUBLIC)
-        else:   # “all” – my + public from others
+            qs = qs.filter(visibility=PersonalMaterial.Visibility.PUBLIC, is_archived=False)
+        else:  # all
             qs = qs.filter(
                 models.Q(author=request.user) |
-                models.Q(visibility=PersonalMaterial.Visibility.PUBLIC)
+                models.Q(visibility=PersonalMaterial.Visibility.PUBLIC),
+                is_archived=False,
             )
     else:
-        # anonymous users can only see PUBLIC things
-        qs = qs.filter(visibility=PersonalMaterial.Visibility.PUBLIC)
+        qs = qs.filter(visibility=PersonalMaterial.Visibility.PUBLIC, is_archived=False)
 
     file_type = request.GET.get("type")
     if file_type in {"pdf", "doc", "ppt"}:
@@ -1200,3 +1199,104 @@ def personal_material_delete_modal(request, pk):
 
     html = render_to_string("slm/modals/personal_material_delete.html", {"pm": pm})
     return JsonResponse({"html": html})
+
+# -----------------------------------------------------------------
+#  ARCHIVE – GET returns the modal HTML, POST toggles the flag
+# -----------------------------------------------------------------
+@login_required
+@teacher_required_for_mutation                     # teachers only for subjects / modules
+@require_http_methods(["GET", "POST"])
+def api_subject_archive(request, pk):
+    """
+    GET   → render the “Archive / Un‑archive” modal.
+    POST  → flip ``is_archived`` and return a JSON result the modal JS
+            understands (``success`` + new state).
+    """
+    subject = get_object_or_404(Subject, pk=pk)
+
+    # ---- 1️⃣  GET → modal HTML -------------------------------------------------
+    if request.method == "GET":
+        # Only the owner may see the modal
+        if subject.author_id != request.user.id:
+            return JsonResponse({"error": "Permission denied"}, status=403)
+
+        html = render_to_string("slm/modals/subject_archive.html", {"subject": subject})
+        return JsonResponse({"html": html})
+
+    # ---- 2️⃣  POST → toggle ----------------------------------------------------
+    if subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    subject.is_archived = not subject.is_archived
+    subject.save(update_fields=["is_archived"])
+
+    return JsonResponse(
+        {
+            "success": True,
+            "archived": subject.is_archived,
+            "id": subject.id,
+            "redirect": "",        # keep the same contract as the edit/delete modals
+        },
+        status=200,
+    )
+
+
+@login_required
+@teacher_required_for_mutation
+@require_http_methods(["GET", "POST"])
+def api_module_archive(request, pk):
+    """Same structure as ``api_subject_archive`` but for a Module."""
+    module = get_object_or_404(Module, pk=pk)
+
+    if request.method == "GET":
+        if module.subject.author_id != request.user.id:
+            return JsonResponse({"error": "Permission denied"}, status=403)
+
+        html = render_to_string("slm/modals/module_archive.html", {"module": module})
+        return JsonResponse({"html": html})
+
+    if module.subject.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    module.is_archived = not module.is_archived
+    module.save(update_fields=["is_archived"])
+
+    return JsonResponse(
+        {
+            "success": True,
+            "archived": module.is_archived,
+            "id": module.id,
+            "redirect": "",
+        },
+        status=200,
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def api_personal_material_archive(request, pk):
+    """Same structure but for a PersonalMaterial (no teacher‑only restriction)."""
+    pm = get_object_or_404(PersonalMaterial, pk=pk)
+
+    if request.method == "GET":
+        if pm.author_id != request.user.id:
+            return JsonResponse({"error": "Permission denied"}, status=403)
+
+        html = render_to_string("slm/modals/personal_material_archive.html", {"pm": pm})
+        return JsonResponse({"html": html})
+
+    if pm.author_id != request.user.id:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    pm.is_archived = not pm.is_archived
+    pm.save(update_fields=["is_archived"])
+
+    return JsonResponse(
+        {
+            "success": True,
+            "archived": pm.is_archived,
+            "id": pm.id,
+            "redirect": "",
+        },
+        status=200,
+    )

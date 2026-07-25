@@ -172,7 +172,7 @@ export function initSubjectWidget(rootEl) {
       del.href = "#";
       del.title = "Delete";
       del.className = "subject-card__action subject-card__action--delete js-modal-trigger";
-      del.dataset.url = `/slm/api/subjects/${subject.id}/delete-modal/`;
+      del.dataset.url = `/slm/api/subjects/${subject.id}/archive/`;
       del.innerHTML = `
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 

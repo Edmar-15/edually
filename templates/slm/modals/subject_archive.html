@@ -1,0 +1,21 @@
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <h2>{% if subject.is_archived %}Unarchive{% else %}Archive{% endif %} subject</h2>
+    <p>
+        Are you sure you want to {% if subject.is_archived %}unarchive{% else %}archive{% endif %}
+        <strong>{{ subject.subject_code }} – {{ subject.subject_name }}</strong>?
+        The subject and all its modules will be hidden.
+    </p>
+
+    <form method="post"
+          action="{% url 'slm:subject-archive' subject.id %}"
+          data-modal-form>
+        {% csrf_token %}
+        <div class="modal__actions">
+            <button type="submit" class="button-primary">
+                {% if subject.is_archived %}Unarchive{% else %}Archive{% endif %}
+            </button>
+            <button type="button" class="button-plain" data-close-modal>Cancel</button>
+        </div>
+    </form>
+</div>

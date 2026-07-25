@@ -141,4 +141,24 @@ urlpatterns = [
         views.personal_material_delete_modal,
         name="personalmaterial-delete-modal",
     ),
+    # Subject
+    path(
+        "api/subjects/<int:pk>/archive/",
+        views.api_subject_archive,
+        name="subject-archive",
+    ),
+
+    # Module
+    path(
+        "api/modules/<int:pk>/archive/",
+        views.api_module_archive,
+        name="module-archive",
+    ),
+
+    # Personal Material
+    path(
+        "api/personal-materials/<int:pk>/archive/",
+        views.api_personal_material_archive,
+        name="personalmaterial-archive",
+    ),
 ]

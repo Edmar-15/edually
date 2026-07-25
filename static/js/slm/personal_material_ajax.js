@@ -214,7 +214,7 @@ export function initPersonalMaterialWidget(rootEl) {
       delLink.href = "#";
       delLink.title = "Delete";
       delLink.className = "pm-card__action pm-card__action--delete js-modal-trigger";
-      delLink.dataset.url = `/slm/api/personal-materials/${pm.id}/delete-modal/`;
+      delLink.dataset.url = `/slm/api/personal-materials/${pm.id}/archive/`;
       delLink.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
       actions.appendChild(delLink);

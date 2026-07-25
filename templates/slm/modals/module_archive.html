@@ -1,0 +1,21 @@
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <h2>{% if module.is_archived %}Unarchive{% else %}Archive{% endif %} module</h2>
+    <p>
+        Are you sure you want to {% if module.is_archived %}unarchive{% else %}archive{% endif %}
+        <strong>#{{ module.module_number }} – {{ module.module_name }}</strong>?
+        This will hide it from normal listings but keep the data.
+    </p>
+
+    <form method="post"
+          action="{% url 'slm:module-archive' module.id %}"
+          data-modal-form>
+        {% csrf_token %}
+        <div class="modal__actions">
+            <button type="submit" class="button-primary">
+                {% if module.is_archived %}Unarchive{% else %}Archive{% endif %}
+            </button>
+            <button type="button" class="button-plain" data-close-modal>Cancel</button>
+        </div>
+    </form>
+</div>
