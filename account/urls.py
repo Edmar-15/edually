@@ -44,4 +44,28 @@ urlpatterns = [
     # ---------------------------------------------------------
     path("terms/", TermsView.as_view(), name="terms"),
     path("privacy/", PrivacyView.as_view(), name="privacy"),
+    
+    # -------------------------------------------------------------
+    # ARCHIVE – separate pages for each type
+    # -------------------------------------------------------------
+    path('archives/', views.archives_home, name='archives-home'),
+
+    #  --- Forum posts ---
+    path('archives/forum-posts/', views.archive_forum_post_list,
+        name='archive-forum-posts'),
+    path('archives/forum-posts/<int:pk>/', views.archive_forum_post_detail,
+        name='archive-forum-post-detail'),
+
+    #  --- Modules ---
+    path('archives/modules/', views.archive_module_list,
+        name='archive-modules'),
+    path('archives/modules/<int:pk>/', views.archive_module_detail,
+        name='archive-module-detail'),
+
+    #  --- Personal Materials ---
+    path('archives/personal-materials/', views.archive_personal_material_list,
+        name='archive-personal-materials'),
+    path('archives/personal-materials/<int:pk>/',
+        views.archive_personal_material_detail,
+        name='archive-personal-material-detail'),
 ]

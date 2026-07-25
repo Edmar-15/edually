@@ -101,50 +101,26 @@
                 <section class="settings-section card">
                     <div class="details-header">
                         <h2>Archive</h2>
-                        <p>Your archived content.  Restore it from the appropriate app sections.</p>
+                        <p>Your archived content.  Click a heading to manage that type.</p>
                     </div>
 
-                    <h3>Forum Posts</h3>
-                    {% if posts %}
-                        <ul class="archive-list">
-                            {% for post in posts %}
-                                <li>
-                                    <span title="{{ post.title }}">{{ post.title|truncatechars:30 }}</span>
-                                    <span class="detail-value">{{ post.created_at|date:"M d, Y" }}</span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="muted-text">You haven’t archived any forum posts yet.</p>
-                    {% endif %}
+                    <!-- 1️⃣ Forum posts – link to its list page -->
+                    <h3>
+                        <a href="{% url 'account:archive-forum-posts' %}"
+                        class="archive-heading-link">Forum Posts</a>
+                    </h3>
 
-                    <h3>Learning Modules</h3>
-                    {% if modules %}
-                        <ul class="archive-list">
-                            {% for module in modules %}
-                                <li>
-                                    <span title="{{ module.module_name }}">{{ module.module_name|truncatechars:30 }}</span>
-                                    <span class="detail-value">{{ module.created_at|date:"M d, Y" }}</span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="muted-text">No modules have been archived yet.</p>
-                    {% endif %}
+                    <!-- 2️⃣ Learning modules – link to its list page -->
+                    <h3>
+                        <a href="{% url 'account:archive-modules' %}"
+                        class="archive-heading-link">Learning Modules</a>
+                    </h3>
 
-                    <h3>Personal Learning Materials</h3>
-                    {% if personal_materials %}
-                        <ul class="archive-list">
-                            {% for material in personal_materials %}
-                                <li>
-                                    <span title="{{ material.title }}">{{ material.title|truncatechars:30 }}</span>
-                                    <span class="detail-value">{{ material.created_at|date:"M d, Y" }}</span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="muted-text">No personal learning materials have been archived yet.</p>
-                    {% endif %}
+                    <!-- 3️⃣ Personal learning materials – link to its list page -->
+                    <h3>
+                        <a href="{% url 'account:archive-personal-materials' %}"
+                        class="archive-heading-link">Personal Learning Materials</a>
+                    </h3>
                 </section>
 
                 <section class="settings-section card danger-zone">

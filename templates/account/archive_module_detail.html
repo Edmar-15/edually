@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archived Module – {{ module.module_name }}</title>
+    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+    <main class="main-content">
+        <section class="profile-page profile-section">
+            <header class="content-header">
+                <h1>Archived Module – {{ module.module_name }}</h1>
+                <p class="user-info">You can restore this module or delete it forever.</p>
+            </header>
+
+            <article class="module-detail-card">
+                <h2>#{{ module.module_number }} – {{ module.module_name }}</h2>
+                <p class="meta">Subject: {{ module.subject.subject_code }} – {{ module.subject.subject_name }}</p>
+                <p class="meta">Created {{ module.created_at|date:"M d, Y" }}</p>
+
+                {% if module.extracted_html %}
+                    <div class="module-preview">
+                        {{ module.extracted_html|safe }}
+                    </div>
+                {% else %}
+                    <p class="muted-text">No extracted preview is available.</p>
+                {% endif %}
+
+                <form method="post" class="archive-action-form">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="unarchive"
+                            class="button button-primary">Unarchive</button>
+                    <button type="submit" name="action" value="delete"
+                            class="button button--danger"
+                            onclick="return confirm('Delete this module forever?');">
+                        Delete permanently
+                    </button>
+                </form>
+            </article>
+        </section>
+    </main>
+</div>
+
+{% include "components/global_modal.html" %}
+<script src="{% static 'js/modal.js' %}" defer></script>
+</body>
+</html>

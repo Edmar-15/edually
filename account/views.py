@@ -515,3 +515,139 @@ def google_callback(request):
         "post_consent_redirect", reverse("account:dashboard")
     )
     return redirect(next_url)
+
+
+@login_required
+def archives_home(request):
+    """
+    Tiny landing page for the archive section.
+    It simply redirects to the first sub‑page (forum posts) – you can
+    change it to render a custom index if you prefer.
+    """
+    return redirect('account:archive-forum-posts')
+
+
+# -----------------------------------------------------------------
+#   Forum posts
+# -----------------------------------------------------------------
+@login_required
+def archive_forum_post_list(request):
+    posts = (
+        Post.objects.filter(author=request.user, is_archived=True)
+        .order_by('-created_at')
+    )
+    return render(request, 'account/archive_forum_posts.html',
+                  {'posts': posts})
+
+
+@login_required
+def archive_forum_post_detail(request, pk):
+    post = get_object_or_404(
+        Post,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'unarchive':
+            post.is_archived = False
+            post.save(update_fields=['is_archived'])
+            messages.success(request, 'Post has been restored.')
+            return redirect('account:archive-forum-posts')
+        elif action == 'delete':
+            post.delete()
+            messages.success(request, 'Post permanently deleted.')
+            return redirect('account:archive-forum-posts')
+
+    return render(request, 'account/archive_forum_post_detail.html',
+                  {'post': post})
+
+
+# -----------------------------------------------------------------
+#   Modules (subject owner only)
+# -----------------------------------------------------------------
+@login_required
+def archive_module_list(request):
+    modules = (
+        Module.objects.filter(
+            subject__author=request.user,
+            is_archived=True,
+        )
+        .select_related('subject')
+        .order_by('-created_at')
+    )
+    return render(request, 'account/archive_modules.html',
+                  {'modules': modules})
+
+
+@login_required
+def archive_module_detail(request, pk):
+    module = get_object_or_404(
+        Module,
+        pk=pk,
+        subject__author=request.user,
+        is_archived=True,
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'unarchive':
+            module.is_archived = False
+            module.save(update_fields=['is_archived'])
+            messages.success(request, 'Module has been restored.')
+            return redirect('account:archive-modules')
+        elif action == 'delete':
+            # delete the file first (uses the same helper you already have)
+            delete_file(module.file)
+            module.delete()
+            messages.success(request, 'Module permanently deleted.')
+            return redirect('account:archive-modules')
+
+    return render(request, 'account/archive_module_detail.html',
+                  {'module': module})
+
+
+# -----------------------------------------------------------------
+#   Personal Materials (owner only)
+# -----------------------------------------------------------------
+@login_required
+def archive_personal_material_list(request):
+    materials = (
+        PersonalMaterial.objects.filter(
+            author=request.user,
+            is_archived=True,
+        )
+        .order_by('-created_at')
+    )
+    return render(request,
+                  'account/archive_personal_materials.html',
+                  {'materials': materials})
+
+
+@login_required
+def archive_personal_material_detail(request, pk):
+    pm = get_object_or_404(
+        PersonalMaterial,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'unarchive':
+            pm.is_archived = False
+            pm.save(update_fields=['is_archived'])
+            messages.success(request, 'Material has been restored.')
+            return redirect('account:archive-personal-materials')
+        elif action == 'delete':
+            delete_file(pm.file)
+            pm.delete()
+            messages.success(request, 'Material permanently deleted.')
+            return redirect('account:archive-personal-materials')
+
+    return render(request,
+                  'account/archive_personal_material_detail.html',
+                  {'pm': pm})

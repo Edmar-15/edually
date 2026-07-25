@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archived Personal Materials – EduAlly</title>
+    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .archive-list { list-style:none; margin:0; padding:0; }
+        .archive-list li { border-bottom:1px solid var(--border); }
+        .archive-item-link {
+            display:flex; justify-content:space-between; padding:.75rem 0;
+            text-decoration:none; color:inherit;
+        }
+        .archive-item-link:hover,
+        .archive-item-link:focus { background:var(--light-bg); }
+        .detail-value { opacity:.7; }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <section class="profile-page profile-section">
+            <header class="content-header">
+                <h1>Archived Personal Learning Materials</h1>
+                <p class="user-info">You can restore or permanently delete any of these items.</p>
+            </header>
+
+            {% if materials %}
+                <ul class="archive-list">
+                    {% for mat in materials %}
+                        <li>
+                            <a href="{% url 'account:archive-personal-material-detail' mat.id %}"
+                               class="archive-item-link">
+                                <span title="{{ mat.title }}">{{ mat.title|truncatechars:50 }}</span>
+                                <span class="detail-value">{{ mat.created_at|date:"M d, Y" }}</span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="muted-text">No personal learning materials have been archived yet.</p>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+{% include "components/global_modal.html" %}
+<script src="{% static 'js/modal.js' %}" defer></script>
+</body>
+</html>
