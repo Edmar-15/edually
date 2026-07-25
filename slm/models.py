@@ -38,6 +38,8 @@ class Subject(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    is_archived = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-updated_at"]
@@ -74,8 +76,14 @@ class Module(models.Model):
         blank=True,
         help_text="HTML version of the uploaded document – generated on upload.",
     )
+    
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    
+    is_archived = models.BooleanField(default=False)
 
     class Meta:
+        ordering = ["-created_at"]
         unique_together = ("subject", "module_number")
         ordering = ["subject", "module_number"]
         verbose_name = "Module"
@@ -131,6 +139,8 @@ class PersonalMaterial(models.Model):
         default=Visibility.PRIVATE,
         help_text=_("Who may view this file."),
     )
+    
+    is_archived = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)

@@ -1,148 +1,230 @@
 {% load static %}
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" >
-    <title>EduAlly - Settings</title>
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    >
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>EduAlly – Settings</title>
+
+    <link rel="shortcut icon"
+          href="{% static "favicon.ico" %}"
+          type="image/x-icon">
+
+    <!-- Font‑Awesome (used throughout the dashboard UI) -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Core styling – same as the dashboard -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-  </head>
-  <body>
-    <div class="dashboard-container">
-      {% include "components/navigations.html" %}
-      <main class="main-content">
-        <section class="profile-page profile-section">
-          <div class="content-header">
+
+    <style>
+        .settings-section + .settings-section { margin-top: 3rem; }
+
+        .archive-list { list-style:none; margin:0; padding:0; }
+        .archive-list li {
+            display:flex; justify-content:space-between;
+            padding:.5rem 0; border-bottom:1px solid var(--border);
+        }
+
+        .danger-button {
+            background:#c0392b; color:#fff;
+        }
+        .danger-button:hover { background:#e74c3c; }
+
+        .danger-zone { border: 1px solid #c0392b; }
+    </style>
+</head>
+
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <header class="content-header">
             <div class="header-left">
-              <h1>Settings</h1>
-              <p class="user-info">
-                Manage your preferences and account settings.
-              </p>
-            </div>
-          </div>
-
-          <div class="profile-grid">
-            <section class="profile-details-card">
-              <div class="details-header">
-                <h2>Account Preferences</h2>
-                <p>Update your notification and privacy options here.</p>
-              </div>
-
-              <div class="settings-stack">
-                <div class="detail-row">
-                  <span>Email Notifications</span>
-                  <span class="detail-value">Enabled</span>
-                </div>
-                <div class="detail-row" style="align-items: center">
-                  <span>Dark Mode</span>
-                  <span>
-                    <label class="switch">
-                      <input
-                        id="dark-mode-toggle"
-                        type="checkbox"
-                        aria-label="Enable dark mode"
-                      />
-                      <span class="slider round"></span>
-                    </label>
-                  </span>
-                </div>
-                <div class="detail-row">
-                  <span>Privacy</span>
-                  <span class="detail-value">Visible to classmates</span>
-                </div>
-              </div>
-
-              <div class="settings-tip">
-                <h3>Stay in the loop</h3>
-                <p>
-                  Notifications and privacy controls help you keep your study
-                  space organized without feeling overwhelmed.
+                <h1>Settings</h1>
+                <p class="user-info">
+                    Manage your preferences and account settings.
                 </p>
-              </div>
+            </div>
+        </header>
 
-              <div class="profile-actions profile-actions-inline">
-                <button class="button primary-button">Save Changes</button>
-                <button class="button outline-button">Reset</button>
-              </div>
-            </section>
-          </div>
-        </section>
-      </main>
-    </div>
-    {# 1️⃣ Global modal placeholder – only once per page #}
-    {% include "components/global_modal.html" %}
+        <div class="dashboard-content">
+            <div class="container">
 
-    {# 2️⃣ Modal JS – load after the DOM #}
-    <script src="{% static 'js/modal.js' %}" defer></script>
-    <script>
-      (function () {
-        const key = "eduallyDarkMode";
-        const toggle = document.getElementById("dark-mode-toggle");
-        const htmlEl = document.documentElement;
+                <section class="settings-section card">
+                    <div class="details-header">
+                        <h2>Account Preferences</h2>
+                        <p>Update your notification and privacy options here.</p>
+                    </div>
 
-        function applyDark(on) {
-          if (on) htmlEl.classList.add("dark");
-          else htmlEl.classList.remove("dark");
-        }
+                    <div class="settings-stack">
+                        <div class="detail-row">
+                            <span>Email Notifications</span>
+                            <span class="detail-value">Enabled</span>
+                        </div>
 
-        function getCookie(name) {
-          const match = document.cookie.match(
-            "(^|;)\\s*" + name + "\\s*=\\s*([^;]+)",
-          );
-          return match ? match.pop() : "";
-        }
+                        <div class="detail-row" style="align-items:center">
+                            <span>Dark Mode</span>
+                            <span>
+                                <label class="switch">
+                                    <input id="dark-mode-toggle"
+                                           type="checkbox"
+                                           aria-label="Enable dark mode">
+                                    <span class="slider round"></span>
+                                </label>
+                            </span>
+                        </div>
 
-        async function persistTheme(theme) {
-          try {
-            localStorage.setItem(key, theme);
-          } catch (err) {
-            /* ignore */
-          }
-          const csrf = getCookie("csrftoken");
-          try {
-            await fetch('{% url "account:api_set_theme" %}', {
-              method: "POST",
-              credentials: "same-origin",
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrf,
-              },
-              body: JSON.stringify({ theme }),
-            });
-          } catch (err) {
-            /* ignore network errors */
-          }
-        }
+                        <div class="detail-row">
+                            <span>Privacy</span>
+                            <span class="detail-value">Visible to classmates</span>
+                        </div>
+                    </div>
 
-        const stored = localStorage.getItem(key);
-        if (stored === "dark") {
-          applyDark(true);
-          if (toggle) toggle.checked = true;
-        } else if (stored === "light") {
-          applyDark(false);
-          if (toggle) toggle.checked = false;
-        } else {
-          const prefersDark =
-            window.matchMedia &&
+                    <div class="settings-tip">
+                        <h3>Stay in the loop</h3>
+                        <p>
+                            Notifications and privacy controls help you keep your study
+                            space organized without feeling overwhelmed.
+                        </p>
+                    </div>
+
+                    <div class="profile-actions profile-actions-inline">
+                        <button class="button primary-button">Save Changes</button>
+                        <button class="button outline-button">Reset</button>
+                    </div>
+                </section>
+
+                <section class="settings-section card">
+                    <div class="details-header">
+                        <h2>Archive</h2>
+                        <p>Your archived content.  Restore it from the appropriate app sections.</p>
+                    </div>
+
+                    <h3>Forum Posts</h3>
+                    {% if posts %}
+                        <ul class="archive-list">
+                            {% for post in posts %}
+                                <li>
+                                    <span title="{{ post.title }}">{{ post.title|truncatechars:30 }}</span>
+                                    <span class="detail-value">{{ post.created_at|date:"M d, Y" }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="muted-text">You haven’t archived any forum posts yet.</p>
+                    {% endif %}
+
+                    <h3>Learning Modules</h3>
+                    {% if modules %}
+                        <ul class="archive-list">
+                            {% for module in modules %}
+                                <li>
+                                    <span title="{{ module.module_name }}">{{ module.module_name|truncatechars:30 }}</span>
+                                    <span class="detail-value">{{ module.created_at|date:"M d, Y" }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="muted-text">No modules have been archived yet.</p>
+                    {% endif %}
+
+                    <h3>Personal Learning Materials</h3>
+                    {% if personal_materials %}
+                        <ul class="archive-list">
+                            {% for material in personal_materials %}
+                                <li>
+                                    <span title="{{ material.title }}">{{ material.title|truncatechars:30 }}</span>
+                                    <span class="detail-value">{{ material.created_at|date:"M d, Y" }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="muted-text">No personal learning materials have been archived yet.</p>
+                    {% endif %}
+                </section>
+
+                <section class="settings-section card danger-zone">
+                    <div class="details-header">
+                        <h2>Danger Zone</h2>
+                        <p>These actions are irreversible.  Proceed with extreme caution.</p>
+                    </div>
+
+                    <form method="post"
+                          action="{% url 'account:delete_account' %}"
+                          onsubmit="return confirm('⚠️  Are you sure you want to permanently delete your account? This cannot be undone.');">
+                        {% csrf_token %}
+                        <button type="submit" class="button danger-button">
+                            Delete Account
+                        </button>
+                    </form>
+                </section>
+
+            </div>  
+        </div> 
+    </main>
+</div>
+
+{% include "components/global_modal.html" %}
+
+<script src="{% static 'js/modal.js' %}" defer></script>
+<script>
+  (function () {
+    const key   = "eduallyDarkMode";
+    const toggle = document.getElementById("dark-mode-toggle");
+    const htmlEl = document.documentElement;
+
+    function applyDark(on) {
+      if (on) htmlEl.classList.add("dark");
+      else    htmlEl.classList.remove("dark");
+    }
+
+    function getCookie(name) {
+      const match = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
+      return match ? match.pop() : "";
+    }
+
+    async function persistTheme(theme) {
+      try { localStorage.setItem(key, theme); } catch (e) {}
+      const csrf = getCookie("csrftoken");
+      try {
+        await fetch('{% url "account:api_set_theme" %}', {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrf,
+          },
+          body: JSON.stringify({ theme })
+        });
+      } catch (e) {}
+    }
+
+    const stored = localStorage.getItem(key);
+    if (stored === "dark") {
+      applyDark(true);
+      if (toggle) toggle.checked = true;
+    } else if (stored === "light") {
+      applyDark(false);
+      if (toggle) toggle.checked = false;
+    } else {
+      const prefersDark = window.matchMedia &&
             window.matchMedia("(prefers-color-scheme: dark)").matches;
-          applyDark(prefersDark);
-          if (toggle) toggle.checked = prefersDark;
-        }
+      applyDark(prefersDark);
+      if (toggle) toggle.checked = prefersDark;
+    }
 
-        if (toggle) {
-          toggle.addEventListener("change", (e) => {
-            const on = !!e.target.checked;
-            applyDark(on);
-            persistTheme(on ? "dark" : "light");
-          });
-        }
-      })();
-    </script>
-  </body>
+    if (toggle) {
+      toggle.addEventListener("change", e => {
+        const on = !!e.target.checked;
+        applyDark(on);
+        persistTheme(on ? "dark" : "light");
+      });
+    }
+  })();
+</script>
+</body>
 </html>

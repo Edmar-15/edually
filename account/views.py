@@ -12,6 +12,7 @@ from django.contrib.auth import (
     authenticate,
     get_user_model,
     login as auth_login,
+    logout as auth_logout,
 )
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseRedirect
@@ -33,7 +34,8 @@ from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
 # Other apps used in the dashboard
-from slm.models import Module
+from slm.models import Module, PersonalMaterial
+from forum.models import Post
 from aihelper.models import Conversation, Message
 
 
@@ -235,8 +237,61 @@ def register(request):
 @login_required(login_url='account:login')
 @ensure_csrf_cookie
 def settings(request):
-    """Simple settings page – kept unchanged."""
-    return render(request, 'account/settings.html')
+    """
+    Settings page – three vertically‑stacked sections:
+
+    1️⃣  Account Preferences (unchanged UI)
+    2️⃣  Archive – shows the user’s archived forum posts,
+        modules **and** personal learning material.
+    3️⃣  Danger Zone – permanent‑delete button.
+    """
+    # ---- ARCHIVED FORUM POSTS -------------------------------------------------
+    archived_posts = (
+        Post.objects.filter(author=request.user, is_archived=True)
+        .order_by('-created_at')[:10]          # limit for quick loading
+    )
+
+    # ---- ARCHIVED MODULES ----------------------------------------------------
+    archived_modules = (
+        Module.objects.filter(
+            subject__author=request.user,      # modules the user authored
+            is_archived=True,
+        )
+        .order_by('-created_at')[:10]
+    )
+
+    # ---- ARCHIVED PERSONAL LEARNING MATERIAL ---------------------------------
+    archived_materials = (
+        PersonalMaterial.objects.filter(
+            author=request.user,
+            is_archived=True,
+        )
+        .order_by('-created_at')[:10]
+    )
+
+    context = {
+        "posts": archived_posts,
+        "modules": archived_modules,
+        "personal_materials": archived_materials,   # ← NEW
+    }
+    return render(request, "account/settings.html", context)
+
+
+# -----------------------------------------------------------------
+#   DANGER ZONE – account deletion (unchanged from the previous answer)
+# -----------------------------------------------------------------
+@login_required
+@require_POST
+def delete_account(request):
+    """
+    Hard‑delete the user and log out.
+    All related objects cascade‑delete because the FK`s use ``on_delete=CASCADE``.
+    """
+    user = request.user
+    auth_logout(request)          # log out before we delete the row
+    user.delete()
+    messages.success(request, "Your account has been permanently deleted.")
+    return redirect("landing")
 
 
 @login_required(login_url='account:login')
@@ -244,8 +299,7 @@ def settings(request):
 def logout_confirm(request):
     """GET → modal HTML, POST → log the user out."""
     if request.method == 'POST':
-        from django.contrib.auth import logout
-        logout(request)
+        auth_logout(request)
         # AJAX response (the JS will redirect)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True,

@@ -34,6 +34,8 @@ class Post(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    is_archived = models.BooleanField(default=False)
 
     # moderation fields
     verified = models.BooleanField(default=False)   # teacher‑approved
