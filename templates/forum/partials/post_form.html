@@ -1,10 +1,11 @@
 <div class="create-post-container">
     <h2>Ask a New Question</h2>
     <form method="post"
-          action="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-          class="post-create-form ajax-form"
-          data-target="#post-list"
-          data-insert="prepend">
+            action="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+            class="post-create-form ajax-form"
+            data-target="#post-list"
+            data-insert="prepend"
+            data-modal-form>
         {% csrf_token %}
         {{ form.as_p }}
         <div class="form-actions">

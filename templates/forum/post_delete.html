@@ -7,8 +7,8 @@
         <strong>"{{ post.title }}"</strong>
     </div>
 
-    <form method="post" action="{% url 'forum:post_delete' post.pk %}" class="ajax-form" data-target="#global-modal">
-        {% csrf_token %}
+    <form method="post" action="{% url 'forum:post_delete' post.pk %}" class="ajax-form" data-target="#global-modal" data-modal-form>        
+    {% csrf_token %}
         <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
             <button type="button" class="button secondary-button" onclick="document.getElementById('global-modal').classList.remove('open');">
                 Cancel

@@ -1,10 +1,11 @@
 <div class="edit-post-container">
     <h2>Edit Question</h2>
     <form method="post"
-          action="{% url 'forum:post_edit' post.pk %}"
-          class="post-edit-form ajax-form"
-          data-target="#global-modal"
-          data-replace="true">
+            action="{% url 'forum:post_edit' post.pk %}"
+            class="post-edit-form ajax-form"
+            data-target="#global-modal"
+            data-replace="true"
+            data-modal-form>
         {% csrf_token %}
         {{ form.as_p }}
         <div class="form-actions">

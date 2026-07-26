@@ -7,7 +7,7 @@
         <strong>"{{ reply.content|truncatewords:10 }}"</strong>
     </div>
 
-    <form method="post" action="{% url 'forum:reply_delete' reply.pk %}" class="ajax-form" data-target="#global-modal">
+    <form method="post" action="{% url 'forum:reply_delete' reply.pk %}" class="ajax-form" data-target="#global-modal" data-modal-form>
         {% csrf_token %}
         <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
             <button type="button" class="button secondary-button" onclick="document.getElementById('global-modal').classList.remove('open');">

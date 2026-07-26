@@ -105,11 +105,13 @@
                                     <div class="top-user-avatar">
                                         {% load account_extras %}
                                         {% if u.avatar %}
-                                            <a href="#" class="ajax-modal" data-ajax-url="{% url 'account:profile_modal' u.pk %}" title="View profile">
+                                            <a href="{% url 'account:profile_modal' u.pk %}"
+                                                class="js-modal-trigger" title="View profile">
                                                 <img src="{{ u.avatar.url }}" alt="{{ u.get_full_name|default:u.username }}">
                                             </a>
                                         {% else %}
-                                            <a href="#" class="ajax-modal" data-ajax-url="{% url 'account:profile_modal' u.pk %}" title="View profile">
+                                            <a href="{% url 'account:profile_modal' u.pk %}"
+                                                class="js-modal-trigger" title="View profile">
                                                 <span class="avatar-fallback">{{ u|initials }}</span>
                                             </a>
                                         {% endif %}
@@ -140,11 +142,9 @@
                     </p>
                 </div>
                 <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                   class="button primary-button ajax-modal"
-                   role="button"
-                   aria-label="Ask a Question"
-                   data-ajax-url="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                   data-target="#global-modal">Ask a Question</a>
+                    class="button primary-button js-modal-trigger"
+                    role="button"
+                    aria-label="Ask a Question">Ask a Question</a>
             </header>
 
             <!-- POST LIST (now a partial) -->
@@ -158,9 +158,6 @@
         {% include "components/right_sidebar.html" %}
     </aside>
 </div>
-
-<!-- Global modal container (used for flagging, edit, etc.) -->
-<div id="global-modal" class="modal" aria-hidden="true"></div>
 
 {# 1️⃣ Global modal placeholder – only once per page #}
     {% include "components/global_modal.html" %}

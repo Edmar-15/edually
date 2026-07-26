@@ -345,38 +345,57 @@ def reply_edit(request, reply_id):
     if reply.author != request.user:
         raise Http404("You can only edit your own replies.")
 
-    if request.method == "POST":
-        form = ReplyForm(request.POST, instance=reply)
-        if form.is_valid():
-            form.save()
-            if is_ajax(request):
-                html = render_to_string(
-                    "forum/partials/reply_item.html",
-                    {
-                        "reply": reply,
-                        "user_reply_upvotes": set(),
-                        "request": request,
-                    },
-                    request=request,
-                )
-                return JsonResponse({"success": True, "html": html})
-            return redirect(reverse("forum:post_detail", args=[reply.post.pk]) + f"#reply-{reply.pk}")
-    else:
+    # -----------------------------------------------------------------
+    # GET – return the edit form as a fragment for the global modal
+    # -----------------------------------------------------------------
+    if request.method == "GET":
         form = ReplyForm(instance=reply)
+        if is_ajax(request):
+            html = render_to_string(
+                "forum/partials/reply_edit_form.html",
+                {"form": form, "reply": reply},
+                request=request,
+            )
+            return JsonResponse({"html": html})
+        # Non‑AJAX fallback – render the full‑page edit view
+        categories = Category.objects.annotate(
+            post_count=Count('posts', filter=Q(posts__is_deleted=False))
+        )
+        context = {
+            "form": form,
+            "reply": reply,
+            "categories": categories,
+            "categories_count": Post.objects.filter(is_deleted=False).count(),
+            "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
+            "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
+            "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
+        }
+        return render(request, "forum/reply_edit.html", context)
 
-    categories = Category.objects.annotate(
-        post_count=Count('posts', filter=Q(posts__is_deleted=False))
+    # -----------------------------------------------------------------
+    # POST – save changes (same logic as before)
+    # -----------------------------------------------------------------
+    form = ReplyForm(request.POST, instance=reply)
+    if form.is_valid():
+        form.save()
+        if is_ajax(request):
+            html = render_to_string(
+                "forum/partials/reply_item.html",
+                {"reply": reply,
+                 "user_reply_upvotes": set(),
+                 "request": request},
+                request=request,
+            )
+            return JsonResponse({"success": True, "html": html})
+        return redirect(reverse("forum:post_detail", args=[reply.post.pk]) + f"#reply-{reply.pk}")
+
+    # Form errors – return the fragment (modal) with the errors highlighted
+    html = render_to_string(
+        "forum/partials/reply_edit_form.html",
+        {"form": form, "reply": reply},
+        request=request,
     )
-    context = {
-        "form": form,
-        "reply": reply,
-        "categories": categories,
-        "categories_count": Post.objects.filter(is_deleted=False).count(),
-        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
-        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
-        "top_users": request.user.__class__.objects.filter(is_active=True).order_by("-karma")[:6],
-    }
-    return render(request, "forum/reply_edit.html", context)
+    return JsonResponse({"success": False, "html": html}, status=400)
 
 
 # -------------------------------------------------------------------------

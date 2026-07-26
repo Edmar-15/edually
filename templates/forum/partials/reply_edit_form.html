@@ -1,0 +1,14 @@
+{% comment %}forum/partials/reply_edit_form.html – form rendered inside the global modal{% endcomment %}
+<form method="post"
+      action="{% url 'forum:reply_edit' reply.pk %}"
+      class="reply-edit-form ajax-form"
+      data-target="#global-modal"
+      data-modal-form>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+        <button type="submit" class="button primary-button">Save Changes</button>
+        <a href="{% url 'forum:post_detail' reply.post.pk %}#reply-{{ reply.pk }}"
+           class="button secondary-button">Cancel</a>
+    </div>
+</form>
