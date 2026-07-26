@@ -33,8 +33,9 @@ def feed(request):
 
     posts_qs = (
         Post.objects.select_related("author", "category")
-        .filter(is_deleted=False)
+        .filter(is_deleted=False, is_archived=False)
     )
+
 
     # ----- search ---------------------------------------------------------
     if query:
@@ -75,9 +76,7 @@ def feed(request):
     else:
         user_post_upvotes = set()
 
-    categories = Category.objects.annotate(
-        post_count=Count('posts', filter=Q(posts__is_deleted=False))
-    )
+    categories = Category.objects.annotate(post_count=Count('posts', filter=Q(posts__is_deleted=False, posts__is_archived=False)))
 
     # Exclude admin/staff users from the top contributors list
     top_users = request.user.__class__.objects.filter(is_active=True, is_superuser=False, is_staff=False).order_by("-karma")[:6]
@@ -89,9 +88,9 @@ def feed(request):
     context = {
         "posts": page_obj,
         "categories": categories,
-        "categories_count": Post.objects.filter(is_deleted=False).count(),
-        "recent_threads": Post.objects.filter(is_deleted=False).order_by('-created_at')[:40],
-        "recent_posts": Post.objects.filter(is_deleted=False).order_by('-created_at')[:6],
+        "categories_count": Post.objects.filter(is_deleted=False, is_archived=False).count(),
+        "recent_threads": Post.objects.filter(is_deleted=False, is_archived=False).order_by('-created_at')[:40],
+        "recent_posts": Post.objects.filter(is_deleted=False, is_archived=False).order_by('-created_at')[:6],
         "top_users": top_users,
         "search_query": query,
         "active_category": category_slug,
@@ -295,21 +294,22 @@ def post_edit(request, pk):
 # Delete a post (soft delete – AJAX‑aware)
 # -------------------------------------------------------------------------
 @login_required(login_url="account:login")
-def post_delete(request, pk):
+def post_archive(request, pk):
     post = get_object_or_404(Post, pk=pk)
     if post.author != request.user:
-        raise Http404("You can only delete your own posts.")
+        raise Http404("You can only archive your own posts.")
 
     if request.method == "POST":
-        post.is_deleted = True
-        post.save()
+        # Toggle the archived flag – this is the new “soft remove” for authors.
+        post.is_archived = not post.is_archived
+        post.save(update_fields=["is_archived"])
         if is_ajax(request):
-            return JsonResponse({"success": True, "deleted_id": post.pk})
+            return JsonResponse({"success": True, "archived_id": post.pk})
         return redirect("forum:feed")
 
     # GET – return confirmation modal content as JSON
     html = render_to_string(
-        "forum/post_delete.html",
+        "forum/post_archive.html",
         {"post": post, "request": request},
         request=request,
     )

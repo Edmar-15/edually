@@ -15,9 +15,13 @@
     {% include "components/navigations.html" %}
     <main class="main-content">
             <header class="content-header">
-                <a href="{% url "account:settings" %}">Settings</a> &gt;
-                <a href="{% url "account:archive-forum-posts" %}">Archived Forum Posts</a> &gt;
-                {{ post.title }}
+                <p class="breadcrumbs">
+                    <i>
+                        <a href="{% url "account:settings" %}">Settings</a> &gt;
+                        <a href="{% url "account:archive-forum-posts" %}">Archived Forum Posts</a> &gt;
+                        {{ post.title }}
+                    </i>
+                </p>
             </header>
 
             <article class="post-detail-card">
@@ -25,7 +29,7 @@
                 <p class="meta">Created {{ post.created_at|date:"M d, Y" }}</p>
 
                 <div class="post-body">
-                    {{ post.body|linebreaks }}
+                    {{ post.content|linebreaks }}
                 </div>
 
                 <form method="post" class="archive-action-form">

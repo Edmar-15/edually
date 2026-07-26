@@ -28,8 +28,13 @@
 
     <main class="main-content">
             <header class="content-header">
-                <a href="{% url "account:settings" %}">Settings</a> &gt;
-                Archived Forum Posts
+                <p class="breadcrumbs">
+                    <i>
+                        <a href="{% url "account:settings" %}">Settings</a> &gt;
+                        Archived Forum Posts
+                    </i>
+                </p>
+                
             </header>
 
             {% if posts %}

@@ -15,6 +15,11 @@
             Our moderation team is reviewing it and will take action if needed.
         </div>
     {% endif %}
+    {% if request.user == post.author and post.is_archived %}
+        <div class="status-pill status-pill--archived" style="background:#607d8b;color:#fff;">
+            Archived
+        </div>
+    {% endif %}
     <article class="post-item card{% if post.verified %} verified{% endif %}"
              data-post-id="{{ post.pk }}" id="post-{{ post.pk }}">
         <div class="post-main">
@@ -86,10 +91,10 @@
                             role="menuitem">
                             <i class="fa-solid fa-edit"></i> Edit
                         </a>
-                        <a href="{% url 'forum:post_delete' post.pk %}"
+                        <a href="{% url 'forum:post_archive' post.pk %}"
                             class="button secondary-button small-button js-modal-trigger action-menu-item"
                             role="menuitem">
-                            <i class="fa-solid fa-trash"></i> Delete
+                            <i class="fa-solid fa-trash"></i> Archive
                         </a>
                     {% endif %}
                     {% if request.user.is_authenticated and request.user.is_teacher_member and not post.verified %}
