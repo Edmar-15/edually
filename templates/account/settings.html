@@ -1,5 +1,5 @@
 {% load static %}
-<!doctype html>
+{% load account_extras %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -110,17 +110,18 @@
                         class="archive-heading-link">Forum Posts</a>
                     </h3>
 
-                    <!-- 2️⃣ Learning modules – link to its list page -->
+                    {% if request.user|has_group:'Teacher' %}
                     <h3>
                         <a href="{% url 'account:archive-modules' %}"
                         class="archive-heading-link">Learning Modules</a>
                     </h3>
-
-                    <!-- 3️⃣ Personal learning materials – link to its list page -->
+                    {% else %}
                     <h3>
                         <a href="{% url 'account:archive-personal-materials' %}"
                         class="archive-heading-link">Personal Learning Materials</a>
                     </h3>
+                    {% endif %}
+
                 </section>
 
                 <section class="settings-section card danger-zone">

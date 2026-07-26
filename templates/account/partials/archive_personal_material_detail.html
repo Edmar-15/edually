@@ -1,0 +1,81 @@
+{% load static %}
+{% load account_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Archived Material – {{ pm.title }}</title>
+
+    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static "css/slm/module_detail.css" %}">
+    <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+
+        <header class="content-header">
+            <p class="breadcrumb"><i>
+                <a href="{% url "account:settings" %}">Settings</a> &gt;
+                <a href="{% url "account:archive-personal-materials" %}#tab-1">Archived Learning Materials</a> &gt;
+                {{ pm.title }}
+            </i></p>
+
+            <div class="header-actions">
+
+                {# 1️⃣  Un‑archive – tiny form #}
+                <form method="post" class="archive-action-form">
+                    {% csrf_token %}
+                    <button type="submit"
+                            name="action"
+                            value="unarchive"
+                            class="button button-primary">
+                        Unarchive
+                    </button>
+                </form>
+
+                {# 2️⃣  Permanently delete – modal trigger #}
+                <a href="#"
+                   class="button button--danger js-modal-trigger"
+                   data-url="{% url 'account:archive-personal-material-delete-modal' pm.id %}"
+                   title="Delete this material permanently">
+                    Delete permanently
+                </a>
+            </div>
+        </header>
+
+        <section class="module-content-card" aria-labelledby="archived-material-title">
+            <div class="module-content-card__header">
+                <h2 id="archived-material-title">{{ pm.title }}</h2>
+                <p>
+                    {% if pm.visibility == "PU" %}Publicly shared{% else %}Your private material{% endif %}<br>
+                    Uploaded {{ pm.created_at|date:"M d, Y" }}
+                </p>
+            </div>
+
+            <!-- Extracted preview (or PDF iframe fallback) -->
+            <div class="module-content">
+                {% if pm.extracted_html %}
+                    {{ pm.extracted_html|safe }}
+                {% elif pm.file_url and pm.file_url|lower|slice:"-4:" == ".pdf" %}
+                    <iframe src="{{ pm.file_url }}" class="pdf-preview"
+                            title="PDF preview" allowfullscreen></iframe>
+                {% else %}
+                    <p><em>No extracted preview is available for this file.</em></p>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+</div>
+
+{% include "components/global_modal.html" %}
+<script src="{% static 'js/modal.js' %}" defer></script>
+
+</body>
+</html>

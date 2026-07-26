@@ -1,0 +1,27 @@
+{# account/templates/account/archive_module_delete_modal.html #}
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <h2>Delete module permanently</h2>
+    <p>
+        Are you sure you want to delete the archived module
+        <strong>#{{ module.module_number }} – {{ module.module_name }}</strong>?
+        This action cannot be undone.
+    </p>
+
+    <form method="post"
+          action="{% url 'account:archive-module-delete' module.id %}"
+          data-modal-form>
+        {% csrf_token %}
+        <div class="modal__actions">
+            <button type="submit"
+                    class="button-primary button--danger">
+                Delete permanently
+            </button>
+            <button type="button"
+                    class="button-plain"
+                    data-close-modal>
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>

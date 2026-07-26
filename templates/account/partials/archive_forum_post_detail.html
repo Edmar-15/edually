@@ -29,15 +29,18 @@
                 </div>
 
                 <form method="post" class="archive-action-form">
-                    {% csrf_token %}
-                    <button type="submit" name="action" value="unarchive"
-                            class="button button-primary">Unarchive</button>
-                    <button type="submit" name="action" value="delete"
-                            class="button button--danger"
-                            onclick="return confirm('Delete this post forever?');">
-                        Delete permanently
-                    </button>
-                </form>
+            {% csrf_token %}
+            <button type="submit" name="action" value="unarchive"
+                    class="button button-primary">Unarchive</button>
+        </form>
+
+        <!-- Delete – opens a modal -->
+        <a href="#"
+           class="button button--danger js-modal-trigger"
+           data-url="{% url 'account:archive-forum-post-delete-modal' post.id %}"
+           title="Delete this post permanently">
+            Delete permanently
+        </a>
             </article>
         </section>
     </main>

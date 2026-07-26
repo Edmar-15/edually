@@ -1,0 +1,90 @@
+{% load static %}
+{% load account_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Archived Module – {{ module.module_name }}</title>
+
+    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static "css/slm/module_detail.css" %}">
+    <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+
+        <!-- -----------------------------------------------------------------
+             Page‑level header – breadcrumb + actions (un‑archive + modal)
+        ----------------------------------------------------------------- -->
+        <header class="content-header">
+            <p class="breadcrumb"><i>
+                <a href="{% url "account:settings" %}">Settings</a> &gt;
+                <a href="{% url "account:archive-modules" %}">Archived Self Learning Modules</a> &gt;
+                Archived Module – {{ module.module_name }}
+            </i></p>
+
+            <div class="header-actions">
+
+                <form method="post" class="archive-action-form">
+                    {% csrf_token %}
+                    <button type="submit"
+                            name="action"
+                            value="unarchive"
+                            class="button button-primary">
+                        Unarchive
+                    </button>
+                </form>
+
+                <a href="#"
+                   class="button button--danger js-modal-trigger"
+                   data-url="{% url 'account:archive-module-delete-modal' module.id %}"
+                   title="Delete this module permanently">
+                    Delete permanently
+                </a>
+            </div>
+        </header>
+
+        <section class="module-content-card" aria-labelledby="archived-module-title">
+            <div class="module-content-card__header">
+                <h2 id="archived-module-title">
+                    #{{ module.module_number }} – {{ module.module_name }}
+                </h2>
+                <p>
+                    Subject: {{ module.subject.subject_code }} – {{ module.subject.subject_name }}<br>
+                    Created {{ module.created_at|date:"M d, Y" }}
+                </p>
+            </div>
+
+            <!-- Highlight‑history pop‑over (unchanged) -->
+            <div class="module-content-history" aria-label="Highlight history">
+                <div class="module-content-history__popover"
+                     id="highlight-history-popover"
+                     hidden>
+                    <ul id="highlight-history-list"
+                        class="module-content-history__list"></ul>
+                </div>
+            </div>
+
+            <!-- Extracted preview (PDF/DOCX/PPT…) -->
+            <div class="module-content">
+                {% if module.extracted_html %}
+                    {{ module.extracted_html|safe }}
+                {% else %}
+                    <p><em>No extracted preview is available for this file.</em></p>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+</div>
+
+{% include "components/global_modal.html" %}
+<script src="{% static 'js/modal.js' %}" defer></script>
+
+</body>
+</html>

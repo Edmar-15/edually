@@ -540,7 +540,7 @@ def archive_forum_post_list(request):
         Post.objects.filter(author=request.user, is_archived=True)
         .order_by('-created_at')
     )
-    return render(request, 'account/archive_forum_posts.html',
+    return render(request, 'account/partials/archive_forum_posts.html',
                   {'posts': posts})
 
 
@@ -560,12 +560,8 @@ def archive_forum_post_detail(request, pk):
             post.save(update_fields=['is_archived'])
             messages.success(request, 'Post has been restored.')
             return redirect('account:archive-forum-posts')
-        elif action == 'delete':
-            post.delete()
-            messages.success(request, 'Post permanently deleted.')
-            return redirect('account:archive-forum-posts')
 
-    return render(request, 'account/archive_forum_post_detail.html',
+    return render(request, 'account/partials/archive_forum_post_detail.html',
                   {'post': post})
 
 
@@ -582,7 +578,7 @@ def archive_module_list(request):
         .select_related('subject')
         .order_by('-created_at')
     )
-    return render(request, 'account/archive_modules.html',
+    return render(request, 'account/partials/archive_modules.html',
                   {'modules': modules})
 
 
@@ -602,18 +598,8 @@ def archive_module_detail(request, pk):
             module.save(update_fields=['is_archived'])
             messages.success(request, 'Module has been restored.')
             return redirect('account:archive-modules')
-        elif action == 'delete':
-            # ---------------------------  DELETE FILE  ---------------------------
-            # If a file is attached, remove it from storage before deleting the DB row.
-            if module.file:
-                # ``save=False`` prevents a second ``save()`` on the now‑deleted model.
-                module.file.delete(save=False)
-            # --------------------------------------------------------------------
-            module.delete()
-            messages.success(request, 'Module permanently deleted.')
-            return redirect('account:archive-modules')
 
-    return render(request, 'account/archive_module_detail.html',
+    return render(request, 'account/partials/archive_module_detail.html',
                   {'module': module})
 
 
@@ -630,7 +616,7 @@ def archive_personal_material_list(request):
         .order_by('-created_at')
     )
     return render(request,
-                  'account/archive_personal_materials.html',
+                  'account/partials/archive_personal_materials.html',
                   {'materials': materials})
 
 
@@ -650,15 +636,131 @@ def archive_personal_material_detail(request, pk):
             pm.save(update_fields=['is_archived'])
             messages.success(request, 'Material has been restored.')
             return redirect('account:archive-personal-materials')
-        elif action == 'delete':
-            # ---------------------------  DELETE FILE  ---------------------------
-            if pm.file:
-                pm.file.delete(save=False)
-            # --------------------------------------------------------------------
-            pm.delete()
-            messages.success(request, 'Material permanently deleted.')
-            return redirect('account:archive-personal-materials')
 
     return render(request,
-                  'account/archive_personal_material_detail.html',
+                  'account/partials/archive_personal_material_detail.html',
                   {'pm': pm})
+    
+@login_required
+def archive_forum_post_delete_modal(request, pk):
+    """
+    Return the modal HTML that asks the user to confirm permanent deletion
+    of an **archived** forum post.
+    """
+    post = get_object_or_404(
+        Post,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+    html = render_to_string(
+        'account/partials/archive_forum_post_delete_modal.html',
+        {'post': post},
+        request=request,
+    )
+    return JsonResponse({'html': html})
+
+
+@require_POST
+@login_required
+def archive_forum_post_delete(request, pk):
+    """AJAX endpoint – actually delete the archived post."""
+    post = get_object_or_404(
+        Post,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+    post.delete()
+    messages.success(request, "Post permanently deleted.")
+    return JsonResponse(
+        {
+            "success": True,
+            "redirect": reverse("account:archive-forum-posts"),
+        }
+    )
+
+
+# -----------------------------------------------------------------
+#  DELETE MODAL – Module
+# -----------------------------------------------------------------
+@login_required
+def archive_module_delete_modal(request, pk):
+    """Return the modal that confirms permanent deletion of an archived module."""
+    module = get_object_or_404(
+        Module,
+        pk=pk,
+        subject__author=request.user,
+        is_archived=True,
+    )
+    html = render_to_string(
+        'account/partials/archive_module_delete_modal.html',
+        {'module': module},
+        request=request,
+    )
+    return JsonResponse({'html': html})
+
+
+@require_POST
+@login_required
+def archive_module_delete(request, pk):
+    """AJAX endpoint – delete the archived module (file removed as well)."""
+    module = get_object_or_404(
+        Module,
+        pk=pk,
+        subject__author=request.user,
+        is_archived=True,
+    )
+    # Delete the file from storage first (mirrors the non‑AJAX view logic)
+    if module.file:
+        module.file.delete(save=False)
+    module.delete()
+    messages.success(request, "Module permanently deleted.")
+    return JsonResponse(
+        {
+            "success": True,
+            "redirect": reverse("account:archive-modules"),
+        }
+    )
+
+
+# -----------------------------------------------------------------
+#  DELETE MODAL – Personal material
+# -----------------------------------------------------------------
+@login_required
+def archive_personal_material_delete_modal(request, pk):
+    """Return the modal that confirms permanent deletion of an archived material."""
+    pm = get_object_or_404(
+        PersonalMaterial,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+    html = render_to_string(
+        'account/partials/archive_personal_material_delete_modal.html',
+        {'pm': pm},
+        request=request,
+    )
+    return JsonResponse({'html': html})
+
+
+@require_POST
+@login_required
+def archive_personal_material_delete(request, pk):
+    """AJAX endpoint – delete the archived personal material."""
+    pm = get_object_or_404(
+        PersonalMaterial,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+    if pm.file:
+        pm.file.delete(save=False)
+    pm.delete()
+    messages.success(request, "Material permanently deleted.")
+    return JsonResponse(
+        {
+            "success": True,
+            "redirect": reverse("account:archive-personal-materials"),
+        }
+    )

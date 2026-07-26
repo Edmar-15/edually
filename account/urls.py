@@ -69,4 +69,31 @@ urlpatterns = [
     path('archives/personal-materials/<int:pk>/',
         views.archive_personal_material_detail,
         name='archive-personal-material-detail'),
+    
+    # Forum‑post
+    path('archives/forum-posts/<int:pk>/delete-modal/',
+        views.archive_forum_post_delete_modal,
+        name='archive-forum-post-delete-modal'),
+
+    path('archives/forum-posts/<int:pk>/delete/',
+        views.archive_forum_post_delete,
+        name='archive-forum-post-delete'),
+
+    # Module
+    path('archives/modules/<int:pk>/delete-modal/',
+        views.archive_module_delete_modal,
+        name='archive-module-delete-modal'),
+
+    path('archives/modules/<int:pk>/delete/',
+        views.archive_module_delete,
+        name='archive-module-delete'),
+
+    # Personal material
+    path('archives/personal-materials/<int:pk>/delete-modal/',
+        views.archive_personal_material_delete_modal,
+        name='archive-personal-material-delete-modal'),
+
+    path('archives/personal-materials/<int:pk>/delete/',
+        views.archive_personal_material_delete,
+        name='archive-personal-material-delete'),
 ]

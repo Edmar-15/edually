@@ -1030,26 +1030,6 @@ def subject_edit_modal(request, pk):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def subject_delete_modal(request, pk):
-    """
-    GET → confirm‑delete modal.
-    POST → delete object and return JSON.
-    """
-    subject = get_object_or_404(Subject, pk=pk)
-
-    if subject.author_id != request.user.id:
-        return JsonResponse({"error": "Permission denied"}, status=403)
-
-    if request.method == "POST":
-        subject.delete()
-        return JsonResponse({"success": True, "redirect": ""})
-
-    html = render_to_string("slm/modals/subject_delete.html", {"subject": subject})
-    return JsonResponse({"html": html})
-
-
-@login_required
-@require_http_methods(["GET", "POST"])
 def module_edit_modal(request, pk):
     module = get_object_or_404(Module, pk=pk)
 
@@ -1122,23 +1102,6 @@ def module_edit_modal(request, pk):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def module_delete_modal(request, pk):
-    module = get_object_or_404(Module, pk=pk)
-
-    if module.subject.author_id != request.user.id:
-        return JsonResponse({"error": "Permission denied"}, status=403)
-
-    if request.method == "POST":
-        delete_file(module.file)
-        module.delete()
-        return JsonResponse({"success": True, "redirect": ""})
-
-    html = render_to_string("slm/modals/module_delete.html", {"module": module})
-    return JsonResponse({"html": html})
-
-
-@login_required
-@require_http_methods(["GET", "POST"])
 def personal_material_edit_modal(request, pk):
     pm = get_object_or_404(PersonalMaterial, pk=pk)
 
@@ -1181,23 +1144,6 @@ def personal_material_edit_modal(request, pk):
         return JsonResponse({"success": True, "redirect": ""})
 
     html = render_to_string("slm/modals/personal_material_edit.html", {"pm": pm})
-    return JsonResponse({"html": html})
-
-
-@login_required
-@require_http_methods(["GET", "POST"])
-def personal_material_delete_modal(request, pk):
-    pm = get_object_or_404(PersonalMaterial, pk=pk)
-
-    if pm.author_id != request.user.id:
-        return JsonResponse({"error": "Permission denied"}, status=403)
-
-    if request.method == "POST":
-        delete_file(pm.file)
-        pm.delete()
-        return JsonResponse({"success": True, "redirect": ""})
-
-    html = render_to_string("slm/modals/personal_material_delete.html", {"pm": pm})
     return JsonResponse({"html": html})
 
 # -----------------------------------------------------------------
