@@ -16,17 +16,22 @@
             <a href="{% url 'landing' %}" class="logo">
                 <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
             </a>
-            <nav class="main-nav">
-                <a href="#features">Home</a>
+            <button class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="main-nav" id="main-nav" aria-label="Primary navigation">
+                <a href="#home">Home</a>
                 <a href="#about">About</a>
-                <a href="#contact">Contact</a>
+                <a href="{% url 'account:contact' %}">Support</a>
                 <a class="button button-outline" href="{% url 'account:login' %}">Login</a>
                 <a class="button" href="{% url 'account:register' %}">Register</a>
             </nav>
         </div>
     </header>
 
-    <main class="landing-container">
+    <main class="landing-container" id="home">
         <section class="hero">
             <div class="hero-copy animate-fade-up">
                 <span class="eyebrow">Welcome to EduAlly</span>
@@ -173,7 +178,7 @@
         </section>
     </main>
 
-    <footer class="page-footer" id="contact">
+    <footer class="page-footer" id="footer">
         <div class="footer-inner simple-footer">
             <div class="footer-left">
                 <a href="{% url 'landing' %}" class="footer-brand">EduAlly</a>
@@ -188,11 +193,27 @@
                 <div class="footer-links">
                     <a href="{% url 'landing' %}">Home</a>
                     <a href="#about">About</a>
-                    <a href="#contact">Contact</a>
+                    <a href="{% url 'account:contact' %}">Contact</a>
                 </div>
             </div>
         </div>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggle = document.querySelector('.mobile-nav-toggle');
+            const nav = document.querySelector('.main-nav');
+
+            if (!toggle || !nav) {
+                return;
+            }
+
+            toggle.addEventListener('click', function () {
+                const isOpen = nav.classList.toggle('is-open');
+                toggle.setAttribute('aria-expanded', String(isOpen));
+            });
+        });
+    </script>
 
     <div id="terms-modal" class="policy-modal hidden" role="dialog"
          aria-modal="true" aria-labelledby="terms-modal-title">

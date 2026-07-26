@@ -176,6 +176,13 @@ body {
         align-items: stretch;
         padding: 1.1rem 1rem;
     }
+    .forum-header > div {
+        margin-left: 2rem;
+    }
+    .search-label {
+        margin-bottom: 10px;
+        margin-left: 2rem;
+    }
     .forum-header .button {
         flex-shrink: 0;
         align-self: flex-start;
@@ -1839,6 +1846,28 @@ body {
 }
 .top-user-meta a {
     cursor: default;
+}
+
+.top-user-points {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--muted-text, #64748b);
+}
+
+.top-user-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(14, 154, 167, 0.12);
+    color: #0f766e;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.72rem;
 }
 /* ----------------------------------------------------------------- */
 

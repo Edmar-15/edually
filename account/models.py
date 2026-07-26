@@ -72,6 +72,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     def short_name(self) -> str:
         return self.first_name or self.email
 
+    @property
+    def forum_badge_label(self) -> str:
+        if self.karma >= 100:
+            return "Expert"
+        if self.karma >= 20:
+            return "Helpful"
+        return "Beginner"
+
     def get_full_name(self) -> str:
         return self.full_name
 

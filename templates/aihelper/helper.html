@@ -29,9 +29,14 @@
                                 <p class="conversation-label">Workspace</p>
                                 <h2>Conversations</h2>
                             </div>
-                            <a href="{% url 'aihelper:helper' %}" class="new-chat-button" title="Start a new chat">
-                                <i class="fa-solid fa-plus"></i>
-                            </a>
+                            <div class="conversation-map-actions">
+                                <button type="button" class="conversation-close-button" id="conversation-close-button" title="Close conversations" aria-label="Close conversations">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <a href="{% url 'aihelper:helper' %}" class="new-chat-button" title="Start a new chat">
+                                    <i class="fa-solid fa-plus"></i>
+                                </a>
+                            </div>
                         </div>
                         <ul id="conversation-list" class="conversation-list">
                             {% for conv in conversation_summaries %}
@@ -59,6 +64,9 @@
                                 <span id="chat-header-badge-text">{{ active_title|default:"New conversation" }}</span>
                             </div>
                             <div class="chat-header-actions">
+                                <button id="conversation-toggle" class="conversation-toggle" aria-expanded="false" title="View conversations">
+                                    <i class="fa-solid fa-bars"></i>
+                                </button>
                                 <div class="minimap-dropdown">
                                     <button id="minimap-toggle" class="minimap-button" aria-expanded="false" title="Open conversations">
                                         <i class="fa-solid fa-list-ul"></i>
@@ -109,14 +117,12 @@
                                        required
                                        autocomplete="off">
 
-                                <select id="explanation-level" class="explanation-select">
-                                    <option value="simplified" selected>Simplified</option>
-                                    <option value="technical">Technical</option>
-                                    <option value="socratic">Socratic</option>
-                                </select>
+                                <button type="button" id="explanation-level" class="explanation-button" data-level="simplified" aria-label="Explanation level: Simplified">
+                                    Simple
+                                </button>
 
-                                <button type="submit" class="button send-button">
-                                    <i class="fa-solid fa-paper-plane"></i> Send
+                                <button type="submit" class="button send-button" aria-label="Send message">
+                                    <i class="fa-solid fa-paper-plane"></i>
                                 </button>
                             </div>
                         </form>

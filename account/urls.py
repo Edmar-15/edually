@@ -16,6 +16,7 @@ app_name = "account"
 
 urlpatterns = [
     path("", views.landing, name="landing"),
+    path("contact/", views.contact_page, name="contact"),
     path("register/", views.register, name="register"),
     path("login/", RoleBasedLoginView.as_view(), name="login"),
     path(

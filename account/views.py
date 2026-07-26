@@ -98,6 +98,10 @@ def landing(request):
     return render(request, "account/landing.html")
 
 
+def contact_page(request):
+    return render(request, "account/contact.html")
+
+
 @login_required(login_url='account:login')
 def dashboard(request):
     subjects = request.user.subjects.all()[:3]

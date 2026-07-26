@@ -44,7 +44,10 @@
                     </div>
                     <div class="top-user-meta">
                         <a href="#">{{ u.get_full_name|default:u.username }}</a>
-                        <div class="top-user-points">{{ u.karma }} pts</div>
+                        <div class="top-user-points">
+                            <span class="top-user-badge">{{ u.forum_badge_label }}</span>
+                            <span>{{ u.karma }} pts</span>
+                        </div>
                     </div>
                 </li>
             {% empty %}

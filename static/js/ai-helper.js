@@ -3,13 +3,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Elements used by the chat UI.
     const form        = document.getElementById("chat-form");
     const input       = document.getElementById("chat-input");
-    const levelSelect = document.getElementById("explanation-level");
+    const levelButton = document.getElementById("explanation-level");
     const chatWindow  = document.getElementById("chat-window");
     const convListEl  = document.getElementById("conversation-list");
     const emptyState  = document.querySelector(".empty-state");
     const headerBadgeText = document.getElementById("chat-header-badge-text");
     const conversationMap = document.getElementById("conversation-map");
     const conversationResizer = document.getElementById("conversation-resizer");
+    const conversationCloseButton = document.getElementById("conversation-close-button");
 
     // Current conversation ID.
     let activeConversationId = document.querySelector(".conversation-item.active")?.dataset.id || null;
@@ -55,6 +56,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    const explanationLabels = {
+        simplified: "Simple",
+        technical: "Tech",
+        socratic: "Guide"
+    };
+
+    function updateExplanationButton(level = levelButton?.dataset.level || "simplified") {
+        if (!levelButton) return;
+        const normalized = ["simplified", "technical", "socratic"].includes(level) ? level : "simplified";
+        levelButton.dataset.level = normalized;
+        levelButton.textContent = explanationLabels[normalized] || "Simple";
+        levelButton.setAttribute("aria-label", `Explanation level: ${explanationLabels[normalized] || "Simple"}`);
+    }
+
+    if (levelButton) {
+        levelButton.addEventListener("click", () => {
+            const current = levelButton.dataset.level || "simplified";
+            const order = ["simplified", "technical", "socratic"];
+            const nextIndex = (order.indexOf(current) + 1) % order.length;
+            updateExplanationButton(order[nextIndex]);
+        });
+        updateExplanationButton();
+    }
 
     [ 'scroll', 'wheel', 'touchstart', 'pointerdown' ].forEach(ev => {
         chatWindow.addEventListener(ev, markUserInteracting, { passive: true });
@@ -113,6 +137,54 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!minimapPopup.contains(ev.target) && !minimapToggle.contains(ev.target)) {
                     minimapPopup.classList.add('hidden');
                     minimapToggle.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+    }
+
+    // Mobile conversation panel toggle
+    const conversationToggle = document.getElementById('conversation-toggle');
+    const conversationPanel = document.querySelector('.conversation-panel');
+
+    function updateConversationToggleVisibility() {
+        if (conversationToggle) {
+            const isMobile = window.matchMedia("(max-width: 960px)").matches;
+            conversationToggle.style.display = isMobile ? 'inline-flex' : 'none';
+        }
+    }
+
+    // Update visibility on load and window resize
+    updateConversationToggleVisibility();
+    window.addEventListener('resize', updateConversationToggleVisibility);
+
+    if (conversationToggle && conversationPanel) {
+        function setConversationPanelOpen(isOpen) {
+            conversationPanel.classList.toggle('mobile-open', isOpen);
+            conversationToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        conversationToggle.addEventListener('click', () => {
+            setConversationPanelOpen(!conversationPanel.classList.contains('mobile-open'));
+        });
+
+        if (conversationCloseButton) {
+            conversationCloseButton.addEventListener('click', () => {
+                setConversationPanelOpen(false);
+            });
+        }
+
+        // Close panel when clicking a conversation
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.addEventListener('click', () => {
+                setConversationPanelOpen(false);
+            });
+        });
+
+        // Close panel when clicking outside
+        document.addEventListener('click', (ev) => {
+            if (conversationPanel.classList.contains('mobile-open')) {
+                if (!conversationPanel.contains(ev.target) && !conversationToggle.contains(ev.target) && !conversationCloseButton?.contains(ev.target)) {
+                    setConversationPanelOpen(false);
                 }
             }
         });
@@ -198,7 +270,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 li.appendChild(text);
                 if (c.id == activeConversationId) li.classList.add("active");
-                li.addEventListener("click", () => selectConversation(c.id));
+                li.addEventListener("click", () => {
+                    selectConversation(c.id);
+                    // Close mobile panel
+                    if (conversationPanel) {
+                        conversationPanel.classList.remove('mobile-open');
+                        if (conversationToggle) {
+                            conversationToggle.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
                 convListEl.appendChild(li);
             });
         }
@@ -217,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateHeaderBadge(document.querySelector(`.conversation-item[data-id="${convId}"]`)?.dataset.title || "New conversation");
         input.value = "";
         input.disabled = true;
-        levelSelect.disabled = true;
+        if (levelButton) levelButton.disabled = true;
         toggleEmptyState(false);
 
         try {
@@ -237,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Failed to load conversation:", e);
         } finally {
             input.disabled = false;
-            levelSelect.disabled = false;
+            if (levelButton) levelButton.disabled = false;
             input.focus();
         }
     }
@@ -249,14 +330,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const question = input.value.trim();
         if (!question) return;
 
-        const level = levelSelect.value;
+        const level = levelButton?.dataset.level || "simplified";
 
         // Optimistic UI
         toggleEmptyState(false);
         appendMessage("user", question);
         input.value = "";
         input.disabled = true;
-        levelSelect.disabled = true;
+        if (levelButton) levelButton.disabled = true;
 
         const payload = {
             question,
@@ -310,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
             showTypingIndicator(false);
             input.disabled = false;
-            levelSelect.disabled = false;
+            if (levelButton) levelButton.disabled = false;
             input.focus();
         }
     });
