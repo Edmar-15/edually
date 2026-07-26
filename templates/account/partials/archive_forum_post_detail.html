@@ -14,10 +14,10 @@
 <div class="dashboard-container">
     {% include "components/navigations.html" %}
     <main class="main-content">
-        <section class="profile-page profile-section">
             <header class="content-header">
-                <h1>Archived Post – {{ post.title }}</h1>
-                <p class="user-info">You can restore this post or delete it forever.</p>
+                <a href="{% url "account:settings" %}">Settings</a> &gt;
+                <a href="{% url "account:archive-forum-posts" %}">Archived Forum Posts</a> &gt;
+                {{ post.title }}
             </header>
 
             <article class="post-detail-card">
@@ -42,7 +42,6 @@
             Delete permanently
         </a>
             </article>
-        </section>
     </main>
 </div>
 

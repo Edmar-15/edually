@@ -27,8 +27,10 @@
 
     <main class="main-content">
             <header class="content-header">
-                <h1>Archived Personal Learning Materials</h1>
-                <p class="user-info">You can restore or permanently delete any of these items.</p>
+                <p class="breadcrumb"><i>
+                <a href="{% url "account:settings" %}">Settings</a> &gt;
+                Archived Learning Materials
+            </i></p>
             </header>
 
             {% if materials %}

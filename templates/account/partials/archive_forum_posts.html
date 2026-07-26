@@ -27,13 +27,9 @@
     {% include "components/navigations.html" %}
 
     <main class="main-content">
-        <section class="profile-page profile-section">
             <header class="content-header">
-                <h1>Archived Forum Posts</h1>
-                <p class="user-info">
-                    Posts you have archived. Click a title to view details, then
-                    un‑archive or permanently delete.
-                </p>
+                <a href="{% url "account:settings" %}">Settings</a> &gt;
+                Archived Forum Posts
             </header>
 
             {% if posts %}
@@ -51,7 +47,6 @@
             {% else %}
                 <p class="muted-text">You haven’t archived any forum posts yet.</p>
             {% endif %}
-        </section>
     </main>
 </div>
 
