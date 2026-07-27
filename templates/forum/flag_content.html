@@ -1,45 +1,48 @@
 {% load static %}
-<div class="create-post-container">
-    <h2>Report Inappropriate Content</h2>
-    <p class="intro-text">Help us keep the forum safe. Please let us know why you&apos;re reporting this content.</p>
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <div class="create-post-container">
+        <h2>Report Inappropriate Content</h2>
+        <p class="intro-text">Help us keep the forum safe. Please let us know why you&apos;re reporting this content.</p>
 
-    {% if error %}
-        <div class="form-error-message">
-            {{ error }}
-        </div>
-    {% endif %}
+        {% if error %}
+            <div class="form-error-message">
+                {{ error }}
+            </div>
+        {% endif %}
 
-    <form method="post"
-            action="{% url 'forum:flag_content' content_type content.pk %}"
-            class="ajax-form"
-            data-target="#global-modal"
-            data-replace="true"
-            data-close-modal="false"
-            data-modal-form>
-        {% csrf_token %}
+        <form method="post"
+                action="{% url 'forum:flag_content' content_type content.pk %}"
+                class="ajax-form"
+                data-target="#global-modal"
+                data-replace="true"
+                data-close-modal="false"
+                data-modal-form>
+            {% csrf_token %}
 
-        <div>
-            <label for="id_reason">Report category:</label>
-            <select id="id_reason" name="reason" required>
-                <option value="">-- Select a category --</option>
-                {% for value, label in reason_choices %}
-                    <option value="{{ value }}">{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
+            <div>
+                <label for="id_reason">Report category:</label>
+                <select id="id_reason" name="reason" required>
+                    <option value="">-- Select a category --</option>
+                    {% for value, label in reason_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div>
-            <label for="id_description">Additional details (optional):</label>
-            <textarea id="id_description" name="description" rows="4" placeholder="Provide any additional context..."></textarea>
-        </div>
+            <div>
+                <label for="id_description">Additional details (optional):</label>
+                <textarea id="id_description" name="description" rows="4" placeholder="Provide any additional context..."></textarea>
+            </div>
 
-        <div class="form-actions">
-            <button type="submit" class="button primary-button">
-                <i class="fa-solid fa-flag"></i> Submit Report
-            </button>
-            <button type="button" class="button secondary-button" onclick="document.getElementById('global-modal').classList.remove('open');">
-                Cancel
-            </button>
-        </div>
-    </form>
+            <div class="modal__actions">
+                <button type="submit" class="button primary-button">
+                    <i class="fa-solid fa-flag"></i> Submit Report
+                </button>
+                <button type="button" class="button secondary-button" data-close-modal>
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
 </div>

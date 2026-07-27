@@ -1,21 +1,24 @@
 {% load static %}
-<div class="create-post-container">
-    <h2>Archive Post?</h2>
-    <p class="intro-text">Do you want to archive this post?</p>
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <div class="create-post-container">
+        <h2>Archive Post?</h2>
+        <p class="intro-text">Do you want to archive this post?</p>
 
-    <div style="background: rgba(211, 47, 47, 0.1); padding: 12px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #d32f2f;">
-        <strong>"{{ post.title }}"</strong>
-    </div>
-
-    <form method="post" action="{% url 'forum:post_archive' post.pk %}" class="ajax-form" data-target="#global-modal" data-modal-form>        
-    {% csrf_token %}
-        <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-            <button type="button" class="button secondary-button" onclick="document.getElementById('global-modal').classList.remove('open');">
-                Cancel
-            </button>
-            <button type="submit" class="button" style="background-color: #d32f2f; color: white;">
-                <i class="fa-solid fa-trash"></i> Archive Post
-            </button>
+        <div style="background: rgba(211, 47, 47, 0.1); padding: 12px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #d32f2f;">
+            <strong>"{{ post.title }}"</strong>
         </div>
-    </form>
+
+        <form method="post" action="{% url 'forum:post_archive' post.pk %}" class="ajax-form" data-target="#global-modal" data-modal-form>
+            {% csrf_token %}
+            <div class="modal__actions" style="justify-content: flex-end; margin-top: 2rem;">
+                <button type="button" class="button secondary-button" data-close-modal>
+                    Cancel
+                </button>
+                <button type="submit" class="button button-danger">
+                    <i class="fa-solid fa-trash"></i> Archive Post
+                </button>
+            </div>
+        </form>
+    </div>
 </div>

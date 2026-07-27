@@ -1,21 +1,23 @@
-<div class="create-post-container">
-    <h2>Ask a New Question</h2>
-    <form method="post"
-            action="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-            class="post-create-form ajax-form"
-            data-target="#post-list"
-            data-insert="prepend"
-            data-modal-form>
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div class="form-actions">
-            <button type="submit" class="button primary-button button-lg">
-                <i class="fas fa-paper-plane"></i> Post Question
-            </button>
-            <a href="javascript:void(0);" class="button secondary-button"
-               onclick="document.getElementById('global-modal').classList.remove('open');">
-                Cancel
-            </a>
-        </div>
-    </form>
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <div class="create-post-container">
+        <h2>Ask a New Question</h2>
+        <form method="post"
+                action="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+                class="post-create-form ajax-form"
+                data-target="#post-list"
+                data-insert="prepend"
+                data-modal-form>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="modal__actions">
+                <button type="submit" class="button primary-button button-lg">
+                    <i class="fas fa-paper-plane"></i> Post Question
+                </button>
+                <button type="button" class="button secondary-button" data-close-modal>
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
