@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="utf-8">
+    <title>{% block title %}EDUALLY{% endblock %}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#0d6efd">
+
+    <!-- 1️⃣ Manifest -->
+    <link rel="manifest" href="{% url 'manifest' %}">
+
+    <!-- Optional iOS support -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="{% static 'icons/icon-192x192.png' %}">
+
+    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    <!-- Your regular CSS/JS (adjust paths) -->
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    {% block content %}{% endblock %}
+
+    <!-- 2️⃣ Service‑worker registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Adding a version query‑string makes it easy to force a refresh:
+                const version = "{{ settings.PWA_SW_VERSION|default:'20240727' }}";
+                navigator.serviceWorker.register("{% url 'service-worker' %}?v=" + version)
+                    .then(reg => console.log('✅ SW registered (scope:', reg.scope, ')'))
+                    .catch(err => console.error('❌ SW registration failed:', err));
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

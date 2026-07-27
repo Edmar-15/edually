@@ -19,6 +19,7 @@ from django.urls import path, include
 from account.views import landing
 from django.conf import settings
 from django.conf.urls.static import static
+from core import views as pwa_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +28,17 @@ urlpatterns = [
     path("forum/", include(("forum.urls", "forum"), namespace="forum")),
     path("aihelper/", include('aihelper.urls')),
     path('slm/', include('slm.urls')),
+    path('offline/', pwa_views.offline, name='offline'),
+
+    # ------------------------------------------------------------------
+    # 2️⃣ Manifest (served by the view)
+    # ------------------------------------------------------------------
+    path('manifest.json', pwa_views.manifest, name='manifest'),
+
+    # ------------------------------------------------------------------
+    # 3️⃣ Service‑worker (served by the view at the site root)
+    # ------------------------------------------------------------------
+    path('service-worker.js', pwa_views.service_worker, name='service-worker'),
 ]
 
 if settings.DEBUG:

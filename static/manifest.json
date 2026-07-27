@@ -1,0 +1,23 @@
+{
+  "name": "EduAlly – Learning Platform",
+  "short_name": "EduAlly",
+  "description": "A Django‑powered hub for courses, forums and AI helpers",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0E9AA7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/static/icons/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

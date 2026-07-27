@@ -1,18 +1,13 @@
+{% extends "base.html" %}
 {% load static %}
 {% load account_extras %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduAlly - Dashboard</title>
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    {% block title %}EduAlly - Dashboard{% endblock %}
+{% block extra_head %}
     <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
-</head>
-<body>
-    <div class="dashboard-container">
+{% endblock %}
+{% block content %}
+<div class="dashboard-container">
         <!-- Left Sidebar Navigation -->
         {% include "components/navigations.html" %}
 
@@ -163,8 +158,10 @@
     </div>
     {# 1️⃣ Global modal placeholder – only once per page #}
     {% include "components/global_modal.html" %}
-
-    {# 2️⃣ Modal JS – load after the DOM #}
-    <script src="{% static 'js/modal.js' %}" defer></script>
-</body>
-</html>
+{% endblock %}
+<body>
+    
+{% block extra_js %}
+<script src="{% static 'js/modal.js' %}" defer></script>
+{% endblock %}
+    
