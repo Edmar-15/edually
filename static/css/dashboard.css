@@ -1208,6 +1208,21 @@ body.sidebar-collapsed .main-content {
     font-size: 0.9rem;
 }
 
+.profile-settings-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1rem;
+    min-width: 130px;
+    justify-content: center;
+    box-shadow: 0 12px 24px rgba(14, 154, 167, 0.18);
+    margin-left: auto;
+}
+
+.profile-settings-link:hover {
+    transform: translateY(-1px);
+}
+
 .profile-actions {
     display: flex;
     gap: 10px;

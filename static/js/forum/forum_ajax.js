@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await resp.json();
 
             if (!data.success) {
+                if (form.dataset.toastError) {
+                    window.showGlobalToast?.(form.dataset.toastError, 'error');
+                }
                 // Replace the modal/body with the HTML that contains the error message
                 if (form.dataset.target) {
                     const container = document.querySelector(form.dataset.target);
@@ -122,6 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.redirect) {
                 window.location.href = data.redirect;
                 return;
+            }
+
+            if (form.dataset.toastSuccess) {
+                window.showGlobalToast?.(form.dataset.toastSuccess, 'success', 2000);
             }
 
             // Close modal if the form lives inside one

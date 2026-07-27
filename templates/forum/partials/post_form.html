@@ -7,7 +7,9 @@
                 class="post-create-form ajax-form"
                 data-target="#post-list"
                 data-insert="prepend"
-                data-modal-form>
+                data-modal-form
+                data-toast-success="Your post was published."
+                data-toast-error="We couldn't publish your post. Please try again.">
             {% csrf_token %}
             {{ form.as_p }}
             <div class="modal__actions">
