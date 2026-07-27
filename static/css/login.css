@@ -341,12 +341,12 @@ button {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 40px rgba(14, 154, 167, 0.18);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(14, 154, 167, 0.12);
 }
 
 form button.button,
@@ -360,8 +360,8 @@ form button[type="submit"] {
 
 form button.button:hover,
 form button[type="submit"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 30px rgba(14, 154, 167, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(14, 154, 167, 0.16);
 }
 
 .toggle-password {

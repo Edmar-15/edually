@@ -180,7 +180,7 @@
     text-decoration: none;
     cursor: pointer;
     margin: 0;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
 .new-chat-button:hover,
@@ -192,7 +192,7 @@
 .conversation-close-button:hover,
 .conversation-close-button:focus-visible {
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(14, 154, 167, 0.12);
+    box-shadow: 0 6px 14px rgba(14, 154, 167, 0.10);
     background: rgba(14, 154, 167, 0.14);
 }
 

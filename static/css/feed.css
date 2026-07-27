@@ -84,7 +84,7 @@ body {
 
 .button.primary-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 22px 46px rgba(14,154,167,0.24);
+    box-shadow: 0 12px 28px rgba(14,154,167,0.16);
 }
 
 .button.secondary-button,
@@ -118,7 +118,7 @@ body {
     gap: 0.6rem;
     cursor: pointer;
     text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
 .button.primary-button {
