@@ -58,9 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await resp.json();
 
             if (!data.success) {
-                if (form.dataset.toastError) {
-                    window.showGlobalToast?.(form.dataset.toastError, 'error');
-                }
                 // Replace the modal/body with the HTML that contains the error message
                 if (form.dataset.target) {
                     const container = document.querySelector(form.dataset.target);
@@ -94,19 +91,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            if (data.deleted_id) {
-                const deletedPost = document.querySelector(`#post-${data.deleted_id}`);
-                const deletedReply = document.querySelector(`#reply-${data.deleted_id}`);
-                const deletedEl = deletedPost || deletedReply;
-                if (deletedEl) deletedEl.remove();
+            const removalId = data.deleted_id || data.archived_id;
+            if (removalId) {
+                const deletedPost = document.querySelector(`#post-${removalId}`);
+                const deletedReply = document.querySelector(`#reply-${removalId}`);
+                const removedEl = deletedPost || deletedReply;
+                if (removedEl) removedEl.remove();
             }
 
-            // If a heading (like the reply count) should be updated
-            if (data.replies_cnt !== undefined) {
-                const headingSelector = form.dataset.after;
-                if (headingSelector) {
-                    const heading = document.querySelector(headingSelector);
-                    if (heading) {
+            // -----------------------------------------------------------------
+            // 6.  If a heading (like the reply count) should be updated
+            // -----------------------------------------------------------------
+             if (data.replies_cnt !== undefined) {
+                 const headingSelector = form.dataset.after;
+                 if (headingSelector) {
+                     const heading = document.querySelector(headingSelector);
+                     if (heading) {
                         heading.textContent = `${data.replies_cnt} Reply${data.replies_cnt === 1 ? '' : 's'}`;
                     }
                 }
@@ -125,10 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.redirect) {
                 window.location.href = data.redirect;
                 return;
-            }
-
-            if (form.dataset.toastSuccess) {
-                window.showGlobalToast?.(form.dataset.toastSuccess, 'success', 2000);
             }
 
             // Close modal if the form lives inside one
