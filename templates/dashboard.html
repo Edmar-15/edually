@@ -16,10 +16,7 @@
             <!-- Header -->
             <header class="content-header">
                 <div class="header-left">
-                    <h1>Welcome back, {{ user.get_full_name|default:user.username|default:user.email }}! <i class="fas fa-wave"></i></h1>
-                </div>
-                <div class="header-right">
-                    <span class="user-info">{{ user.email }}</span>
+                    <p>Welcome back, {{ user.get_full_name|default:user.username|default:user.email }}! <i class="fas fa-wave"></i></p>
                 </div>
             </header>
 
