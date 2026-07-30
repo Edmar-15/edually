@@ -16,69 +16,6 @@
     box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
 }
 
-/* -----------------------------------------------------------------
-   2️⃣ Page‑level header – breadcrumb + action icons
-   ----------------------------------------------------------------- */
-.content-header {
-    /* Flex container: breadcrumb left, actions right */
-    display: flex;
-    flex-wrap: wrap;               /* wrap on very narrow screens */
-    align-items: center;
-    justify-content: space-between;
-    padding: .75rem 1rem;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #e5e7eb;
-    background: #fafafa;          /* subtle paper‑like bg */
-    position: sticky;             /* stay visible while scrolling */
-    top: 0;
-    z-index: 5;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
-}
-
-/* Breadcrumb text */
-.breadcrumb {
-    margin: 0;
-    font-size: .95rem;
-    color: #6b7280;
-    line-height: 1;
-}
-
-/* Remove the italic style that the <i> tag gives by default */
-.breadcrumb i {
-    font-style: normal;
-}
-
-/* Links inside the breadcrumb */
-.breadcrumb a {
-    color: #0e9aa7;
-    text-decoration: none;
-}
-.breadcrumb a:hover,
-.breadcrumb a:focus {
-    text-decoration: underline;
-}
-
-/* Add a little visual “>” separator with spacing */
-.breadcrumb > a:not(:last-child)::after {
-    content: " › ";                /* narrow‑no‑break‑space + arrow */
-    margin-left: .2rem;
-    margin-right: .2rem;
-    color: #9ca3af;
-    font-weight: 400;
-}
-
-/* Container for the action icons on the right side */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: .5rem;                     /* consistent spacing between buttons */
-}
-
-/* Keep the existing .button look but tighten the padding for the tiny icons */
-.header-actions .button {
-    padding: .45rem .7rem;         /* a touch tighter than the main .button */
-}
-
 /* Badge that shows the number of highlight‑history items */
 .badge {
     display: inline-block;
