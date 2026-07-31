@@ -9,45 +9,186 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        .archive-shell {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px 40px;
+        }
+
+        .archive-detail-panel {
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 28px;
+            box-shadow: 0 20px 56px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .archive-detail-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .75rem 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fafafa;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+        }
+
+        .archive-detail-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .archive-detail-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(14,154,167,0.14), rgba(34,197,94,0.08));
+            color: var(--primary, #0e9aa7);
+            box-shadow: inset 0 0 0 1px rgba(14,154,167,0.08);
+        }
+
+        .archive-detail-title {
+            margin: 0;
+            font-size: clamp(1.8rem, 2vw, 2.4rem);
+            letter-spacing: -0.03em;
+            color: var(--text, #0f172a);
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+        }
+
+        .archive-detail-body {
+            padding: 0 1rem 1.5rem;
+        }
+
+        .archive-detail-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.94), rgba(239,246,246,0.92));
+            border: 1px solid rgba(148,163,184,0.14);
+            border-radius: 20px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+            padding: 1.5rem;
+        }
+
+        .archive-detail-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 0 1rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(14,154,167,0.08);
+            color: var(--primary, #0e9aa7);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .archive-detail-content {
+            color: var(--text, #0f172a);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .archive-detail-content p {
+            margin: 0 0 1rem;
+        }
+
+        .archive-detail-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .archive-action-form {
+            display: inline-block;
+            margin: 0;
+        }
+
+        @media (max-width: 720px) {
+            .archive-shell {
+                padding: 0 12px 28px;
+            }
+
+            .archive-detail-header {
+                padding: 0.9rem 0.85rem;
+            }
+
+            .archive-detail-title-wrap {
+                padding: 0 0.85rem;
+            }
+
+            .archive-detail-title {
+                font-size: 1.55rem;
+            }
+
+            .archive-detail-card {
+                padding: 1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="dashboard-container">
     {% include "components/navigations.html" %}
     <main class="main-content">
-            <header class="content-header">
-                <p class="breadcrumbs">
-                    <i>
+        <div class="archive-shell">
+            <section class="archive-detail-panel">
+                <header class="archive-detail-header content-header">
+                    <p class="breadcrumb"><i>
                         <a href="{% url "account:settings" %}">Settings</a> &gt;
                         <a href="{% url "account:archive-forum-posts" %}">Archived Forum Posts</a> &gt;
-                        {{ post.title }}
-                    </i>
-                </p>
+                        <span>{{ post.title }}</span>
+                    </i></p>
 
-                <div class="header-actions">
-                    <form method="post" class="archive-action-form">
-                        {% csrf_token %}
-                        <button type="submit" name="action" value="unarchive"
-                                class="button button-primary">Unarchive</button>
-                    </form>
+                    <div class="header-actions">
+                        <form method="post" class="archive-action-form">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="unarchive"
+                                    class="button primary-button">Unarchive</button>
+                        </form>
 
-                    <!-- Delete – opens a modal -->
-                    <a href="#"
-                    class="button button--danger js-modal-trigger"
-                    data-url="{% url 'account:archive-forum-post-delete-modal' post.id %}"
-                    title="Delete this post permanently">
-                        Delete permanently
-                    </a>
+                        <a href="#"
+                           class="button button-primary button--danger js-modal-trigger"
+                           data-url="{% url 'account:archive-forum-post-delete-modal' post.id %}"
+                           title="Delete this post permanently">
+                            Delete permanently
+                        </a>
+                    </div>
+                </header>
+
+                <div class="archive-detail-title-wrap">
+                    <span class="archive-detail-icon"><i class="fa-solid fa-comments"></i></span>
+                    <h1 class="archive-detail-title">{{ post.title }}</h1>
                 </div>
-            </header>
 
-            <article class="post-detail-card">
-                <h2>{{ post.title }}</h2>
-                <p class="meta">Created {{ post.created_at|date:"M d, Y" }}</p>
+                <div class="archive-detail-body">
+                    <article class="archive-detail-card">
+                        <p class="archive-detail-meta">Created {{ post.created_at|date:"M d, Y" }}</p>
 
-                <div class="post-body">
-                    {{ post.content|linebreaks }}
+                        <div class="archive-detail-content">
+                            {{ post.content|linebreaks }}
+                        </div>
+                    </article>
                 </div>
-            </article>
+            </section>
+        </div>
     </main>
 </div>
 

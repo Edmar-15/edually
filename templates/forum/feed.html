@@ -141,10 +141,21 @@
                         and get help from your peers and teachers.
                     </p>
                 </div>
-                <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                    class="button primary-button js-modal-trigger"
-                    role="button"
-                    aria-label="Ask a Question">Ask a Question</a>
+                <div class="forum-header-actions">
+                    <a href="{% url 'account:notifications' %}"
+                       class="button secondary-button forum-notification-button"
+                       aria-label="Notifications"
+                       title="Notifications">
+                        <i class="fa-solid fa-bell"></i>
+                        {% if unread_notification_count and unread_notification_count > 0 %}
+                            <span class="forum-notification-badge">{{ unread_notification_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+                        class="button primary-button js-modal-trigger"
+                        role="button"
+                        aria-label="Ask a Question">Ask a Question</a>
+                </div>
             </header>
 
             <!-- POST LIST (now a partial) -->

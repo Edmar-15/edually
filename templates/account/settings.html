@@ -104,23 +104,39 @@
                         <p>Your archived content.  Click a heading to manage that type.</p>
                     </div>
 
-                    <!-- 1️⃣ Forum posts – link to its list page -->
-                    <h3>
-                        <a href="{% url 'account:archive-forum-posts' %}"
-                        class="archive-heading-link">Forum Posts</a>
-                    </h3>
+                    <div class="archive-links-grid">
+                        <a href="{% url 'account:archive-forum-posts' %}" class="archive-card archive-card--posts">
+                            <span class="archive-card-icon">
+                                <i class="fa-solid fa-comments"></i>
+                            </span>
+                            <span class="archive-card-copy">
+                                <span class="archive-card-label">Archive</span>
+                                <strong>Forum Posts</strong>
+                            </span>
+                        </a>
 
-                    {% if request.user|has_group:'Teacher' %}
-                    <h3>
-                        <a href="{% url 'account:archive-modules' %}"
-                        class="archive-heading-link">Learning Modules</a>
-                    </h3>
-                    {% else %}
-                    <h3>
-                        <a href="{% url 'account:archive-personal-materials' %}"
-                        class="archive-heading-link">Personal Learning Materials</a>
-                    </h3>
-                    {% endif %}
+                        {% if request.user|has_group:'Teacher' %}
+                        <a href="{% url 'account:archive-modules' %}" class="archive-card archive-card--modules">
+                            <span class="archive-card-icon">
+                                <i class="fa-solid fa-book-open"></i>
+                            </span>
+                            <span class="archive-card-copy">
+                                <span class="archive-card-label">Archive</span>
+                                <strong>Learning Modules</strong>
+                            </span>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'account:archive-personal-materials' %}" class="archive-card archive-card--materials">
+                            <span class="archive-card-icon">
+                                <i class="fa-solid fa-folder-open"></i>
+                            </span>
+                            <span class="archive-card-copy">
+                                <span class="archive-card-label">Archive</span>
+                                <strong>Personal Learning Materials</strong>
+                            </span>
+                        </a>
+                        {% endif %}
+                    </div>
 
                 </section>
 
