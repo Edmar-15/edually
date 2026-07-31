@@ -27,6 +27,8 @@ const CORE_STATIC_ASSETS = [
   "/static/css/slm/slm.css",
   "/static/css/slm/module_detail.css",
   "/static/css/slm/highlight_ai.css",
+  "/static/js/feed.js",
+  "/static/js/helper.js",
   "/static/js/modal.js",
   "/static/js/slm/tab_switching.js",
   "/static/js/slm/subject_ajax.js",
