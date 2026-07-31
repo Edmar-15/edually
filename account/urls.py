@@ -31,7 +31,6 @@ urlpatterns = [
     path("profile/modal/<int:pk>/", views.profile_modal, name='profile_modal'),
     path("settings/", views.settings, name='settings'),
     path("settings/delete/", views.delete_account, name="delete_account"),
-    path("notifications/", views.notifications_inbox, name="notifications"),
     path("api/set-theme/", views.api_set_theme, name='api_set_theme'),
 
     # ---------------------------------------------------------

@@ -29,7 +29,7 @@ from django.template.loader import render_to_string
 # Local imports
 # --------------------------------------------------------------
 from .forms import PublicRegisterForm, ProfileForm, LoginForm
-from .models import Notification, UserConsent, User, StudentProfile
+from .models import UserConsent, User, StudentProfile
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
@@ -155,13 +155,6 @@ def dashboard(request):
         "onboarding_steps": onboarding_steps,
     }
     return render(request, "dashboard.html", context)
-
-
-@login_required(login_url="account:login")
-def notifications_inbox(request):
-    notifications = Notification.objects.filter(recipient=request.user).select_related("actor").order_by("-created_at")
-    notifications.filter(read=False).update(read=True)
-    return render(request, "account/notifications.html", {"notifications": notifications})
 
 
 @login_required(login_url="account:login")

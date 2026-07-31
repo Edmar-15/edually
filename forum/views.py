@@ -9,9 +9,8 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
-from .models import Category, Post, PostUpvote, Reply, ReplyUpvote, FlagReport
+from .models import Category, Post, PostUpvote, Reply, ReplyUpvote, FlagReport, Notification
 from .forms import PostForm, ReplyForm
-from account.models import Notification
 
 # -------------------------------------------------------------------------
 # Helpers
@@ -692,3 +691,48 @@ def resolve_report(request, report_id):
     if is_ajax(request):
         return JsonResponse({"success": True, "resolved_id": report.pk})
     return redirect("forum:moderation_dashboard")
+
+
+@login_required(login_url="account:login")
+def notifications(request):
+    """
+    Return the 8 most‑recent notifications for the logged‑in user.
+    The response is a JSON object with a single ``html`` key – this is
+    exactly what the global‑modal loader (`js-modal-trigger`) expects.
+    The HTML includes the modal backdrop and content wrapper so the
+    modal works the same way as for posts, flag forms, ….
+    """
+    recent = (
+        Notification.objects.filter(recipient=request.user)
+        .select_related("actor", "target_post", "target_reply")
+        .order_by("-created_at")[:8]
+    )
+    # Render the dropdown fragment inside the modal wrapper
+    html = render_to_string(
+        "forum/partials/notification.html",
+        {"notifications": recent},
+        request=request,
+    )
+    return JsonResponse({"html": html})
+
+
+# ------------------------------------------------------------
+# 2️⃣  Click a notification → mark read and redirect
+# ------------------------------------------------------------
+@login_required(login_url="account:login")
+def notification_goto(request, pk):
+    notif = get_object_or_404(Notification, pk=pk, recipient=request.user)
+    if not notif.read:
+        notif.read = True
+        notif.save(update_fields=['read'])
+    return redirect(notif.url)
+
+# ------------------------------------------------------------
+# 3️⃣  Mark *all* as read (AJAX POST, returns JSON)
+# ------------------------------------------------------------
+@login_required(login_url="account:login")
+@require_http_methods(["POST"])
+def notification_mark_all_read(request):
+    Notification.objects.filter(recipient=request.user, read=False) \
+        .update(read=True)
+    return JsonResponse({"success": True, "unread": 0})

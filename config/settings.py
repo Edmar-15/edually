@@ -69,8 +69,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'account.context_processors.unread_notifications',
                 'account.context_processors.user_groups',
+                'forum.context_processors.unread_notifications',
             ],
         },
     },
@@ -153,7 +153,7 @@ OLLAMA_API_KEY = ""
 OLLAMA_HOST = ""
 OLLAMA_MODEL = ""
 
-PWA_SW_VERSION = "20240727"
+PWA_SW_VERSION = "20240728"
 
 # --------------------------------------------------------------
 # Google OAuth2 configuration

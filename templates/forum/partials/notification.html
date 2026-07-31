@@ -1,0 +1,31 @@
+{# forum/partials/notification_dropdown.html #}
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <div class="notification-dropdown-inner">
+        {% if notifications %}
+            <ul class="notification-list">
+                {% for n in notifications %}
+                    <li class="{% if not n.read %}unread{% endif %}">
+                        <a href="{% url 'forum:notification_goto' n.pk %}"
+                        class="notification-link">
+                            <strong>{{ n.actor }}</strong> {{ n.verb }}
+                            {% if n.target_post %}your post{% elif n.target_reply %}your reply{% endif %}
+                        </a>
+                        <small class="time">{{ n.created_at|timesince }} ago</small>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="notification-footer">
+                <button type="button"
+                        class="button secondary-button small-button"
+                        id="mark-all-read-btn"
+                        data-url="{% url 'forum:notification_mark_all_read' %}">
+                    Mark all as read
+                </button>
+            </div>
+        {% else %}
+            <p class="no-notifications">You have no notifications.</p>
+        {% endif %}
+    </div>
+</div>

@@ -229,4 +229,39 @@ document.addEventListener('DOMContentLoaded', () => {
             if (panel) panel.setAttribute('aria-hidden', 'true');
         });
     });
+
+    document.addEventListener('click', async function (e) {
+        // The button lives inside the global modal that is loaded via
+        // the js‑modal‑trigger on the bell icon.
+        const btn = e.target.closest('#mark-all-read-btn');
+        if (!btn) return;
+        e.preventDefault();
+
+        const url = btn.dataset.url;
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X‑CSRFToken': getCsrfToken(),
+                    'X‑Requested‑With': 'XMLHttpRequest',
+                },
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                // 1️⃣ Remove the red badge that shows the unread count
+                const badge = document.getElementById('notification-badge');
+                if (badge) badge.remove();
+
+                // 2️⃣ Inside the modal, turn every <li class="unread"> → normal
+                const modal = document.getElementById('global-modal');
+                if (modal) {
+                    modal.querySelectorAll('li.unread')
+                        .forEach(li => li.classList.remove('unread'));
+                }
+            }
+        } catch (err) {
+            console.error('Mark‑all‑read failed', err);
+        }
+    });
 });

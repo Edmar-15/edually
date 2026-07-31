@@ -142,13 +142,16 @@
                     </p>
                 </div>
                 <div class="forum-header-actions">
-                    <a href="{% url 'account:notifications' %}"
-                       class="button secondary-button forum-notification-button"
-                       aria-label="Notifications"
-                       title="Notifications">
+                    <a href="{% url 'forum:notifications' %}"
+                        class="button secondary-button forum-notification-button js-modal-trigger"
+                        aria-label="Notifications"
+                        title="Notifications"
+                    id="notification-button">
                         <i class="fa-solid fa-bell"></i>
-                        {% if unread_notification_count and unread_notification_count > 0 %}
-                            <span class="forum-notification-badge">{{ unread_notification_count }}</span>
+                        {% if unread_notifications_count %}
+                            <span class="forum-notification-badge" id="notification-badge">
+                                {{ unread_notifications_count }}
+                            </span>
                         {% endif %}
                     </a>
                     <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"

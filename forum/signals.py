@@ -2,8 +2,8 @@
 from django.db.models import F
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Reply, Post, ReplyUpvote, PostUpvote
-from django.conf import settings
+from .models import Reply, Post, ReplyUpvote, PostUpvote, Notification
+from django.urls import reverse
 
 
 @receiver(post_save, sender=Reply)
@@ -36,6 +36,17 @@ def increment_reply_upvotes(sender, instance, created, **kwargs):
         Reply.objects.filter(pk=instance.reply_id).update(
             upvotes=F("upvotes") + 1
         )
+        reply = Reply.objects.select_related('author', 'post').get(pk=instance.reply_id)
+        if instance.voter != reply.author:
+            Notification.objects.create(
+                recipient=reply.author,
+                actor=instance.voter,
+                verb='upvoted your reply',
+                target_reply=reply,
+                # Direct the user to the post detail and jump to the reply
+                url=reverse('forum:post_detail', args=[reply.post_id]) + f'#reply-{reply.pk}',
+                read=False,
+            )
         # Award karma to reply author
         Reply.objects.filter(pk=instance.reply_id).select_related('author')
         PostAuthor = Reply.objects.filter(pk=instance.reply_id).values_list('author_id', flat=True).first()
@@ -71,6 +82,16 @@ def increment_post_upvotes(sender, instance, created, **kwargs):
         Post.objects.filter(pk=instance.post_id).update(
             upvotes=F("upvotes") + 1
         )
+        post = Post.objects.select_related('author').get(pk=instance.post_id)
+        if instance.voter != post.author:
+            Notification.objects.create(
+                recipient=post.author,
+                actor=instance.voter,
+                verb='upvoted your post',
+                target_post=post,
+                url=reverse('forum:post_detail', args=[post.pk]),
+                read=False,
+            )
         # Award karma to post author
         PostAuthor = Post.objects.filter(pk=instance.post_id).values_list('author_id', flat=True).first()
         if PostAuthor:

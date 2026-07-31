@@ -24,4 +24,10 @@ urlpatterns = [
         name="moderation_deleted_content_detail",
     ),
     path("moderation/report/<int:report_id>/resolve/", views.resolve_report, name="resolve_report"),
+    path('notifications/', views.notifications,
+         name='notifications'),
+    path('notifications/mark-all-read/', views.notification_mark_all_read,
+         name='notification_mark_all_read'),
+    path('n/<int:pk>/', views.notification_goto,
+         name='notification_goto'),
 ]

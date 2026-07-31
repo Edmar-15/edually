@@ -145,3 +145,56 @@ class FlagReport(models.Model):
     class Meta:
         ordering = ["-created_at"]
         unique_together = ("reporter", "content_type", "post", "reply")
+
+
+class Notification(models.Model):
+    """
+    Simple notification model used throughout the forum.
+    - `recipient`   – the user who receives the notification
+    - `actor`      – the user who triggered it (e.g. the replier,
+                     the up‑voter, …)
+    - `verb`       – short text describing the action
+    - `target_post` / `target_reply` – optional FK to the related object
+    - `url`        – where the notification should send the user
+    - `read`       – Has the recipient marked it as read?
+    """
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='forum_notifications',
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='forum_sent_notifications',
+    )
+    verb = models.CharField(max_length=255)
+
+    # optional “target” objects – either a post **or** a reply
+    target_post = models.ForeignKey(
+        'Post',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+    )
+    target_reply = models.ForeignKey(
+        'Reply',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+    )
+
+    # URL to jump to when the user clicks the notification.
+    # Stored as a plain string so it can be a fragment‑link.
+    url = models.CharField(max_length=500)
+
+    read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Notification({self.recipient}, {self.verb})'
