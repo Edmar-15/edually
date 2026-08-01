@@ -7,15 +7,8 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
 from .explanations import system_prompt_for
 from .models import Message, Conversation
-
-# ----------------------------------------------------------------------
-# Optional lazy import of the Ollama SDK – makes the module importable
-# even if the package is not installed (useful for CI).
-# ----------------------------------------------------------------------
-try:
-    from ollama import Client as OllamaClient
-except Exception:          # pragma: no cover – defensive fallback
-    OllamaClient = None
+import openai
+from django.views.decorators.cache import never_cache
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +22,7 @@ def _last_n_turns(conversation: Conversation, n_turns: int = 8) -> list[dict]:
 
     The DB stores each message separately, so we fetch up to ``2 * n_turns``
     rows, slice the newest ones, then reverse them so the oldest message appears
-    first – exactly what Ollama expects.
+    first – exactly what OpenAI expects.
     """
     # Grab the newest ``2 * n_turns`` rows (user + ai for each turn)
     recent_qs = (
@@ -40,33 +33,39 @@ def _last_n_turns(conversation: Conversation, n_turns: int = 8) -> list[dict]:
     recent = list(recent_qs)
     # Reverse to chronological order (oldest → newest) for the model.
     recent.reverse()
-    # Return in the exact shape the Ollama API expects.
+    # Return in the exact shape the OpenAI API expects.
     return [{"role": r["role"], "content": r["content"]} for r in recent]
 
 # ----------------------------------------------------------------------
-# 1️⃣ Helper that actually contacts Ollama Cloud
+# 1️⃣ Helper that actually contacts OpenAI Cloud
 # ----------------------------------------------------------------------
-def _call_ollama(messages: list[dict]) -> str:
+def _call_openai(messages: list[dict]) -> str:
     """
-    Sends a **pre‑formatted** list of ``messages`` to Ollama Cloud and returns the
-    assistant’s reply. ``messages`` must already contain a leading ``system``
-    entry, followed by the ordered conversation history (user/ai alternating)
-    and finally the *current* user question.
+    Sends a **pre‑formatted** list of ``messages`` to the OpenAI API (gpt‑4o‑mini)
+    and returns the assistant’s reply. ``messages`` must already contain a leading
+    ``system`` entry, followed by any past conversation turns and finally the
+    current user question.
     """
-    if OllamaClient is None:
-        raise RuntimeError("ollama Python client not installed")
+    # The new OpenAI SDK (v1.x) encourages using an explicit client instance.
+    # It reads the API key from the argument we pass, so we don’t rely on a
+    # global ``openai.api_key`` which can be polluted in tests.
+    client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
 
-    client = OllamaClient(
-        host=settings.OLLAMA_HOST,
-        headers={"Authorization": f"Bearer {settings.OLLAMA_API_KEY}"},
-    )
+    try:
+        # ``chat.completions.create`` returns a structured object.
+        resp = client.chat.completions.create(
+            model=settings.OPENAI_MODEL,
+            messages=messages,
+            # You can tune these if you wish; 0.0 = deterministic,
+            # 0.7 = a bit more creative.
+            temperature=0.7,
+        )
+    except Exception as exc:  # pragma: no cover – exercised via test mock
+        # Let the caller decide what to do; we just re‑raise a generic error.
+        raise RuntimeError("OpenAI request failed") from exc
 
-    resp = client.chat(
-        model=settings.OLLAMA_MODEL,
-        messages=messages,
-        stream=False,
-    )
-    return resp["message"]["content"]
+    # ``resp.choices`` is a list with a single element (non‑streaming mode).
+    return resp.choices[0].message.content
 
 
 def _conversation_summaries(user) -> list[dict]:
@@ -96,6 +95,7 @@ def _conversation_summaries(user) -> list[dict]:
 # 2️⃣ Page view – renders the chat UI
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
+@never_cache 
 def helper(request):
     """
     Render the main page.
@@ -130,6 +130,7 @@ def helper(request):
 # 3️⃣ JSON: list of all user conversations (mini‑map)
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
+@never_cache 
 def list_conversations(request):
     """Return a tiny JSON payload for the right‑hand mini‑map."""
     summaries = _conversation_summaries(request.user)
@@ -149,6 +150,7 @@ def list_conversations(request):
 # 4️⃣ JSON: fetch a single conversation (messages)
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
+@never_cache 
 def get_conversation(request, pk):
     """
     Return all messages belonging to ``pk``.  Used when the user clicks a
@@ -172,7 +174,7 @@ def get_conversation(request, pk):
 # ----------------------------------------------------------------------
 @login_required(login_url="account:login")
 def helper_api(request):
-    """Accept a POST with a question, call Ollama, store → return answer."""
+    """Accept a POST with a question, call OpenAI, store → return answer."""
     if request.method != "POST":
         return HttpResponseBadRequest("POST only")
 
@@ -216,19 +218,16 @@ def helper_api(request):
     else:
         history = []
 
-    # Build the final Ollama message list:
+    # Build the final OpenAI message list:
     #   system → (optional) history → current user question
-    ollama_messages = [{"role": "system", "content": system_prompt}]
-    ollama_messages.extend(history)
-    ollama_messages.append({"role": "user", "content": question})
+    openai_messages = [{"role": "system", "content": system_prompt}]
+    openai_messages.extend(history)
+    openai_messages.append({"role": "user", "content": question})
 
-    # ------------------------------------------------------------------
-    # 4️⃣ Call Ollama (fallback on error)
-    # ------------------------------------------------------------------
     try:
-        ai_reply = _call_ollama(ollama_messages)
-    except Exception as exc:               # pragma: no cover – exercised via test mock
-        log.error("Ollama request failed – falling back to canned response: %s", exc)
+        ai_reply = _call_openai(openai_messages)   # ``openai_messages`` is just
+    except Exception as exc:               # a list of dicts, the name is historical.
+        log.error("OpenAI request failed – falling back to canned response: %s", exc)
         # Keep the fallback wording *consistent* with the chosen level.
         ai_reply = (
             f"[{level.title()} explanation] (fallback) Here is a short answer to: "

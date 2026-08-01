@@ -118,7 +118,10 @@ self.addEventListener("fetch", (ev) => {
   // -----------------------------------------------------------------
   // 5.2  API requests – NEVER cache, always go to the network.
   // -----------------------------------------------------------------
-  if (url.pathname.startsWith("/slm/api/")) {
+  if (
+    url.pathname.startsWith("/slm/api/") || 
+    url.pathname.startsWith("/aihelper/")
+  ) {
     ev.respondWith(
       fetch(req).catch(() => {
         // In the very unlikely case the device is offline *and* the

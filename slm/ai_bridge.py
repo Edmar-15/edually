@@ -1,7 +1,7 @@
 # slm/ai_bridge.py
 import logging
 from aihelper.explanations import system_prompt_for
-from aihelper.views import _call_ollama   # reuse the private function that actually calls Ollama
+from aihelper.views import _call_openai   # reuse the private function that actually calls Ollama
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def ask_ai_one_level(question: str, level: str) -> str:
             {"role": "system", "content": system_prompt},
             {"role": "user",   "content": question},
         ]
-        return _call_ollama(messages)
+        return _call_openai(messages)
     except Exception as exc:                     # pragma: no cover
-        log.error("Ollama failed for level %s: %s", level, exc)
+        log.error("OpenAI failed for level %s: %s", level, exc)
         return f"[{level.title()} fallback] Here is a brief answer to “{question}”."

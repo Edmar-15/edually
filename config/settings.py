@@ -153,6 +153,9 @@ OLLAMA_API_KEY = ""
 OLLAMA_HOST = ""
 OLLAMA_MODEL = ""
 
+OPENAI_API_KEY = "OPENAI_API_KEY"          
+OPENAI_MODEL   = "gpt-4o-mini"
+
 PWA_SW_VERSION = "20240728"
 
 # --------------------------------------------------------------
