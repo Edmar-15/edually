@@ -27,8 +27,11 @@ const CORE_STATIC_ASSETS = [
   "/static/css/slm/slm.css",
   "/static/css/slm/module_detail.css",
   "/static/css/slm/highlight_ai.css",
-  "/static/js/feed.js",
-  "/static/js/helper.js",
+  "/static/js/forum/category-dots.js",
+  "/static/js/forum/forum_ajax.js",
+  "/static/js/forum/forum-reply-focus.js",
+  "/static/js/forum/forum-upvote.js",
+  "/static/js/ai-helper.js",
   "/static/js/modal.js",
   "/static/js/slm/tab_switching.js",
   "/static/js/slm/subject_ajax.js",
@@ -49,16 +52,24 @@ const OFFLINE_PAGE = "/offline/";
 /* ------------------------------------------------------------------
  *  3️⃣  INSTALL – pre‑cache the static assets only.
  * ------------------------------------------------------------------ */
-self.addEventListener("install", (ev) => {
+self.addEventListener('install', ev => {
   ev.waitUntil(
     (async () => {
       const cache = await caches.open(STATIC_CACHE);
-      await cache.addAll(CORE_STATIC_ASSETS);
-      // The shell (HTML) will be cached on‑the‑fly when the user first
-      // navigates, so we don’t pre‑populate it here.
+
+      // Try to cache each asset one‑by‑one and log the problem.
+      for (const url of CORE_STATIC_ASSETS) {
+        try {
+          await cache.add(url);
+        } catch (err) {
+          console.error('SW install – failed to cache:', url, err);
+          throw err;
+        }
+      }
+
+      // If we got this far, every asset was cached → activate immediately.
+      self.skipWaiting();
     })()
-      // Activate immediately – no extra waiting page.
-      .then(() => self.skipWaiting()),
   );
 });
 
