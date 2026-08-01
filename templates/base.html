@@ -16,6 +16,45 @@
     <link rel="apple-touch-icon" href="{% static 'icons/icon-192x192.png' %}">
 
     <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <script>
+        (function () {
+            const html = document.documentElement;
+            const key = 'eduallyDarkMode';
+            const cookieName = 'eduallyTheme';
+
+            function getCookie(name) {
+                const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+                return match ? match.pop() : '';
+            }
+
+            let theme = 'light';
+            try {
+                const saved = localStorage.getItem(key);
+                if (saved === 'dark' || saved === 'light') {
+                    theme = saved;
+                }
+            } catch (error) {
+                // ignore storage access errors
+            }
+
+            if (theme === 'light') {
+                const cookieTheme = getCookie(cookieName);
+                if (cookieTheme === 'dark' || cookieTheme === 'light') {
+                    theme = cookieTheme;
+                }
+            }
+
+            if (!theme || (theme !== 'dark' && theme !== 'light')) {
+                theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+                    ? 'dark'
+                    : 'light';
+            }
+
+            html.classList.toggle('dark', theme === 'dark');
+            html.dataset.theme = theme;
+            html.style.colorScheme = theme;
+        })();
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
@@ -39,6 +78,7 @@
         }
     </script>
 
+    <script src="{% static 'js/theme.js' %}" defer></script>
     <script src="{% static 'js/toast_notifications.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>

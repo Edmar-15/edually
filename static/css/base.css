@@ -117,6 +117,10 @@
   --ring: rgba(14, 154, 167, 0.18);
 }
 
+html {
+  transition: background-color var(--transition), color var(--transition) !important;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --pgn-bg:        var(--pgn-bg-dark);
@@ -128,13 +132,279 @@
 }
 
 html.dark {
+  --bg: #0b1220;
+  --surface: #111827;
+  --text: #e5eefb;
+  --muted: #97a4ba;
+  --border: rgba(148, 163, 184, 0.18);
+  --shadow: 0 20px 60px rgba(2, 6, 23, 0.45);
+  --shadow-lg: 0 30px 70px rgba(14, 154, 167, 0.18);
+  --background: #0b1220;
+  --surface-soft: #121b2c;
+  --surface-elevated: rgba(17, 24, 39, 0.96);
+  --surface-muted: #111827;
   --pgn-bg:        var(--pgn-bg-dark);
   --pgn-fg:        var(--pgn-fg-dark);
   --pgn-muted:     var(--pgn-muted-dark);
   --pgn-border:    var(--pgn-border-dark);
   --pgn-primary:   var(--pgn-primary-dark);
-  background-color: var(--pgn-bg-dark);
-  color: var(--pgn-fg-dark);
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+html.dark body {
+  background:
+    radial-gradient(circle at top left, rgba(14, 154, 167, 0.16), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.12), transparent 28%),
+    linear-gradient(135deg, #07101d 0%, #0b1220 48%, #0f172a 100%);
+  color: var(--text);
+}
+
+html.dark body::before {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(14, 154, 167, 0.10), transparent 22%),
+    radial-gradient(circle at 90% 15%, rgba(99, 102, 241, 0.08), transparent 20%),
+    radial-gradient(circle at 50% 100%, rgba(255, 107, 107, 0.08), transparent 24%);
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(148, 163, 184, 0.22);
+  color: var(--text);
+  transition: all var(--transition);
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  background: rgba(15, 23, 42, 0.98);
+  border-color: rgba(14, 154, 167, 0.24);
+  box-shadow: 0 0 0 3px rgba(14, 154, 167, 0.1);
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder,
+html.dark select:invalid {
+  color: #94a3b8;
+}
+
+html.dark .card,
+html.dark .auth-card,
+html.dark .stat-card,
+html.dark .module-content-card,
+html.dark .post-item,
+html.dark .profile-card,
+html.dark .overview-item,
+html.dark .forum-empty-state,
+html.dark .report-card-body,
+html.dark .top-user-item,
+html.dark .content-card,
+html.dark .activity-item {
+  background: linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,15,28,0.98));
+  border-color: rgba(148, 163, 184, 0.14);
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.3);
+  transition: all var(--transition);
+}
+
+html.dark .card:hover,
+html.dark .auth-card:hover,
+html.dark .post-item:hover,
+html.dark .profile-card:hover,
+html.dark .overview-item:hover,
+html.dark .report-card-body:hover,
+html.dark .top-user-item:hover,
+html.dark .content-card:hover,
+html.dark .activity-item:hover {
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 20px 50px rgba(14, 154, 167, 0.12);
+}
+
+html.dark .forum-sidebar,
+html.dark .sidebar,
+html.dark .dashboard-shell,
+html.dark .dashboard-container,
+html.dark .sidebar .sidebar-header,
+html.dark .sidebar .sidebar-footer {
+  background: rgba(10, 15, 28, 0.96);
+}
+
+html.dark .sidebar {
+  background: linear-gradient(180deg, rgba(11, 18, 32, 0.98), rgba(8, 13, 24, 0.98));
+}
+
+html.dark .sidebar-trigger,
+html.dark .mobile-sidebar-trigger,
+html.dark .theme-toggle {
+  background: rgba(17, 24, 39, 0.96);
+  border-color: rgba(148, 163, 184, 0.18);
+  color: var(--text);
+}
+
+html.dark .mobile-sidebar-trigger:hover,
+html.dark .mobile-sidebar-trigger:focus-visible,
+html.dark .sidebar-trigger:hover,
+html.dark .sidebar-trigger:focus-visible,
+html.dark .theme-toggle:hover,
+html.dark .theme-toggle:focus-visible {
+  background: rgba(14, 154, 167, 0.16);
+  border-color: rgba(14, 154, 167, 0.24);
+}
+
+html.dark .main-content {
+  background:
+    radial-gradient(circle at top left, rgba(14, 154, 167, 0.12), transparent 30%),
+    linear-gradient(180deg, #09111d 0%, #0b1324 45%, #0f172a 100%);
+}
+
+html.dark .content-header {
+  background: rgba(10, 15, 28, 0.92);
+  border-bottom-color: rgba(148, 163, 184, 0.14);
+  box-shadow: 0 2px 6px rgba(2, 6, 23, 0.28);
+}
+
+html.dark .header-left h1,
+html.dark .breadcrumb,
+html.dark .breadcrumb a,
+html.dark .user-info,
+html.dark .details-header h2,
+html.dark .details-header p,
+html.dark .detail-row span:first-child,
+html.dark .detail-value,
+html.dark .profile-section-title,
+html.dark .section-title,
+html.dark .report-card-title,
+html.dark .report-card-subject,
+html.dark .report-card-author,
+html.dark .forum-title,
+html.dark .post-title,
+html.dark .post-meta,
+html.dark .post-excerpt,
+html.dark .post-author,
+html.dark .forum-header h1,
+html.dark .thread-title,
+html.dark .reply-author,
+html.dark .reply-content,
+html.dark .reply-time,
+html.dark .forum-search label,
+html.dark .sort-label,
+html.dark .mobile-action-row,
+html.dark .widget-title,
+html.dark .user-card h3,
+html.dark .user-card p,
+html.dark .nav-label,
+html.dark .sidebar-logo {
+  color: var(--text);
+}
+
+html.dark .dashboard-content .card,
+html.dark .report-card,
+html.dark .report-card-body,
+html.dark .forum-search,
+html.dark .forum-header,
+html.dark .post-item,
+html.dark .activity-item,
+html.dark .stat-card,
+html.dark .overview-item,
+html.dark .profile-card,
+html.dark .journey-card,
+html.dark .welcome-card,
+html.dark .onboarding-card,
+html.dark .module-content-card,
+html.dark .archive-card,
+html.dark .empty-state-card,
+html.dark .inbox-card,
+html.dark .auth-card,
+html.dark .action-menu-panel,
+html.dark .filter-row,
+html.dark .search-box,
+html.dark .sort-group,
+html.dark .reply-form,
+html.dark .post-form,
+html.dark .create-post-container {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 28, 0.98));
+  border-color: rgba(148, 163, 184, 0.14);
+  color: var(--text);
+}
+
+html.dark .dashboard-content .card,
+html.dark .forum-search,
+html.dark .forum-header,
+html.dark .post-item,
+html.dark .stat-card,
+html.dark .overview-item,
+html.dark .profile-card,
+html.dark .journey-card,
+html.dark .welcome-card,
+html.dark .onboarding-card,
+html.dark .module-content-card,
+html.dark .archive-card,
+html.dark .empty-state-card,
+html.dark .inbox-card,
+html.dark .auth-card,
+html.dark .action-menu-panel,
+html.dark .search-box,
+html.dark .filter-row,
+html.dark .reply-form,
+html.dark .post-form,
+html.dark .create-post-container {
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.34);
+}
+
+html.dark .button,
+html.dark button,
+html.dark .reply-btn,
+html.dark .social-button,
+html.dark .outline-button,
+html.dark .secondary-button,
+html.dark .small-button,
+html.dark .header-actions .button,
+html.dark .action-menu-toggle,
+html.dark .upvote-btn,
+html.dark .reply-upvote-btn {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(11, 18, 30, 0.98));
+  border-color: rgba(148, 163, 184, 0.18);
+  color: var(--text);
+  transition: all var(--transition);
+}
+
+html.dark .button:hover,
+html.dark button:hover,
+html.dark .reply-btn:hover,
+html.dark .outline-button:hover,
+html.dark .secondary-button:hover,
+html.dark .small-button:hover,
+html.dark .header-actions .button:hover,
+html.dark .action-menu-toggle:hover,
+html.dark .upvote-btn:hover,
+html.dark .reply-upvote-btn:hover {
+  background: linear-gradient(180deg, rgba(20, 29, 48, 0.98), rgba(14, 22, 40, 0.98));
+  border-color: rgba(14, 154, 167, 0.22);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(14, 154, 167, 0.12);
+}
+
+html.dark .button:focus-visible,
+html.dark button:focus-visible,
+html.dark .reply-btn:focus-visible,
+html.dark .outline-button:focus-visible,
+html.dark .secondary-button:focus-visible,
+html.dark .small-button:focus-visible,
+html.dark .header-actions .button:focus-visible,
+html.dark .action-menu-toggle:focus-visible,
+html.dark .upvote-btn:focus-visible,
+html.dark .reply-upvote-btn:focus-visible {
+  outline: 2px solid rgba(14, 154, 167, 0.24);
+  outline-offset: 2px;
+}
+
+html.dark .forum-sidebar,
+html.dark .sidebar,
+html.dark .main-content,
+html.dark .dashboard-content .container,
+html.dark .dashboard-content {
+  background-color: transparent;
 }
 
 .switch { position: relative; display: inline-block; width: 46px; height: 26px; }

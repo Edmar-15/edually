@@ -164,60 +164,6 @@
 {% include "components/global_modal.html" %}
 
 <script src="{% static 'js/modal.js' %}" defer></script>
-<script>
-  (function () {
-    const key   = "eduallyDarkMode";
-    const toggle = document.getElementById("dark-mode-toggle");
-    const htmlEl = document.documentElement;
-
-    function applyDark(on) {
-      if (on) htmlEl.classList.add("dark");
-      else    htmlEl.classList.remove("dark");
-    }
-
-    function getCookie(name) {
-      const match = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
-      return match ? match.pop() : "";
-    }
-
-    async function persistTheme(theme) {
-      try { localStorage.setItem(key, theme); } catch (e) {}
-      const csrf = getCookie("csrftoken");
-      try {
-        await fetch('{% url "account:api_set_theme" %}', {
-          method: "POST",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrf,
-          },
-          body: JSON.stringify({ theme })
-        });
-      } catch (e) {}
-    }
-
-    const stored = localStorage.getItem(key);
-    if (stored === "dark") {
-      applyDark(true);
-      if (toggle) toggle.checked = true;
-    } else if (stored === "light") {
-      applyDark(false);
-      if (toggle) toggle.checked = false;
-    } else {
-      const prefersDark = window.matchMedia &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches;
-      applyDark(prefersDark);
-      if (toggle) toggle.checked = prefersDark;
-    }
-
-    if (toggle) {
-      toggle.addEventListener("change", e => {
-        const on = !!e.target.checked;
-        applyDark(on);
-        persistTheme(on ? "dark" : "light");
-      });
-    }
-  })();
-</script>
+<script src="{% static 'js/theme.js' %}" defer></script>
 </body>
 </html>

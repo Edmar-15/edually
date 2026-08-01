@@ -445,9 +445,15 @@
 .tab-panel {
   border: 1px solid rgba(148, 163, 184, 0.18);
   padding: 1rem;
-  background: linear-gradient(180deg, #ffffff 0%, #fcfeff 100%);
+  background: var(--surface, #ffffff);
   border-radius: 20px;
   box-shadow: 0 14px 30px rgba(31, 42, 71, 0.05);
+}
+
+html.dark .tab-panel,
+html[data-theme="dark"] .tab-panel {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.96) 0%, #0b1220 100%) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
 }
 
 .tab-panel[hidden] {
@@ -594,7 +600,7 @@
   align-items: flex-start;
   gap: 10px;
   padding: 16px 18px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fcfd 100%);
+  background: linear-gradient(121deg, rgba(17, 24, 39, 0.96) 0%, #0b1220 100%);
   border: 1px solid rgba(14, 154, 167, 0.16);
   border-radius: 18px;
   text-decoration: none;
@@ -752,11 +758,16 @@
 }
 
 .pm-form-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  background: var(--surface, #ffffff);
   border: 1px solid rgba(14, 154, 167, 0.16);
   border-radius: 20px;
   box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
   padding: 1.15rem;
+}
+
+html.dark .pm-form-card,
+html[data-theme="dark"] .pm-form-card {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.96) 0%, #0b1220 100%) !important;
 }
 
 .pm-form__header {
@@ -789,10 +800,20 @@
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 12px;
   padding: 0.8rem 0.95rem;
-  background: #fff;
-  color: var(--text);
+  background: var(--surface-soft, #f8fbff);
+  color: var(--text-slm, var(--text));
   font-size: 0.95rem;
   box-sizing: border-box;
+}
+
+html.dark .pm-form input[type="text"],
+html.dark .pm-form input[type="file"],
+html.dark .pm-form select,
+html[data-theme="dark"] .pm-form input[type="text"],
+html[data-theme="dark"] .pm-form input[type="file"],
+html[data-theme="dark"] .pm-form select {
+  background: #0b1220 !important;
+  color: var(--text) !important;
 }
 
 .pm-form input:focus,
@@ -1177,7 +1198,7 @@
 
 /* -------------------- 9️⃣ SELECTED COMPONENTS FROM tabs.css (unchanged) -------------------- */
 .tab-header {
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(88, 113, 167, 0.96)rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid rgba(14, 154, 167, 0.12);
   display: flex;
   align-items: center;

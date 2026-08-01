@@ -44,25 +44,34 @@ body.sidebar-mobile-open .sidebar-backdrop {
     display: none;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 999px;
-    border: 1px solid rgba(14, 154, 167, 0.18);
-    background: rgba(255, 255, 255, 0.96);
-    color: var(--primary);
-    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+    width: 34px;
+    height: 34px;
+    border-radius: 9999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
     cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+html.dark .mobile-sidebar-trigger,
+html[data-theme="dark"] .mobile-sidebar-trigger {
+    background: rgba(17, 24, 39, 0.96) !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+    color: var(--text) !important;
 }
 
 .mobile-sidebar-trigger:hover,
 .mobile-sidebar-trigger:focus-visible {
     background: rgba(14, 154, 167, 0.08);
+    border-color: rgba(14, 154, 167, 0.2);
     outline: none;
 }
 
 .mobile-sidebar-trigger svg.sidebar-trigger-icon {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     display: block;
 }
 
@@ -82,6 +91,14 @@ body.sidebar-mobile-open .sidebar-backdrop {
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
     transition: transform 0.25s ease, width 0.25s ease, padding 0.25s ease, opacity 0.25s ease;
     will-change: width, padding, transform, opacity;
+}
+
+html.dark .sidebar,
+html[data-theme="dark"] .sidebar {
+    background: linear-gradient(180deg, rgba(11, 18, 32, 0.98), rgba(8, 13, 24, 0.98)) !important;
+    border-right-color: rgba(148, 163, 184, 0.16) !important;
+    box-shadow: 0 18px 44px rgba(2, 6, 23, 0.34) !important;
+    color: var(--text) !important;
 }
 
 .sidebar-header {
@@ -123,6 +140,38 @@ body.sidebar-mobile-open .sidebar-backdrop {
     transition: all 0.2s ease;
     font-weight: 500;
     font-size: 0.95rem;
+}
+
+html.dark .nav-item,
+html[data-theme="dark"] .nav-item,
+html.dark .sidebar .nav-item,
+html[data-theme="dark"] .sidebar .nav-item {
+    background: rgba(20, 29, 48, 0.88) !important;
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    color: var(--text) !important;
+    transition: all 200ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+html.dark .nav-item:hover,
+html[data-theme="dark"] .nav-item:hover {
+    background: rgba(30, 41, 59, 0.92) !important;
+    border-color: rgba(14, 154, 167, 0.24) !important;
+    color: var(--primary) !important;
+    transform: translateX(4px) !important;
+    box-shadow: inset 0 0 0 1px rgba(14, 154, 167, 0.16) !important;
+}
+
+html.dark .nav-item:focus-visible,
+html[data-theme="dark"] .nav-item:focus-visible {
+    outline: 2px solid rgba(14, 154, 167, 0.24) !important;
+    outline-offset: 2px !important;
+}
+
+html.dark .nav-item.active,
+html[data-theme="dark"] .nav-item.active {
+    background: rgba(14, 154, 167, 0.16) !important;
+    color: var(--primary) !important;
+    border-color: rgba(14, 154, 167, 0.24) !important;
 }
 
 .nav-item:hover {
@@ -503,6 +552,21 @@ body.sidebar-collapsed .sidebar {
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16);
 }
 
+html.dark .nav-item.logout,
+html[data-theme="dark"] .nav-item.logout {
+    background: rgba(20, 29, 48, 0.88) !important;
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    border-radius: 12px !important;
+    color: #ef5350 !important;
+}
+
+html.dark .nav-item.logout:hover,
+html[data-theme="dark"] .nav-item.logout:hover {
+    background: rgba(30, 41, 59, 0.92) !important;
+    border-color: rgba(220, 38, 38, 0.24) !important;
+    color: #ef5350 !important;
+}
+
 .link-button {
     color: #dc2626;
 }
@@ -625,8 +689,8 @@ body.sidebar-animating .main-content {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     border-radius: 9999px;
     border: 1px solid var(--border);
     background: var(--surface);
@@ -635,6 +699,13 @@ body.sidebar-animating .main-content {
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
     padding: 0;
     min-width: 0;
+}
+
+html.dark .sidebar-trigger,
+html[data-theme="dark"] .sidebar-trigger {
+    background: rgba(17, 24, 39, 0.96) !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+    color: var(--text) !important;
 }
 
 .sidebar-trigger:hover,
@@ -841,7 +912,7 @@ body.sidebar-collapsed .main-content {
     gap: 12px;
     padding: 12px 14px;
     border-radius: 16px;
-    background: rgba(255,255,255,0.9);
+    background: rgb(255 255 255 / 0%);
     border: 1px solid rgba(14, 154, 167, 0.12);
     text-decoration: none;
     color: var(--text);
@@ -876,6 +947,33 @@ body.sidebar-collapsed .main-content {
     color: var(--muted);
     font-size: 0.9rem;
     line-height: 1.5;
+}
+
+html.dark .section-chip,
+html[data-theme="dark"] .section-chip {
+    background: rgba(20, 29, 48, 0.88) !important;
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    color: var(--primary) !important;
+}
+
+html.dark .journey-step,
+html[data-theme="dark"] .journey-step {
+    background: rgba(20, 29, 48, 0.88) !important;
+    border-color: rgba(148, 163, 184, 0.16) !important;
+    color: var(--text) !important;
+}
+
+html.dark .journey-step:hover,
+html[data-theme="dark"] .journey-step:hover {
+    background: rgba(30, 41, 59, 0.92) !important;
+    border-color: rgba(14, 154, 167, 0.24) !important;
+    box-shadow: 0 8px 16px rgba(14, 154, 167, 0.12) !important;
+}
+
+html.dark .step-badge,
+html[data-theme="dark"] .step-badge {
+    background: rgba(14, 154, 167, 0.16) !important;
+    color: var(--primary) !important;
 }
 
 .welcome-card {
@@ -1007,7 +1105,7 @@ body.sidebar-collapsed .main-content {
     gap: 12px;
     padding: 12px 14px;
     border-radius: 16px;
-    background: rgba(255,255,255,0.9);
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 28, 0.98));
     border: 1px solid rgba(14, 154, 167, 0.12);
 }
 
@@ -1186,6 +1284,20 @@ body.sidebar-collapsed .main-content {
     overflow: visible;
 }
 
+html.dark .profile-overview-card,
+html.dark .profile-details-card,
+html.dark .profile-page .profile-overview-card,
+html.dark .profile-page .profile-details-card,
+html[data-theme="dark"] .profile-overview-card,
+html[data-theme="dark"] .profile-details-card,
+html[data-theme="dark"] .profile-page .profile-overview-card,
+html[data-theme="dark"] .profile-page .profile-details-card {
+    background: linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,15,28,0.98)) !important;
+    border-color: rgba(148, 163, 184, 0.14) !important;
+    box-shadow: 0 18px 48px rgba(2, 6, 23, 0.34) !important;
+    color: var(--text) !important;
+}
+
 .profile-top {
     display: flex;
     align-items: center;
@@ -1262,6 +1374,47 @@ body.sidebar-collapsed .main-content {
     border-radius: 16px;
     background: rgba(14, 154, 167, 0.08);
     border: 1px solid rgba(14, 154, 167, 0.12);
+}
+
+html.dark .profile-highlight-card,
+html.dark .profile-summary,
+html.dark .profile-page .profile-highlight-card,
+html.dark .profile-page .profile-summary,
+html.dark .profile-details-card .input-group input,
+html.dark .profile-details-card .input-group select,
+html.dark .profile-details-card .input-group textarea,
+html.dark .profile-page .profile-details-card .input-group input,
+html.dark .profile-page .profile-details-card .input-group select,
+html.dark .profile-page .profile-details-card .input-group textarea,
+html.dark .profile-details-card .messages li,
+html.dark .profile-page .profile-details-card .messages li,
+html.dark .profile-page .profile-details-card .profile-form-note,
+html.dark .profile-page .profile-details-card .details-header {
+    background: rgba(15, 23, 42, 0.92) !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+    color: var(--text) !important;
+}
+
+html.dark .profile-highlight-card strong,
+html.dark .profile-summary p strong,
+html.dark .profile-summary p,
+html.dark .profile-overview-card h2,
+html.dark .profile-details-card .details-header h2,
+html.dark .profile-details-card .details-header p,
+html.dark .profile-details-card .messages li,
+html.dark .profile-details-card .profile-form-note {
+    color: var(--text);
+}
+
+html.dark .profile-summary {
+    border-top-color: rgba(148, 163, 184, 0.16);
+}
+
+html.dark .profile-details-card .input-group input:focus,
+html.dark .profile-details-card .input-group select:focus,
+html.dark .profile-details-card .input-group textarea:focus {
+    background: rgba(17, 24, 39, 0.98);
+    box-shadow: 0 0 0 4px rgba(14, 154, 167, 0.12);
 }
 
 .highlight-label {
@@ -1568,6 +1721,10 @@ body.sidebar-collapsed .main-content {
         flex-wrap: wrap;
     }
 
+    .sidebar-header .sidebar-trigger {
+        display: none;
+    }
+
     .sidebar {
         width: min(86vw, 320px);
         padding: 14px 10px;
@@ -1596,7 +1753,7 @@ body.sidebar-collapsed .main-content {
     }
 
     .mobile-sidebar-trigger {
-        display: inline-flex;
+        display: none !important;
     }
 
     body.sidebar-mobile-open {
@@ -1790,8 +1947,8 @@ body.sidebar-collapsed .main-content {
     }
 
     .mobile-sidebar-trigger {
-        top: 12px;
-        left: 12px;
+        top: 20px;
+        left: 20 Hold down yarn performpx;
         width: 40px;
         height: 40px;
     }
@@ -1955,7 +2112,7 @@ body.sidebar-collapsed .main-content {
 .modal__content,
 .modal__dialog {                /* .modal__dialog is the original name,
                                    we style both so you can keep either. */
-    background: #fff;
+    background: #0b1220;
     border-radius: .5rem;
     max-width: 420px;           /* same as the original .modal__dialog */
     width: 100%;
@@ -1964,6 +2121,23 @@ body.sidebar-collapsed .main-content {
     animation: fadeIn .15s ease-out forwards;
     position: relative;
     z-index: 1;                  /* above the backdrop */
+}
+
+html.dark .modal__content,
+html.dark .modal__dialog,
+html[data-theme="dark"] .modal__content,
+html[data-theme="dark"] .modal__dialog {
+    background: #0b1220 !important;
+    border-radius: .5rem;
+    max-width: 420px;
+    width: 100%;
+    padding: 1rem;
+    box-shadow: 0 4px 18px rgba(14, 154, 167, 0.2) !important;
+    animation: fadeIn .15s ease-out forwards;
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(148, 163, 184, 0.14) !important;
+    color: var(--text) !important;
 }
 
 /* -----------------------------------------------------------------
@@ -2025,6 +2199,40 @@ a.button-primary.button--danger {
     background: #c62828;        /* a slightly darker red */
 }
 
+html.dark .modal__actions .button-primary,
+html.dark .modal__footer .button-primary,
+html.dark button.button-primary,
+html.dark a.button-primary,
+html[data-theme="dark"] .modal__actions .button-primary,
+html[data-theme="dark"] .modal__footer .button-primary,
+html[data-theme="dark"] button.button-primary,
+html[data-theme="dark"] a.button-primary {
+    background: #ef5350 !important;
+    color: #fff !important;
+}
+
+html.dark .modal__actions .button-plain,
+html.dark .modal__footer .button-plain,
+html.dark button.button-plain,
+html.dark a.button-plain,
+html[data-theme="dark"] .modal__actions .button-plain,
+html[data-theme="dark"] .modal__footer .button-plain,
+html[data-theme="dark"] button.button-plain,
+html[data-theme="dark"] a.button-plain {
+    background: rgba(30, 41, 59, 0.92) !important;
+    color: var(--text) !important;
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+}
+
+html.dark .button-primary.button--danger,
+html.dark button.button-primary.button--danger,
+html.dark a.button-primary.button--danger,
+html[data-theme="dark"] .button-primary.button--danger,
+html[data-theme="dark"] button.button-primary.button--danger,
+html[data-theme="dark"] a.button-primary.button--danger {
+    background: #f44336 !important;
+}
+
 /* --------------------------------------------------------------
    Form fields inside the modal – keep them readable
    -------------------------------------------------------------- */
@@ -2033,6 +2241,13 @@ a.button-primary.button--danger {
     display: block;
     margin-bottom: .4rem;
     font-weight: 600;
+}
+
+html.dark .modal__content label,
+html.dark .modal__dialog label,
+html[data-theme="dark"] .modal__content label,
+html[data-theme="dark"] .modal__dialog label {
+    color: var(--text) !important;
 }
 
 .modal__content input[type="text"],
@@ -2052,6 +2267,27 @@ a.button-primary.button--danger {
     background: #fff;
 }
 
+html.dark .modal__content input[type="text"],
+html.dark .modal__content input[type="number"],
+html.dark .modal__content input[type="file"],
+html.dark .modal__content select,
+html.dark .modal__dialog input[type="text"],
+html.dark .modal__dialog input[type="number"],
+html.dark .modal__dialog input[type="file"],
+html.dark .modal__dialog select,
+html[data-theme="dark"] .modal__content input[type="text"],
+html[data-theme="dark"] .modal__content input[type="number"],
+html[data-theme="dark"] .modal__content input[type="file"],
+html[data-theme="dark"] .modal__content select,
+html[data-theme="dark"] .modal__dialog input[type="text"],
+html[data-theme="dark"] .modal__dialog input[type="number"],
+html[data-theme="dark"] .modal__dialog input[type="file"],
+html[data-theme="dark"] .modal__dialog select {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+    color: var(--text) !important;
+}
+
 /* Give the fields a focus outline (important for accessibility) */
 .modal__content input:focus,
 .modal__content select:focus,
@@ -2059,6 +2295,20 @@ a.button-primary.button--danger {
 .modal__dialog select:focus {
     outline: 2px solid #0066cc;
     outline-offset: 2px;
+}
+
+html.dark .modal__content input:focus,
+html.dark .modal__content select:focus,
+html.dark .modal__dialog input:focus,
+html.dark .modal__dialog select:focus,
+html[data-theme="dark"] .modal__content input:focus,
+html[data-theme="dark"] .modal__content select:focus,
+html[data-theme="dark"] .modal__dialog input:focus,
+html[data-theme="dark"] .modal__dialog select:focus {
+    outline: 2px solid rgba(14, 154, 167, 0.6) !important;
+    outline-offset: 2px;
+    background: rgba(15, 23, 42, 0.98) !important;
+    border-color: rgba(14, 154, 167, 0.24) !important;
 }
 
 /* -----------------------------------------------------------------

@@ -893,3 +893,126 @@ form button[type="submit"]:hover {
         transform: translateY(0);
     }
 }
+
+/* ============================================= */
+/* DARK MODE STYLES - login.css */
+/* ============================================= */
+
+html.dark body,
+html[data-theme="dark"] body {
+    background: linear-gradient(135deg, rgba(11, 18, 32, 0.98), rgba(8, 13, 24, 0.98)) !important;
+    color: var(--text) !important;
+}
+
+html.dark .page-header,
+html[data-theme="dark"] .page-header {
+    background: rgba(10, 15, 28, 0.92) !important;
+    border-bottom-color: rgba(148, 163, 184, 0.14) !important;
+}
+
+html.dark .logo,
+html[data-theme="dark"] .logo {
+    color: var(--primary) !important;
+}
+
+html.dark .main-nav a,
+html[data-theme="dark"] .main-nav a {
+    color: var(--text) !important;
+}
+
+html.dark .main-nav a:hover,
+html[data-theme="dark"] .main-nav a:hover {
+    color: var(--primary) !important;
+}
+
+html.dark .form-card,
+html.dark .auth-card,
+html.dark .card,
+html[data-theme="dark"] .form-card,
+html[data-theme="dark"] .auth-card,
+html[data-theme="dark"] .card {
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 28, 0.98)) !important;
+    border-color: rgba(148, 163, 184, 0.14) !important;
+    box-shadow: 0 16px 40px rgba(2, 6, 23, 0.3) !important;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select,
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+    color: var(--text) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder,
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+    color: rgba(148, 163, 184, 0.6) !important;
+}
+
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus,
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] textarea:focus,
+html[data-theme="dark"] select:focus {
+    background: rgba(15, 23, 42, 0.98) !important;
+    border-color: rgba(14, 154, 167, 0.24) !important;
+    box-shadow: 0 0 0 3px rgba(14, 154, 167, 0.1) !important;
+}
+
+html.dark button,
+html.dark .button,
+html.dark .btn,
+html[data-theme="dark"] button,
+html[data-theme="dark"] .button,
+html[data-theme="dark"] .btn {
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(11, 18, 30, 0.98)) !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+    color: var(--text) !important;
+}
+
+html.dark button:hover,
+html.dark .button:hover,
+html.dark .btn:hover,
+html[data-theme="dark"] button:hover,
+html[data-theme="dark"] .button:hover,
+html[data-theme="dark"] .btn:hover {
+    background: linear-gradient(180deg, rgba(20, 29, 48, 0.98), rgba(14, 22, 40, 0.98)) !important;
+    border-color: rgba(14, 154, 167, 0.24) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(14, 154, 167, 0.12) !important;
+}
+
+html.dark .errorlist,
+html[data-theme="dark"] .errorlist {
+    background: rgba(239, 68, 68, 0.08) !important;
+    border-color: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+}
+
+html.dark .input-error input,
+html.dark .input-error textarea,
+html[data-theme="dark"] .input-error input,
+html[data-theme="dark"] .input-error textarea {
+    border-color: #ef4444 !important;
+    background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+html.dark .input-valid input,
+html.dark .input-valid textarea,
+html[data-theme="dark"] .input-valid input,
+html[data-theme="dark"] .input-valid textarea {
+    border-color: #10b981 !important;
+    background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+html.dark .validation-error,
+html[data-theme="dark"] .validation-error {
+    color: #fca5a5 !important;
+}
+
