@@ -283,3 +283,27 @@ class Announcement(models.Model):
         if self.end_date and now > self.end_date:
             return False
         return True
+    
+
+class PushSubscription(models.Model):
+    """
+    One subscription per endpoint per user.
+    The data is exactly what the browser’s ServiceWorkerSubscription object
+    contains (endpoint, p256dh, auth).
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="push_subscriptions",
+    )
+    endpoint = models.URLField()
+    auth = models.CharField(max_length=255)
+    p256dh = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "endpoint")
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"PushSubscription({self.user.email}, {self.endpoint[:30]}…)"

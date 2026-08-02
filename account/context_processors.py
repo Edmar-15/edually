@@ -1,3 +1,5 @@
+from django.conf import settings
+
 def user_groups(request):
     """
     Adds three booleans (is_student, is_teacher, is_admin) and the full
@@ -11,3 +13,6 @@ def user_groups(request):
         "is_admin": request.user.is_staff or request.user.is_superuser,
         "user_groups": request.user.groups.all(),
     }
+    
+def vapid_key(request):
+    return {"VAPID_PUBLIC_KEY": getattr(settings, "VAPID_PUBLIC_KEY", "")}

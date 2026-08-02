@@ -70,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'account.context_processors.user_groups',
+                'account.context_processors.vapid_key',
                 'forum.context_processors.unread_notifications',
             ],
         },
@@ -157,6 +158,9 @@ OPENAI_API_KEY = "OPENAI_API_KEY"
 OPENAI_MODEL   = "gpt-4o-mini"
 
 PWA_SW_VERSION = "20240728"
+
+VAPID_PUBLIC_KEY  = ""
+VAPID_PRIVATE_KEY = ""
 
 # --------------------------------------------------------------
 # Google OAuth2 configuration
