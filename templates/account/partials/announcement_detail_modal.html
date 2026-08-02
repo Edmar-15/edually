@@ -1,0 +1,37 @@
+{% load static %}
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <header class="modal__header">
+        <h2 class="modal__title">{{ announcement.title }}</h2>
+        <button type="button" class="modal__close" data-close-modal aria-label="Close">&times;</button>
+    </header>
+
+    <section class="modal__body">
+        <p class="muted-text">
+            By {{ announcement.author.get_full_name|default:announcement.author.email }}
+            – {{ announcement.created_at|date:"M d, Y H:i" }}
+        </p>
+
+        <div class="announcement-content">
+            {{ announcement.content|linebreaks }}
+        </div>
+    </section>
+
+    {% if request.user.is_teacher_member %}
+    <footer class="modal__footer">
+        <a href="#"
+           class="button button-primary js-modal-trigger"
+           data-url="{% url 'account:announcement_update_modal' announcement.id %}">Edit</a>
+
+        <a href="#"
+           class="button button--danger js-modal-trigger"
+           data-url="{% url 'account:announcement_delete_modal' announcement.id %}">Delete</a>
+
+        <button type="button" class="button-plain" data-close-modal>Close</button>
+    </footer>
+    {% else %}
+    <footer class="modal__footer">
+        <button type="button" class="button-plain" data-close-modal>Close</button>
+    </footer>
+    {% endif %}
+</div>

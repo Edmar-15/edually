@@ -97,13 +97,8 @@ urlpatterns = [
         name='archive-personal-material-delete'),
     
     path("announcements/", views.announcement_list, name="announcement_list"),
-    path("announcements/<int:pk>/", views.announcement_detail, name="announcement_detail"),
     path("announcements/create/", views.announcement_create, name="announcement_create"),
-    path(
-        "announcements/<int:pk>/edit/",
-        views.announcement_update,
-        name="announcement_update",
-    ),
+
     path(
         "announcements/<int:pk>/delete/",
         views.announcement_delete,
@@ -113,5 +108,21 @@ urlpatterns = [
         "announcements/<int:pk>/delete-modal/",
         views.announcement_delete_modal,
         name="announcement_delete_modal",
+    ),
+    
+    path(
+        "announcements/<int:pk>/detail-modal/",
+        views.announcement_detail_modal,
+        name="announcement_detail_modal",
+    ),
+    path(
+        "announcements/create-modal/",
+        views.announcement_create_modal,
+        name="announcement_create_modal",
+    ),
+    path(
+        "announcements/<int:pk>/edit-modal/",
+        views.announcement_update_modal,
+        name="announcement_update_modal",
     ),
 ]

@@ -1,0 +1,35 @@
+{% load static %}
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <header class="modal__header">
+        <h2 class="modal__title">{% if action == "Create" %}Create Announcement{% else %}Edit Announcement{% endif %}</h2>
+        <button type="button" class="modal__close" data-close-modal aria-label="Close">&times;</button>
+    </header>
+
+    <form method="post"
+          action="{{ form_action_url }}"
+          data-modal-form>
+        {% csrf_token %}
+
+        <section class="modal__body">
+
+            {% for field in form %}
+                <div class="form-group">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="errorlist">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+        </section>
+
+        <footer class="modal__footer">
+            <button type="submit" class="button-primary">
+                {% if action == "Create" %}Create{% else %}Save{% endif %}
+            </button>
+            <button type="button" class="button-plain" data-close-modal>Cancel</button>
+        </footer>
+    </form>
+</div>

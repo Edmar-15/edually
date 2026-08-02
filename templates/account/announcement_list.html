@@ -17,10 +17,10 @@
                 <h1>Announcements</h1>
 
                 {% if request.user.is_teacher_member %}
-                <a href="{% url 'account:announcement_create' %}"
-                   class="button button-primary">
-                    + New announcement
-                </a>
+                <a href="#"
+                   class="button button-primary js-modal-trigger"
+                   data-url="{% url 'account:announcement_create_modal' %}"
+                   title="Create a new announcement">+ New announcement</a>
                 {% endif %}
             </header>
 
@@ -28,8 +28,9 @@
                 <ul class="archive-list">
                     {% for ann in announcements %}
                         <li>
-                            <a href="{% url 'account:announcement_detail' ann.id %}"
-                               class="archive-item-link">
+                            <a href="#"
+                               class="archive-item-link js-modal-trigger"
+                               data-url="{% url 'account:announcement_detail_modal' ann.id %}">
                                 <span class="archive-item-main">
                                     <strong class="archive-item-title">{{ ann.title }}</strong>
                                     <span class="archive-item-meta">
@@ -37,15 +38,19 @@
                                         – {{ ann.created_at|date:"M d, Y" }}
                                     </span>
                                 </span>
+
                                 {% if request.user.is_teacher_member %}
-                                    <span class="detail-value">
-                                        <a href="{% url 'account:announcement_update' ann.id %}"
-                                           class="button button--small">Edit</a>
-                                        <a href="#"
-                                           class="button button--danger button--small js-modal-trigger"
-                                           data-url="{% url 'account:announcement_delete_modal' ann.id %}"
-                                           title="Delete permanently">Delete</a>
-                                    </span>
+                                <span class="detail-value">
+                                    <a href="#"
+                                       class="button button--small js-modal-trigger"
+                                       data-url="{% url 'account:announcement_update_modal' ann.id %}"
+                                       title="Edit this announcement">Edit</a>
+
+                                    <a href="#"
+                                       class="button button--danger button--small js-modal-trigger"
+                                       data-url="{% url 'account:announcement_delete_modal' ann.id %}"
+                                       title="Delete permanently">Delete</a>
+                                </span>
                                 {% endif %}
                             </a>
                         </li>

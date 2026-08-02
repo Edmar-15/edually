@@ -811,15 +811,6 @@ def announcement_list(request):
     )
     
 
-@login_required(login_url='account:login')
-def announcement_detail(request, pk):
-    ann = get_object_or_404(Announcement, pk=pk, is_active=True)
-    # Respect the schedule – if it isn’t “current” hide the content.
-    if not ann.is_current:
-        return HttpResponseForbidden("This announcement is not currently visible.")
-    return render(request, "account/announcement_detail.html", {"announcement": ann})
-
-
 @teacher_required_for_mutation
 def announcement_create(request):
     # GET is allowed for any logged‑in user by the decorator.
@@ -846,30 +837,6 @@ def announcement_create(request):
 
 
 @teacher_required_for_mutation
-def announcement_update(request, pk):
-    ann = get_object_or_404(Announcement, pk=pk)
-
-    # Extra safety – only the author (or any teacher) may edit.
-    if not request.user.is_teacher_member:
-        return HttpResponseForbidden("Only teachers can edit announcements.")
-
-    if request.method == "POST":
-        form = AnnouncementForm(request.POST, instance=ann)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Announcement updated.")
-            return redirect("account:announcement_detail", pk=pk)
-    else:
-        form = AnnouncementForm(instance=ann)
-
-    return render(
-        request,
-        "account/announcement_form.html",
-        {"form": form, "action": "Edit"},
-    )
-
-
-@teacher_required_for_mutation
 def announcement_delete_modal(request, pk):
     ann = get_object_or_404(Announcement, pk=pk)
     html = render_to_string(
@@ -891,3 +858,107 @@ def announcement_delete(request, pk):
     )
 
 
+@login_required
+def announcement_detail_modal(request, pk):
+    """
+    Return a compact announcement detail ready to be dropped into the
+    global modal.  Used by the “single‑page” list view.
+    """
+    ann = get_object_or_404(Announcement, pk=pk, is_active=True)
+    if not ann.is_current:
+        return HttpResponseForbidden("This announcement is not currently visible.")
+    html = render_to_string(
+        "account/partials/announcement_detail_modal.html",
+        {"announcement": ann, "request": request},
+        request=request,
+    )
+    return JsonResponse({"html": html})
+
+
+@teacher_required_for_mutation
+def announcement_create_modal(request):
+    """
+    Serve the *Create* form inside the global modal (GET) and handle
+    submission via AJAX (POST).  Returns JSON for the modal.js handler.
+    """
+    if request.method == "POST":
+        form = AnnouncementForm(request.POST)
+        if form.is_valid():
+            ann = form.save(commit=False)
+            ann.author = request.user
+            ann.save()
+            # Signal success – the modal.js will close the modal and
+            # redirect the page (or you can just refresh the list).
+            return JsonResponse(
+                {"success": True, "redirect": reverse("account:announcement_list")}
+            )
+        # Validation failed – re‑render the form with errors.
+        html = render_to_string(
+            "account/partials/announcement_form_modal.html",
+            {
+                "form": form,
+                "action": "Create",
+                "form_action_url": reverse("account:announcement_create_modal"),
+                "request": request,
+            },
+            request=request,
+        )
+        return JsonResponse({"html": html})
+
+    # GET → just render the empty form.
+    form = AnnouncementForm()
+    html = render_to_string(
+        "account/partials/announcement_form_modal.html",
+        {
+            "form": form,
+            "action": "Create",
+            "form_action_url": reverse("account:announcement_create_modal"),
+            "request": request,
+        },
+        request=request,
+    )
+    return JsonResponse({"html": html})
+
+
+@teacher_required_for_mutation
+def announcement_update_modal(request, pk):
+    """
+    Serve the *Edit* form inside the modal (GET) and process updates
+    via AJAX (POST).  Mirrors ``announcement_create_modal``.
+    """
+    ann = get_object_or_404(Announcement, pk=pk)
+
+    if request.method == "POST":
+        form = AnnouncementForm(request.POST, instance=ann)
+        if form.is_valid():
+            form.save()
+            return JsonResponse(
+                {"success": True, "redirect": reverse("account:announcement_detail", args=[pk])}
+            )
+        html = render_to_string(
+            "account/partials/announcement_form_modal.html",
+            {
+                "form": form,
+                "action": "Edit",
+                "form_action_url": reverse("account:announcement_update_modal", args=[pk]),
+                "request": request,
+                "announcement": ann,
+            },
+            request=request,
+        )
+        return JsonResponse({"html": html})
+
+    # GET → return the populated edit form.
+    form = AnnouncementForm(instance=ann)
+    html = render_to_string(
+        "account/partials/announcement_form_modal.html",
+        {
+            "form": form,
+            "action": "Edit",
+            "form_action_url": reverse("account:announcement_update_modal", args=[pk]),
+            "request": request,
+            "announcement": ann,
+        },
+        request=request,
+    )
+    return JsonResponse({"html": html})
