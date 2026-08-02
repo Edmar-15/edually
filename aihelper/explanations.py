@@ -1,79 +1,84 @@
-# aihelper/explanations.py
-"""
-Utility functions that generate the system‑prompt for each explanation level.
-
-The functions are deliberately tiny – they receive the *raw user question* and
-return the string that should be used as the ``system`` message when talking
-to Ollama.  Keeping them separate makes prompt‑engineering a first‑class
-concern: you can edit the wording, add few‑shot examples, or even load the
-prompt from a DB/file without touching the view logic.
-"""
-
 def get_simplified_prompt(question: str) -> str:
     """
-    Return a short, jargon‑free explanation prompt.
+    Return a *system* prompt for a **simplified** answer.
 
-    The assistant should talk to a beginner and avoid technical terms unless
-    the user explicitly asks for them.
+    The model receives the raw ``question`` in the system message so it can
+    tailor the tone without having to guess the topic from the user message
+    alone.  The assistant must answer in **Markdown** and keep the language
+    accessible to a high‑school student.
     """
+    # NOTE: ``question`` is interpolated only for context – we never expose it
+    # to the model as a “user” turn.
     return (
-        "You are an educational assistant. Provide a **simplified** "
-        "explanation that a high‑school student can understand. "
-        "Avoid jargon, keep sentences short, and use everyday analogies."
+        "You are an educational AI tutor.  **Goal:** give a short, jargon‑free "
+        "explanation that a high‑school student can understand.\n"
+        "• Use plain language, everyday analogies and concrete examples.\n"
+        "• Keep sentences under 25 words.\n"
+        "• Respond *only* in Markdown – no HTML tags.\n"
+        f"**Question:** {question}"
     )
 
 
 def get_technical_prompt(question: str) -> str:
     """
-    Return a more detailed, semi‑technical explanation.
+    Return a *system* prompt for a **technical** answer.
 
-    Target audience: someone with a basic background in the subject,
-    comfortable with terminology but not an expert.
+    The user already knows the basics, so we can use proper terminology,
+    formulas, and short examples.  Markdown formatting is required.
     """
     return (
-        "You are an educational assistant. Provide a **technical** "
-        "explanation that includes the correct terminology, relevant formulas "
-        "or definitions, and brief examples. Keep the answer concise but "
-        "accurate."
+        "You are an educational AI tutor.  **Goal:** give a concise but technically "
+        "accurate answer.\n"
+        "• Use correct terminology and include any relevant formulae.\n"
+        "• Provide a brief example or two if it helps clarity.\n"
+        "• Output **Markdown only**.\n"
+        f"**Question:** {question}"
     )
 
 
 def get_socratic_prompt(question: str) -> str:
     """
-    Return a **Socratic** style prompt.
+    Return a *system* prompt for a **Socratic** style interaction.
 
-    Instead of dumping the answer, the assistant should guide the learner
-    by asking a series of progressively deeper questions, encouraging the
-    user to reason out the solution themselves.  The assistant may provide
-    brief hints or clarifications **only when the user asks**.
+    The model must *only* ask a single probing question, wait for the user’s
+    response, and continue the dialogue.  If the user asks for a hint the
+    assistant may give a short clue; only when the user explicitly says
+    “I give up” (or an equivalent phrase) should the assistant reveal the
+    full solution.  All answers must be in Markdown.
     """
     return (
-        "You are an educational assistant that uses the Socratic method. "
-        "When given a question, respond *first* with a probing question that "
-        "helps the learner think about the problem. Follow up with additional "
-        "guided questions, offering hints only if the learner asks for them. "
-        "The goal is to lead the learner step‑by‑step to the correct answer "
-        "without stating the full solution outright."
+        "You are an educational AI tutor that follows the Socratic method.\n"
+        "• **Never** give the final answer right away.\n"
+        "• Respond to the user’s question with **one** probing question that "
+        "helps them think about the problem.\n"
+        "• After the user replies, ask a follow‑up question that deepens the "
+        "reasoning.  Continue this pattern.\n"
+        "• If the user explicitly requests a *hint*, give a short clue; "
+        "if they say *I give up* or ask for the solution, provide the full "
+        "answer.\n"
+        "• Output **Markdown only**.\n"
+        f"**Question:** {question}"
     )
 
 
 # ----------------------------------------------------------------------
-# Helper: map the incoming ``explanation_level`` string to the right
-# function.  Adding a new level later is as easy as dropping a new entry.
+# Mapping from ``explanation_level`` → prompt‑builder.
 # ----------------------------------------------------------------------
 PROMPT_FOR_LEVEL = {
     "simplified": get_simplified_prompt,
     "technical":  get_technical_prompt,
-    "socratic":   get_socratic_prompt,
+    "socratic":  get_socratic_prompt,
 }
 
 
 def system_prompt_for(level: str, question: str) -> str:
     """
     Public entry point used by ``views.helper_api``.
-    *level* comes from the JSON payload (defaults to ``simplified``).  
-    Raises ``KeyError`` if the level is unknown – the view will catch it
-    and fall back to a safe default.
+
+    * ``level`` – comes from the JSON payload; defaults to ``simplified`` in the
+      view.\n
+    * ``question`` – the raw user question, injected into the system prompt.\n
+    * Raises :class:`ValueError` if the level is unknown.\n
     """
     try:
         fn = PROMPT_FOR_LEVEL[level]

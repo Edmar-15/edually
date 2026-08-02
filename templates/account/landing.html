@@ -1,16 +1,11 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduAlly - Landing</title>
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% block title %}EduAlly - Landing{% endblock %}
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/landing.css' %}">
     <link rel="stylesheet" href="{% static 'css/policy_modal.css' %}">
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
-</head>
-<body>
+{% endblock %}
+{% block content %}
     <header class="page-header">
         <div class="header-inner">
             <a href="{% url 'landing' %}" class="logo">
@@ -169,22 +164,6 @@
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const toggle = document.querySelector('.mobile-nav-toggle');
-            const nav = document.querySelector('.main-nav');
-
-            if (!toggle || !nav) {
-                return;
-            }
-
-            toggle.addEventListener('click', function () {
-                const isOpen = nav.classList.toggle('is-open');
-                toggle.setAttribute('aria-expanded', String(isOpen));
-            });
-        });
-    </script>
-
     <div id="terms-modal" class="policy-modal hidden" role="dialog"
          aria-modal="true" aria-labelledby="terms-modal-title">
         <div class="policy-modal__backdrop"></div>
@@ -336,7 +315,22 @@
             </footer>
         </div>
     </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggle = document.querySelector('.mobile-nav-toggle');
+            const nav = document.querySelector('.main-nav');
 
+            if (!toggle || !nav) {
+                return;
+            }
+
+            toggle.addEventListener('click', function () {
+                const isOpen = nav.classList.toggle('is-open');
+                toggle.setAttribute('aria-expanded', String(isOpen));
+            });
+        });
+    </script>
     <script src="{% static 'js/account/policy_modal.js' %}"></script>
-</body>
-</html>
+{% endblock  %}

@@ -1,19 +1,11 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EduAlly – Register</title>
-
-    <!-- Base page CSS -->
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% block title %}EduAlly - Register{% endblock  %}
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
-
-    <!-- Policy‑modal CSS (needed for the Terms/Privacy pop‑ups) -->
     <link rel="stylesheet" href="{% static 'css/policy_modal.css' %}">
-</head>
-<body>
+{% endblock %}
+{% block content %}
 <header class="page-header">
     <div class="header-inner">
         <a href="{% url 'landing' %}" class="logo">
@@ -30,14 +22,6 @@
     <section class="auth-card">
         <h1>Create your account</h1>
         <p class="auth-subtitle">Join EduAlly and start learning with confidence.</p>
-
-        {% if messages %}
-            <ul class="messages" aria-live="polite">
-                {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
 
         <form method="POST" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
@@ -328,8 +312,8 @@
         </footer>
     </div>
 </div>
-
-<script src="{% static 'js/toast_notifications.js' %}"></script>
+{% endblock %}
+{% block extra_js %}
 <script src="{% static 'js/account/password_toggle.js' %}"></script>
 <script src="{% static 'js/account/floating_labels.js' %}"></script>
 <script src="{% static 'js/account/policy_modal.js' %}"></script>
@@ -362,6 +346,4 @@
         toggleFields();
     });
 </script>
-
-</body>
-</html>
+{% endblock %}

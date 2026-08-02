@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const explanationLabels = {
         simplified: "Simple",
         technical: "Tech",
-        socratic: "Guide"
+        socratic: "Socratic"
     };
 
     function updateExplanationButton(level = levelButton?.dataset.level || "simplified") {

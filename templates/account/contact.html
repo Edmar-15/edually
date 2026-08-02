@@ -1,15 +1,12 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us - EduAlly</title>
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
-</head>
-<body>
-    <header class="page-header">
+
+{% block title %}Contact Us - EduAlly{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+{% endblock %}
+{% block content %}
+<header class="page-header">
         <div class="header-inner">
             <a href="{% url 'landing' %}" class="logo">
                 <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
@@ -35,5 +32,5 @@
             </div>
         </section>
     </main>
-</body>
-</html>
+{% endblock %}
+

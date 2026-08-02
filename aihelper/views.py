@@ -17,14 +17,15 @@ log = logging.getLogger(__name__)
 # ----------------------------------------------------------------------
 def _last_n_turns(conversation: Conversation, n_turns: int = 8) -> list[dict]:
     """
-    Return a list of ``{'role': ..., 'content': ...}`` dictionaries representing the
-    last ``n_turns`` *pairs* (user + AI) from *conversation* ordered **chronologically**.
+    Return the most recent ``n_turns`` *pairs* (user  assistant) from *conversation*
+    in the order expected by the OpenAI chat API.
 
-    The DB stores each message separately, so we fetch up to ``2 * n_turns``
-    rows, slice the newest ones, then reverse them so the oldest message appears
-    first – exactly what OpenAI expects.
+    The ``Message`` model stores the AI side as ``role='ai'`` for historical
+    reasons, but the OpenAI endpoint requires the string ``'assistant'``.
+    This helper therefore **normalises the role on‑the‑fly** before returning
+    the list.
     """
-    # Grab the newest ``2 * n_turns`` rows (user + ai for each turn)
+    # Grab the newest ``2 * n_turns`` rows (user  ai for each turn)
     recent_qs = (
         conversation.messages.select_related("user")
         .order_by("-created_at")                # newest first
@@ -33,38 +34,62 @@ def _last_n_turns(conversation: Conversation, n_turns: int = 8) -> list[dict]:
     recent = list(recent_qs)
     # Reverse to chronological order (oldest → newest) for the model.
     recent.reverse()
-    # Return in the exact shape the OpenAI API expects.
-    return [{"role": r["role"], "content": r["content"]} for r in recent]
+
+    # ------------------------------------------------------------------
+    # Map our internal ``ai`` role to the OpenAI‑accepted ``assistant`` value.
+    # Any unexpected role falls back to ``user`` – that should never happen but
+    # keeps the function safe.
+    # ------------------------------------------------------------------
+    openai_role_map = {"user": "user", "ai": "assistant"}
+
+    return [
+        {"role": openai_role_map.get(r["role"], "user"), "content": r["content"]}
+        for r in recent
+    ]
 
 # ----------------------------------------------------------------------
 # 1️⃣ Helper that actually contacts OpenAI Cloud
 # ----------------------------------------------------------------------
-def _call_openai(messages: list[dict]) -> str:
+def _call_openai(messages: list[dict], *, level: str = "simplified") -> str:
     """
-    Sends a **pre‑formatted** list of ``messages`` to the OpenAI API (gpt‑4o‑mini)
-    and returns the assistant’s reply. ``messages`` must already contain a leading
-    ``system`` entry, followed by any past conversation turns and finally the
-    current user question.
+    Calls the OpenAI chat completion endpoint and returns the assistant’s reply.
+
+    * ``messages`` – already contains the system prompt, optional history and the
+      current user question.\n
+    * ``level`` – allows us to set a *temperature* that matches the desired\n
+      tone (e.g. lower temperature for factual/technical answers, higher for\n
+      Socratic probing).\n
     """
-    # The new OpenAI SDK (v1.x) encourages using an explicit client instance.
-    # It reads the API key from the argument we pass, so we don’t rely on a
-    # global ``openai.api_key`` which can be polluted in tests.
     client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
 
+    # A tiny temperature map – feel free to adjust per‑model.
+    temperature_by_level = {
+        "simplified": 0.5,
+        "technical":  0.2,
+        "socratic":   0.8,   # a bit more exploratory / creative
+    }
+    temperature = temperature_by_level.get(level, 0.5)
+
     try:
-        # ``chat.completions.create`` returns a structured object.
         resp = client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=messages,
-            # You can tune these if you wish; 0.0 = deterministic,
-            # 0.7 = a bit more creative.
-            temperature=0.7,
+            temperature=temperature,
+            max_tokens=1024,
         )
     except Exception as exc:  # pragma: no cover – exercised via test mock
-        # Let the caller decide what to do; we just re‑raise a generic error.
+        # Log the *full* exception (type, message, traceback) **and** the payload.
+        log.exception(
+            "OpenAI request failed – model=%s, temperature=%.2f, token_limit=%s, payload=%s",
+            settings.OPENAI_MODEL,
+            temperature,
+            1024,
+            messages,
+        )
+        # Re‑raise a generic error that the view catches later.
         raise RuntimeError("OpenAI request failed") from exc
 
-    # ``resp.choices`` is a list with a single element (non‑streaming mode).
+    # Return the text of the sole choice.
     return resp.choices[0].message.content
 
 
@@ -225,11 +250,11 @@ def helper_api(request):
     openai_messages.append({"role": "user", "content": question})
 
     try:
-        ai_reply = _call_openai(openai_messages)   # ``openai_messages`` is just
+        ai_reply = _call_openai(openai_messages, level=level)   # pass level for temp
     except Exception as exc:               # a list of dicts, the name is historical.
-        log.error("OpenAI request failed – falling back to canned response: %s", exc)
-        # Keep the fallback wording *consistent* with the chosen level.
-        ai_reply = (
+         log.error("OpenAI request failed – falling back to canned response: %s", exc)
+         # Keep the fallback wording *consistent* with the chosen level.
+         ai_reply = (
             f"[{level.title()} explanation] (fallback) Here is a short answer to: "
             f"“{question}”."
         )
@@ -237,23 +262,25 @@ def helper_api(request):
     # ------------------------------------------------------------------
     # 5️⃣ Persist both user + AI messages inside the same conversation
     # ------------------------------------------------------------------
-    Message.objects.bulk_create(
-        [
-            Message(
-                conversation=conversation,
-                user=request.user,
-                role="user",
-                content=question,
-            ),
-            Message(
-                conversation=conversation,
-                user=request.user,
-                role="ai",
-                content=ai_reply,
-            ),
-        ]
-    )
+    from django.db import transaction
 
+    with transaction.atomic():
+        Message.objects.bulk_create(
+            [
+                Message(
+                    conversation=conversation,
+                    user=request.user,
+                    role="user",
+                    content=question,
+                ),
+                Message(
+                    conversation=conversation,
+                    user=request.user,
+                    role="ai",
+                    content=ai_reply,
+                ),
+            ]
+        )
     # Keep the title in sync if this was the first message.
     if not conversation.title:
         conversation.title = question[:80]

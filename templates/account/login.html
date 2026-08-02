@@ -1,14 +1,10 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EduAlly – Login</title>
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
-</head>
-<body>
+{% block title %}EduAlly - Landing{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+{% block content %}
 <header class="page-header">
     <div class="header-inner">
         <a href="{% url 'landing' %}" class="logo">
@@ -24,14 +20,6 @@
 <main class="auth-page">
     <section class="auth-card">
         <h1>Log in</h1>
-
-        {% if messages %}
-            <ul class="messages" aria-live="polite">
-                {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
 
         <form method="post" novalidate>
             {% csrf_token %}
@@ -96,12 +84,9 @@
         </p>
     </section>
 </main>
-
-<script src="{% static 'js/toast_notifications.js' %}"></script>
+{% endblock %}
+{% block extra_js %}
 <script src="{% static 'js/account/password_toggle.js' %}"></script>
 <script src="{% static 'js/account/floating_labels.js' %}"></script>
 <script src="{% static 'js/account/form_validation.js' %}"></script>
-</body>
-</html>
-</body>
-</html>
+{% endblock %}
