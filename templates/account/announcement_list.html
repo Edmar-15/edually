@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Announcements – EduAlly</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <section class="announcement-panel">
+            <header class="content-header">
+                <h1>Announcements</h1>
+
+                {% if request.user.is_teacher_member %}
+                <a href="{% url 'account:announcement_create' %}"
+                   class="button button-primary">
+                    + New announcement
+                </a>
+                {% endif %}
+            </header>
+
+            {% if announcements %}
+                <ul class="archive-list">
+                    {% for ann in announcements %}
+                        <li>
+                            <a href="{% url 'account:announcement_detail' ann.id %}"
+                               class="archive-item-link">
+                                <span class="archive-item-main">
+                                    <strong class="archive-item-title">{{ ann.title }}</strong>
+                                    <span class="archive-item-meta">
+                                        By {{ ann.author.get_full_name|default:ann.author.email }}
+                                        – {{ ann.created_at|date:"M d, Y" }}
+                                    </span>
+                                </span>
+                                {% if request.user.is_teacher_member %}
+                                    <span class="detail-value">
+                                        <a href="{% url 'account:announcement_update' ann.id %}"
+                                           class="button button--small">Edit</a>
+                                        <a href="#"
+                                           class="button button--danger button--small js-modal-trigger"
+                                           data-url="{% url 'account:announcement_delete_modal' ann.id %}"
+                                           title="Delete permanently">Delete</a>
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="archive-empty">
+                    <span class="archive-empty-icon"><i class="fa-solid fa-bullhorn"></i></span>
+                    <span>No active announcements at the moment.</span>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+{% include "components/global_modal.html" %}
+<script src="{% static 'js/modal.js' %}" defer></script>
+</body>
+</html>

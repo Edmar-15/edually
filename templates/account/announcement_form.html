@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ action }} Announcement – EduAlly</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <section class="announcement-form">
+            <header class="content-header">
+                <h1>{{ action }} Announcement</h1>
+                <a href="{% url 'account:announcement_list' %}" class="button button-outline">
+                    ← Back to list
+                </a>
+            </header>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="errorlist nonfield">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="form-group">
+                    {{ form.title.label_tag }}
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="errorlist">{{ form.title.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.content.label_tag }}
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                        <div class="errorlist">{{ form.content.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.is_active }}
+                    {{ form.is_active.label_tag }}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.start_date.label_tag }}
+                        {{ form.start_date }}
+                        {% if form.start_date.errors %}
+                            <div class="errorlist">{{ form.start_date.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.end_date.label_tag }}
+                        {{ form.end_date }}
+                        {% if form.end_date.errors %}
+                            <div class="errorlist">{{ form.end_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button type="submit" class="button button-primary">{{ action }}</button>
+                <a href="{% url 'account:announcement_list' %}" class="button button-outline">Cancel</a>
+            </form>
+        </section>
+    </main>
+</div>
+</body>
+</html>

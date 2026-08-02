@@ -15,7 +15,7 @@ from django.contrib.auth import (
     logout as auth_logout,
 )
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseRedirect
+from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -24,12 +24,14 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 from django.template.loader import render_to_string
+from functools import wraps
+from django.db import models
 
 # --------------------------------------------------------------
 # Local imports
 # --------------------------------------------------------------
-from .forms import PublicRegisterForm, ProfileForm, LoginForm
-from .models import UserConsent, User, StudentProfile
+from .forms import PublicRegisterForm, ProfileForm, LoginForm, AnnouncementForm
+from .models import UserConsent, User, StudentProfile, Announcement
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
@@ -757,3 +759,135 @@ def archive_personal_material_delete(request, pk):
             "redirect": reverse("account:archive-personal-materials"),
         }
     )
+    
+
+def teacher_required_for_mutation(view_func):
+    """
+    *GET* requests are allowed for any authenticated user.
+    All other HTTP verbs (POST, PUT, PATCH, DELETE) are allowed **only**
+    for users that belong to the *Teacher* group.
+    """
+    @wraps(view_func)
+    @login_required                     # always require a logged‑in user
+    def _wrapped(request, *args, **kwargs):
+        # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
+        # 1️⃣  GET → public read‑only
+        # -----------------------------------------------------------------
+        if request.method == "GET":
+            return view_func(request, *args, **kwargs)
+
+        # -----------------------------------------------------------------
+        # 2️⃣  Anything else → must be a teacher
+        # -----------------------------------------------------------------
+        if getattr(request.user, "is_teacher_member", False):
+            return view_func(request, *args, **kwargs)
+
+        return HttpResponseForbidden(
+            "Only teachers may create / edit / delete resources."
+        )
+    return _wrapped
+
+    
+@login_required(login_url='account:login')
+def announcement_list(request):
+    """
+    Show *only* announcements that are “current” (active and within
+    their optional start / end dates).  Students, teachers and staff
+    can all see this page.
+    """
+    now = timezone.now()
+    announcements = (
+        Announcement.objects.filter(is_active=True)
+        .filter(
+            models.Q(start_date__lte=now) | models.Q(start_date__isnull=True),
+            models.Q(end_date__gte=now) | models.Q(end_date__isnull=True),
+        )
+        .order_by("-created_at")
+    )
+    return render(
+        request,
+        "account/announcement_list.html",
+        {"announcements": announcements},
+    )
+    
+
+@login_required(login_url='account:login')
+def announcement_detail(request, pk):
+    ann = get_object_or_404(Announcement, pk=pk, is_active=True)
+    # Respect the schedule – if it isn’t “current” hide the content.
+    if not ann.is_current:
+        return HttpResponseForbidden("This announcement is not currently visible.")
+    return render(request, "account/announcement_detail.html", {"announcement": ann})
+
+
+@teacher_required_for_mutation
+def announcement_create(request):
+    # GET is allowed for any logged‑in user by the decorator.
+    # We still want only teachers to *see* the form, so we double‑check.
+    if request.method == "GET" and not request.user.is_teacher_member:
+        return HttpResponseForbidden("Only teachers can open the create form.")
+
+    if request.method == "POST":
+        form = AnnouncementForm(request.POST)
+        if form.is_valid():
+            ann = form.save(commit=False)
+            ann.author = request.user
+            ann.save()
+            messages.success(request, "Announcement created.")
+            return redirect("account:announcement_list")
+    else:
+        form = AnnouncementForm()
+
+    return render(
+        request,
+        "account/announcement_form.html",
+        {"form": form, "action": "Create"},
+    )
+
+
+@teacher_required_for_mutation
+def announcement_update(request, pk):
+    ann = get_object_or_404(Announcement, pk=pk)
+
+    # Extra safety – only the author (or any teacher) may edit.
+    if not request.user.is_teacher_member:
+        return HttpResponseForbidden("Only teachers can edit announcements.")
+
+    if request.method == "POST":
+        form = AnnouncementForm(request.POST, instance=ann)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Announcement updated.")
+            return redirect("account:announcement_detail", pk=pk)
+    else:
+        form = AnnouncementForm(instance=ann)
+
+    return render(
+        request,
+        "account/announcement_form.html",
+        {"form": form, "action": "Edit"},
+    )
+
+
+@teacher_required_for_mutation
+def announcement_delete_modal(request, pk):
+    ann = get_object_or_404(Announcement, pk=pk)
+    html = render_to_string(
+        "account/partials/announcement_delete_modal.html",
+        {"announcement": ann},
+        request=request,
+    )
+    return JsonResponse({"html": html})
+
+
+@require_POST
+@teacher_required_for_mutation
+def announcement_delete(request, pk):
+    ann = get_object_or_404(Announcement, pk=pk)
+    ann.delete()
+    messages.success(request, "Announcement permanently deleted.")
+    return JsonResponse(
+        {"success": True, "redirect": reverse("account:announcement_list")}
+    )
+
+

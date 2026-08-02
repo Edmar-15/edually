@@ -12,11 +12,12 @@ from django.contrib.auth.forms import (
     UserChangeForm as DjangoUserChangeForm,
 )
 from django.utils import timezone
+from django.forms import DateTimeInput
 
 # -----------------------------------------------------------------
 # Local imports
 # -----------------------------------------------------------------
-from .models import UserConsent, StudentProfile, TeacherProfile
+from .models import UserConsent, StudentProfile, TeacherProfile, Announcement
 from .utils import add_user_to_group
 from .constants import GROUP_STUDENT, GROUP_TEACHER
 
@@ -280,3 +281,30 @@ class ProfileForm(forms.ModelForm):
         if commit:
             profile.save()
         return user
+
+
+class AnnouncementForm(forms.ModelForm):
+    """Form used by teachers to create / edit an announcement."""
+
+    class Meta:
+        model = Announcement
+        fields = (
+            "title",
+            "content",
+            "is_active",
+            "start_date",
+            "end_date",
+        )
+        widgets = {
+            "content": forms.Textarea(
+                attrs={"rows": 6, "placeholder": "Plain text or HTML"}
+            ),
+            "start_date": DateTimeInput(
+                attrs={"type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
+            "end_date": DateTimeInput(
+                attrs={"type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
+        }
