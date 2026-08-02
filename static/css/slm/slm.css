@@ -33,6 +33,8 @@
   border-radius: 22px;
   box-shadow: var(--module-shadow);
   padding: 1.2rem;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .module-form__header {
@@ -58,6 +60,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.8rem;
+}
+
+.module-form input[type="text"],
+.subject-form input[type="text"],
+.module-form input[type="number"],
+.module-form input[type="file"] {
+  min-width: 0;
 }
 
 .module-form input[type="text"],
@@ -113,7 +122,7 @@
 
 .module-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.95rem;
   align-items: stretch;
 }
@@ -144,8 +153,9 @@
 /* Header (icon) */
 .module-card__header,
 .pm-card__header {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: 0.8rem;
   margin-bottom: 0.75rem;
 }
@@ -191,6 +201,7 @@
 .module-card__content,
 .pm-card__content {
   flex: 1;
+  min-width: 0;
 }
 
 .module-card__content h3,
@@ -198,6 +209,9 @@
   margin: 0;
   font-size: 1.05rem;
   color: var(--text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.4;
 }
 
 .module-card__meta,
@@ -233,9 +247,20 @@
 .module-card__actions,
 .pm-card__actions {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
   gap: 0.45rem;
-  margin-top: auto;
+  margin-top: 0.85rem;
+}
+
+.module-card__actions .button-plain,
+.pm-card__actions .button-plain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.55rem 0.9rem;
 }
 
 .module-card__action,
@@ -332,6 +357,11 @@
     align-items: flex-start;
   }
 
+  .module-form button,
+  .subject-form button {
+    width: 100%;
+  }
+
   .module-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -345,6 +375,11 @@
   .pm-card__actions {
     justify-content: flex-start;
   }
+
+  .module-card__actions .button-plain,
+  .pm-card__actions .button-plain {
+    flex: 1 1 100%;
+  }
 }
 
 @media (max-width: 540px) {
@@ -354,7 +389,7 @@
 
   .module-card__header,
   .pm-card__header {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     align-items: flex-start;
   }
 
@@ -600,7 +635,7 @@ html[data-theme="dark"] .tab-panel {
   align-items: flex-start;
   gap: 10px;
   padding: 16px 18px;
-  background: linear-gradient(121deg, rgba(17, 24, 39, 0.96) 0%, #0b1220 100%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(239,250,252,0.96) 100%);
   border: 1px solid rgba(14, 154, 167, 0.16);
   border-radius: 18px;
   text-decoration: none;
@@ -609,6 +644,13 @@ html[data-theme="dark"] .tab-panel {
   min-height: 170px;
   position: relative;
   overflow: hidden;
+  color: var(--text);
+}
+
+html.dark .subject-card,
+html[data-theme="dark"] .subject-card {
+  background: linear-gradient(121deg, rgba(17, 24, 39, 0.96) 0%, #0b1220 100%) !important;
+  color: var(--text) !important;
 }
 
 .subject-card-link {
@@ -763,6 +805,8 @@ html[data-theme="dark"] .tab-panel {
   border-radius: 20px;
   box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
   padding: 1.15rem;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 html.dark .pm-form-card,
@@ -791,6 +835,12 @@ html[data-theme="dark"] .pm-form-card {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.8rem;
   align-items: end;
+}
+
+.pm-form input[type="text"],
+.pm-form input[type="file"],
+.pm-form select {
+  min-width: 0;
 }
 
 .pm-form input[type="text"],
@@ -853,14 +903,23 @@ html[data-theme="dark"] .pm-form select {
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
+html.dark .pm-card,
+html[data-theme="dark"] .pm-card {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.98) 0%, rgba(10, 15, 28, 0.98) 100%);
+  border-color: rgba(148, 163, 184, 0.14);
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.28);
+  color: var(--text);
+}
+
 .pm-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 16px 34px rgba(14, 154, 167, 0.12);
 }
 
 .pm-card__header {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: 0.8rem;
   margin-bottom: 0.75rem;
 }
@@ -908,11 +967,20 @@ html[data-theme="dark"] .pm-form select {
 
 .pm-card__content {
   flex: 1;
+  min-width: 0;
 }
 
 .pm-card__header h3 {
   margin: 0;
   font-size: 1.05rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+html.dark .pm-card__header h3,
+html[data-theme="dark"] .pm-card__header h3 {
   color: var(--text);
 }
 
@@ -925,6 +993,11 @@ html[data-theme="dark"] .pm-form select {
   color: var(--muted);
 }
 
+html.dark .pm-card__meta,
+html[data-theme="dark"] .pm-card__meta {
+  color: var(--muted);
+}
+
 .pm-card__pill {
   display: inline-flex;
   align-items: center;
@@ -933,6 +1006,12 @@ html[data-theme="dark"] .pm-form select {
   padding: 0.24rem 0.55rem;
   border-radius: 999px;
   font-weight: 600;
+}
+
+html.dark .pm-card__pill,
+html[data-theme="dark"] .pm-card__pill {
+  background: rgba(14, 154, 167, 0.12);
+  color: #9fe9f2;
 }
 
 .pm-card__pill--visibility {
@@ -948,7 +1027,8 @@ html[data-theme="dark"] .pm-form select {
 .pm-card__actions {
   margin-top: 0.75rem;
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   align-items: center;
   gap: 0.4rem;
 }
@@ -967,6 +1047,15 @@ html[data-theme="dark"] .pm-form select {
   border: 1px solid rgba(14, 154, 167, 0.16);
   font-weight: 700;
   transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+html.dark .pm-card__actions .button,
+html.dark .pm-card__actions .button-plain,
+html[data-theme="dark"] .pm-card__actions .button,
+html[data-theme="dark"] .pm-card__actions .button-plain {
+  background: rgba(14, 154, 167, 0.12);
+  color: #b7f0f7;
+  border-color: rgba(14, 154, 167, 0.22);
 }
 
 .pm-card__actions .button:hover,
@@ -1047,10 +1136,15 @@ html[data-theme="dark"] .pm-form select {
   .pm-filter-row {
     flex-direction: column;
     align-items: stretch;
+    padding: 0.9rem;
   }
 
   .pm-filter-row label {
     min-width: 0;
+  }
+
+  .pm-filter-row select {
+    width: 100%;
   }
 }
 
@@ -1108,8 +1202,21 @@ html[data-theme="dark"] .pm-form select {
     grid-template-columns: 1fr;
   }
 
+  .pm-form button {
+    width: 100%;
+  }
+
   .pm-card__header {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .pm-card__actions {
+    gap: 0.35rem;
+  }
+
+  .pm-card__actions .button,
+  .pm-card__actions .button-plain {
+    flex: 1 1 100%;
   }
 }
 

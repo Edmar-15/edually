@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime
 from urllib.parse import urlencode
 
 import requests
+from pywebpush import WebPusher
 from django.conf import settings as django_settings
 from django.contrib import messages
 from django.contrib.auth import (
@@ -31,7 +33,7 @@ from django.db import models
 # Local imports
 # --------------------------------------------------------------
 from .forms import PublicRegisterForm, ProfileForm, LoginForm, AnnouncementForm
-from .models import UserConsent, User, StudentProfile, Announcement
+from .models import UserConsent, User, StudentProfile, Announcement, PushSubscription
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
@@ -39,6 +41,52 @@ from .utils import user_is_in_group, add_user_to_group
 from slm.models import Module, PersonalMaterial
 from forum.models import Post
 from aihelper.models import Conversation, Message
+
+log = logging.getLogger(__name__)
+
+
+def _send_announcement_push(announcement: Announcement) -> None:
+    """Send a browser push notification to every stored subscription."""
+    subscriptions = PushSubscription.objects.select_related("user").all()
+    if not subscriptions:
+        return
+
+    private_key = getattr(django_settings, "VAPID_PRIVATE_KEY", "") or ""
+    if not private_key:
+        log.warning("Skipping announcement push because VAPID_PRIVATE_KEY is not configured.")
+        return
+
+    payload = {
+        "title": announcement.title,
+        "body": (announcement.content[:160] or "New announcement"),
+        "icon": "/static/icons/icon-192x192.png",
+        "tag": f"announcement-{announcement.pk}",
+        "url": reverse("account:announcement_list"),
+    }
+
+    for subscription in subscriptions:
+        try:
+            subscriber = WebPusher(
+                subscription_info={
+                    "endpoint": subscription.endpoint,
+                    "keys": {
+                        "p256dh": subscription.p256dh,
+                        "auth": subscription.auth,
+                    },
+                },
+                vapid_private_key=private_key,
+                vapid_claims={
+                    "sub": f"mailto:{subscription.user.email}",
+                },
+                ttl=60,
+            )
+            subscriber.send(data=json.dumps(payload), timeout=10000)
+        except Exception:
+            log.exception(
+                "Failed to deliver announcement push to %s for announcement %s",
+                subscription.user.email,
+                announcement.pk,
+            )
 
 
 # -----------------------------------------------------------------
@@ -108,6 +156,17 @@ def contact_page(request):
 def dashboard(request):
     subjects = request.user.subjects.all()[:3]
     modules = Module.objects.filter(subject__author=request.user).select_related("subject")[:3]
+    recent_module_ids = request.session.get("recent_modules", [])
+    recent_modules = list(
+        Module.objects.filter(pk__in=recent_module_ids)
+        .select_related("subject")
+        .order_by(
+            models.Case(
+                *[models.When(pk=pk, then=pos) for pos, pk in enumerate(recent_module_ids)],
+                output_field=models.IntegerField(),
+            )
+        )
+    ) if recent_module_ids else []
 
     recent_activity = [
         {
@@ -136,7 +195,7 @@ def dashboard(request):
         {
             "title": "Open a module",
             "detail": "Review the latest materials and start building momentum with one small step.",
-            "done": modules.exists(),
+            "done": modules.exists() or bool(recent_modules),
         },
         {
             "title": "Ask one question",
@@ -151,6 +210,7 @@ def dashboard(request):
     context = {
         "subjects": subjects,
         "modules": modules,
+        "recent_modules": recent_modules,
         "recent_activity": recent_activity,
         "module_count": modules.count(),
         "subject_count": subjects.count(),
@@ -313,6 +373,47 @@ def logout_confirm(request):
         request=request,
     )
     return JsonResponse({'html': html})
+
+
+@require_POST
+@login_required(login_url='account:login')
+def api_push_subscribe(request):
+    """Persist a browser push subscription for the authenticated user."""
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON payload"}, status=400)
+
+    endpoint = payload.get("endpoint")
+    auth = payload.get("keys", {}).get("auth")
+    p256dh = payload.get("keys", {}).get("p256dh")
+
+    if not endpoint or not auth or not p256dh:
+        return JsonResponse({"error": "Incomplete push subscription payload"}, status=400)
+
+    subscription, _ = PushSubscription.objects.update_or_create(
+        user=request.user,
+        endpoint=endpoint,
+        defaults={"auth": auth, "p256dh": p256dh},
+    )
+    return JsonResponse({"success": True, "id": subscription.pk})
+
+
+@require_POST
+@login_required(login_url='account:login')
+def api_push_unsubscribe(request):
+    """Delete a stored browser push subscription for the authenticated user."""
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON payload"}, status=400)
+
+    endpoint = payload.get("endpoint")
+    if not endpoint:
+        return JsonResponse({"error": "Endpoint is required"}, status=400)
+
+    PushSubscription.objects.filter(user=request.user, endpoint=endpoint).delete()
+    return JsonResponse({"success": True})
 
 
 @require_POST
@@ -824,6 +925,7 @@ def announcement_create(request):
             ann = form.save(commit=False)
             ann.author = request.user
             ann.save()
+            _send_announcement_push(ann)
             messages.success(request, "Announcement created.")
             return redirect("account:announcement_list")
     else:
@@ -887,6 +989,7 @@ def announcement_create_modal(request):
             ann = form.save(commit=False)
             ann.author = request.user
             ann.save()
+            _send_announcement_push(ann)
             # Signal success – the modal.js will close the modal and
             # redirect the page (or you can just refresh the list).
             return JsonResponse(

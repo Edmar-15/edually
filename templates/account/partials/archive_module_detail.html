@@ -7,80 +7,226 @@
     <title>Archived Module – {{ module.module_name }}</title>
 
     <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static "css/slm/module_detail.css" %}">
     <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
+    <style>
+        .archive-shell {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px 40px;
+        }
+
+        .archive-detail-panel {
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 28px;
+            box-shadow: 0 20px 56px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .archive-detail-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .75rem 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fafafa;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+        }
+
+        .archive-detail-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .archive-detail-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(168,85,247,0.14), rgba(14,154,167,0.08));
+            color: var(--primary, #0e9aa7);
+            box-shadow: inset 0 0 0 1px rgba(14,154,167,0.08);
+        }
+
+        .archive-detail-title {
+            margin: 0;
+            font-size: clamp(1.8rem, 2vw, 2.4rem);
+            letter-spacing: -0.03em;
+            color: var(--text, #0f172a);
+            line-height: 1.2;
+        }
+
+        .archive-detail-body {
+            padding: 0 1rem 1.5rem;
+        }
+
+        .archive-detail-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.94), rgba(239,246,246,0.92));
+            border: 1px solid rgba(148,163,184,0.14);
+            border-radius: 20px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+            padding: 1.5rem;
+        }
+
+        .archive-detail-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            margin-bottom: 1rem;
+        }
+
+        .archive-detail-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+            padding: 0.5rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(168,85,247,0.08);
+            color: #7c3aed;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .archive-detail-content {
+            color: var(--text, #0f172a);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        html.dark .archive-detail-panel,
+        html[data-theme="dark"] .archive-detail-panel {
+            background: linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,15,28,0.98));
+            border-color: rgba(148, 163, 184, 0.18);
+            box-shadow: 0 20px 56px rgba(2, 6, 23, 0.32);
+        }
+
+        html.dark .archive-detail-header,
+        html[data-theme="dark"] .archive-detail-header {
+            background: rgba(15, 23, 42, 0.96);
+            border-bottom-color: rgba(148, 163, 184, 0.14);
+        }
+
+        html.dark .archive-detail-card,
+        html[data-theme="dark"] .archive-detail-card {
+            background: linear-gradient(135deg, rgba(17,24,39,0.98), rgba(10,15,28,0.98));
+            border-color: rgba(148, 163, 184, 0.14);
+        }
+
+        html.dark .archive-detail-title,
+        html.dark .archive-detail-content,
+        html.dark .archive-detail-meta,
+        html[data-theme="dark"] .archive-detail-title,
+        html[data-theme="dark"] .archive-detail-content,
+        html[data-theme="dark"] .archive-detail-meta {
+            color: var(--text);
+        }
+
+        html.dark .archive-detail-meta,
+        html[data-theme="dark"] .archive-detail-meta {
+            background: rgba(14, 154, 167, 0.12);
+        }
+
+        @media (max-width: 720px) {
+            .archive-shell {
+                padding: 0 12px 28px;
+            }
+
+            .archive-detail-header {
+                padding: 0.9rem 0.85rem;
+            }
+
+            .archive-detail-title-wrap {
+                padding: 0 0.85rem;
+            }
+
+            .archive-detail-title {
+                font-size: 1.55rem;
+            }
+
+            .archive-detail-card {
+                padding: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="dashboard-container">
     {% include "components/navigations.html" %}
 
     <main class="main-content">
+        <div class="archive-shell">
+            <section class="archive-detail-panel" aria-labelledby="archived-module-title">
+                <header class="content-header archive-detail-header">
+                    <p class="breadcrumb"><i>
+                        <a href="{% url "account:settings" %}">Settings</a> &gt;
+                        <a href="{% url "account:archive-modules" %}">Archived Self Learning Modules</a> &gt;
+                        {{ module.module_name }}
+                    </i></p>
 
-        <!-- -----------------------------------------------------------------
-             Page‑level header – breadcrumb + actions (un‑archive + modal)
-        ----------------------------------------------------------------- -->
-        <header class="content-header">
-            <p class="breadcrumb"><i>
-                <a href="{% url "account:settings" %}">Settings</a> &gt;
-                <a href="{% url "account:archive-modules" %}">Archived Self Learning Modules</a> &gt;
-                Archived Module – {{ module.module_name }}
-            </i></p>
+                    <div class="header-actions">
+                        <form method="post" class="archive-action-form">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    name="action"
+                                    value="unarchive"
+                                    class="button"
+                                    style="background: var(--primary); border-color: var(--primary); color: white; border-radius: .3rem;">
+                                Unarchive
+                            </button>
+                        </form>
 
-            <div class="header-actions">
+                        <a href="#"
+                           class="button button--danger js-modal-trigger"
+                           data-url="{% url 'account:archive-module-delete-modal' module.id %}"
+                           title="Delete this module permanently">
+                            Delete permanently
+                        </a>
+                    </div>
+                </header>
 
-                <form method="post" class="archive-action-form">
-                    {% csrf_token %}
-                    <button type="submit"
-                            name="action"
-                            value="unarchive"
-                            class="button"
-                            style="background: var(--primary); border-color: var(--primary); color: white; border-radius: .3rem;">
-                        Unarchive
-                    </button>
-                </form>
-
-                <a href="#"
-                   class="button button--danger js-modal-trigger"
-                   data-url="{% url 'account:archive-module-delete-modal' module.id %}"
-                   title="Delete this module permanently">
-                    Delete permanently
-                </a>
-            </div>
-        </header>
-
-        <section class="module-content-card" aria-labelledby="archived-module-title">
-            <div class="module-content-card__header">
-                <h2 id="archived-module-title">
-                    #{{ module.module_number }} – {{ module.module_name }}
-                </h2>
-                <p>
-                    Subject: {{ module.subject.subject_code }} – {{ module.subject.subject_name }}<br>
-                    Created {{ module.created_at|date:"M d, Y" }}
-                </p>
-            </div>
-
-            <!-- Highlight‑history pop‑over (unchanged) -->
-            <div class="module-content-history" aria-label="Highlight history">
-                <div class="module-content-history__popover"
-                     id="highlight-history-popover"
-                     hidden>
-                    <ul id="highlight-history-list"
-                        class="module-content-history__list"></ul>
+                <div class="archive-detail-title-wrap">
+                    <span class="archive-detail-icon"><i class="fa-solid fa-book-open-reader"></i></span>
+                    <h1 id="archived-module-title" class="archive-detail-title">#{{ module.module_number }} – {{ module.module_name }}</h1>
                 </div>
-            </div>
 
-            <!-- Extracted preview (PDF/DOCX/PPT…) -->
-            <div class="module-content">
-                {% if module.extracted_html %}
-                    {{ module.extracted_html|safe }}
-                {% else %}
-                    <p><em>No extracted preview is available for this file.</em></p>
-                {% endif %}
-            </div>
-        </section>
+                <div class="archive-detail-body">
+                    <article class="archive-detail-card">
+                        <div class="archive-detail-meta-row">
+                            <p class="archive-detail-meta">Subject {{ module.subject.subject_code }}</p>
+                            <p class="archive-detail-meta">{{ module.subject.subject_name }}</p>
+                            <p class="archive-detail-meta">Created {{ module.created_at|date:"M d, Y" }}</p>
+                        </div>
+
+                        <div class="archive-detail-content">
+                            {% if module.extracted_html %}
+                                {{ module.extracted_html|safe }}
+                            {% else %}
+                                <p><em>No extracted preview is available for this file.</em></p>
+                            {% endif %}
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </div>
     </main>
 </div>
 

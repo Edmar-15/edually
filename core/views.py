@@ -41,10 +41,10 @@ def service_worker(request):
     if not sw_path.is_file():
         raise Http404("Service‑worker file not found")
 
-    # FileResponse streams the file efficiently.
-    response = FileResponse(open(sw_path, "rb"), content_type="application/javascript")
-    # Cache the worker for a year – the query‑string version bump will
-    # force a refresh when you need it.
+    sw_source = sw_path.read_text(encoding="utf-8")
+    sw_source = sw_source.replace("{{ PWA_SW_VERSION }}", str(django_settings.PWA_SW_VERSION))
+
+    response = HttpResponse(sw_source, content_type="application/javascript")
     response["Cache-Control"] = "public, max-age=31536000, immutable"
     return response
 

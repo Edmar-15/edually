@@ -14,57 +14,66 @@
     {% include "components/navigations.html" %}
 
     <main class="main-content">
-        <section class="announcement-panel">
-            <header class="content-header">
+        <header class="content-header">
+            <div class="header-left">
                 <h1>Announcements</h1>
-
-                {% if request.user.is_teacher_member %}
+                <p class="user-info">Stay up to date with school-wide updates and important notices.</p>
+            </div>
+            {% if request.user.is_teacher_member %}
+            <div class="header-actions">
                 <a href="#"
                    class="button button-primary js-modal-trigger"
                    data-url="{% url 'account:announcement_create_modal' %}"
                    title="Create a new announcement">+ New announcement</a>
-                {% endif %}
-            </header>
-
-            {% if announcements %}
-                <ul class="archive-list">
-                    {% for ann in announcements %}
-                        <li>
-                            <a href="#"
-                               class="archive-item-link js-modal-trigger"
-                               data-url="{% url 'account:announcement_detail_modal' ann.id %}">
-                                <span class="archive-item-main">
-                                    <strong class="archive-item-title">{{ ann.title }}</strong>
-                                    <span class="archive-item-meta">
-                                        By {{ ann.author.get_full_name|default:ann.author.email }}
-                                        – {{ ann.created_at|date:"M d, Y" }}
-                                    </span>
-                                </span>
-
-                                {% if request.user.is_teacher_member %}
-                                <span class="detail-value">
-                                    <a href="#"
-                                       class="button button--small js-modal-trigger"
-                                       data-url="{% url 'account:announcement_update_modal' ann.id %}"
-                                       title="Edit this announcement">Edit</a>
-
-                                    <a href="#"
-                                       class="button button--danger button--small js-modal-trigger"
-                                       data-url="{% url 'account:announcement_delete_modal' ann.id %}"
-                                       title="Delete permanently">Delete</a>
-                                </span>
-                                {% endif %}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <div class="archive-empty">
-                    <span class="archive-empty-icon"><i class="fa-solid fa-bullhorn"></i></span>
-                    <span>No active announcements at the moment.</span>
-                </div>
+            </div>
             {% endif %}
-        </section>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="container">
+                <section class="announcement-panel">
+                    {% if announcements %}
+                        <div class="announcement-list">
+                            {% for ann in announcements %}
+                                <article class="announcement-card">
+                                    <a href="#"
+                                       class="announcement-card__link js-modal-trigger"
+                                       data-url="{% url 'account:announcement_detail_modal' ann.id %}">
+                                        <div class="announcement-card__header">
+                                            <span class="announcement-badge">Announcement</span>
+                                            <h2 class="announcement-title">{{ ann.title }}</h2>
+                                        </div>
+                                        <p class="announcement-meta">
+                                            By {{ ann.author.get_full_name|default:ann.author.email }}
+                                            • {{ ann.created_at|date:"M d, Y" }}
+                                        </p>
+                                    </a>
+
+                                    {% if request.user.is_teacher_member %}
+                                    <div class="announcement-actions">
+                                        <a href="#"
+                                           class="button button--small js-modal-trigger"
+                                           data-url="{% url 'account:announcement_update_modal' ann.id %}"
+                                           title="Edit this announcement">Edit</a>
+
+                                        <a href="#"
+                                           class="button button--danger button--small js-modal-trigger"
+                                           data-url="{% url 'account:announcement_delete_modal' ann.id %}"
+                                           title="Delete permanently">Delete</a>
+                                    </div>
+                                    {% endif %}
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="archive-empty">
+                            <span class="archive-empty-icon"><i class="fa-solid fa-bullhorn"></i></span>
+                            <span>No active announcements at the moment.</span>
+                        </div>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
     </main>
 </div>
 

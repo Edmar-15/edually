@@ -8,12 +8,22 @@
    ----------------------------------------------------------------- */
 .module-content-card {
     max-width: 900px;
+    width: min(100%, 900px);
     margin: 2rem auto;
     padding: 1.5rem;
     border: 1px solid rgba(14, 154, 167, 0.16);
     border-radius: 16px;
     background: linear-gradient(180deg, #fafbfc, #fff);
     box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+html.dark .module-content-card,
+html[data-theme="dark"] .module-content-card {
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 28, 0.98));
+    border-color: rgba(148, 163, 184, 0.16);
+    box-shadow: 0 20px 56px rgba(2, 6, 23, 0.32);
 }
 
 /* Badge that shows the number of highlight‑history items */
@@ -41,15 +51,34 @@
 }
 .module-content-card__header h2 {
     margin: 0 0 .35rem;
-    font-size: 1.35rem;
+    font-size: clamp(1.15rem, 2vw, 1.35rem);
     font-weight: 600;
     color: #111827;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 .module-content-card__header p {
     margin: 0;
     color: #6b7280;
     font-size: .95rem;
-    line-height: 1.4;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+html.dark .module-content-card__header,
+html[data-theme="dark"] .module-content-card__header {
+    border-bottom-color: rgba(148, 163, 184, 0.14);
+}
+
+html.dark .module-content-card__header h2,
+html[data-theme="dark"] .module-content-card__header h2 {
+    color: var(--text);
+}
+
+html.dark .module-content-card__header p,
+html[data-theme="dark"] .module-content-card__header p {
+    color: var(--muted);
 }
 
 /* -----------------------------------------------------------------
@@ -60,10 +89,17 @@
     color: #374151;
 }
 
+html.dark .module-content,
+html[data-theme="dark"] .module-content {
+    color: var(--text);
+}
+
 /* Paragraphs – comfortable width */
 .module-content p {
-    max-width: 70ch;               /* keep line length readable */
+    max-width: 70ch;
     margin: .6rem 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 /* Headings – clear hierarchy */
@@ -79,6 +115,15 @@
 .module-content h2 { font-size: 1.6rem; color: #1f2937; }
 .module-content h3 { font-size: 1.35rem; color: #374151; }
 .module-content h4 { font-size: 1.2rem;  color: #475569; }
+
+html.dark .module-content h1,
+html[data-theme="dark"] .module-content h1 { color: #f8fafc; }
+html.dark .module-content h2,
+html[data-theme="dark"] .module-content h2 { color: #e2e8f0; }
+html.dark .module-content h3,
+html[data-theme="dark"] .module-content h3 { color: #cbd5e1; }
+html.dark .module-content h4,
+html[data-theme="dark"] .module-content h4 { color: #a5b4c8; }
 
 /* Images – rounded corners + tiny zoom on hover */
 .module-content img {
@@ -104,9 +149,31 @@
 .pdf-page:empty,
 .pdf-page p:empty { display: none; }
 
+html.dark .pdf-page,
+html[data-theme="dark"] .pdf-page {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: var(--text);
+}
+html.dark .pdf-page:nth-child(even),
+html[data-theme="dark"] .pdf-page:nth-child(even) { background: rgba(18, 27, 39, 0.9); }
+
 .pdf-page > p {
     margin: .4rem 0;
     color: #1f2937;
+}
+
+html.dark .pdf-page > p,
+html[data-theme="dark"] .pdf-page > p,
+html.dark .pdf-page > h1,
+html.dark .pdf-page > h2,
+html.dark .pdf-page > h3,
+html.dark .pdf-page > h4,
+html[data-theme="dark"] .pdf-page > h1,
+html[data-theme="dark"] .pdf-page > h2,
+html[data-theme="dark"] .pdf-page > h3,
+html[data-theme="dark"] .pdf-page > h4 {
+    color: var(--text);
 }
 
 /* Headings inside a PDF page */
@@ -134,6 +201,15 @@
 .docx-page:empty,
 .docx-page p:empty { display: none; }
 
+html.dark .docx-page,
+html[data-theme="dark"] .docx-page {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: var(--text);
+}
+html.dark .docx-page:nth-child(even),
+html[data-theme="dark"] .docx-page:nth-child(even) { background: rgba(18, 27, 39, 0.9); }
+
 /* Headings that appear directly inside a DOCX page */
 .docx-page > h1,
 .docx-page > h2,
@@ -143,6 +219,17 @@
     margin-bottom: .6rem;
     font-weight: 600;
     color: #111827;
+}
+
+html.dark .docx-page > h1,
+html.dark .docx-page > h2,
+html.dark .docx-page > h3,
+html.dark .docx-page > h4,
+html[data-theme="dark"] .docx-page > h1,
+html[data-theme="dark"] .docx-page > h2,
+html[data-theme="dark"] .docx-page > h3,
+html[data-theme="dark"] .docx-page > h4 {
+    color: var(--text);
 }
 
 /* -----------------------------------------------------------------
@@ -159,6 +246,15 @@
 .ppt-page:empty,
 .ppt-page p:empty { display: none; }
 
+html.dark .ppt-page,
+html[data-theme="dark"] .ppt-page {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: var(--text);
+}
+html.dark .ppt-page:nth-child(even),
+html[data-theme="dark"] .ppt-page:nth-child(even) { background: rgba(18, 27, 39, 0.9); }
+
 /* Title inside a slide */
 .ppt-page > h2 {
     margin-top: .4rem;
@@ -173,6 +269,21 @@
     margin: .4rem 0;
     line-height: 1.6;
     color: #1f2937;
+}
+
+html.dark .ppt-page > p,
+html.dark .ppt-page > h2,
+html.dark .ppt-page ul,
+html.dark .ppt-page ul ul,
+html.dark .ppt-page ul li,
+html.dark .ppt-page ul ul li,
+html[data-theme="dark"] .ppt-page > p,
+html[data-theme="dark"] .ppt-page > h2,
+html[data-theme="dark"] .ppt-page ul,
+html[data-theme="dark"] .ppt-page ul ul,
+html[data-theme="dark"] .ppt-page ul li,
+html[data-theme="dark"] .ppt-page ul ul li {
+    color: var(--text);
 }
 
 /* • First‑level lists – keep the default disc bullet */
@@ -268,10 +379,26 @@
 .selection-toolbar button i { margin-right: 2px; font-size: 1.1rem; }
 
 /* Larger tap‑targets on tiny screens */
+@media (max-width: 768px) {
+    .module-content-card {
+        margin: 1rem 0.75rem;
+        padding: 1rem;
+    }
+
+    .module-content img {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+}
+
 @media (max-width: 480px) {
     .selection-toolbar button { padding: .6rem .8rem; }
-    .module-content-card { margin: 1rem; padding: 1rem; }
+    .module-content-card { margin: 0.75rem; padding: 0.95rem; }
     .module-content p { max-width: 100%; }
+    .module-content h1 { font-size: 1.5rem; }
+    .module-content h2 { font-size: 1.3rem; }
+    .module-content h3 { font-size: 1.15rem; }
     .selection-toolbar {
         left: 1rem !important;
         right: 1rem !important;

@@ -89,6 +89,34 @@ class Module(models.Model):
         verbose_name = "Module"
         verbose_name_plural = "Modules"
 
+    @property
+    def file_icon(self) -> str:
+        """Return a Font Awesome icon class based on the uploaded file type."""
+        return self.file_icon_classes.split()[0]
+
+    @property
+    def file_icon_classes(self) -> str:
+        """Return the icon class and color modifier for the file type."""
+        name = (self.file.name or "").lower()
+
+        if name.endswith(".pdf"):
+            return "fas fa-file-pdf activity-icon--pdf"
+        if name.endswith((".ppt", ".pptx", ".key")):
+            return "fas fa-file-powerpoint activity-icon--ppt"
+        if name.endswith((".doc", ".docx", ".rtf")):
+            return "fas fa-file-word activity-icon--doc"
+        if name.endswith((".xls", ".xlsx", ".csv")):
+            return "fas fa-file-excel activity-icon--doc"
+        if name.endswith((".mp4", ".mov", ".avi", ".mkv", ".webm")):
+            return "fas fa-file-video activity-icon--ppt"
+        if name.endswith((".mp3", ".wav", ".aac", ".ogg")):
+            return "fas fa-file-audio activity-icon--doc"
+        if name.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")):
+            return "fas fa-file-image activity-icon--doc"
+        if name.endswith((".html", ".htm")):
+            return "fas fa-file-code activity-icon--ppt"
+        return "fas fa-file-alt activity-icon--default"
+
     def __str__(self) -> str:
         return f"{self.subject.subject_code} – Module {self.module_number}: {self.module_name}"
 

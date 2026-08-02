@@ -32,6 +32,8 @@ urlpatterns = [
     path("settings/", views.settings, name='settings'),
     path("settings/delete/", views.delete_account, name="delete_account"),
     path("api/set-theme/", views.api_set_theme, name='api_set_theme'),
+    path("api/push-subscribe/", views.api_push_subscribe, name='api_push_subscribe'),
+    path("api/push-unsubscribe/", views.api_push_unsubscribe, name='api_push_unsubscribe'),
 
     # ---------------------------------------------------------
     # OAuth

@@ -82,6 +82,40 @@
             padding: 1.5rem;
         }
 
+        html.dark .archive-detail-panel,
+        html[data-theme="dark"] .archive-detail-panel {
+            background: linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,15,28,0.98));
+            border-color: rgba(148, 163, 184, 0.18);
+            box-shadow: 0 20px 56px rgba(2, 6, 23, 0.32);
+        }
+
+        html.dark .archive-detail-header,
+        html[data-theme="dark"] .archive-detail-header {
+            background: rgba(15, 23, 42, 0.96);
+            border-bottom-color: rgba(148, 163, 184, 0.14);
+        }
+
+        html.dark .archive-detail-card,
+        html[data-theme="dark"] .archive-detail-card {
+            background: linear-gradient(135deg, rgba(17,24,39,0.98), rgba(10,15,28,0.98));
+            border-color: rgba(148, 163, 184, 0.14);
+            color: var(--text);
+        }
+
+        html.dark .archive-detail-title,
+        html.dark .archive-detail-content,
+        html.dark .archive-detail-meta,
+        html[data-theme="dark"] .archive-detail-title,
+        html[data-theme="dark"] .archive-detail-content,
+        html[data-theme="dark"] .archive-detail-meta {
+            color: var(--text);
+        }
+
+        html.dark .archive-detail-meta,
+        html[data-theme="dark"] .archive-detail-meta {
+            background: rgba(14, 154, 167, 0.12);
+        }
+
         .archive-detail-meta-row {
             display: flex;
             flex-wrap: wrap;

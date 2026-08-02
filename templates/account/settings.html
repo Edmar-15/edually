@@ -57,13 +57,20 @@
                 <section class="settings-section card">
                     <div class="details-header">
                         <h2>Account Preferences</h2>
-                        <p>Update your notification and privacy options here.</p>
+                        <p>Manage your push notification preferences here.</p>
                     </div>
 
                     <div class="settings-stack">
-                        <div class="detail-row">
-                            <span>Email Notifications</span>
-                            <span class="detail-value">Enabled</span>
+                        <div class="detail-row" style="align-items:center">
+                            <span>Push Notification</span>
+                            <span>
+                                <label class="switch">
+                                    <input id="browser-notifications-toggle"
+                                           type="checkbox"
+                                           aria-label="Enable push notifications">
+                                    <span class="slider round"></span>
+                                </label>
+                            </span>
                         </div>
 
                         <div class="detail-row" style="align-items:center">
@@ -77,24 +84,15 @@
                                 </label>
                             </span>
                         </div>
-
-                        <div class="detail-row">
-                            <span>Privacy</span>
-                            <span class="detail-value">Visible to classmates</span>
-                        </div>
                     </div>
 
                     <div class="settings-tip">
                         <h3>Stay in the loop</h3>
                         <p>
-                            Notifications and privacy controls help you keep your study
-                            space organized without feeling overwhelmed.
+                            Push notifications keep your study space updated without
+                            needing to check the announcements page manually.
                         </p>
-                    </div>
-
-                    <div class="profile-actions profile-actions-inline">
-                        <button class="button primary-button">Save Changes</button>
-                        <button class="button outline-button">Reset</button>
+                        <p id="push-notification-status" class="muted-text"></p>
                     </div>
                 </section>
 
@@ -163,6 +161,220 @@
 
 {% include "components/global_modal.html" %}
 
+<script>
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+        return outputArray;
+    }
+
+    function bytesToBase64(bytes) {
+        return btoa(String.fromCharCode(...new Uint8Array(bytes)));
+    }
+
+    const notificationStorageKey = 'eduallyBrowserNotifications';
+    const notificationToggle = document.getElementById('browser-notifications-toggle');
+    const notificationStatus = document.getElementById('push-notification-status');
+
+    function setNotificationStatus(message) {
+        if (notificationStatus) {
+            notificationStatus.textContent = message;
+        }
+    }
+
+    async function ensureServiceWorkerRegistration() {
+        if (!('serviceWorker' in navigator)) {
+            return false;
+        }
+
+        try {
+            const version = '{{ settings.PWA_SW_VERSION|default:"20240727" }}';
+            await navigator.serviceWorker.register('{% url "service-worker" %}?v=' + version);
+            return true;
+        } catch (error) {
+            console.error('Failed to register service worker for push alerts.', error);
+            return false;
+        }
+    }
+
+    function getStoredNotificationPreference() {
+        try {
+            const storedValue = localStorage.getItem(notificationStorageKey);
+            if (storedValue === 'true' || storedValue === 'false') {
+                return storedValue === 'true';
+            }
+        } catch (error) {
+            // ignore storage access errors
+        }
+
+        return Notification.permission === 'granted';
+    }
+
+    function applyNotificationToggleState(isEnabled) {
+        if (notificationToggle) {
+            notificationToggle.checked = Boolean(isEnabled);
+        }
+
+        try {
+            localStorage.setItem(notificationStorageKey, String(Boolean(isEnabled)));
+        } catch (error) {
+            // ignore storage access errors
+        }
+    }
+
+    async function syncNotificationSubscriptionState() {
+        if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
+            setNotificationStatus('This browser does not support web push notifications.');
+            return;
+        }
+
+        await ensureServiceWorkerRegistration();
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        const permission = Notification.permission;
+        const storedPreference = getStoredNotificationPreference();
+
+        if (storedPreference === true) {
+            applyNotificationToggleState(true);
+            if (permission === 'granted' && !subscription) {
+                try {
+                    await window.enablePushNotifications();
+                } catch (error) {
+                    console.warn('Could not restore browser push subscription on refresh.', error);
+                }
+            }
+            if (permission === 'granted') {
+                setNotificationStatus('Push notifications are enabled for this browser.');
+            } else if (permission === 'denied') {
+                setNotificationStatus('Push notifications are blocked in this browser. Enable them in Brave site settings, then refresh the page.');
+            } else {
+                setNotificationStatus('Push notifications are enabled in EduAlly. Please allow notifications in Brave for this site to finish the browser setup.');
+            }
+            return;
+        }
+
+        applyNotificationToggleState(Boolean(subscription));
+
+        if (permission === 'granted' && subscription) {
+            setNotificationStatus('Push notifications are enabled for this browser.');
+        } else if (permission === 'denied') {
+            setNotificationStatus('Push notifications are blocked in this browser. Enable them in Brave site settings, then refresh the page.');
+        } else {
+            setNotificationStatus('Push notifications are currently off. Turn the toggle on to enable them.');
+        }
+    }
+
+    window.enablePushNotifications = async function () {
+        if (!('PushManager' in window) || !('Notification' in window) || !('serviceWorker' in navigator)) {
+            console.warn('Web Push is not supported in this browser.');
+            return false;
+        }
+
+        if (Notification.permission === 'default') {
+            setNotificationStatus('Notifications are not enabled for this website yet. Please allow Notifications in Brave site settings for this site, then refresh the page and try again.');
+            return false;
+        }
+
+        if (Notification.permission === 'denied') {
+            setNotificationStatus('Notifications are blocked for this site in Brave. Open the site settings for this website, set Notifications to Allow, then refresh and turn the toggle back on.');
+            return false;
+        }
+
+        if (Notification.permission !== 'granted') {
+            setNotificationStatus('Please allow notifications in Brave site settings for this website before enabling push notifications.');
+            return false;
+        }
+
+        await ensureServiceWorkerRegistration();
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}')
+        });
+
+        await fetch('{% url "account:api_push_subscribe" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                endpoint: subscription.endpoint,
+                keys: {
+                    p256dh: bytesToBase64(subscription.getKey('p256dh')),
+                    auth: bytesToBase64(subscription.getKey('auth'))
+                }
+            })
+        });
+
+        applyNotificationToggleState(true);
+        setNotificationStatus('Push notifications are enabled. New announcements will now show as browser notifications.');
+        return true;
+    };
+
+    window.disablePushNotifications = async function () {
+        if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
+            console.warn('Browser push cannot be disabled in this browser.');
+            return false;
+        }
+
+        await ensureServiceWorkerRegistration();
+        const registration = await navigator.serviceWorker.ready;
+        const existingSubscription = await registration.pushManager.getSubscription();
+
+        if (!existingSubscription) {
+            return true;
+        }
+
+        const endpoint = existingSubscription.endpoint;
+        await existingSubscription.unsubscribe();
+
+        await fetch('{% url "account:api_push_unsubscribe" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ endpoint })
+        });
+
+        applyNotificationToggleState(false);
+        setNotificationStatus('Push notifications are now turned off for this browser.');
+        return true;
+    };
+
+    async function initializeNotificationToggle() {
+        if (!notificationToggle) {
+            return;
+        }
+
+        await syncNotificationSubscriptionState();
+
+        notificationToggle.addEventListener('change', async function (event) {
+            const shouldEnable = event.target.checked;
+
+            try {
+                const success = shouldEnable
+                    ? await window.enablePushNotifications()
+                    : await window.disablePushNotifications();
+
+                if (success) {
+                    applyNotificationToggleState(shouldEnable);
+                } else {
+                    event.target.checked = !shouldEnable;
+                }
+            } catch (error) {
+                console.error('Failed to update browser notification preference.', error);
+                event.target.checked = !shouldEnable;
+            }
+        });
+    }
+
+    initializeNotificationToggle();
+</script>
 <script src="{% static 'js/modal.js' %}" defer></script>
 <script src="{% static 'js/theme.js' %}" defer></script>
 </body>

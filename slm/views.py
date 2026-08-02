@@ -600,7 +600,13 @@ def module_detail(request, subject_id, module_id):
     The original file can still be downloaded.
     """
     subject = get_object_or_404(Subject, pk=subject_id)
-    module  = get_object_or_404(Module, pk=module_id, subject=subject)
+    module = get_object_or_404(Module, pk=module_id, subject=subject)
+
+    recent_modules = request.session.get("recent_modules", [])
+    recent_modules = [item for item in recent_modules if item != module.pk]
+    recent_modules.insert(0, module.pk)
+    request.session["recent_modules"] = recent_modules[:10]
+    request.session.modified = True
 
     context = {
         "subject": subject,

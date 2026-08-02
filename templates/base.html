@@ -67,15 +67,74 @@
 
     <!-- 2️⃣ Service‑worker registration -->
     <script>
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+            return outputArray;
+        }
+
+        function bytesToBase64(bytes) {
+            return btoa(String.fromCharCode(...new Uint8Array(bytes)));
+        }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Adding a version query‑string makes it easy to force a refresh:
                 const version = "{{ settings.PWA_SW_VERSION|default:'20240727' }}";
                 navigator.serviceWorker.register("{% url 'service-worker' %}?v=" + version)
                     .then(reg => console.log('✅ SW registered (scope:', reg.scope, ')'))
                     .catch(err => console.error('❌ SW registration failed:', err));
             });
         }
+
+        {% if user.is_authenticated and VAPID_PUBLIC_KEY %}
+        window.enablePushNotifications = async function () {
+            if (!('PushManager' in window) || !('Notification' in window) || !('serviceWorker' in navigator)) {
+                console.warn('Web Push is not supported in this browser.');
+                return false;
+            }
+
+            if (Notification.permission === 'default') {
+                console.warn('Notification permission is not granted yet. Enable it in the browser site settings for this website first.');
+                return false;
+            }
+
+            if (Notification.permission === 'denied') {
+                console.warn('Notification permission is denied for this site. Enable it in the browser site settings before subscribing.');
+                return false;
+            }
+
+            const registration = await navigator.serviceWorker.ready;
+            const existingSubscription = await registration.pushManager.getSubscription();
+            if (existingSubscription) {
+                await existingSubscription.unsubscribe();
+            }
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}')
+            });
+
+            await fetch('{% url "account:api_push_subscribe" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    endpoint: subscription.endpoint,
+                    keys: {
+                        p256dh: bytesToBase64(subscription.getKey('p256dh')),
+                        auth: bytesToBase64(subscription.getKey('auth'))
+                    }
+                })
+            });
+
+            return true;
+        };
+        {% endif %}
     </script>
 
     <script src="{% static 'js/theme.js' %}" defer></script>

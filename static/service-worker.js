@@ -9,7 +9,7 @@
  *  Bump `CACHE_VERSION` on every deploy – that forces a fresh install.
  * ------------------------------------------------------------------ */
 
-const CACHE_VERSION = "{{ PWA_SW_VERSION }}"; // ← change this whenever you redeploy
+const CACHE_VERSION = "20240728"; // bump this whenever you redeploy
 const STATIC_CACHE = `edually-static-${CACHE_VERSION}`;
 const SHELL_CACHE = `edually-shell-${CACHE_VERSION}`;
 
@@ -204,6 +204,39 @@ self.addEventListener("fetch", (ev) => {
  *  6️⃣  OPTIONAL – Listen for a “skipWaiting” message from the page.
  *        This lets you force an immediate activation after a deploy.
  * ------------------------------------------------------------------ */
+self.addEventListener("push", (event) => {
+  const payload = event.data ? event.data.json() : null;
+  const title = payload?.title || "EduAlly notification";
+  const body = payload?.body || "You have a new announcement.";
+  const tag = payload?.tag || "edually-announcement";
+  const url = payload?.url || "/account/announcements/";
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      tag,
+      icon: payload?.icon || "/static/icons/icon-192x192.png",
+      data: { url },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/account/announcements/";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(location.origin) && "focus" in client) {
+          return client.focus();
+        }
+      }
+      return clients.openWindow(targetUrl);
+    }),
+  );
+});
+
 self.addEventListener("message", (ev) => {
   if (ev.data && ev.data.type === "SKIP_WAITING") {
     self.skipWaiting();
