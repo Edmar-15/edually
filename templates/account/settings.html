@@ -144,14 +144,18 @@
                         <p>These actions are irreversible.  Proceed with extreme caution.</p>
                     </div>
 
-                    <form method="post"
-                          action="{% url 'account:delete_account' %}"
-                          onsubmit="return confirm('⚠️  Are you sure you want to permanently delete your account? This cannot be undone.');">
-                        {% csrf_token %}
-                        <button type="submit" class="button danger-button">
-                            Delete Account
-                        </button>
-                    </form>
+                    <div class="danger-zone-notice">
+                        <p>
+                            Clicking Delete Account will open a password confirmation modal.
+                            You must enter your current password before the account is permanently removed.
+                        </p>
+                    </div>
+
+                    <button type="button"
+                            class="button danger-button js-modal-trigger"
+                            data-url="{% url 'account:delete_account_modal' %}">
+                        Delete Account
+                    </button>
                 </section>
 
             </div>  

@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  if (body.dataset.sidebarToggleInitialized === '1') {
+    return;
+  }
+  body.dataset.sidebarToggleInitialized = '1';
+
   body.classList.add('SidebarProvider');
   mainContent.classList.add('SidebarInset');
 
@@ -31,18 +36,24 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarHeader.insertBefore(trigger, sidebarHeader.firstChild);
   }
 
-  const backdrop = document.createElement('div');
-  backdrop.className = 'sidebar-backdrop';
-  body.appendChild(backdrop);
+  let backdrop = document.querySelector('.sidebar-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'sidebar-backdrop';
+    body.appendChild(backdrop);
+  }
 
-  const mobileTrigger = document.createElement('button');
-  mobileTrigger.type = 'button';
-  mobileTrigger.className = 'mobile-sidebar-trigger';
-  mobileTrigger.setAttribute('aria-controls', 'sidebar');
-  mobileTrigger.setAttribute('aria-expanded', 'false');
-  mobileTrigger.setAttribute('aria-label', 'Open navigation sidebar');
-  mobileTrigger.innerHTML = '<span class="sr-only">Toggle sidebar</span><svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
-  body.appendChild(mobileTrigger);
+  let mobileTrigger = document.querySelector('.mobile-sidebar-trigger');
+  if (!mobileTrigger) {
+    mobileTrigger = document.createElement('button');
+    mobileTrigger.type = 'button';
+    mobileTrigger.className = 'mobile-sidebar-trigger';
+    mobileTrigger.setAttribute('aria-controls', 'sidebar');
+    mobileTrigger.setAttribute('aria-expanded', 'false');
+    mobileTrigger.setAttribute('aria-label', 'Open navigation sidebar');
+    mobileTrigger.innerHTML = '<span class="sr-only">Toggle sidebar</span><svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    body.appendChild(mobileTrigger);
+  }
 
   const setExpandedState = (isExpanded) => {
     trigger.setAttribute('aria-expanded', String(isExpanded));
@@ -81,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const syncLayout = () => {
-    const isMobile = window.innerWidth < mobileBreakpoint;
+    const isMobile = window.innerWidth <= mobileBreakpoint;
 
     if (isMobile) {
       body.classList.remove('sidebar-collapsed');

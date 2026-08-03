@@ -86,15 +86,20 @@
         const currentHash = window.location.hash;
         let target = data.redirect;
 
+        if (data.message) {
+          sessionStorage.setItem('eduallyToastMessage', JSON.stringify({
+            message: data.message,
+            type: data.toastType || 'success',
+            duration: data.toastDuration || 4000,
+          }));
+        }
+
         // Only append the hash when the target URL does NOT already have one.
         if (currentHash && !target.includes("#")) {
-          // Preserve any trailing slash before we add the hash.
           target = target.replace(/\/?$/, "") + currentHash;
         }
         window.location.href = target;
       } else {
-        // For safety, reload the page if something went wrong.
-        // The hash stays intact because we reload the *same* URL.
         window.location.reload();
       }
     });

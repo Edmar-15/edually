@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% block html_attrs %}data-force-theme="light"{% endblock %}
 {% block title %}EduAlly - Register{% endblock  %}
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/login.css' %}">

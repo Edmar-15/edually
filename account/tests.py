@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 
 from django import forms
@@ -193,6 +194,27 @@ class RecentModuleDashboardTests(TestCase):
         self.assertEqual(self.module_one.file_icon_classes, "fas fa-file-pdf activity-icon--pdf")
         self.assertEqual(self.module_two.file_icon, "fas")
         self.assertEqual(self.module_two.file_icon_classes, "fas fa-file-pdf activity-icon--pdf")
+
+    def test_dashboard_restores_recent_modules_from_cookie_when_session_is_empty(self):
+        self.client.cookies["eduallyRecentModules"] = json.dumps([self.module_two.pk, self.module_one.pk])
+        self.client.logout()
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("account:dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Recently visited modules")
+        self.assertContains(response, "Second Module")
+        self.assertContains(response, "First Module")
+
+        page_html = response.content.decode()
+        second_link = page_html.index(
+            f'href="{reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_two.pk})}"'
+        )
+        first_link = page_html.index(
+            f'href="{reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_one.pk})}"'
+        )
+        self.assertLess(second_link, first_link)
 
 
 class AnnouncementPushTests(TestCase):

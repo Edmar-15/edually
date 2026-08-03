@@ -32,7 +32,13 @@ from django.db import models
 # --------------------------------------------------------------
 # Local imports
 # --------------------------------------------------------------
-from .forms import PublicRegisterForm, ProfileForm, LoginForm, AnnouncementForm
+from .forms import (
+    PublicRegisterForm,
+    ProfileForm,
+    LoginForm,
+    AnnouncementForm,
+    DeleteAccountForm,
+)
 from .models import UserConsent, User, StudentProfile, Announcement, PushSubscription
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
@@ -152,11 +158,41 @@ def contact_page(request):
     return render(request, "account/contact.html")
 
 
+def _get_recent_module_ids(request):
+    recent_module_ids = request.session.get("recent_modules", [])
+    if recent_module_ids:
+        return recent_module_ids
+
+    cookie_value = request.COOKIES.get("eduallyRecentModules")
+    if not cookie_value:
+        return []
+
+    try:
+        parsed = json.loads(cookie_value)
+    except json.JSONDecodeError:
+        return []
+
+    if not isinstance(parsed, list):
+        return []
+
+    recent_module_ids = []
+    for item in parsed:
+        try:
+            recent_module_ids.append(int(item))
+        except (TypeError, ValueError):
+            continue
+
+    if recent_module_ids:
+        request.session["recent_modules"] = recent_module_ids
+
+    return recent_module_ids
+
+
 @login_required(login_url='account:login')
 def dashboard(request):
     subjects = request.user.subjects.all()[:3]
     modules = Module.objects.filter(subject__author=request.user).select_related("subject")[:3]
-    recent_module_ids = request.session.get("recent_modules", [])
+    recent_module_ids = _get_recent_module_ids(request)
     recent_modules = list(
         Module.objects.filter(pk__in=recent_module_ids)
         .select_related("subject")
@@ -328,28 +364,71 @@ def settings(request):
         .order_by('-created_at')[:10]
     )
 
-    context = {
-        "posts": archived_posts,
-        "modules": archived_modules,
-        "personal_materials": archived_materials,   # ← NEW
+    return render(request, "account/settings.html", _settings_context(
+        request,
+        posts=archived_posts,
+        modules=archived_modules,
+        personal_materials=archived_materials,
+    ))
+
+
+def _settings_context(request, delete_form=None, posts=None, modules=None, personal_materials=None):
+    return {
+        "posts": posts,
+        "modules": modules,
+        "personal_materials": personal_materials,
+        "delete_form": delete_form or DeleteAccountForm(user=request.user),
     }
-    return render(request, "account/settings.html", context)
 
 
 # -----------------------------------------------------------------
-#   DANGER ZONE – account deletion (unchanged from the previous answer)
+#   DANGER ZONE – account deletion (updated to require password confirm)
 # -----------------------------------------------------------------
+@login_required
+def delete_account_modal(request):
+    form = DeleteAccountForm(user=request.user)
+    html = render_to_string(
+        "account/partials/account_delete_modal.html",
+        {
+            "form": form,
+            "request": request,
+        },
+        request=request,
+    )
+    return JsonResponse({"html": html})
+
+
 @login_required
 @require_POST
 def delete_account(request):
-    """
-    Hard‑delete the user and log out.
-    All related objects cascade‑delete because the FK`s use ``on_delete=CASCADE``.
-    """
+    """Hard-delete the user after confirming the current password."""
+    form = DeleteAccountForm(request.POST, user=request.user)
+    if not form.is_valid():
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            html = render_to_string(
+                "account/partials/account_delete_modal.html",
+                {
+                    "form": form,
+                    "request": request,
+                },
+                request=request,
+            )
+            return JsonResponse({"html": html})
+        return render(request, "account/settings.html", _settings_context(request, delete_form=form))
+
     user = request.user
     auth_logout(request)          # log out before we delete the row
     user.delete()
-    messages.success(request, "Your account has been permanently deleted.")
+    message = "Your account has been permanently deleted."
+    messages.success(request, message)
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({
+            "success": True,
+            "redirect": reverse("account:landing"),
+            "message": message,
+            "toastType": "success",
+            "toastDuration": 5000,
+        })
     return redirect("landing")
 
 

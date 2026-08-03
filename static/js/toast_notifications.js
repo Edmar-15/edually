@@ -66,4 +66,22 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   renderToasts();
+
+  const renderRedirectToast = () => {
+    try {
+      const payload = sessionStorage.getItem('eduallyToastMessage');
+      if (!payload) return;
+
+      const { message, type, duration } = JSON.parse(payload);
+      if (message) {
+        window.showGlobalToast(message, type, duration);
+      }
+    } catch (error) {
+      console.error('Failed to render redirect toast', error);
+    } finally {
+      sessionStorage.removeItem('eduallyToastMessage');
+    }
+  };
+
+  renderRedirectToast();
 });

@@ -345,7 +345,7 @@ html[data-theme="dark"] .ppt-page ul ul li {
    9️⃣ Floating selection‑toolbar – pill‑shaped + animation
    ----------------------------------------------------------------- */
 .selection-toolbar {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     display: none;                       /* hidden until needed */
@@ -354,7 +354,7 @@ html[data-theme="dark"] .ppt-page ul ul li {
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,.12);
     padding: .5rem .8rem;
-    z-index: 1000;
+    z-index: 3000;
     font-size: .9rem;
     white-space: nowrap;
     opacity: 0;

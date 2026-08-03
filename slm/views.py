@@ -612,7 +612,14 @@ def module_detail(request, subject_id, module_id):
         "subject": subject,
         "module": module,
     }
-    return render(request, "slm/module_detail.html", context)
+    response = render(request, "slm/module_detail.html", context)
+    response.set_cookie(
+        "eduallyRecentModules",
+        json.dumps(recent_modules),
+        max_age=30 * 24 * 60 * 60,
+        samesite="Lax",
+    )
+    return response
 
 
 # -----------------------------------------------------------------

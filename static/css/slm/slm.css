@@ -362,12 +362,19 @@
     width: 100%;
   }
 
+  #module-list {
+    width: 100%;
+    min-width: 0;
+  }
+
   .module-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .module-card,
   .pm-card {
+    width: 100%;
+    max-width: 100%;
     padding: 0.95rem;
   }
 
@@ -415,6 +422,7 @@
 
 /* Base button styling – keep whatever you already have */
 .tab-card {
+  min-width: 0;
   background: #f5f7fb;
   border: 1px solid rgba(148, 163, 184, 0.22);
   cursor: pointer;
@@ -1305,7 +1313,7 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
 
 /* -------------------- 9️⃣ SELECTED COMPONENTS FROM tabs.css (unchanged) -------------------- */
 .tab-header {
-  background: rgba(88, 113, 167, 0.96)rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid rgba(14, 154, 167, 0.12);
   display: flex;
   align-items: center;

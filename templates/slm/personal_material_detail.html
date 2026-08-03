@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ pm.title }}{% if pm.visibility == "PU" %} – Public Material{% else %} – My Material{% endif %}</title>
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static "css/slm/module_detail.css" %}">
+    <link rel="stylesheet" href="{% static 'css/slm/module_detail.css' %}">
     <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
 </head>
 <body>
@@ -17,11 +17,11 @@
     <main class="main-content">
         <header class="content-header">
             <p class="breadcrumb"><i>
-                <a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+                <a href="{% url 'slm:slmlists' %}">Self Learning Modules</a> &gt;
                 {% if pm.visibility == 'PU' and pm.author_id != request.user.id %}
-                    <a href="{% url "slm:slmlists" %}#tab-2">Public Learning Materials</a> &gt;
+                    <a href="{% url 'slm:slmlists' %}#tab-2">Public Learning Materials</a> &gt;
                 {% else %}
-                    <a href="{% url "slm:slmlists" %}#tab-1">My Learning Materials</a> &gt;
+                    <a href="{% url 'slm:slmlists' %}#tab-1">My Learning Materials</a> &gt;
                 {% endif %}
                 {{ pm.title }}
             </i></p>
@@ -136,14 +136,16 @@
         })();
     </script>
 
+    {% if request.user.is_authenticated %}
     <script type="module">
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
         const toolbar   = document.getElementById('selection-toolbar');
         const pmId      = {{ pm.id }};
         const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        // point the JS to the personal‑material endpoint
+        // point the JS to the personal-material endpoint
         initHighlightAI(toolbar, pmId, contentRoot, '/slm/api/personal-materials/');
     </script>
+    {% endif %}
 </body>
 </html>

@@ -1,0 +1,32 @@
+{# account/partials/account_delete_modal.html #}
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content">
+    <h2>Confirm account deletion</h2>
+    <p>
+        This action is permanent. Enter your current password to confirm
+        deletion of your account.
+    </p>
+
+    <form method="post"
+          action="{% url 'account:delete_account' %}"
+          data-modal-form>
+        {% csrf_token %}
+
+        <div class="form-row{% if form.password.errors %} input-error{% endif %}">
+            <label for="id_password">Password</label>
+            {{ form.password }}
+            {% for error in form.password.errors %}
+                <div class="validation-error">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="modal__actions">
+            <button type="submit" class="button-primary button--danger">
+                Delete account
+            </button>
+            <button type="button" class="button-plain" data-close-modal>
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" {% block html_attrs %}{% endblock %}>
 <head>
     {% load static %}
     <meta charset="utf-8">
@@ -28,13 +28,25 @@
             }
 
             let theme = 'light';
-            try {
-                const saved = localStorage.getItem(key);
-                if (saved === 'dark' || saved === 'light') {
-                    theme = saved;
+            const forcedTheme = html.dataset.forceTheme;
+            if (forcedTheme === 'dark' || forcedTheme === 'light') {
+                theme = forcedTheme;
+            } else {
+                try {
+                    const saved = localStorage.getItem(key);
+                    if (saved === 'dark' || saved === 'light') {
+                        theme = saved;
+                    }
+                } catch (error) {
+                    // ignore storage access errors
                 }
-            } catch (error) {
-                // ignore storage access errors
+
+                if (theme === 'light') {
+                    const cookieTheme = getCookie(cookieName);
+                    if (cookieTheme === 'dark' || cookieTheme === 'light') {
+                        theme = cookieTheme;
+                    }
+                }
             }
 
             if (theme === 'light') {
@@ -63,6 +75,14 @@
 </head>
 
 <body>
+    {% if messages %}
+      <ul class="messages" aria-live="polite" style="display:none;">
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
     {% block content %}{% endblock %}
 
     <!-- 2️⃣ Service‑worker registration -->

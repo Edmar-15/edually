@@ -5,10 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ subject.subject_code }} – {{ module.module_name }}</title>
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static "css/slm/module_detail.css" %}">
+    <link rel="stylesheet" href="{% static 'css/slm/module_detail.css' %}">
     <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
 </head>
 <body>
@@ -19,11 +19,11 @@
                 <!-- Breadcrumb on the left -->
                 <p class="breadcrumb"><i>
                     {% if request.user|has_group:'Teacher' %}
-                    <i><a href="{% url "slm:management" %}">Module Management</a> &gt;
+                        <a href="{% url 'slm:management' %}">Module Management</a> &gt;
                     {% else %}
-                    <i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+                        <a href="{% url 'slm:slmlists' %}">Self Learning Modules</a> &gt;
                     {% endif %}
-                    <a href="{% url "slm:subject-modules" subject.id %}">{{ subject.subject_code }} – {{ subject.subject_name }}</a>
+                    <a href="{% url 'slm:subject-modules' subject.id %}">{{ subject.subject_code }} – {{ subject.subject_name }}</a>
                     &gt; {{ module.module_name }}
                 </i></p>
 
@@ -84,64 +84,7 @@
     {# 2️⃣ Modal JS – load after the DOM #}
     <script src="{% static 'js/modal.js' %}" defer></script>
 
-    <script>
-        (function () {
-            const toolbar = document.getElementById('selection-toolbar');
-            const contentRoot = document.querySelector('.module-content-card .module-content');
-
-            const hideToolbar = () => { toolbar.style.display = 'none'; };
-            const isSelectionInContent = (selection) => {
-                if (!selection || selection.rangeCount === 0 || !contentRoot) return false;
-                const range = selection.getRangeAt(0);
-                const checkNode = (node) => {
-                    let current = node;
-                    while (current) {
-                        if (current === contentRoot) return true;
-                        current = current.parentNode;
-                    }
-                    return false;
-                };
-                return checkNode(range.startContainer) && checkNode(range.endContainer);
-            };
-
-            // ---- same mouse / touch handling you already had ----
-            const showToolbarForSelection = (event) => {
-                const sel  = window.getSelection();
-                const text = sel.toString().trim();
-
-                if (toolbar.contains(event.target)) return;
-                if (!text || !isSelectionInContent(sel)) { hideToolbar(); return; }
-
-                const range = sel.getRangeAt(0);
-                const rect  = range.getBoundingClientRect();
-
-                const toolbarX = rect.left + (rect.width / 2) - (toolbar.offsetWidth / 2);
-                const toolbarY = rect.top + window.scrollY - toolbar.offsetHeight - 8;
-
-                const maxX = document.documentElement.clientWidth - toolbar.offsetWidth - 4;
-                const maxY = document.documentElement.clientHeight - toolbar.offsetHeight - 4;
-
-                toolbar.style.left = `${Math.min(Math.max(toolbarX, 4), maxX)}px`;
-                toolbar.style.top  = `${Math.min(Math.max(toolbarY, 4), maxY)}px`;
-                toolbar.style.display = 'flex';
-            };
-
-            document.addEventListener('mouseup', showToolbarForSelection);
-            document.addEventListener('touchend', (e) => setTimeout(() => showToolbarForSelection(e), 10));
-            document.addEventListener('selectionchange', () => {
-                const sel = window.getSelection();
-                if (!sel || !sel.toString().trim()) hideToolbar();
-            });
-            document.addEventListener('mousedown', (e) => {
-                if (!toolbar.contains(e.target)) hideToolbar();
-            });
-            document.addEventListener('touchstart', (e) => {
-                if (!toolbar.contains(e.target)) hideToolbar();
-            });
-        })();
-    </script>
-
-    {% if request.user|has_group:'Student' %}
+    {% if request.user.is_authenticated %}
     <script type="module">
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
         const toolbar   = document.getElementById('selection-toolbar');

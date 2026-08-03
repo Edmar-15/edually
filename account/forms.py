@@ -245,6 +245,29 @@ class PublicRegisterForm(forms.ModelForm):
         return user
 
 
+class DeleteAccountForm(forms.Form):
+    password = forms.CharField(
+        label="Confirm your password",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "Enter your password to confirm",
+                "autocomplete": "current-password",
+            }
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password")
+        if self.user is None or not self.user.check_password(password):
+            raise forms.ValidationError("Password is incorrect.")
+        return password
+
+
 # -----------------------------------------------------------------
 #  PROFILE FORM – unchanged (still edits the Student profile fields)
 # -----------------------------------------------------------------
