@@ -10,7 +10,6 @@ from .models import (
     StudentProfile,
     TeacherProfile,
     UserConsent,
-    Announcement,
 )
 
 
@@ -69,17 +68,3 @@ class UserConsentAdmin(admin.ModelAdmin):
     list_filter = ("version",)
     search_fields = ("user__email", "user__username")
     ordering = ("-accepted_at",)
-    
-    
-@admin.register(Announcement)
-class AnnouncementAdmin(admin.ModelAdmin):
-    list_display = (
-        "title",
-        "author",
-        "is_active",
-        "start_date",
-        "end_date",
-        "created_at",
-    )
-    list_filter = ("is_active", "author")
-    search_fields = ("title", "content", "author__email")

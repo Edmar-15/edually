@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .forms import LoginForm
-from .models import Announcement, PushSubscription, User, UserConsent
+from .models import PushSubscription, User, UserConsent
 from slm.models import Module, Subject
 
 
@@ -215,42 +215,3 @@ class RecentModuleDashboardTests(TestCase):
             f'href="{reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_one.pk})}"'
         )
         self.assertLess(second_link, first_link)
-
-
-class AnnouncementPushTests(TestCase):
-    def setUp(self):
-        self.teacher_group, _ = Group.objects.get_or_create(name="Teacher")
-        self.teacher = User.objects.create_user(
-            email="teacher@example.com",
-            password="secret123",
-            username="teacher",
-            first_name="Teacher",
-            last_name="User",
-        )
-        self.teacher.groups.add(self.teacher_group)
-        self.client.force_login(self.teacher)
-        UserConsent.objects.create(user=self.teacher, version="1.0")
-
-        self.subscriber = User.objects.create_user(
-            email="subscriber@example.com",
-            password="secret123",
-            username="subscriber",
-        )
-        PushSubscription.objects.create(
-            user=self.subscriber,
-            endpoint="https://example.com/endpoint",
-            auth="auth-secret",
-            p256dh="p256dh-secret",
-        )
-
-    @patch("account.views._send_announcement_push")
-    def test_create_modal_dispatches_push_for_new_announcement(self, send_push):
-        response = self.client.post(
-            reverse("account:announcement_create_modal"),
-            {"title": "System update", "content": "Maintenance starts tonight."},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(Announcement.objects.filter(title="System update").exists())
-        send_push.assert_called_once()
-

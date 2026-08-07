@@ -223,67 +223,7 @@ class UserConsent(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.email} – v{self.version} ({self.accepted_at:%Y-%m-%d})"
-    
-    
-class Announcement(models.Model):
-    """
-    Public announcements that appear on the “Announcements” page.
-    - ``is_active``  → quick on/off switch.
-    - ``start_date`` / ``end_date`` → optional schedule.
-    - ``author``     → who posted it (staff / admin).
-    """
-    title = models.CharField("Title", max_length=200)
-    content = models.TextField("Content")                     # plain text or HTML (you decide)
-    created_at = models.DateTimeField("Created", auto_now_add=True)
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="announcements",
-        help_text="User that created the announcement (staff).",
-    )
-    is_active = models.BooleanField(
-        "Active",
-        default=True,
-        help_text="Uncheck to hide the announcement without deleting it.",
-    )
-    start_date = models.DateTimeField(
-        "Start date",
-        null=True,
-        blank=True,
-        help_text="If set, the announcement is shown only after this date/time.",
-    )
-    end_date = models.DateTimeField(
-        "End date",
-        null=True,
-        blank=True,
-        help_text="If set, the announcement stops being shown after this date/time.",
-    )
 
-    class Meta:
-        ordering = ["-created_at"]
-        verbose_name = "Announcement"
-        verbose_name_plural = "Announcements"
-
-    def __str__(self) -> str:
-        return self.title
-
-    @property
-    def is_current(self) -> bool:
-        """
-        Returns ``True`` when the announcement is active and (if set) the
-        start/end dates make it visible right now.
-        """
-        now = timezone.now()
-        if not self.is_active:
-            return False
-        if self.start_date and now < self.start_date:
-            return False
-        if self.end_date and now > self.end_date:
-            return False
-        return True
-    
 
 class PushSubscription(models.Model):
     """
