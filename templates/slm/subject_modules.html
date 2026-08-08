@@ -1,17 +1,13 @@
+{% extends "base.html" %}
 {% load static %}
 {% load account_extras %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ subject.subject_code }} – {{ subject.subject_name }}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+{% block title %}{{ subject.subject_code }} – {{ subject.subject_name }}{% endblock %}
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/slm/slm.css' %}">
-</head>
-<body>
-    {% include "components/navigations.html" %}
+{% endblock %}
+{% block content %}
+{% include "components/navigations.html" %}
     <main class="main-content">
         <header class="content-header">
             {% if request.user|has_group:'Teacher' %}
@@ -66,20 +62,17 @@
                 </section>
                 {% endif %}
             </div>
-
-            {# 1️⃣ Global modal placeholder – only once per page #}
     {% include "components/global_modal.html" %}
-
-    {# 2️⃣ Modal JS – load after the DOM #}
-    <script src="{% static 'js/modal.js' %}" defer></script>
-
         </section>
     </main>
 
-    <script type="module">
+    
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/modal.js' %}" defer></script>
+<script type="module">
         import { initModuleWidget } from "{% static 'js/slm/module_ajax.js' %}";
         const root = document.getElementById('module-widget');
         initModuleWidget(root);
     </script>
-</body>
-</html>
+{% endblock %}

@@ -1,18 +1,14 @@
+{% extends "base.html" %}
 {% load static %}
 {% load account_extras %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ subject.subject_code }} – {{ module.module_name }}</title>
-    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% block title %}{{ subject.subject_code }} – {{ module.module_name }}{% endblock %}
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/slm/module_detail.css' %}">
     <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
-</head>
-<body>
-    <div class="dashboard-container">
+{% endblock %}
+{% block content %}
+<div class="dashboard-container">
         {% include "components/navigations.html" %}
         <main class="main-content">
             <header class="content-header">
@@ -80,10 +76,9 @@
     </div>
 
     {% include "components/global_modal.html" %}
-
-    {# 2️⃣ Modal JS – load after the DOM #}
+{% endblock %}
+{% block extra_js %}
     <script src="{% static 'js/modal.js' %}" defer></script>
-
     {% if request.user.is_authenticated %}
     <script type="module">
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
@@ -95,5 +90,4 @@
         initHighlightAI(toolbar, moduleId, contentRoot);
     </script>
     {% endif %}
-</body>
-</html>
+{% endblock %}
