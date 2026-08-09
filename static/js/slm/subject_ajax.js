@@ -121,70 +121,92 @@ export function initSubjectWidget(rootEl) {
   /* -----------------------------------------------------------------
    * 6️⃣  Render a single subject card (including edit/delete actions).
    * ----------------------------------------------------------------- */
-  function renderCard(subject) {
-    const card = document.createElement("div");
-    card.className = "subject-card";
-    card.dataset.id = subject.id;
+  /* -------------------------------------------------------------
+ * 6️⃣  Render a single subject card (including edit/delete actions).
+ * ------------------------------------------------------------- */
+function renderCard(subject) {
+  const card = document.createElement("div");
+  card.className = "subject-card";
+  card.dataset.id = subject.id;
 
-    const link = document.createElement("a");
-    link.href = subject.detail_url;
-    link.className = "subject-card-link";
-    link.setAttribute("aria-label", `Open ${subject.subject_code}`);
+  /* ---- Link that points to the detail page (kept for accessibility) ---- */
+  const link = document.createElement("a");
+  link.href = subject.detail_url;
+  link.className = "subject-card-link";
+  link.setAttribute("aria-label", `Open ${subject.subject_code}`);
 
-    const h1 = document.createElement("h1");
-    h1.textContent = subject.subject_code;
-    link.appendChild(h1);
+  const h1 = document.createElement("h1");
+  h1.textContent = subject.subject_code;
+  link.appendChild(h1);
 
-    const pName = document.createElement("p");
-    pName.textContent = subject.subject_name;
-    link.appendChild(pName);
+  const pName = document.createElement("p");
+  pName.textContent = subject.subject_name;
+  link.appendChild(pName);
 
-    const pYear = document.createElement("p");
-    pYear.textContent = `Year: ${subject.year_display}`;
-    link.appendChild(pYear);
+  const pYear = document.createElement("p");
+  pYear.textContent = `Year: ${subject.year_display}`;
+  link.appendChild(pYear);
 
-    const pAuthor = document.createElement("i");
-    pAuthor.textContent = `By ${subject.author_name}`;
-    link.appendChild(pAuthor);
+  const pAuthor = document.createElement("i");
+  pAuthor.textContent = `By ${subject.author_name}`;
+  link.appendChild(pAuthor);
 
-    card.appendChild(link);
+  card.appendChild(link);
 
-    if (subject.is_owner) {
-      const actions = document.createElement("div");
-      actions.className = "subject-card__actions";
+  /* ------------------------- Owner actions -------------------------- */
+  if (subject.is_owner) {
+    const actions = document.createElement("div");
+    actions.className = "subject-card__actions";
 
-      // ---- Edit (global modal) ---------------------------------
-      const edit = document.createElement("a");
-      edit.href = "#";
-      edit.title = "Edit";
-      edit.className = "subject-card__action js-modal-trigger";
-      edit.dataset.url = `/slm/api/subjects/${subject.id}/edit-modal/`;
-      edit.innerHTML = `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 
-                 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 
-                 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-        </svg>`;
-      actions.appendChild(edit);
+    /* ---- Edit (global modal) --------------------------------- */
+    const edit = document.createElement("a");
+    edit.href = "#";
+    edit.title = "Edit";
+    edit.className = "subject-card__action js-modal-trigger";
+    edit.dataset.url = `/slm/api/subjects/${subject.id}/edit-modal/`;
+    edit.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 
+               7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 
+               0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+      </svg>`;
+    actions.appendChild(edit);
 
-      // ---- Delete (global modal) -------------------------------
-      const del = document.createElement("a");
-      del.href = "#";
-      del.title = "Delete";
-      del.className = "subject-card__action subject-card__action--delete js-modal-trigger";
-      del.dataset.url = `/slm/api/subjects/${subject.id}/archive/`;
-      del.innerHTML = `
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 
-                 0h2v8h-2V9zm-8 0h2v8H7V9z"/>
-        </svg>`;
-      actions.appendChild(del);
+    /* ---- Delete (global modal) ------------------------------- */
+    const del = document.createElement("a");
+    del.href = "#";
+    del.title = "Delete";
+    del.className = "subject-card__action subject-card__action--delete js-modal-trigger";
+    del.dataset.url = `/slm/api/subjects/${subject.id}/archive/`;
+    del.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 
+               0h2v8h-2V9zm-8 0h2v8H7V9z"/>
+      </svg>`;
+    actions.appendChild(del);
 
-      card.appendChild(actions);
-    }
-
-    return card;
+    card.appendChild(actions);
   }
+
+  /* -----------------------------------------------------------------
+   * Make the whole card clickable (except when the click lands on a link
+   * – the edit/delete buttons are themselves <a> elements, so we let
+   * those behave normally and only handle “empty” clicks on the card).
+   * ----------------------------------------------------------------- */
+  card.style.cursor = "pointer";
+
+  card.addEventListener("click", e => {
+    // If the click originated on any <a> (detail link OR edit/delete), do nothing.
+    // The default navigation or modal‑trigger logic will run.
+    if (e.target.closest("a")) return;
+
+    // Otherwise treat the click as “open the subject detail page”.
+    window.location.href = link.href;
+  });
+
+  return card;
+}
+
 
   /* -----------------------------------------------------------------
    * 7️⃣  Paginator – same markup as the module widget.
