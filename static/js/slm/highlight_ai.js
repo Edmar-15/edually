@@ -1056,47 +1056,83 @@ export function initHighlightAI(
     /* -----------------------------------------------------------------
      * 15️⃣ Pre‑load cached highlights *and* populate the history UI
      * ----------------------------------------------------------------- */
-    const preloadExistingHighlights = async () => {
-        if (!hasValidId) return; // nothing to preload for static pages
+    const preloadExistingData = async () => {
+        if (!hasValidId) return;   // static pages (no id → nothing to preload)
 
         try {
-            const resp = await fetch(`${apiBase}${moduleId}/highlight/`);
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json(); // {answers:[{query, answer:{…}}]}
+            // ---------------------------------------------------------
+            // 1️⃣  Fire the two requests at the same time
+            // ---------------------------------------------------------
+            const [answersResp, annResp] = await Promise.all([
+                fetch(`${apiBase}${moduleId}/highlight/`),
+                fetch(`${apiBase}${moduleId}/annotation/`),
+            ]);
 
-            (data.answers || []).forEach((item) => {
-                const query = (item.query || "").trim();
-                if (!query) return;
+            // ---------------------------------------------------------
+            // 2️⃣  Process cached **answers**
+            // ---------------------------------------------------------
+            if (answersResp.ok) {
+                const data = await answersResp.json(); // {answers:[{query, answer:{…}}]}
+                (data.answers || []).forEach((item) => {
+                    const query = (item.query || "").trim();
+                    if (!query) return;
 
-                const ans = item.answer || {};
-                const hasS = !!ans.simplified;
-                const hasT = !!ans.technical;
+                    const ans = item.answer || {};
+                    const hasS = !!ans.simplified;
+                    const hasT = !!ans.technical;
 
-                if (hasS) {
-                    setHighlightAnswer(query, "simplified", ans.simplified);
-                    addHistoryEntry(query, "simplified");
-                }
-                if (hasT) {
-                    setHighlightAnswer(query, "technical", ans.technical);
-                    addHistoryEntry(query, "technical");
-                }
+                    if (hasS) {
+                        setHighlightAnswer(query, "simplified", ans.simplified);
+                        addHistoryEntry(query, "simplified");
+                    }
+                    if (hasT) {
+                        setHighlightAnswer(query, "technical", ans.technical);
+                        addHistoryEntry(query, "technical");
+                    }
 
-                applyHighlightToQuery(query, {
-                    simplified: hasS,
-                    technical: hasT,
+                    // Create the highlighted spans (state tells the class to use)
+                    applyHighlightToQuery(query, {
+                        simplified: hasS,
+                        technical: hasT,
+                    });
                 });
-            });
+            } else {
+                console.warn("Answers preload failed – status", answersResp.status);
+            }
 
+            // ---------------------------------------------------------
+            // 3️⃣  Process saved **annotations**
+            // ---------------------------------------------------------
+            if (annResp.ok) {
+                const annData = await annResp.json(); // {annotations:[{query, note, …}]}
+                (annData.annotations || []).forEach((a) => {
+                    const query = (a.query || "").trim();
+                    if (!query) return;
+
+                    // Store the note locally and decorate existing spans.
+                    setAnnotation(query, a.note);
+
+                    // Ensure a highlighted element exists – we do not have an
+                    // answer state, so pass an empty object (no simplified/technical).
+                    applyHighlightToQuery(query, {});
+                });
+            } else {
+                console.warn("Annotations preload failed – status", annResp.status);
+            }
+
+            // ---------------------------------------------------------
+            // 4️⃣  Finally make sure every span reflects the latest maps
+            // ---------------------------------------------------------
             syncHighlightSpans();
         } catch (e) {
-            console.warn("Could not preload highlights:", e);
+            console.warn("Could not preload highlights/annotations:", e);
         }
     };
 
     // -----------------------------------------------------------------
     // Initialise everything
     // -----------------------------------------------------------------
-    preloadExistingHighlights(); // fills maps, creates spans, populates history
+    preloadExistingData(); // fills maps, creates spans, populates history
     updateHistoryUI(); // in case nothing was cached
 
     if (historyToggle) {

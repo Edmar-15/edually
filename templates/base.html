@@ -101,13 +101,24 @@
         }
 
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const version = "{{ settings.PWA_SW_VERSION|default:'20240727' }}";
-                navigator.serviceWorker.register("{% url 'service-worker' %}?v=" + version)
-                    .then(reg => console.log('✅ SW registered (scope:', reg.scope, ')'))
-                    .catch(err => console.error('❌ SW registration failed:', err));
-            });
-        }
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => {
+                // If a new SW is waiting, tell it to activate now.
+                if (reg.waiting) {
+                    reg.waiting.postMessage({type: 'SKIP_WAITING'});
+                }
+
+                // Listen for future updates and apply them automatically.
+                reg.addEventListener('updatefound', () => {
+                    const newSW = reg.installing;
+                    newSW.addEventListener('statechange', () => {
+                    if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                        newSW.postMessage({type: 'SKIP_WAITING'});
+                    }
+                    });
+                });
+                });
+            }
 
         {% if user.is_authenticated and VAPID_PUBLIC_KEY %}
         window.enablePushNotifications = async function () {

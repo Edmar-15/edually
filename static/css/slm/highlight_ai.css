@@ -1,61 +1,127 @@
-/* ==============================================================
-   highlight_ai.css – full UI makeover
-   ==============================================================
-   This file contains every style needed by the new
-   “AI Answers / Annotations” tooltip, the choice widget,
-   annotation editor, highlighted‑fragment colours and the
-   highlight‑history button/pop‑over.
-   ============================================================= */
+@import "../base.css";
 
-/* --------------------------------------------------------------
-   1️⃣  Colour palette (easy to tweak)
-   -------------------------------------------------------------- */
+/*====================================================================
+   highlight_ai.css – updated to use the SLM design‑system colours
+   -------------------------------------------------
+   • All colours come from the design‑system (light + dark).
+   • Light defaults mirror the look of module_detail.css.
+   • Dark overrides mirror the dark theme of module_detail.css.
+   • Tooltip background stays solid; history UI now has both light &
+     dark variants.
+====================================================================*/
+
+/* -------------------------------------------------------------
+   1️⃣  Design tokens – light mode (default)
+   ------------------------------------------------------------- */
 :root {
-    /* brand / accent colours */
-    --c-primary          : #0e9aa7;   /* same colour as the old AI button */
-    --c-primary-dark    : #0b7b80;
-    --c-accent           : #2c7be5;   /* tab‑active colour */
-    --c-accent-dark     : #1855b8;
+    /* ────── Brand palette ────── */
+    --c-primary         : #0e9aa7;        /* primary brand – matches .button */
+    --c-primary-dark    : #0b7b80;        /* hover/focus for primary */
+    --c-accent          : #2c7be5;        /* secondary accent */
+    --c-accent-dark     : #1855b8;        /* accent hover */
 
-    /* backgrounds */
-    --c-bg           : #ffffff;
-    --c-bg-dark      : #212529;
-    --c-bg-muted     : #f9f9f9;
-    --c-bg-tooltip   : rgba(15, 23, 42, 0.95);   /* dark tooltip body */
-    --c-bg-history   : rgba(255,255,255,0.98);
+    /* ────── Core surfaces ────── */
+    --c-bg              : var(--surface, #ffffff);   /* page background   */
+    --c-bg-dark         : var(--surface-dark, #111111);
+    --c-bg-muted        : #fafbfc;        /* very light gray – used for tooltip header */
+    --c-bg-tooltip      : var(--c-bg);    /* solid tooltip body (overridden dark) */
+    --c-bg-history      : rgba(255,255,255,.98);   /* history pop‑over – light */
 
-    /* highlight colours */
-    --c-hl-default   : #fef3c7;   /* original highlight */
-    --c-hl-simplified: #b2ffcd;
-    --c-hl-technical : #ffeda6;
-    --c-hl-both      : #9cc7ff;
-    --c-hl-annotated : #e0f7fa;   /* light cyan for notes */
+    /* ────── Highlight colours – light mode ────── */
+    --c-hl-default      : #fef3c7;
+    --c-hl-simplified   : #b2ffcd;
+    --c-hl-technical    : #ffeda6;
+    --c-hl-both         : #9cc7ff;
+    --c-hl-annotated    : #e0f7fa;        /* light cyan for notes */
 
-    /* text colours */
-    --c-text          : #111827;
-    --c-text-muted    : #6b7280;
-    --c-text-light    : #f9fafb;   /* on dark tooltip */
-    --c-link          : #0e9aa7;
-    --c-link-hover    : #0b7b80;
-    --c-success       : #28a745;
+    /* ────── Text & UI affordances ────── */
+    --c-text            : #374151;        /* body copy – same as .module-content */
+    --c-text-muted      : #6b7280;        /* secondary copy */
+    --c-text-light      : #f9fafb;        /* used inside dark tooltip – kept */
+    --c-link            : #0e9aa7;
+    --c-link-hover      : #0b7b80;
+    --c-success         : #28a745;        /* “save” button */
 
-    /* borders / shadows */
-    --b-radius        : .5rem;
-    --b-radius-sm     : .4rem;
-    --b-shadow        : 0 6px 18px rgba(0,0,0,.12);
-    --b-shadow-heavy  : 0 12px 28px rgba(0,0,0,.22);
+    /* ────── Radii & shadows ────── */
+    --b-radius          : 0.625rem;
+    --b-radius-sm       : 0.4rem;
+    --b-shadow          : 0 16px 36px rgba(15,23,42,.07);
+    --b-shadow-heavy    : 0 12px 24px rgba(14,154,167,.10);
+
+    /* ────── Tooltip / card background – solid ────── */
+    --c-tooltip-bg      : var(--c-bg);               /* overridden in dark mode */
+    --c-heading         : #111827;                    /* headings inside cards */
+
+    /* ────── Generic UI tokens (light) ────── */
+    --c-tooltip-border      : #eef2f7;                /* header bottom line */
+    --c-tooltip-tab-color   : var(--c-text-muted);   /* tab text */
+    --c-tooltip-tab-bg-hover: #f5f7fb;               /* tab hover – light gray */
+    --c-btn-hover-bg        : #e0e0e0;                /* hover bg for .highlight-choice buttons */
+
+    --c-history-toggle-bg   : linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    --c-history-toggle-border : #bfdbfe;            /* border of toggle button */
+    --c-history-item-bg     : linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    --c-history-item-border : #eef2f7;               /* border of each history entry */
+
+    --c-border            : #ddd;                    /* generic border fallback */
+    --c-border-input      : #cbd5e1;                /* textarea / input border */
+    --c-code-bg           : rgba(15,23,42,.06);     /* inline‑code bg */
+    --c-pre-bg            : rgba(15,23,42,.05);     /* pre‑formatted block bg */
 }
 
-/* --------------------------------------------------------------
+/* -------------------------------------------------------------
+   1️⃣ 1️⃣ Dark‑mode overrides
+   ------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Brand (unchanged – already dark‑friendly) */
+        --c-primary         : #2dd4bf;
+        --c-primary-dark    : #22c5b0;
+        --c-accent          : #60a5fa;
+        --c-accent-dark     : #3b82f6;
+
+        /* Core surfaces */
+        --c-bg              : var(--surface-dark, #111111);
+        --c-bg-muted        : rgba(15,23,42,.9);      /* same as dark PDF/DOCX/PPT pages */
+        --c-bg-history      : #1a1a1a;                /* dark history pop‑over */
+        --c-tooltip-bg      : #1f2937;               /* solid tooltip body – dark gray */
+
+        /* Text & UI */
+        --c-text            : var(--text, #e5e7eb);
+        --c-text-muted      : var(--muted, #9ca3af);
+        --c-heading         : var(--text, #e5e7eb);
+
+        /* Tooltip UI */
+        --c-tooltip-border      : rgba(148,163,184,.14);
+        --c-tooltip-tab-color   : #ccc;
+        --c-tooltip-tab-bg-hover: #383838;
+        --c-btn-hover-bg        : #2d2d2d;
+
+        /* History UI */
+        --c-history-toggle-bg   : linear-gradient(135deg, #2a2b2c 0%, #1c1c1d 100%);
+        --c-history-toggle-border : var(--c-accent);
+        --c-history-item-bg     : var(--c-bg-muted);    /* solid dark background */
+        --c-history-item-border : #444;                /* dark border */
+
+        /* Generic UI */
+        --c-border            : #444;
+        --c-border-input      : #666;
+        --c-code-bg           : rgba(255,255,255,.06);
+        --c-pre-bg            : rgba(255,255,255,.05);
+    }
+}
+
+/* -------------------------------------------------------------
    2️⃣  Global utilities
-   -------------------------------------------------------------- */
+   ------------------------------------------------------------- */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
 }
 html {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
 }
@@ -68,13 +134,14 @@ a:focus-visible {
     color: var(--c-link-hover);
 }
 
-/* --------------------------------------------------------------
+/* -------------------------------------------------------------
    3️⃣  Highlighted fragments
-   -------------------------------------------------------------- */
+   ------------------------------------------------------------- */
 .highlight-marked {
     padding: 0 .16em;
     border-radius: .3em;
     background: var(--c-hl-default);
+    color: var(--c-text);
     box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
     transition: filter 120ms ease, transform 120ms ease;
 }
@@ -85,12 +152,12 @@ a:focus-visible {
     outline: none;
 }
 
-/* colours for AI‑answer levels */
+/* Level‑specific colours */
 .highlight-marked--simplified { background: var(--c-hl-simplified); }
 .highlight-marked--technical  { background: var(--c-hl-technical); }
 .highlight-marked--both       { background: var(--c-hl-both); }
 
-/* annotated fragments – a light‑cyan background + tiny pencil icon */
+/* Annotated fragments */
 .highlight-marked--annotated {
     position: relative;
     background: var(--c-hl-annotated);
@@ -104,7 +171,7 @@ a:focus-visible {
     color: var(--c-primary-dark);
 }
 
-/* focus style for a fragment that is highlighted from history */
+/* History‑focused highlight */
 .highlight-marked.highlight-history-focused {
     box-shadow:
         0 0 0 3px rgba(255,255,255,.95),
@@ -118,31 +185,31 @@ a:focus-visible {
     50%      { transform: scale(1.01); }
 }
 
-/* --------------------------------------------------------------
-   4️⃣  Tooltip that appears when a highlighted fragment is clicked
-   -------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   4️⃣  Tooltip (solid background)
+   ------------------------------------------------------------- */
 .highlight-answer-tooltip {
     position: absolute;
     z-index: 3000;
     max-width: min(340px, 80vw);
-    pointer-events: auto;                 /* ←  crucial – now the tooltip receives clicks */
-    animation: fadeIn 0.12s ease-out;
+    pointer-events: auto;
+    animation: fadeIn .12s ease-out;
 }
 
-/* optional arrow pointing to the fragment */
+/* Arrow – same colour as the tooltip body */
 .highlight-answer-tooltip::after {
     content: "";
     position: absolute;
-    top: -6px;                                    /* adjust to fit your design */
-    left: 1.5rem;                               /* roughly centre under the tab bar */
+    top: -6px;
+    left: 1.5rem;
     border-width: 6px;
     border-style: solid;
-    border-color: transparent transparent var(--c-bg) transparent;
+    border-color: transparent transparent var(--c-tooltip-bg) transparent;
 }
 
-/* inner wrapper – white card with slight shadow */
+/* Card wrapper */
 .highlight-answer-tooltip__inner {
-    background: var(--c-bg);
+    background: var(--c-tooltip-bg);
     border-radius: var(--b-radius);
     box-shadow: var(--b-shadow);
     overflow: hidden;
@@ -150,12 +217,10 @@ a:focus-visible {
     flex-direction: column;
 }
 
-/* --------------------------------------------------------------
-   4.1  Header (tabs)
-   -------------------------------------------------------------- */
+/* Header (tabs) – uses the same tokens as the module‑detail header */
 .highlight-tooltip-header {
     display: flex;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--c-tooltip-border);
     background: var(--c-bg-muted);
 }
 .tooltip-tab {
@@ -165,10 +230,12 @@ a:focus-visible {
     border: none;
     font-size: .9rem;
     cursor: pointer;
-    color: #555;
+    color: var(--c-tooltip-tab-color);
     transition: background .12s ease;
 }
-.tooltip-tab:hover { background: #eaeaea; }
+.tooltip-tab:hover {
+    background: var(--c-tooltip-tab-bg-hover);
+}
 .tooltip-tab--active {
     font-weight: 600;
     background: var(--c-bg);
@@ -176,9 +243,7 @@ a:focus-visible {
     color: var(--c-accent);
 }
 
-/* --------------------------------------------------------------
-   4.2  Body – scrollable area
-   -------------------------------------------------------------- */
+/* Body – solid background (no transparency) */
 .highlight-tooltip-body {
     max-height: 260px;
     overflow-y: auto;
@@ -186,16 +251,10 @@ a:focus-visible {
     font-size: .9rem;
     line-height: 1.45;
     color: var(--c-text);
+    background: var(--c-tooltip-bg);
 }
 
-/* reuse the original dark‑tooltip styling for when you need it
-   (kept for backward compatibility – you can delete it if you like) */
-.highlight-tooltip-body.dark {
-    background: var(--c-bg-tooltip);
-    color: var(--c-text-light);
-}
-
-/* common markdown elements inside the tooltip body */
+/* Markdown‑style helpers (code, tables, etc.) */
 .highlight-tooltip-body p,
 .highlight-tooltip-body ul,
 .highlight-tooltip-body ol,
@@ -203,24 +262,21 @@ a:focus-visible {
 .highlight-tooltip-body pre {
     margin: 0;
 }
-.highlight-tooltip-body a {
-    color: var(--c-link);
-}
+.highlight-tooltip-body a { color: var(--c-link); }
 .highlight-tooltip-body ul,
-.highlight-tooltip-body ol {
-    padding-left: 1.1rem;
-}
+.highlight-tooltip-body ol { padding-left: 1.1rem; }
 .highlight-tooltip-body code {
     display: inline-block;
     padding: .15rem .35rem;
     border-radius: 6px;
-    background: rgba(15,23,42,.06);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    background: var(--c-code-bg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
+                 Consolas, "Liberation Mono", "Courier New", monospace;
 }
 .highlight-tooltip-body pre {
     padding: .6rem;
     border-radius: 8px;
-    background: rgba(15,23,42,.05);
+    background: var(--c-pre-bg);
     overflow-x: auto;
 }
 .highlight-tooltip-body table {
@@ -239,24 +295,24 @@ a:focus-visible {
     background: rgba(37,99,235,.08);
 }
 
-/* cached‑answer badge inside AI section */
+/* Cached‑answer badge (keeps the muted colour) */
 .ai-cached {
     display: inline-block;
     margin-right: .4rem;
     font-size: .85rem;
-    color: #555;
+    color: var(--c-text-muted);
 }
 
-/* --------------------------------------------------------------
-   5️⃣  AI Answers tab (inside the tooltip body)
-   -------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   5️⃣  AI Answers tab
+   ------------------------------------------------------------- */
 .ai-answer-level {
     margin-bottom: 1rem;
 }
 .ai-answer-level h4 {
     margin: 0 0 .4rem;
     font-size: .95rem;
-    color: #333;
+    color: var(--c-heading);
 }
 .ai-get-level {
     display: inline-block;
@@ -274,15 +330,15 @@ a:focus-visible {
     transform: translateY(-1px);
 }
 
-/* --------------------------------------------------------------
-   6️⃣  Annotation editor (inside the tooltip body)
-   -------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   6️⃣  Annotation editor (inside tooltip)
+   ------------------------------------------------------------- */
 .annotation-edit textarea.annotation-textarea {
     width: 100%;
     min-height: 4rem;
     padding: .45rem;
     font-size: .85rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--c-border-input);
     border-radius: .4rem;
     resize: vertical;
 }
@@ -297,23 +353,21 @@ a:focus-visible {
     font-weight: 600;
     transition: background .12s ease;
 }
-.annotation-save:hover {
-    background: #1e7e34;
-}
+.annotation-save:hover { background: #1e7e34; }
 
-/* --------------------------------------------------------------
+/* -------------------------------------------------------------
    7️⃣  “Ask AI / Add annotation” choice widget
-   -------------------------------------------------------------- */
+   ------------------------------------------------------------- */
 .highlight-choice {
     position: absolute;
     padding: .6rem .9rem;
     background: var(--c-bg);
-    border: 1px solid #ccc;
+    border: 1px solid var(--c-border);
     border-radius: .5rem;
     box-shadow: 0 4px 12px rgba(0,0,0,.15);
     font-size: .9rem;
     line-height: 1.4;
-    z-index: 3100;                /* above everything else */
+    z-index: 3100;
     max-width: 260px;
 }
 .highlight-choice p {
@@ -325,25 +379,24 @@ a:focus-visible {
     padding: .35rem .8rem;
     font-size: .85rem;
     background: var(--c-bg);
-    border: 1px solid #bbb;
+    border: 1px solid var(--c-border);
     border-radius: .4rem;
     cursor: pointer;
     transition: background .12s ease;
 }
 .highlight-choice button:hover {
-    background: #e0e0e0;
+    background: var(--c-btn-hover-bg);
 }
 
-/* --------------------------------------------------------------
+/* -------------------------------------------------------------
    8️⃣  Annotation editor that appears after “Add annotation”
-   (stand‑alone widget – used when the user clicks the choice button)
-   -------------------------------------------------------------- */
+   ------------------------------------------------------------- */
 .annotation-widget {
     position: absolute;
     width: 260px;
     padding: .8rem .9rem;
     background: var(--c-bg);
-    border: 1px solid #aaa;
+    border: 1px solid var(--c-border);
     border-radius: .5rem;
     box-shadow: 0 4px 12px rgba(0,0,0,.2);
     font-size: .9rem;
@@ -356,14 +409,14 @@ a:focus-visible {
     margin-bottom: .6rem;
     padding: .45rem;
     font-size: .85rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--c-border-input);
     border-radius: .4rem;
     resize: vertical;
 }
 
-/* --------------------------------------------------------------
-   9️⃣  Highlight‑history button & pop‑over (kept mostly the same)
-   -------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   9️⃣  Highlight‑history button & pop‑over
+   ------------------------------------------------------------- */
 .module-content-history {
     position: fixed;
     right: 1.1rem;
@@ -375,8 +428,8 @@ a:focus-visible {
     align-items: center;
     gap: .5rem;
     padding: .6rem .85rem;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    border: 1px solid #bfdbfe;
+    background: var(--c-history-toggle-bg);
+    border: 1px solid var(--c-history-toggle-border);
     border-radius: 999px;
     color: var(--c-primary);
     font-weight: 700;
@@ -384,7 +437,7 @@ a:focus-visible {
     box-shadow: 0 10px 20px rgba(14,154,167,.12);
 }
 .module-content-history__toggle:hover {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    background: var(--c-history-toggle-bg);
 }
 .module-content-history__popover {
     position: absolute;
@@ -394,7 +447,7 @@ a:focus-visible {
     max-width: min(380px, 90vw);
     padding: .6rem;
     background: var(--c-bg-history);
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--c-border);
     border-radius: .9rem;
     box-shadow: 0 16px 34px rgba(15,23,42,.16);
     backdrop-filter: blur(8px);
@@ -412,8 +465,8 @@ a:focus-visible {
     display: flex;
     justify-content: space-between;
     padding: .6rem .7rem;
-    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
-    border: 1px solid #eef2f7;
+    background: var(--c-history-item-bg);
+    border: 1px solid var(--c-history-item-border);
     border-radius: .6rem;
     cursor: pointer;
     transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
@@ -436,21 +489,19 @@ a:focus-visible {
     text-transform: capitalize;
 }
 
-/* --------------------------------------------------------------
-   10️⃣  Small utilities & animations
-   -------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   🔟  Small utilities & animations
+   ------------------------------------------------------------- */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-
-/* make the tooltip invisible when hidden (used by JS) */
 .highlight-answer-tooltip.hidden { display: none; }
 
-/* --------------------------------------------------------------
-   11️⃣  Legacy class names kept for backward‑compatibility
-   -------------------------------------------------------------- */
-.ai-mini {                     /* old mini‑widget – still works as a fallback */
+/* -------------------------------------------------------------
+   1️⃣1️⃣  Legacy class names – kept for compatibility
+   ------------------------------------------------------------- */
+.ai-mini {
     position: absolute;
     z-index: 2000;
     width: 250px;
@@ -519,13 +570,14 @@ a:focus-visible {
     display: inline-block;
     padding: .15rem .35rem;
     border-radius: 6px;
-    background: rgba(15,23,42,.06);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    background: var(--c-code-bg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
+                 Consolas, "Liberation Mono", "Courier New", monospace;
 }
 .ai-mini .ai-answer-content pre {
     padding: .6rem;
     border-radius: 8px;
-    background: rgba(15,23,42,.05);
+    background: var(--c-pre-bg);
     overflow-x: auto;
 }
 .ai-mini .ai-answer-content table {
