@@ -1,6 +1,41 @@
 # forum/forms.py
+import re
+
 from django import forms
 from .models import Post, Reply, Category
+
+BAD_WORDS = {
+    "fuck",
+    "shit",
+    "bitch",
+    "asshole",
+    "bastard",
+    "damn",
+    "crap",
+    "dick",
+    "piss",
+    "hell",
+    "slut",
+    "putang ina",
+    "puta",
+    "tangina",
+    "tanginang",
+    "pucha",
+    "pakyu",
+    "gago",
+    "tarantado",
+    "ulol",
+    "bobo",
+    "tanga",
+}
+
+BAD_WORD_PATTERN = re.compile(r"\b(?:" + r"|".join(re.escape(word) for word in BAD_WORDS) + r")\b", re.IGNORECASE)
+
+
+def contains_bad_word(text: str) -> bool:
+    if not text:
+        return False
+    return bool(BAD_WORD_PATTERN.search(text))
 
 
 class PostForm(forms.ModelForm):
@@ -21,6 +56,22 @@ class PostForm(forms.ModelForm):
             "category": forms.Select(attrs={"class": "select"}),
         }
 
+    def clean_title(self):
+        title = self.cleaned_data.get("title", "")
+        if contains_bad_word(title):
+            raise forms.ValidationError(
+                "Your title contains inappropriate language. Please remove any profanity before posting."
+            )
+        return title
+
+    def clean_content(self):
+        content = self.cleaned_data.get("content", "")
+        if contains_bad_word(content):
+            raise forms.ValidationError(
+                "Your post content contains inappropriate language. Please remove any profanity before posting."
+            )
+        return content
+
 
 class ReplyForm(forms.ModelForm):
     class Meta:
@@ -35,3 +86,11 @@ class ReplyForm(forms.ModelForm):
                 }
             )
         }
+
+    def clean_content(self):
+        content = self.cleaned_data.get("content", "")
+        if contains_bad_word(content):
+            raise forms.ValidationError(
+                "Your reply contains inappropriate language. Please remove any profanity before posting."
+            )
+        return content

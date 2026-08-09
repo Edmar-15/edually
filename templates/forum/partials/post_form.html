@@ -11,6 +11,20 @@
                 data-toast-success="Your post was published."
                 data-toast-error="We couldn't publish your post. Please try again.">
             {% csrf_token %}
+            {% if form.errors %}
+                <div class="form-error-summary">
+                    <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
             {{ form.as_p }}
             <div class="modal__actions">
                 <button type="submit" class="button primary-button button-lg">
