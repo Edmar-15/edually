@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
 from django.db import models
-from .models import Subject, Module, PersonalMaterial, HighlightAnswer
+from .models import Subject, Module, PersonalMaterial, HighlightAnswer, HighlightAnnotation
 import os
 from .content_extractor import extract_content
 import logging as logger
@@ -990,6 +990,85 @@ def api_highlight(request, pk, target_type):
     return JsonResponse(
         {"query": raw_query, "answer": answer_body, "cached": False},
         status=200,
+    )
+    
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def api_annotation(request, pk, target_type):
+    """
+    ``target_type`` – ``module`` or ``personal`` (same as the highlight view).
+
+    GET   →  {annotations: [{id, query, note, created_at}, …]}
+    POST  →  {id, query, note, created_at}
+            expects JSON: {query: "...", note: "..."}
+    """
+    # -----------------------------------------------------------------
+    # Resolve target object
+    # -----------------------------------------------------------------
+    if target_type == "module":
+        target = get_object_or_404(Module, pk=pk)
+        fk_name = "module"
+    else:   # personal material
+        target = get_object_or_404(PersonalMaterial, pk=pk)
+        # visibility guard – owners may see private, others only public
+        if (
+            target.visibility == PersonalMaterial.Visibility.PRIVATE
+            and target.author_id != request.user.id
+        ):
+            return JsonResponse({"error": "Permission denied"}, status=403)
+        fk_name = "personal_material"
+
+    # -----------------------------------------------------------------
+    # GET – list the current user’s annotations for this object
+    # -----------------------------------------------------------------
+    if request.method == "GET":
+        ann_qs = HighlightAnnotation.objects.filter(**{fk_name: target, "owner": request.user})
+        data = [
+            {
+                "id": a.id,
+                "query": a.query,
+                "note": a.note,
+                "created_at": a.created_at.isoformat(),
+            }
+            for a in ann_qs
+        ]
+        return JsonResponse({"annotations": data}, safe=False)
+
+    # -----------------------------------------------------------------
+    # POST – create a new annotation
+    # -----------------------------------------------------------------
+    try:
+        payload = json.loads(request.body)
+        raw_query = payload.get("query", "").strip()
+        note = payload.get("note", "").strip()
+        if not raw_query:
+            raise ValueError("Empty query")
+    except (json.JSONDecodeError, ValueError) as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    # Normalise the query (lower‑case) for DB‑uniqueness
+    query = raw_query.lower()
+
+    try:
+        ann = HighlightAnnotation.objects.create(
+            **{fk_name: target},
+            owner=request.user,
+            query=query,
+            note=note,
+        )
+    except Exception as exc:      # pragma: no cover – defensive
+        logger.error("Failed to store annotation: %s", exc)
+        return JsonResponse({"error": "Could not store annotation"}, status=500)
+
+    return JsonResponse(
+        {
+            "id": ann.id,
+            "query": raw_query,
+            "note": ann.note,
+            "created_at": ann.created_at.isoformat(),
+        },
+        status=201,
     )
 
 

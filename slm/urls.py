@@ -146,4 +146,17 @@ urlpatterns = [
         views.api_personal_material_archive,
         name="personalmaterial-archive",
     ),
+    
+    path(
+        "api/modules/<int:pk>/annotation/",
+        views.api_annotation,
+        {"target_type": "module"},
+        name="module-annotation",
+    ),
+    path(
+        "api/personal-materials/<int:pk>/annotation/",
+        views.api_annotation,
+        {"target_type": "personal"},
+        name="personalmaterial-annotation",
+    ),
 ]

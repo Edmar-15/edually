@@ -236,3 +236,51 @@ class HighlightAnswer(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Highlight answer"
         verbose_name_plural = "Highlight answers"
+        
+
+class HighlightAnnotation(models.Model):
+    """
+    A free‑form note attached to a highlighted fragment.
+    One row per (owner, query, target) – the same query can be
+    annotated many times (different owners).  For a given owner we keep
+    only the newest one.
+    """
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.CASCADE,
+        related_name="highlight_annotations",
+        null=True,
+        blank=True,
+        help_text="Module the annotation belongs to (null for personal material).",
+    )
+    personal_material = models.ForeignKey(
+        "PersonalMaterial",
+        on_delete=models.CASCADE,
+        related_name="highlight_annotations",
+        null=True,
+        blank=True,
+        help_text="Personal material the annotation belongs to (null for module).",
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="highlight_annotations",
+        help_text="User that created the annotation.",
+    )
+    # store the *canonical* (lower‑cased) version of the highlighted text
+    query = models.CharField(
+        max_length=255,
+        help_text="Exact highlighted text (lower‑cased).",
+    )
+    note = models.TextField(
+        blank=True,
+        help_text="Free‑form annotation written by the user.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # a user may have only one annotation per query per target
+        unique_together = ("module", "personal_material", "query", "owner")
+        ordering = ["-created_at"]
+        verbose_name = "Highlight annotation"
+        verbose_name_plural = "Highlight annotations"

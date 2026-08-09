@@ -30,8 +30,6 @@ export function initHighlightAI(
      * ----------------------------------------------------------------- */
     const hasValidId = Number.isInteger(moduleId) && moduleId > 0;
     if (!hasValidId) {
-        // The rest of the UI (selection toolbar, mini‑AI widget) still works,
-        // but we will skip any network calls that would 404.
         console.info(
             "[highlight_ai] No valid id supplied – highlight cache disabled."
         );
@@ -71,6 +69,44 @@ export function initHighlightAI(
     // Internal maps keyed by the *normalised* query.
     const highlightStates = new Map(); // { simplified:bool, technical:bool }
     const answerStore = new Map(); // { simplified:'html', technical:'html' }
+    const annotationStore = new Map(); // { query -> note }
+
+    /**
+     * Store a note for a query, add visual cue, and refresh tooltip/ history.
+     */
+    const setAnnotation = (query, note) => {
+        const q = normalise(query);
+        if (!q) return;
+
+        // 1️⃣ Remember it locally.
+        annotationStore.set(q, note);
+
+        // 2️⃣ Find existing highlighted spans (if any) and decorate them.
+        const existingSpans = contentRoot.querySelectorAll(
+            `.highlight-marked[data-highlight-query="${q}"]`
+        );
+
+        if (existingSpans.length) {
+            existingSpans.forEach((span) => {
+                span.classList.add("highlight-marked--annotated");
+                span.dataset.annotation = note;
+                span.dataset.answer = buildAnswerText(q);
+            });
+        } else {
+            // No span yet – create a neutral highlight and then tag it.
+            applyHighlightToQuery(query, {}); // creates a generic .highlight-marked
+            contentRoot
+                .querySelectorAll(`.highlight-marked[data-highlight-query="${q}"]`)
+                .forEach((span) => {
+                    span.classList.add("highlight-marked--annotated");
+                    span.dataset.annotation = note;
+                    span.dataset.answer = buildAnswerText(q);
+                });
+        }
+
+        // 3️⃣ Add to the history UI (we call the level “annotation”).
+        addHistoryEntry(query, "annotation");
+    };
 
     /* -----------------------------------------------------------------
      * 4️⃣ History UI helpers
@@ -196,6 +232,9 @@ export function initHighlightAI(
         const parts = [];
         if (ans.simplified) parts.push(`Simplified:\n${ans.simplified}`);
         if (ans.technical) parts.push(`Technical:\n${ans.technical}`);
+        if (annotationStore.has(q)) {
+            parts.push(`Annotation:\n${annotationStore.get(q)}`);
+        }
         return parts.join("\n\n");
     };
 
@@ -289,11 +328,22 @@ export function initHighlightAI(
                 span.textContent?.trim().toLowerCase() ||
                 "";
             if (!query) return;
+
             const state = highlightStates.get(query) || {
                 simplified: false,
                 technical: false,
             };
             span.className = getHighlightClassName(state);
+
+            // ---- NEW: add annotation visual cue if we have a note ----
+            if (annotationStore.has(query)) {
+                span.classList.add("highlight-marked--annotated");
+                span.dataset.annotation = annotationStore.get(query);
+            } else {
+                span.classList.remove("highlight-marked--annotated");
+                delete span.dataset.annotation;
+            }
+
             span.dataset.answer = buildAnswerText(query);
             attachHighlightEvents(span, query);
         });
@@ -349,7 +399,7 @@ export function initHighlightAI(
                 span.className = className;
                 span.dataset.highlightQuery = q;
                 span.dataset.answer = buildAnswerText(q);
-                span.appendChild(document.createTextNode(match[1])); // keep original casing
+                span.appendChild(document.createTextNode(match[1])); // preserve original case
                 attachHighlightEvents(span, q);
                 frag.appendChild(span);
                 last = match.index + match[1].length;
@@ -366,9 +416,61 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 🔟 Mini‑AI widget (the small box that appears after a selection)
+     * 🔟 UI: Choice widget (Ask AI | Annotate)
      * ----------------------------------------------------------------- */
-    const createMiniAI = (range) => {
+    const createChoiceWidget = (range) => {
+        const choice = document.createElement("div");
+        choice.className = "highlight-choice";
+        choice.innerHTML = `
+            <p class="highlight-choice__text">What would you like to do?</p>
+            <button class="choice-ask-ai">Ask AI</button>
+            <button class="choice-annotate">Add annotation</button>
+        `;
+        document.body.appendChild(choice);
+
+        const rect = range.getBoundingClientRect();
+        const top = rect.bottom + window.scrollY + 6;
+        const left = Math.min(
+            rect.left + window.scrollX,
+            document.documentElement.clientWidth - choice.offsetWidth - 8
+        );
+        choice.style.top = `${top}px`;
+        choice.style.left = `${left}px`;
+
+        const clickOutside = (e) => {
+            if (!choice.contains(e.target)) {
+                choice.remove();
+                document.removeEventListener("mousedown", clickOutside);
+                mini = null;
+            }
+        };
+        document.addEventListener("mousedown", clickOutside);
+
+        // ---- Ask‑AI button -------------------------------------------------
+        choice
+            .querySelector(".choice-ask-ai")
+            .addEventListener("click", () => {
+                choice.remove();
+                document.removeEventListener("mousedown", clickOutside);
+                mini = createAIMiniWidget(range);
+            });
+
+        // ---- Add‑annotation button -------------------------------------------
+        choice
+            .querySelector(".choice-annotate")
+            .addEventListener("click", () => {
+                choice.remove();
+                document.removeEventListener("mousedown", clickOutside);
+                mini = createAnnotationWidget(range);
+            });
+
+        return choice;
+    };
+
+    /* -----------------------------------------------------------------
+     * 🔟 Mini‑AI widget (the small box that appears after selecting “Ask AI”)
+     * ----------------------------------------------------------------- */
+    const createAIMiniWidget = (range) => {
         const mini = document.createElement("div");
         mini.className = "ai-mini";
         mini.innerHTML = `
@@ -396,7 +498,132 @@ export function initHighlightAI(
             }
         };
         document.addEventListener("mousedown", clickOutside);
+
+        // Bind the button to actually query the AI
+        const btn = mini.querySelector(".ai-get");
+        const levelSelect = mini.querySelector(".ai-level");
+        btn.addEventListener("click", () => {
+            const lvl = levelSelect.value;
+            performAIQuery(range, lvl);
+        });
+
         return mini;
+    };
+
+    /* -----------------------------------------------------------------
+     * 🔟 Perform the AI request (used by the mini‑AI widget)
+     * ----------------------------------------------------------------- */
+    const performAIQuery = async (range, level) => {
+        const sel = window.getSelection();
+        const query = sel.toString().trim();
+        if (!query) return;
+
+        const btn = mini.querySelector(".ai-get");
+        const old = btn.textContent;
+        btn.textContent = "Thinking…";
+        btn.disabled = true;
+
+        try {
+            const resp = await fetch(
+                `${apiBase}${moduleId}/highlight/`,
+                {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken,
+                    },
+                    body: JSON.stringify({ query, level }),
+                }
+            );
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json(); // {answer:"<html>", cached:true|false}
+            renderAnswer(mini, data.answer, !!data.cached);
+            setHighlightAnswer(query, level, data.answer);
+            markSelection(range, level);
+            syncHighlightSpans();
+            addHistoryEntry(query, level);
+        } catch (err) {
+            console.error("AI request failed:", err);
+            renderAnswer(
+                mini,
+                "<em>Sorry – the AI service could not be reached.</em>",
+                false
+            );
+        } finally {
+            btn.textContent = old;
+            btn.disabled = false;
+        }
+    };
+
+    /* -----------------------------------------------------------------
+     * 🔟 Annotation widget (simple textarea + save)
+     * ----------------------------------------------------------------- */
+    const createAnnotationWidget = (range) => {
+        const ann = document.createElement("div");
+        ann.className = "annotation-widget";
+        ann.innerHTML = `
+            <textarea rows="3" placeholder="Enter your note"></textarea>
+            <button class="annotation-save">Save</button>
+        `;
+        document.body.appendChild(ann);
+        const rect = range.getBoundingClientRect();
+        const top = rect.bottom + window.scrollY + 6;
+        const left = Math.min(
+            rect.left + window.scrollX,
+            document.documentElement.clientWidth - ann.offsetWidth - 8
+        );
+        ann.style.top = `${top}px`;
+        ann.style.left = `${left}px`;
+
+        const clickOutside = (e) => {
+            if (!ann.contains(e.target)) {
+                ann.remove();
+                document.removeEventListener("mousedown", clickOutside);
+                mini = null;
+            }
+        };
+        document.addEventListener("mousedown", clickOutside);
+
+        const saveBtn = ann.querySelector(".annotation-save");
+        const textarea = ann.querySelector("textarea");
+        saveBtn.addEventListener("click", async () => {
+            const note = textarea.value.trim();
+            const query = range.toString().trim();
+
+            if (!note) {
+                alert("Annotation cannot be empty.");
+                return;
+            }
+
+            try {
+                const resp = await fetch(
+                    `${apiBase}${moduleId}/annotation/`,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrftoken,
+                        },
+                        body: JSON.stringify({ query, note }),
+                    }
+                );
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+                const data = await resp.json(); // {id, query, note, created_at}
+                setAnnotation(query, data.note ?? note);
+                alert("Annotation saved.");
+            } catch (e) {
+                console.error("Annotation request failed:", e);
+                alert("Failed to save annotation.");
+            } finally {
+                ann.remove();
+                mini = null;
+            }
+        });
+
+        return ann;
     };
 
     /* -----------------------------------------------------------------
@@ -583,51 +810,8 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 12️⃣ Ask the AI (POST)
+     * 12️⃣ Ask the AI (POST) – handled by `performAIQuery`
      * ----------------------------------------------------------------- */
-    const askAI = async (range, level) => {
-        const sel = window.getSelection();
-        const query = sel.toString().trim();
-        if (!query) return;
-
-        const mini = createMiniAI(range);
-        const btn = mini.querySelector(".ai-get");
-        const old = btn.textContent;
-        btn.textContent = "Thinking…";
-        btn.disabled = true;
-
-        try {
-            const resp = await fetch(
-                `${apiBase}${moduleId}/highlight/`,
-                {
-                    method: "POST",
-                    credentials: "same-origin",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrftoken,
-                    },
-                    body: JSON.stringify({ query, level }),
-                }
-            );
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json(); // {answer:"<html>", cached:true|false}
-            renderAnswer(mini, data.answer, !!data.cached);
-            setHighlightAnswer(query, level, data.answer);
-            markSelection(range, level);
-            syncHighlightSpans();
-            addHistoryEntry(query, level);
-        } catch (err) {
-            console.error("AI request failed:", err);
-            renderAnswer(
-                mini,
-                "<em>Sorry – the AI service could not be reached.</em>",
-                false
-            );
-        } finally {
-            btn.textContent = old;
-            btn.disabled = false;
-        }
-    };
 
     /* -----------------------------------------------------------------
      * 13️⃣ Visual marking of the selected fragment
@@ -649,9 +833,9 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 14️⃣ Bind selection → mini‑AI widget
+     * 14️⃣ Bind selection → choice widget
      * ----------------------------------------------------------------- */
-    let mini = null; // currently open mini‑AI widget
+    let mini = null; // currently open mini/choice/annotation widget
 
     const isSelectionWithinContent = (sel) => {
         if (!sel || sel.rangeCount === 0) return false;
@@ -695,15 +879,7 @@ export function initHighlightAI(
 
         const range = sel.getRangeAt(0);
         if (mini) mini.remove();
-        mini = createMiniAI(range);
-
-        const levelSelect = mini.querySelector(".ai-level");
-        const getBtn = mini.querySelector(".ai-get");
-        getBtn.addEventListener("click", (ev) => {
-            ev.preventDefault();
-            const lvl = levelSelect.value; // "simplified" | "technical"
-            askAI(range, lvl);
-        });
+        mini = createChoiceWidget(range);
     };
 
     /* -----------------------------------------------------------------
@@ -765,9 +941,21 @@ export function initHighlightAI(
     document.addEventListener("mouseup", onSelectionDone);
     document.addEventListener("touchend", (e) => setTimeout(() => onSelectionDone(e), 10));
 
+    // -----------------------------------------------------------------
+    // Updated selection‑change handler – keep annotation widget alive.
+    // -----------------------------------------------------------------
     document.addEventListener("selectionchange", () => {
         const sel = window.getSelection();
-        if (!sel || !sel.toString().trim() || !isSelectionWithinContent(sel)) {
+
+        const hasSelection =
+            sel &&
+            sel.toString().trim() &&
+            isSelectionWithinContent(sel);
+
+        // If an annotation widget is open we must keep it.
+        const keepOpen = mini && mini.classList.contains("annotation-widget");
+
+        if (!hasSelection && !keepOpen) {
             if (mini) mini.remove();
             mini = null;
             toolbar.style.display = "none";
@@ -778,7 +966,7 @@ export function initHighlightAI(
         // Click outside of an open tooltip → close it.
         if (activeTooltip && !activeTooltip.contains(e.target)) removeTooltip();
 
-        // Click outside any mini‑AI widget → close that widget.
+        // Click outside any mini‑AI/choice/annotation widget → close that widget.
         if (mini && !mini.contains(e.target) && !toolbar.contains(e.target)) {
             mini.remove();
             mini = null;

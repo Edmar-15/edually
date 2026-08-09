@@ -301,3 +301,99 @@
     border-left: 3px solid rgba(191, 219, 254, 0.5);
     color: #dbeafe;
 }
+
+/* ---------------------------------------------------------------
+   NEW UI – the “Ask AI / Add annotation” choice widget
+   --------------------------------------------------------------- */
+.highlight-choice {
+    position: absolute;               /* makes the JS‑set top/left work */
+    top: 0; left: 0;                 /* will be overwritten by JS */
+    padding: 8px 12px;
+    background: #fff;                /* white background (you can use a gradient if you like) */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    font-family: inherit;
+    font-size: .9rem;
+    line-height: 1.4;
+    z-index: 3000;                    /* above the page content & tooltip */
+    max-width: 260px;
+}
+
+/* Buttons inside the choice widget */
+.highlight-choice button {
+    margin: 4px 4px 0 0;
+    padding: 4px 8px;
+    font-size: .85rem;
+    background: #f0f0f0;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.highlight-choice button:hover {
+    background: #e0e0e0;
+}
+
+/* ---------------------------------------------------------------
+   NEW UI – the annotation editor that appears after “Add annotation”
+   --------------------------------------------------------------- */
+/* ---------------------------------------------------------------
+   Annotation editor that appears after “Add annotation”
+   --------------------------------------------------------------- */
+.annotation-widget {
+    position: absolute;               /* essential – lets JS‑set top/left work */
+    top: 0; left: 0;                 /* will be overwritten by JS */
+    width: 260px;
+    padding: 8px 12px;
+    background: #fff;                /* white card background */
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    font-family: inherit;
+    font-size: .9rem;
+    line-height: 1.4;
+    z-index: 3000;                   /* above tooltip, history button, etc. */
+}
+
+/* textarea inside the annotation widget */
+.annotation-widget textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 6px;
+    font-family: inherit;
+    font-size: .85rem;
+    padding: 4px;
+}
+
+/* Save‑button for the annotation widget */
+.annotation-widget .annotation-save {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #0e9aa7;            /* same colour as the AI button */
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.annotation-widget .annotation-save:hover {
+    background: #0b7b80;
+}
+
+/* ---------------------------------------------------------------
+   Annotation visual cue – shows a small pencil‑note icon and a
+   light‑cyan background on any fragment that has a saved note.
+   --------------------------------------------------------------- */
+.highlight-marked--annotated {
+    position: relative;                 /* needed for ::after */
+    background: #e0f7fa;                /* light cyan – different from AI colours */
+}
+
+/* A tiny “📝” badge that appears on the right side of the span */
+.highlight-marked--annotated::after {
+    font-size: 0.85rem;
+    position: absolute;
+    right: -0.6em;
+    top: 0;
+    opacity: 0.7;
+    pointer‑events: none;               /* never steals a click */
+}
