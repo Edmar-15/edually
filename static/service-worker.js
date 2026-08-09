@@ -9,7 +9,7 @@
  *  Bump `CACHE_VERSION` on every deploy – that forces a fresh install.
  * ------------------------------------------------------------------ */
 
-const CACHE_VERSION = "20240728"; // bump this whenever you redeploy
+const CACHE_VERSION = "{{ PWA_SW_VERSION }}"; // bump this whenever you redeploy
 const STATIC_CACHE = `edually-static-${CACHE_VERSION}`;
 const SHELL_CACHE = `edually-shell-${CACHE_VERSION}`;
 
