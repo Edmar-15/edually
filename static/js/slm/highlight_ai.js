@@ -251,7 +251,7 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 7️⃣ Tooltip handling (click‑to‑show)
+     * 7️⃣ Tooltip handling (click‑to‑show) – now tab‑bed
      * ----------------------------------------------------------------- */
     let activeTooltip = null; // only one tooltip at a time
 
@@ -262,27 +262,199 @@ export function initHighlightAI(
         }
     };
 
-    const showTooltip = (span, query) => {
-        const answer = buildAnswerText(query);
-        if (!answer) return;
+    /**
+     * Small helper that talks to the AI endpoint and stores the answer.
+     * Used by the AI‑answers tab.
+     */
+    const fetchAiAnswer = async (query, level) => {
+        const payload = { query, level };
+        const resp = await fetch(`${apiBase}${moduleId}/highlight/`, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken,
+            },
+            body: JSON.stringify(payload),
+        });
+        const data = await resp.json(); // {answer, cached}
+        if (!data.cached && data.answer) {
+            setHighlightAnswer(query, level, data.answer);
+            syncHighlightSpans();
+        }
+        return data;
+    };
 
-        if (activeTooltip && activeTooltip.dataset.for === query) {
+    /**
+     * Render the **AI Answers** tab.
+     */
+    const renderAiSection = (query, container) => {
+        const q = normalise(query);
+        const stored = answerStore.get(q) || {};
+        const levels = ["simplified", "technical"];
+
+        levels.forEach((lvl) => {
+            const lvlCap = lvl.charAt(0).toUpperCase() + lvl.slice(1);
+            const wrapper = document.createElement("div");
+            wrapper.className = "ai-answer-level";
+
+            if (stored[lvl]) {
+                // cached answer – just render it
+                wrapper.innerHTML = `
+                    <h4>${lvlCap} answer</h4>
+                    <div class="ai-answer-content">${renderMarkdown(
+                        stored[lvl]
+                    )}</div>
+                `;
+            } else {
+                // not cached – a button that will fetch it
+                const btn = document.createElement("button");
+                btn.className = "ai-get-level";
+                btn.textContent = `Get ${lvlCap} answer`;
+
+                btn.addEventListener("click", async () => {
+                    btn.disabled = true;
+                    const old = btn.textContent;
+                    btn.textContent = "Thinking…";
+                    try {
+                        const data = await fetchAiAnswer(query, lvl);
+                        if (data && data.answer) {
+                            // re‑render the whole AI tab – now the answer is cached
+                            renderAiSection(query, container);
+                        } else {
+                            console.error("AI answer error:", data);
+                        }
+                    } finally {
+                        btn.textContent = old;
+                        btn.disabled = false;
+                    }
+                });
+
+                wrapper.appendChild(btn);
+            }
+
+            container.appendChild(wrapper);
+        });
+    };
+
+    /**
+     * Render the **Annotations** tab.
+     */
+    const renderAnnotationSection = (query, container) => {
+        const q = normalise(query);
+        const existing = annotationStore.get(q) || "";
+        const wrapper = document.createElement("div");
+        wrapper.className = "annotation-edit";
+        wrapper.innerHTML = `
+            <textarea rows="3" class="annotation-textarea">${existing.replace(
+                /</g,
+                "&lt;"
+            )}</textarea>
+            <button class="annotation-save">Save</button>
+        `;
+
+        const saveBtn = wrapper.querySelector(".annotation-save");
+        const textarea = wrapper.querySelector(".annotation-textarea");
+
+        saveBtn.addEventListener("click", async () => {
+            const note = textarea.value.trim();
+            if (!note) {
+                alert("Annotation cannot be empty.");
+                return;
+            }
+            try {
+                const resp = await fetch(
+                    `${apiBase}${moduleId}/annotation/`,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrftoken,
+                        },
+                        body: JSON.stringify({ query, note }),
+                    }
+                );
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || "Failed");
+
+                // Update local store & UI
+                setAnnotation(query, data.note ?? note);
+                alert("Annotation saved.");
+            } catch (e) {
+                console.error("Saving annotation failed:", e);
+                alert("Could not save annotation.");
+            }
+        });
+
+        container.appendChild(wrapper);
+    };
+
+    const showTooltip = (span, query) => {
+        const q = normalise(query);
+        if (!q) return;
+
+        // close any previous tooltip
+        if (activeTooltip && activeTooltip.dataset.for === q) {
             removeTooltip();
             return;
         }
-
         removeTooltip();
 
         const tip = document.createElement("div");
         tip.className = "highlight-answer-tooltip";
-        tip.dataset.for = query;
-        tip.innerHTML = `<div class="highlight-answer-tooltip__body">${renderMarkdown(
-            answer
-        )}</div>`;
+        tip.dataset.for = q;
+
+        /* ----- Header with two tabs ----- */
+        const header = document.createElement("div");
+        header.className = "highlight-tooltip-header";
+        header.innerHTML = `
+            <button class="tooltip-tab tooltip-tab--active" data-target="ai">AI Answers</button>
+            <button class="tooltip-tab" data-target="annotation">Annotations</button>
+        `;
+        tip.appendChild(header);
+
+        /* ----- Body (will be filled by the selected tab) ----- */
+        const body = document.createElement("div");
+        body.className = "highlight-tooltip-body";
+        tip.appendChild(body);
+
+        /* ----- Helper to render a chosen section ----- */
+        const renderSection = (section) => {
+            body.innerHTML = "";
+            if (section === "ai") {
+                renderAiSection(q, body);
+            } else {
+                renderAnnotationSection(q, body);
+            }
+        };
+        renderSection("ai"); // default tab
+
+        /* ----- Tab‑click handling ----- */
+        header.addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-target]");
+            if (!btn) return;
+            // mark the clicked tab as active
+            header
+                .querySelectorAll(".tooltip-tab")
+                .forEach((t) =>
+                    t.classList.toggle(
+                        "tooltip-tab--active",
+                        t === btn
+                    )
+                );
+            renderSection(btn.dataset.target);
+        });
+
+        /* ----- Prevent the global "click‑outside‑to‑close" logic from
+               firing when the user clicks inside the tooltip ----- */
+        tip.addEventListener("mousedown", (e) => e.stopPropagation());
+
         document.body.appendChild(tip);
 
+        // Position tooltip close to the highlighted fragment
         const rect = span.getBoundingClientRect();
-        const maxW = Math.min(320, window.innerWidth - 24);
+        const maxW = Math.min(340, window.innerWidth - 24);
         const left = Math.min(
             rect.left + window.scrollX,
             document.documentElement.clientWidth - maxW - 8
@@ -335,7 +507,7 @@ export function initHighlightAI(
             };
             span.className = getHighlightClassName(state);
 
-            // ---- NEW: add annotation visual cue if we have a note ----
+            // ---- annotation visual cue ----
             if (annotationStore.has(query)) {
                 span.classList.add("highlight-marked--annotated");
                 span.dataset.annotation = annotationStore.get(query);
@@ -360,20 +532,24 @@ export function initHighlightAI(
         const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const regex = new RegExp(`(${escaped})`, "gi"); // case‑insensitive
 
-        const walker = document.createTreeWalker(contentRoot, NodeFilter.SHOW_TEXT, {
-            acceptNode: (node) => {
-                if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
-                if (!node.nodeValue.toLowerCase().includes(q)) return NodeFilter.FILTER_REJECT;
-                if (
-                    node.parentNode &&
-                    node.parentNode.closest &&
-                    node.parentNode.closest(".highlight-marked")
-                ) {
-                    return NodeFilter.FILTER_REJECT;
-                }
-                return NodeFilter.FILTER_ACCEPT;
-            },
-        });
+        const walker = document.createTreeWalker(
+            contentRoot,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode: (node) => {
+                    if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
+                    if (!node.nodeValue.toLowerCase().includes(q))
+                        return NodeFilter.FILTER_REJECT;
+                    if (
+                        node.parentNode &&
+                        node.parentNode.closest &&
+                        node.parentNode.closest(".highlight-marked")
+                    )
+                        return NodeFilter.FILTER_REJECT;
+                    return NodeFilter.FILTER_ACCEPT;
+                },
+            }
+        );
 
         const textNodes = [];
         let cur = walker.nextNode();
@@ -446,7 +622,7 @@ export function initHighlightAI(
         };
         document.addEventListener("mousedown", clickOutside);
 
-        // ---- Ask‑AI button -------------------------------------------------
+        // Ask‑AI button -------------------------------------------------
         choice
             .querySelector(".choice-ask-ai")
             .addEventListener("click", () => {
@@ -455,7 +631,7 @@ export function initHighlightAI(
                 mini = createAIMiniWidget(range);
             });
 
-        // ---- Add‑annotation button -------------------------------------------
+        // Add‑annotation button -----------------------------------------
         choice
             .querySelector(".choice-annotate")
             .addEventListener("click", () => {
@@ -557,7 +733,7 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 🔟 Annotation widget (simple textarea + save)
+     * 🔟 Annotation widget (simple textarea + save) – used from the choice widget
      * ----------------------------------------------------------------- */
     const createAnnotationWidget = (range) => {
         const ann = document.createElement("div");
@@ -609,9 +785,8 @@ export function initHighlightAI(
                         body: JSON.stringify({ query, note }),
                     }
                 );
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-                const data = await resp.json(); // {id, query, note, created_at}
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || "Failed");
                 setAnnotation(query, data.note ?? note);
                 alert("Annotation saved.");
             } catch (e) {
@@ -810,10 +985,6 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 12️⃣ Ask the AI (POST) – handled by `performAIQuery`
-     * ----------------------------------------------------------------- */
-
-    /* -----------------------------------------------------------------
      * 13️⃣ Visual marking of the selected fragment
      * ----------------------------------------------------------------- */
     const markSelection = (range, level) => {
@@ -936,14 +1107,12 @@ export function initHighlightAI(
     }
 
     // -----------------------------------------------------------------
-    // Mouse / touch handling (same as before)
+    // Mouse / touch handling (same as before, but we keep the tooltip
+    // alive when the click is inside it)
     // -----------------------------------------------------------------
     document.addEventListener("mouseup", onSelectionDone);
     document.addEventListener("touchend", (e) => setTimeout(() => onSelectionDone(e), 10));
 
-    // -----------------------------------------------------------------
-    // Updated selection‑change handler – keep annotation widget alive.
-    // -----------------------------------------------------------------
     document.addEventListener("selectionchange", () => {
         const sel = window.getSelection();
 
@@ -985,5 +1154,9 @@ export function initHighlightAI(
 
         if (!toolbar.contains(e.target)) toolbar.style.display = "none";
     });
-    document.addEventListener("scroll", removeTooltip, true);
+
+    // NOTE: The scroll‑listener that previously forced the tooltip to
+    // disappear has been removed deliberately – the tooltip now stays
+    // visible while the page is scrolled, allowing you to read the AI
+    // answer or edit an annotation without it vanishing.
 }

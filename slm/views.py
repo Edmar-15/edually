@@ -1036,7 +1036,7 @@ def api_annotation(request, pk, target_type):
         return JsonResponse({"annotations": data}, safe=False)
 
     # -----------------------------------------------------------------
-    # POST – create a new annotation
+    # POST – **create OR update** an annotation (upsert)
     # -----------------------------------------------------------------
     try:
         payload = json.loads(request.body)
@@ -1050,16 +1050,12 @@ def api_annotation(request, pk, target_type):
     # Normalise the query (lower‑case) for DB‑uniqueness
     query = raw_query.lower()
 
-    try:
-        ann = HighlightAnnotation.objects.create(
-            **{fk_name: target},
-            owner=request.user,
-            query=query,
-            note=note,
-        )
-    except Exception as exc:      # pragma: no cover – defensive
-        logger.error("Failed to store annotation: %s", exc)
-        return JsonResponse({"error": "Could not store annotation"}, status=500)
+    # ``update_or_create`` will INSERT if the row does not exist,
+    # otherwise it will UPDATE the ``note`` field.
+    ann, created = HighlightAnnotation.objects.update_or_create(
+        defaults={"note": note},
+        **{fk_name: target, "owner": request.user, "query": query},
+    )
 
     return JsonResponse(
         {
@@ -1067,6 +1063,7 @@ def api_annotation(request, pk, target_type):
             "query": raw_query,
             "note": ann.note,
             "created_at": ann.created_at.isoformat(),
+            "created": created,
         },
         status=201,
     )

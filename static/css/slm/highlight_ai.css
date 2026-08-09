@@ -1,56 +1,507 @@
-/* static/css/slm/highlight_ai.css */
-.ai-mini {
+/* ==============================================================
+   highlight_ai.css – full UI makeover
+   ==============================================================
+   This file contains every style needed by the new
+   “AI Answers / Annotations” tooltip, the choice widget,
+   annotation editor, highlighted‑fragment colours and the
+   highlight‑history button/pop‑over.
+   ============================================================= */
+
+/* --------------------------------------------------------------
+   1️⃣  Colour palette (easy to tweak)
+   -------------------------------------------------------------- */
+:root {
+    /* brand / accent colours */
+    --c-primary          : #0e9aa7;   /* same colour as the old AI button */
+    --c-primary-dark    : #0b7b80;
+    --c-accent           : #2c7be5;   /* tab‑active colour */
+    --c-accent-dark     : #1855b8;
+
+    /* backgrounds */
+    --c-bg           : #ffffff;
+    --c-bg-dark      : #212529;
+    --c-bg-muted     : #f9f9f9;
+    --c-bg-tooltip   : rgba(15, 23, 42, 0.95);   /* dark tooltip body */
+    --c-bg-history   : rgba(255,255,255,0.98);
+
+    /* highlight colours */
+    --c-hl-default   : #fef3c7;   /* original highlight */
+    --c-hl-simplified: #b2ffcd;
+    --c-hl-technical : #ffeda6;
+    --c-hl-both      : #9cc7ff;
+    --c-hl-annotated : #e0f7fa;   /* light cyan for notes */
+
+    /* text colours */
+    --c-text          : #111827;
+    --c-text-muted    : #6b7280;
+    --c-text-light    : #f9fafb;   /* on dark tooltip */
+    --c-link          : #0e9aa7;
+    --c-link-hover    : #0b7b80;
+    --c-success       : #28a745;
+
+    /* borders / shadows */
+    --b-radius        : .5rem;
+    --b-radius-sm     : .4rem;
+    --b-shadow        : 0 6px 18px rgba(0,0,0,.12);
+    --b-shadow-heavy  : 0 12px 28px rgba(0,0,0,.22);
+}
+
+/* --------------------------------------------------------------
+   2️⃣  Global utilities
+   -------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+a {
+    color: var(--c-link);
+    text-decoration: underline;
+}
+a:hover,
+a:focus-visible {
+    color: var(--c-link-hover);
+}
+
+/* --------------------------------------------------------------
+   3️⃣  Highlighted fragments
+   -------------------------------------------------------------- */
+.highlight-marked {
+    padding: 0 .16em;
+    border-radius: .3em;
+    background: var(--c-hl-default);
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
+    transition: filter 120ms ease, transform 120ms ease;
+}
+.highlight-marked:hover,
+.highlight-marked:focus-visible {
+    filter: brightness(.97);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+/* colours for AI‑answer levels */
+.highlight-marked--simplified { background: var(--c-hl-simplified); }
+.highlight-marked--technical  { background: var(--c-hl-technical); }
+.highlight-marked--both       { background: var(--c-hl-both); }
+
+/* annotated fragments – a light‑cyan background + tiny pencil icon */
+.highlight-marked--annotated {
+    position: relative;
+    background: var(--c-hl-annotated);
+}
+.highlight-marked--annotated::after {
+    content: "✎";
+    font-size: .7rem;
+    position: absolute;
+    right: -.2rem;
+    top: -.2rem;
+    color: var(--c-primary-dark);
+}
+
+/* focus style for a fragment that is highlighted from history */
+.highlight-marked.highlight-history-focused {
+    box-shadow:
+        0 0 0 3px rgba(255,255,255,.95),
+        0 0 0 5px rgba(249,115,22,.55),
+        0 0 16px rgba(249,115,22,.45);
+    outline: 2px solid rgba(249,115,22,.9);
+    animation: hl-history-pulse 1.2s ease-in-out 2;
+}
+@keyframes hl-history-pulse {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.01); }
+}
+
+/* --------------------------------------------------------------
+   4️⃣  Tooltip that appears when a highlighted fragment is clicked
+   -------------------------------------------------------------- */
+.highlight-answer-tooltip {
+    position: absolute;
+    z-index: 3000;
+    max-width: min(340px, 80vw);
+    pointer-events: auto;                 /* ←  crucial – now the tooltip receives clicks */
+    animation: fadeIn 0.12s ease-out;
+}
+
+/* optional arrow pointing to the fragment */
+.highlight-answer-tooltip::after {
+    content: "";
+    position: absolute;
+    top: -6px;                                    /* adjust to fit your design */
+    left: 1.5rem;                               /* roughly centre under the tab bar */
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent var(--c-bg) transparent;
+}
+
+/* inner wrapper – white card with slight shadow */
+.highlight-answer-tooltip__inner {
+    background: var(--c-bg);
+    border-radius: var(--b-radius);
+    box-shadow: var(--b-shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --------------------------------------------------------------
+   4.1  Header (tabs)
+   -------------------------------------------------------------- */
+.highlight-tooltip-header {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    background: var(--c-bg-muted);
+}
+.tooltip-tab {
+    flex: 1;
+    padding: .45rem .6rem;
+    background: transparent;
+    border: none;
+    font-size: .9rem;
+    cursor: pointer;
+    color: #555;
+    transition: background .12s ease;
+}
+.tooltip-tab:hover { background: #eaeaea; }
+.tooltip-tab--active {
+    font-weight: 600;
+    background: var(--c-bg);
+    border-bottom: 2px solid var(--c-accent);
+    color: var(--c-accent);
+}
+
+/* --------------------------------------------------------------
+   4.2  Body – scrollable area
+   -------------------------------------------------------------- */
+.highlight-tooltip-body {
+    max-height: 260px;
+    overflow-y: auto;
+    padding: .75rem .85rem;
+    font-size: .9rem;
+    line-height: 1.45;
+    color: var(--c-text);
+}
+
+/* reuse the original dark‑tooltip styling for when you need it
+   (kept for backward compatibility – you can delete it if you like) */
+.highlight-tooltip-body.dark {
+    background: var(--c-bg-tooltip);
+    color: var(--c-text-light);
+}
+
+/* common markdown elements inside the tooltip body */
+.highlight-tooltip-body p,
+.highlight-tooltip-body ul,
+.highlight-tooltip-body ol,
+.highlight-tooltip-body blockquote,
+.highlight-tooltip-body pre {
+    margin: 0;
+}
+.highlight-tooltip-body a {
+    color: var(--c-link);
+}
+.highlight-tooltip-body ul,
+.highlight-tooltip-body ol {
+    padding-left: 1.1rem;
+}
+.highlight-tooltip-body code {
+    display: inline-block;
+    padding: .15rem .35rem;
+    border-radius: 6px;
+    background: rgba(15,23,42,.06);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+.highlight-tooltip-body pre {
+    padding: .6rem;
+    border-radius: 8px;
+    background: rgba(15,23,42,.05);
+    overflow-x: auto;
+}
+.highlight-tooltip-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+    margin-top: .6rem;
+}
+.highlight-tooltip-body th,
+.highlight-tooltip-body td {
+    border: 1px solid rgba(148,163,184,.25);
+    padding: .35rem .45rem;
+    text-align: left;
+}
+.highlight-tooltip-body th {
+    background: rgba(37,99,235,.08);
+}
+
+/* cached‑answer badge inside AI section */
+.ai-cached {
+    display: inline-block;
+    margin-right: .4rem;
+    font-size: .85rem;
+    color: #555;
+}
+
+/* --------------------------------------------------------------
+   5️⃣  AI Answers tab (inside the tooltip body)
+   -------------------------------------------------------------- */
+.ai-answer-level {
+    margin-bottom: 1rem;
+}
+.ai-answer-level h4 {
+    margin: 0 0 .4rem;
+    font-size: .95rem;
+    color: #333;
+}
+.ai-get-level {
+    display: inline-block;
+    padding: .45rem .7rem;
+    background: var(--c-accent);
+    color: #fff;
+    border: none;
+    border-radius: .55rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background .12s ease, transform .12s ease;
+}
+.ai-get-level:hover {
+    background: var(--c-accent-dark);
+    transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------
+   6️⃣  Annotation editor (inside the tooltip body)
+   -------------------------------------------------------------- */
+.annotation-edit textarea.annotation-textarea {
+    width: 100%;
+    min-height: 4rem;
+    padding: .45rem;
+    font-size: .85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .4rem;
+    resize: vertical;
+}
+.annotation-save {
+    margin-top: .4rem;
+    padding: .45rem .9rem;
+    background: var(--c-success);
+    color: #fff;
+    border: none;
+    border-radius: .4rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background .12s ease;
+}
+.annotation-save:hover {
+    background: #1e7e34;
+}
+
+/* --------------------------------------------------------------
+   7️⃣  “Ask AI / Add annotation” choice widget
+   -------------------------------------------------------------- */
+.highlight-choice {
+    position: absolute;
+    padding: .6rem .9rem;
+    background: var(--c-bg);
+    border: 1px solid #ccc;
+    border-radius: .5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    font-size: .9rem;
+    line-height: 1.4;
+    z-index: 3100;                /* above everything else */
+    max-width: 260px;
+}
+.highlight-choice p {
+    margin: 0 0 .4rem;
+    font-weight: 600;
+}
+.highlight-choice button {
+    margin-right: .4rem;
+    padding: .35rem .8rem;
+    font-size: .85rem;
+    background: var(--c-bg);
+    border: 1px solid #bbb;
+    border-radius: .4rem;
+    cursor: pointer;
+    transition: background .12s ease;
+}
+.highlight-choice button:hover {
+    background: #e0e0e0;
+}
+
+/* --------------------------------------------------------------
+   8️⃣  Annotation editor that appears after “Add annotation”
+   (stand‑alone widget – used when the user clicks the choice button)
+   -------------------------------------------------------------- */
+.annotation-widget {
+    position: absolute;
+    width: 260px;
+    padding: .8rem .9rem;
+    background: var(--c-bg);
+    border: 1px solid #aaa;
+    border-radius: .5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    font-size: .9rem;
+    line-height: 1.4;
+    z-index: 3100;
+}
+.annotation-widget textarea {
+    width: 100%;
+    min-height: 4rem;
+    margin-bottom: .6rem;
+    padding: .45rem;
+    font-size: .85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .4rem;
+    resize: vertical;
+}
+
+/* --------------------------------------------------------------
+   9️⃣  Highlight‑history button & pop‑over (kept mostly the same)
+   -------------------------------------------------------------- */
+.module-content-history {
+    position: fixed;
+    right: 1.1rem;
+    bottom: 1.1rem;
+    z-index: 2600;
+}
+.module-content-history__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem .85rem;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    color: var(--c-primary);
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(14,154,167,.12);
+}
+.module-content-history__toggle:hover {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+.module-content-history__popover {
+    position: absolute;
+    bottom: calc(100% + .45rem);
+    right: 0;
+    min-width: 290px;
+    max-width: min(380px, 90vw);
+    padding: .6rem;
+    background: var(--c-bg-history);
+    border: 1px solid #e5e7eb;
+    border-radius: .9rem;
+    box-shadow: 0 16px 34px rgba(15,23,42,.16);
+    backdrop-filter: blur(8px);
+    z-index: 2500;
+}
+.module-content-history__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+}
+.module-content-history__item {
+    display: flex;
+    justify-content: space-between;
+    padding: .6rem .7rem;
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    border: 1px solid #eef2f7;
+    border-radius: .6rem;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+.module-content-history__item:hover,
+.module-content-history__item:focus-visible {
+    transform: translateY(-1px);
+    border-color: rgba(14,154,167,.24);
+    box-shadow: 0 8px 16px rgba(14,154,167,.12);
+    outline: none;
+}
+.module-content-history__text {
+    font-size: .9rem;
+    color: var(--c-text);
+}
+.module-content-history__meta {
+    flex-shrink: 0;
+    font-size: .78rem;
+    color: var(--c-text-muted);
+    text-transform: capitalize;
+}
+
+/* --------------------------------------------------------------
+   10️⃣  Small utilities & animations
+   -------------------------------------------------------------- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* make the tooltip invisible when hidden (used by JS) */
+.highlight-answer-tooltip.hidden { display: none; }
+
+/* --------------------------------------------------------------
+   11️⃣  Legacy class names kept for backward‑compatibility
+   -------------------------------------------------------------- */
+.ai-mini {                     /* old mini‑widget – still works as a fallback */
     position: absolute;
     z-index: 2000;
     width: 250px;
     max-width: calc(100vw - 24px);
-    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-    border: 1px solid rgba(14, 154, 167, 0.16);
-    border-radius: 0.85rem;
-    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.16);
-    padding: 0.7rem 0.8rem;
-    font-size: 0.9rem;
+    background: linear-gradient(135deg, #fff 0%, #f8fbff 100%);
+    border: 1px solid rgba(14,154,167,.16);
+    border-radius: .85rem;
+    box-shadow: 0 16px 42px rgba(15,23,42,.16);
+    padding: .7rem .8rem;
+    font-size: .9rem;
     line-height: 1.4;
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: .45rem;
 }
 .ai-mini .ai-level {
     width: 100%;
     padding: .45rem .55rem;
     border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
+    border-radius: .5rem;
     background: #fff;
 }
 .ai-mini .ai-get {
-    background: linear-gradient(135deg, #0e9aa7 0%, #0b7b80 100%);
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 100%);
     color: #fff;
     border: none;
-    border-radius: 0.55rem;
+    border-radius: .55rem;
     padding: .45rem .7rem;
     cursor: pointer;
     font-weight: 600;
-    transition: transform 120ms ease, box-shadow 120ms ease;
+    transition: transform .12s ease, box-shadow .12s ease;
 }
 .ai-mini .ai-get:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(14, 154, 167, 0.2);
+    box-shadow: 0 8px 18px rgba(14,154,167,.2);
 }
 .ai-mini .ai-get:disabled {
     opacity: .6;
     cursor: not-allowed;
 }
 .ai-mini .ai-answer {
-    margin-top: 0.4rem;
+    margin-top: .4rem;
     border-top: 1px solid #eee;
-    padding-top: 0.4rem;
+    padding-top: .4rem;
 }
 .ai-mini .ai-answer.hidden { display: none; }
 .ai-mini .ai-answer-content {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    font-size: 0.95rem;
+    gap: .4rem;
+    font-size: .95rem;
     line-height: 1.5;
     color: #1f2937;
 }
@@ -61,339 +512,37 @@
 .ai-mini .ai-answer-content pre {
     margin: 0;
 }
-.ai-mini .ai-answer-content a {
-    color: #0e9aa7;
-    text-decoration: underline;
-}
+.ai-mini .ai-answer-content a { color: var(--c-primary); text-decoration: underline; }
 .ai-mini .ai-answer-content ul,
-.ai-mini .ai-answer-content ol {
-    padding-left: 1.1rem;
-}
+.ai-mini .ai-answer-content ol { padding-left: 1.1rem; }
 .ai-mini .ai-answer-content code {
     display: inline-block;
-    padding: 0.15rem 0.35rem;
+    padding: .15rem .35rem;
     border-radius: 6px;
-    background: rgba(15, 23, 42, 0.06);
+    background: rgba(15,23,42,.06);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 .ai-mini .ai-answer-content pre {
-    padding: 0.6rem;
+    padding: .6rem;
     border-radius: 8px;
-    background: rgba(15, 23, 42, 0.05);
+    background: rgba(15,23,42,.05);
     overflow-x: auto;
 }
 .ai-mini .ai-answer-content table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9rem;
+    font-size: .9rem;
 }
 .ai-mini .ai-answer-content th,
 .ai-mini .ai-answer-content td {
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    padding: 0.35rem 0.45rem;
+    border: 1px solid rgba(148,163,184,.25);
+    padding: .35rem .45rem;
     text-align: left;
 }
-.ai-mini .ai-answer-content th {
-    background: rgba(37, 99, 235, 0.08);
-}
+.ai-mini .ai-answer-content th { background: rgba(37,99,235,.08); }
 .ai-mini .ai-cached {
     display: inline-block;
     margin-right: .4rem;
     color: #555;
     font-size: .85rem;
-}
-
-.highlight-marked {
-    padding: 0 0.16em;
-    border-radius: 0.3em;
-    background: #fef3c7;
-    color: inherit;
-    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
-    transition: filter 120ms ease, transform 120ms ease;
-}
-
-.highlight-marked:hover,
-.highlight-marked:focus-visible {
-    filter: brightness(0.97);
-    transform: translateY(-1px);
-    outline: none;
-}
-
-.highlight-marked--simplified {
-    background: #b2ffcd;
-}
-
-.highlight-marked--technical {
-    background: #ffeda6;
-}
-
-.highlight-marked--both {
-    background: #9cc7ff;
-}
-
-.highlight-marked.highlight-history-focused {
-    box-shadow:
-        0 0 0 3px rgba(255, 255, 255, 0.95),
-        0 0 0 5px rgba(249, 115, 22, 0.55),
-        0 0 16px rgba(249, 115, 22, 0.45);
-    outline: 2px solid rgba(249, 115, 22, 0.9);
-    animation: highlight-history-pulse 1.2s ease-in-out 2;
-}
-
-@keyframes highlight-history-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.01); }
-}
-
-.module-content-history {
-    position: fixed;
-    right: 1.1rem;
-    bottom: 1.1rem;
-    display: inline-block;
-    z-index: 2600;
-}
-
-.module-content-history__toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 0.85rem;
-    border: 1px solid #bfdbfe;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    color: #0b7b80;
-    cursor: pointer;
-    font-weight: 700;
-    box-shadow: 0 10px 20px rgba(14, 154, 167, 0.12);
-}
-
-.module-content-history__toggle:hover {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-}
-
-.module-content-history__popover {
-    position: absolute;
-    bottom: calc(100% + 0.45rem);
-    right: 0;
-    z-index: 2500;
-    min-width: 290px;
-    max-width: min(380px, 90vw);
-    padding: 0.6rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.9rem;
-    background: rgba(255, 255, 255, 0.98);
-    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
-    backdrop-filter: blur(8px);
-}
-
-.module-content-history__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-}
-
-.module-content-history__item {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.6rem 0.7rem;
-    border-radius: 0.6rem;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid #eef2f7;
-    cursor: pointer;
-    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-}
-
-.module-content-history__item:hover,
-.module-content-history__item:focus-visible {
-    transform: translateY(-1px);
-    border-color: rgba(14, 154, 167, 0.24);
-    box-shadow: 0 8px 16px rgba(14, 154, 167, 0.12);
-    outline: none;
-}
-
-.module-content-history__text {
-    font-size: 0.9rem;
-    line-height: 1.35;
-    color: #111827;
-}
-
-.module-content-history__meta {
-    flex-shrink: 0;
-    font-size: 0.78rem;
-    color: #6b7280;
-    text-transform: capitalize;
-}
-
-.highlight-answer-tooltip {
-    position: absolute;
-    z-index: 3000;
-    max-width: min(320px, 78vw);
-    pointer-events: none;
-}
-
-.highlight-answer-tooltip__body {
-    padding: 0.75rem 0.85rem;
-    border-radius: 0.8rem;
-    background: rgba(15, 23, 42, 0.95);
-    color: #f9fafb;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-    font-size: 0.9rem;
-    line-height: 1.45;
-    white-space: pre-wrap;
-}
-
-.highlight-answer-tooltip__body p,
-.highlight-answer-tooltip__body ul,
-.highlight-answer-tooltip__body ol,
-.highlight-answer-tooltip__body blockquote,
-.highlight-answer-tooltip__body pre {
-    margin: 0;
-}
-
-.highlight-answer-tooltip__body a {
-    color: #bfdbfe;
-    text-decoration: underline;
-}
-
-.highlight-answer-tooltip__body ul,
-.highlight-answer-tooltip__body ol {
-    padding-left: 1.1rem;
-}
-
-.highlight-answer-tooltip__body code {
-    display: inline-block;
-    padding: 0.15rem 0.35rem;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.12);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-.highlight-answer-tooltip__body pre {
-    padding: 0.6rem;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    overflow-x: auto;
-}
-
-.highlight-answer-tooltip__body table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.highlight-answer-tooltip__body th,
-.highlight-answer-tooltip__body td {
-    border: 1px solid rgba(191, 219, 254, 0.24);
-    padding: 0.35rem 0.45rem;
-    text-align: left;
-}
-
-.highlight-answer-tooltip__body th {
-    background: rgba(59, 130, 246, 0.16);
-}
-
-.highlight-answer-tooltip__body blockquote {
-    padding-left: 0.7rem;
-    border-left: 3px solid rgba(191, 219, 254, 0.5);
-    color: #dbeafe;
-}
-
-/* ---------------------------------------------------------------
-   NEW UI – the “Ask AI / Add annotation” choice widget
-   --------------------------------------------------------------- */
-.highlight-choice {
-    position: absolute;               /* makes the JS‑set top/left work */
-    top: 0; left: 0;                 /* will be overwritten by JS */
-    padding: 8px 12px;
-    background: #fff;                /* white background (you can use a gradient if you like) */
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.15);
-    font-family: inherit;
-    font-size: .9rem;
-    line-height: 1.4;
-    z-index: 3000;                    /* above the page content & tooltip */
-    max-width: 260px;
-}
-
-/* Buttons inside the choice widget */
-.highlight-choice button {
-    margin: 4px 4px 0 0;
-    padding: 4px 8px;
-    font-size: .85rem;
-    background: #f0f0f0;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.highlight-choice button:hover {
-    background: #e0e0e0;
-}
-
-/* ---------------------------------------------------------------
-   NEW UI – the annotation editor that appears after “Add annotation”
-   --------------------------------------------------------------- */
-/* ---------------------------------------------------------------
-   Annotation editor that appears after “Add annotation”
-   --------------------------------------------------------------- */
-.annotation-widget {
-    position: absolute;               /* essential – lets JS‑set top/left work */
-    top: 0; left: 0;                 /* will be overwritten by JS */
-    width: 260px;
-    padding: 8px 12px;
-    background: #fff;                /* white card background */
-    border: 1px solid #aaa;
-    border-radius: 5px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.2);
-    font-family: inherit;
-    font-size: .9rem;
-    line-height: 1.4;
-    z-index: 3000;                   /* above tooltip, history button, etc. */
-}
-
-/* textarea inside the annotation widget */
-.annotation-widget textarea {
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 6px;
-    font-family: inherit;
-    font-size: .85rem;
-    padding: 4px;
-}
-
-/* Save‑button for the annotation widget */
-.annotation-widget .annotation-save {
-    display: inline-block;
-    padding: 4px 10px;
-    background: #0e9aa7;            /* same colour as the AI button */
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.annotation-widget .annotation-save:hover {
-    background: #0b7b80;
-}
-
-/* ---------------------------------------------------------------
-   Annotation visual cue – shows a small pencil‑note icon and a
-   light‑cyan background on any fragment that has a saved note.
-   --------------------------------------------------------------- */
-.highlight-marked--annotated {
-    position: relative;                 /* needed for ::after */
-    background: #e0f7fa;                /* light cyan – different from AI colours */
-}
-
-/* A tiny “📝” badge that appears on the right side of the span */
-.highlight-marked--annotated::after {
-    font-size: 0.85rem;
-    position: absolute;
-    right: -0.6em;
-    top: 0;
-    opacity: 0.7;
-    pointer‑events: none;               /* never steals a click */
 }
