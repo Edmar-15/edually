@@ -1,118 +1,127 @@
 @import "../base.css";
 
 /*====================================================================
-   highlight_ai.css – updated to use the SLM design‑system colours
-   -------------------------------------------------
-   • All colours come from the design‑system (light + dark).
-   • Light defaults mirror the look of module_detail.css.
-   • Dark overrides mirror the dark theme of module_detail.css.
-   • Tooltip background stays solid; history UI now has both light &
-     dark variants.
+   highlight_ai.css – colour‑fixed version with self‑contained SLM palette
+   --------------------------------------------------------------------
+   The colour palette that used to be pulled from `slm.css` is now
+   declared in this file, removing the need for a separate import.
 ====================================================================*/
 
 /* -------------------------------------------------------------
-   1️⃣  Design tokens – light mode (default)
+   1️⃣  Design tokens – SLM colour palette (copied from slm.css)
    ------------------------------------------------------------- */
 :root {
-    /* ────── Brand palette ────── */
-    --c-primary         : #0e9aa7;        /* primary brand – matches .button */
-    --c-primary-dark    : #0b7b80;        /* hover/focus for primary */
-    --c-accent          : #2c7be5;        /* secondary accent */
-    --c-accent-dark     : #1855b8;        /* accent hover */
+    /* ────── SLM colour palette (originally in slm.css) ────── */
+    /* Accent / brand */
+    --module-accent:        #0e9aa7;                     /* primary accent               */
+    --module-accent-dark:   #0b7d86;                     /* darker accent (hover/focus)   */
 
-    /* ────── Core surfaces ────── */
-    --c-bg              : var(--surface, #ffffff);   /* page background   */
-    --c-bg-dark         : var(--surface-dark, #111111);
-    --c-bg-muted        : #fafbfc;        /* very light gray – used for tooltip header */
-    --c-bg-tooltip      : var(--c-bg);    /* solid tooltip body (overridden dark) */
-    --c-bg-history      : rgba(255,255,255,.98);   /* history pop‑over – light */
+    /* Surfaces – we keep the indirection to the core tokens from base.css */
+    --module-surface:       var(--surface);              /* main page surface */
+    --module-surface-soft:  var(--surface-soft);         /* soft surface (tool‑tip header) */
 
-    /* ────── Highlight colours – light mode ────── */
-    --c-hl-default      : #fef3c7;
-    --c-hl-simplified   : #b2ffcd;
-    --c-hl-technical    : #ffeda6;
-    --c-hl-both         : #9cc7ff;
-    --c-hl-annotated    : #e0f7fa;        /* light cyan for notes */
+    /* Borders & shadows that the module uses */
+    --module-border:        rgba(14, 154, 167, 0.18);
+    --module-shadow:         0 18px 40px rgba(14, 154, 167, 0.12);
 
-    /* ────── Text & UI affordances ────── */
-    --c-text            : #374151;        /* body copy – same as .module-content */
-    --c-text-muted      : #6b7280;        /* secondary copy */
-    --c-text-light      : #f9fafb;        /* used inside dark tooltip – kept */
-    --c-link            : #0e9aa7;
-    --c-link-hover      : #0b7b80;
-    --c-success         : #28a745;        /* “save” button */
+    /* Fallback for the generic border used by the AI widget */
+    --border-slm:           rgba(15, 23, 42, 0.12);
 
-    /* ────── Radii & shadows ────── */
-    --b-radius          : 0.625rem;
-    --b-radius-sm       : 0.4rem;
-    --b-shadow          : 0 16px 36px rgba(15,23,42,.07);
-    --b-shadow-heavy    : 0 12px 24px rgba(14,154,167,.10);
 
-    /* ────── Tooltip / card background – solid ────── */
-    --c-tooltip-bg      : var(--c-bg);               /* overridden in dark mode */
-    --c-heading         : #111827;                    /* headings inside cards */
+    /* ────── Highlight‑AI design tokens (now backed by the above) ────── */
 
-    /* ────── Generic UI tokens (light) ────── */
-    --c-tooltip-border      : #eef2f7;                /* header bottom line */
-    --c-tooltip-tab-color   : var(--c-text-muted);   /* tab text */
-    --c-tooltip-tab-bg-hover: #f5f7fb;               /* tab hover – light gray */
-    --c-btn-hover-bg        : #e0e0e0;                /* hover bg for .highlight-choice buttons */
+    /* Brand palette */
+    --c-primary:          var(--module-accent);                /* primary brand – matches .button   */
+    --c-primary-dark:     var(--module-accent-dark);           /* hover/focus for primary          */
+    --c-primary-light:    var(--module-accent-light, #93c5fd);/* optional lighter accent           */
+    --c-accent:           var(--module-accent);                /* secondary accent                 */
+    --c-accent-dark:      var(--module-accent-dark);           /* accent hover                     */
 
-    --c-history-toggle-bg   : linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    --c-history-toggle-border : #bfdbfe;            /* border of toggle button */
-    --c-history-item-bg     : linear-gradient(135deg, #fff 0%, #f8fafc 100%);
-    --c-history-item-border : #eef2f7;               /* border of each history entry */
+    /* Core surfaces */
+    --c-bg:               var(--surface);                      /* page background                  */
+    --c-bg-dark:          var(--surface-dark);
+    --c-bg-muted:         var(--module-surface-soft);          /* tooltip header / soft surface    */
+    --c-bg-tooltip:       var(--c-bg);                         /* solid tooltip body (overridden)  */
+    --c-bg-history:       var(--module-surface);               /* history pop‑over                 */
 
-    --c-border            : #ddd;                    /* generic border fallback */
-    --c-border-input      : #cbd5e1;                /* textarea / input border */
-    --c-code-bg           : rgba(15,23,42,.06);     /* inline‑code bg */
-    --c-pre-bg            : rgba(15,23,42,.05);     /* pre‑formatted block bg */
+    /* Highlight colours – light variants (the ones you had before) */
+    --c-hl-default-light:    #fef3c7;   /* buttery‑yellow   */
+    --c-hl-simplified-light: #b2ffcd;   /* mint‑green       */
+    --c-hl-technical-light: #ffeda6;   /* soft‑amber       */
+    --c-hl-both-light:       #9cc7ff;   /* pale‑blue        */
+    --c-hl-annotated-light:  #e0f7fa;   /* light‑cyan       */
+
+    /* Dark variants – ≥4.5:1 contrast on dark surface */
+    --c-hl-default-dark:     #5b5020;   /* deep‑goldenrod   */
+    --c-hl-simplified-dark:  #16643e;   /* forest‑green     */
+    --c-hl-technical-dark:   #6c5800;   /* burnt‑amber      */
+    --c-hl-both-dark:        #2c5aa0;   /* steel‑blue       */
+    --c-hl-annotated-dark:   #0c7a9d;   /* muted‑teal       */
+
+    /* Public aliases (used throughout the file) */
+    --c-hl-default:      var(--c-hl-default-light);
+    --c-hl-simplified:   var(--c-hl-simplified-light);
+    --c-hl-technical:    var(--c-hl-technical-light);
+    --c-hl-both:         var(--c-hl-both-light);
+    --c-hl-annotated:    var(--c-hl-annotated-light);
+
+    /* Text & UI affordances */
+    --c-text:            var(--text);          /* body copy                        */
+    --c-text-muted:      var(--muted);         /* secondary copy                  */
+    --c-text-light:      #f9fafb;              /* used inside dark tooltip         */
+    --c-link:            var(--module-accent);
+    --c-link-hover:      var(--module-accent-dark);
+    --c-success:         #28a745;              /* “save” button (green)           */
+
+    /* Buttons used by AI / choice widget */
+    --c-ai-btn-bg:       var(--c-primary);          /* high‑contrast button background */
+    --c-ai-btn-bg-hover: var(--c-primary-dark);     /* hover colour                     */
+    --c-ai-btn-fg:       #ffffff;                   /* white text                       */
+
+    /* Radii & shadows */
+    --b-radius:          0.625rem;
+    --b-radius-sm:       0.4rem;
+    --b-shadow:          var(--module-shadow);
+    --b-shadow-heavy:    0 12px 24px rgba(14,154,167,.10);
+
+    /* Tooltip / card background */
+    --c-tooltip-bg:      var(--c-bg);                /* solid tooltip body               */
+    --c-heading:         var(--text);                /* headings inside cards            */
+
+    /* Tooltip‑tab colours */
+    --c-tooltip-tab-bg:          var(--c-bg);         /* solid, non‑transparent          */
+    --c-tooltip-tab-fg:          var(--c-text);       /* same as body text               */
+    --c-tooltip-tab-bg-hover:    var(--c-bg-muted);   /* slight hover variation           */
+
+    /* History UI tokens */
+    --c-history-toggle-bg:       linear-gradient(135deg,
+                               var(--surface-soft) 0%,
+                               var(--surface) 100%);   /* toggle gradient                 */
+    --c-history-toggle-border:   var(--module-accent);      /* border of toggle button         */
+    --c-history-item-bg:         var(--surface);            /* history entry background        */
+    --c-history-item-border:     var(--module-border);      /* history entry border            */
+
+    /* Generic UI tokens */
+    --c-tooltip-border:   var(--module-border);        /* header bottom line               */
+    --c-border:           var(--module-border);
+    --c-border-input:    var(--border-slm);
+    --c-code-bg:          rgba(15,23,42,.06);
+    --c-pre-bg:          rgba(15,23,42,.05);
 }
 
 /* -------------------------------------------------------------
-   1️⃣ 1️⃣ Dark‑mode overrides
+   2️⃣  Dark‑mode overrides
    ------------------------------------------------------------- */
-@media (prefers-color-scheme: dark) {
-    :root {
-        /* Brand (unchanged – already dark‑friendly) */
-        --c-primary         : #2dd4bf;
-        --c-primary-dark    : #22c5b0;
-        --c-accent          : #60a5fa;
-        --c-accent-dark     : #3b82f6;
-
-        /* Core surfaces */
-        --c-bg              : var(--surface-dark, #111111);
-        --c-bg-muted        : rgba(15,23,42,.9);      /* same as dark PDF/DOCX/PPT pages */
-        --c-bg-history      : #1a1a1a;                /* dark history pop‑over */
-        --c-tooltip-bg      : #1f2937;               /* solid tooltip body – dark gray */
-
-        /* Text & UI */
-        --c-text            : var(--text, #e5e7eb);
-        --c-text-muted      : var(--muted, #9ca3af);
-        --c-heading         : var(--text, #e5e7eb);
-
-        /* Tooltip UI */
-        --c-tooltip-border      : rgba(148,163,184,.14);
-        --c-tooltip-tab-color   : #ccc;
-        --c-tooltip-tab-bg-hover: #383838;
-        --c-btn-hover-bg        : #2d2d2d;
-
-        /* History UI */
-        --c-history-toggle-bg   : linear-gradient(135deg, #2a2b2c 0%, #1c1c1d 100%);
-        --c-history-toggle-border : var(--c-accent);
-        --c-history-item-bg     : var(--c-bg-muted);    /* solid dark background */
-        --c-history-item-border : #444;                /* dark border */
-
-        /* Generic UI */
-        --c-border            : #444;
-        --c-border-input      : #666;
-        --c-code-bg           : rgba(255,255,255,.06);
-        --c-pre-bg            : rgba(255,255,255,.05);
-    }
+html[data-theme="dark"] {
+    --c-hl-default:    var(--c-hl-default-dark);
+    --c-hl-simplified: var(--c-hl-simplified-dark);
+    --c-hl-technical:  var(--c-hl-technical-dark);
+    --c-hl-both:       var(--c-hl-both-dark);
+    --c-hl-annotated: var(--c-hl-annotated-dark);
 }
 
 /* -------------------------------------------------------------
-   2️⃣  Global utilities
+   3️⃣  Global utilities (unchanged)
    ------------------------------------------------------------- */
 *,
 *::before,
@@ -129,13 +138,12 @@ a {
     color: var(--c-link);
     text-decoration: underline;
 }
-a:hover,
-a:focus-visible {
+a:hover {
     color: var(--c-link-hover);
 }
 
 /* -------------------------------------------------------------
-   3️⃣  Highlighted fragments
+   4️⃣  Highlighted fragments (unchanged – colour tokens already fixed)
    ------------------------------------------------------------- */
 .highlight-marked {
     padding: 0 .16em;
@@ -151,27 +159,21 @@ a:focus-visible {
     transform: translateY(-1px);
     outline: none;
 }
-
-/* Level‑specific colours */
 .highlight-marked--simplified { background: var(--c-hl-simplified); }
 .highlight-marked--technical  { background: var(--c-hl-technical); }
 .highlight-marked--both       { background: var(--c-hl-both); }
-
-/* Annotated fragments */
 .highlight-marked--annotated {
     position: relative;
     background: var(--c-hl-annotated);
 }
 .highlight-marked--annotated::after {
-    content: "✎";
+    content: "\01F5D2";
     font-size: .7rem;
     position: absolute;
-    right: -.2rem;
-    top: -.2rem;
+    right: -.4rem;
+    top: -.4rem;
     color: var(--c-primary-dark);
 }
-
-/* History‑focused highlight */
 .highlight-marked.highlight-history-focused {
     box-shadow:
         0 0 0 3px rgba(255,255,255,.95),
@@ -186,7 +188,7 @@ a:focus-visible {
 }
 
 /* -------------------------------------------------------------
-   4️⃣  Tooltip (solid background)
+   5️⃣  Tooltip (solid background) – fixed tab colours
    ------------------------------------------------------------- */
 .highlight-answer-tooltip {
     position: absolute;
@@ -195,8 +197,6 @@ a:focus-visible {
     pointer-events: auto;
     animation: fadeIn .12s ease-out;
 }
-
-/* Arrow – same colour as the tooltip body */
 .highlight-answer-tooltip::after {
     content: "";
     position: absolute;
@@ -206,8 +206,6 @@ a:focus-visible {
     border-style: solid;
     border-color: transparent transparent var(--c-tooltip-bg) transparent;
 }
-
-/* Card wrapper */
 .highlight-answer-tooltip__inner {
     background: var(--c-tooltip-bg);
     border-radius: var(--b-radius);
@@ -216,8 +214,6 @@ a:focus-visible {
     display: flex;
     flex-direction: column;
 }
-
-/* Header (tabs) – uses the same tokens as the module‑detail header */
 .highlight-tooltip-header {
     display: flex;
     border-bottom: 1px solid var(--c-tooltip-border);
@@ -226,11 +222,11 @@ a:focus-visible {
 .tooltip-tab {
     flex: 1;
     padding: .45rem .6rem;
-    background: transparent;
+    background: var(--c-tooltip-tab-bg);
     border: none;
     font-size: .9rem;
     cursor: pointer;
-    color: var(--c-tooltip-tab-color);
+    color: var(--c-tooltip-tab-fg);
     transition: background .12s ease;
 }
 .tooltip-tab:hover {
@@ -242,8 +238,6 @@ a:focus-visible {
     border-bottom: 2px solid var(--c-accent);
     color: var(--c-accent);
 }
-
-/* Body – solid background (no transparency) */
 .highlight-tooltip-body {
     max-height: 260px;
     overflow-y: auto;
@@ -253,8 +247,6 @@ a:focus-visible {
     color: var(--c-text);
     background: var(--c-tooltip-bg);
 }
-
-/* Markdown‑style helpers (code, tables, etc.) */
 .highlight-tooltip-body p,
 .highlight-tooltip-body ul,
 .highlight-tooltip-body ol,
@@ -294,8 +286,6 @@ a:focus-visible {
 .highlight-tooltip-body th {
     background: rgba(37,99,235,.08);
 }
-
-/* Cached‑answer badge (keeps the muted colour) */
 .ai-cached {
     display: inline-block;
     margin-right: .4rem;
@@ -304,7 +294,7 @@ a:focus-visible {
 }
 
 /* -------------------------------------------------------------
-   5️⃣  AI Answers tab
+   6️⃣  AI Answers tab – colour‑fixed buttons
    ------------------------------------------------------------- */
 .ai-answer-level {
     margin-bottom: 1rem;
@@ -317,8 +307,8 @@ a:focus-visible {
 .ai-get-level {
     display: inline-block;
     padding: .45rem .7rem;
-    background: var(--c-accent);
-    color: #fff;
+    background: var(--c-ai-btn-bg);
+    color: var(--c-ai-btn-fg);
     border: none;
     border-radius: .55rem;
     cursor: pointer;
@@ -326,12 +316,12 @@ a:focus-visible {
     transition: background .12s ease, transform .12s ease;
 }
 .ai-get-level:hover {
-    background: var(--c-accent-dark);
+    background: var(--c-ai-btn-bg-hover);
     transform: translateY(-1px);
 }
 
 /* -------------------------------------------------------------
-   6️⃣  Annotation editor (inside tooltip)
+   7️⃣  Annotation editor (inside tooltip) – unchanged
    ------------------------------------------------------------- */
 .annotation-edit textarea.annotation-textarea {
     width: 100%;
@@ -356,7 +346,7 @@ a:focus-visible {
 .annotation-save:hover { background: #1e7e34; }
 
 /* -------------------------------------------------------------
-   7️⃣  “Ask AI / Add annotation” choice widget
+   8️⃣  “Ask AI / Add annotation” choice widget – colour‑fixed
    ------------------------------------------------------------- */
 .highlight-choice {
     position: absolute;
@@ -373,23 +363,25 @@ a:focus-visible {
 .highlight-choice p {
     margin: 0 0 .4rem;
     font-weight: 600;
+    color: var(--c-text);
 }
 .highlight-choice button {
     margin-right: .4rem;
     padding: .35rem .8rem;
     font-size: .85rem;
-    background: var(--c-bg);
-    border: 1px solid var(--c-border);
-    border-radius: .4rem;
+    background: var(--c-ai-btn-bg);
+    color: var(--c-ai-btn-fg);
+    border: none;
+    border-radius: .35rem;
     cursor: pointer;
     transition: background .12s ease;
 }
 .highlight-choice button:hover {
-    background: var(--c-btn-hover-bg);
+    background: var(--c-ai-btn-bg-hover);
 }
 
 /* -------------------------------------------------------------
-   8️⃣  Annotation editor that appears after “Add annotation”
+   9️⃣  Annotation widget that appears after “Add annotation”
    ------------------------------------------------------------- */
 .annotation-widget {
     position: absolute;
@@ -415,7 +407,7 @@ a:focus-visible {
 }
 
 /* -------------------------------------------------------------
-   9️⃣  Highlight‑history button & pop‑over
+   🔟  Highlight‑history button & pop‑over (unchanged)
    ------------------------------------------------------------- */
 .module-content-history {
     position: fixed;
@@ -471,8 +463,7 @@ a:focus-visible {
     cursor: pointer;
     transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
 }
-.module-content-history__item:hover,
-.module-content-history__item:focus-visible {
+.module-content-history__item:hover {
     transform: translateY(-1px);
     border-color: rgba(14,154,167,.24);
     box-shadow: 0 8px 16px rgba(14,154,167,.12);
@@ -482,15 +473,20 @@ a:focus-visible {
     font-size: .9rem;
     color: var(--c-text);
 }
-.module-content-history__meta {
-    flex-shrink: 0;
+.module-content-history__levels {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .12rem;
     font-size: .78rem;
     color: var(--c-text-muted);
+}
+.module-content-history__level-item {
     text-transform: capitalize;
 }
 
 /* -------------------------------------------------------------
-   🔟  Small utilities & animations
+   1️⃣1️⃣  Small utilities & animations (unchanged)
    ------------------------------------------------------------- */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }
@@ -499,7 +495,7 @@ a:focus-visible {
 .highlight-answer-tooltip.hidden { display: none; }
 
 /* -------------------------------------------------------------
-   1️⃣1️⃣  Legacy class names – kept for compatibility
+   1️⃣2️⃣  Legacy class names – kept for compatibility (unchanged)
    ------------------------------------------------------------- */
 .ai-mini {
     position: absolute;

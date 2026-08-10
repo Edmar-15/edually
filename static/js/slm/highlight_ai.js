@@ -122,37 +122,55 @@ export function initHighlightAI(
         historyPopover.hidden = true;
         historyToggle.setAttribute("aria-expanded", "false");
     };
+    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
     const updateHistoryUI = () => {
         if (!historyList) return;
         historyList.innerHTML = "";
+
         if (historyEntries.length === 0) {
             const empty = document.createElement("li");
             empty.className = "module-content-history__item";
             empty.textContent = "No highlights yet.";
             historyList.appendChild(empty);
-        } else {
-            historyEntries.slice().reverse().forEach((entry) => {
-                const li = document.createElement("li");
-                li.className = "module-content-history__item";
-                li.tabIndex = 0;
-                li.innerHTML = `
-                    <span class="module-content-history__text">${entry.text}</span>
-                    <span class="module-content-history__meta">${entry.levels.join(
-                        " + "
-                    )}</span>
-                `;
-                li.addEventListener("click", () =>
-                    focusHighlightByQuery(entry.text)
-                );
-                li.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        focusHighlightByQuery(entry.text);
-                    }
-                });
-                historyList.appendChild(li);
-            });
+            return;
         }
+
+        // newest first (the UI already shows the newest at the bottom – we keep that)
+        historyEntries.slice().reverse().forEach((entry) => {
+            const li = document.createElement("li");
+            li.className = "module-content-history__item";
+            li.tabIndex = 0;
+
+            // ---- term (left side) --------------------------------
+            const termSpan = document.createElement("span");
+            termSpan.className = "module-content-history__text";
+            termSpan.textContent = entry.text;
+
+            // ---- stacked actions (right side) ----------------------
+            const levelsDiv = document.createElement("div");
+            levelsDiv.className = "module-content-history__levels";
+            entry.levels.forEach((lvl) => {
+                const lvlDiv = document.createElement("div");
+                lvlDiv.className = "module-content-history__level-item";
+                lvlDiv.textContent = capitalize(lvl);
+                levelsDiv.appendChild(lvlDiv);
+            });
+
+            li.append(termSpan, levelsDiv);
+
+            // ---- focus on click / keyboard -------------------------
+            li.addEventListener("click", () => focusHighlightByQuery(entry.text));
+            li.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    focusHighlightByQuery(entry.text);
+                }
+            });
+
+            historyList.appendChild(li);
+        });
+
         if (historyCount) {
             historyCount.textContent = `${historyEntries.length} ${
                 historyEntries.length === 1 ? "item" : "items"
