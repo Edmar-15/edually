@@ -397,7 +397,7 @@ body {
    ---------------------------------------------------------------------- */
 .tabs .tablist {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: .65rem;
   /* On very narrow screens allow horizontal scrolling */
   overflow-x: auto;

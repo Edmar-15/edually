@@ -17,6 +17,30 @@
     {% include "components/navigations.html" %}
 
     <main class="main-content">
+        <header class="content-header">
+                <div class="header-left">
+                    <button type="button"
+                            class="mobile-sidebar-trigger"
+                            aria-controls="sidebar"
+                            aria-expanded="false"
+                            aria-label="Open navigation sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg class="sidebar-trigger-icon"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false">
+                            <path d="M4 7h16M4 12h16M4 17h16"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- Existing welcome text -->
+                    <p>Peer Discussion Forum</p>
+                </div>
+            </header>
+
         <section class="forum-page">
             <!-- SEARCH & FILTERS -->
             <section class="forum-search">
@@ -53,6 +77,10 @@
                                 </span>
                                 <i class="fa-solid fa-chevron-down sort-icon"></i>
                             </button>
+                            <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
+                        class="button primary-button js-modal-trigger"
+                        role="button"
+                        aria-label="Ask a Question">Ask a Question</a>
                             <div class="sort-options" id="sort-options">
                                 <a href="{% url 'forum:feed' %}?sort=latest{% if search_query %}&q={{ search_query }}{% endif %}{% if active_category %}&cat={{ active_category }}{% endif %}{% if show_unanswered %}&unanswered=1{% endif %}"
                                    class="sort-option {% if sort_by == 'latest' %}active{% endif %}">Latest</a>
@@ -73,23 +101,6 @@
                 </form>
 
             </section>
-
-            <header class="forum-header">
-                <div>
-                    <p class="eyebrow">Peer Discussion Forum</p>
-                    <h1>Ask questions and learn from classmates.</h1>
-                    <p class="intro-text">
-                        Browse recent posts, filter by subject or keyword,
-                        and get help from your peers and teachers.
-                    </p>
-                </div>
-                <div class="forum-header-actions">
-                    <a href="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
-                        class="button primary-button js-modal-trigger"
-                        role="button"
-                        aria-label="Ask a Question">Ask a Question</a>
-                </div>
-            </header>
 
             <!-- POST LIST (now a partial) -->
             <section class="post-list" id="post-list">

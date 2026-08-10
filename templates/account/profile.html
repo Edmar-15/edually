@@ -15,20 +15,35 @@
     {% include "components/navigations.html" %}
 
     <main class="main-content">
-        <section class="profile-page profile-section">
-            <div class="content-header">
+        <header class="content-header">
                 <div class="header-left">
-                    <h1>My Profile</h1>
-                    <p class="user-info">View and edit your personal information.</p>
+                    <button type="button"
+                            class="mobile-sidebar-trigger"
+                            aria-controls="sidebar"
+                            aria-expanded="false"
+                            aria-label="Open navigation sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg class="sidebar-trigger-icon"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false">
+                            <path d="M4 7h16M4 12h16M4 17h16"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- Existing welcome text -->
+                    <p>Profile</p>
                 </div>
                 <div class="header-right">
                     <a href="{% url 'account:settings' %}" class="button primary-button profile-settings-link">
                         <i class="fas fa-cog nav-icon"></i>
-                        <span class="nav-label">Settings</span>
                     </a>
                 </div>
-            </div>
-
+            </header>
+        <section class="profile-page profile-section">
             <div class="profile-grid">
                 <!-- LEFT – read‑only overview -->
                 <aside class="profile-overview-card">

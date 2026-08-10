@@ -43,22 +43,34 @@
 
     <main class="main-content">
         <header class="content-header">
-            <div class="header-left">
-                <h1>Settings</h1>
-                <p class="user-info">
-                    Manage your preferences and account settings.
-                </p>
-            </div>
-        </header>
+                <div class="header-left">
+                    <button type="button"
+                            class="mobile-sidebar-trigger"
+                            aria-controls="sidebar"
+                            aria-expanded="false"
+                            aria-label="Open navigation sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg class="sidebar-trigger-icon"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false">
+                            <path d="M4 7h16M4 12h16M4 17h16"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- Existing welcome text -->
+                    <p>Settings</p>
+                </div>
+            </header>
 
         <div class="dashboard-content">
             <div class="container">
 
                 <section class="settings-section card">
-                    <div class="details-header">
-                        <h2>Account Preferences</h2>
-                        <p>Manage your push notification preferences here.</p>
-                    </div>
+                    <h2>Account Preferences</h2>
 
                     <div class="settings-stack">
                         <div class="detail-row" style="align-items:center">
@@ -97,10 +109,7 @@
                 </section>
 
                 <section class="settings-section card">
-                    <div class="details-header">
-                        <h2>Archive</h2>
-                        <p>Your archived content.  Click a heading to manage that type.</p>
-                    </div>
+                    <h2>Archive</h2>
 
                     <div class="archive-links-grid">
                         <a href="{% url 'account:archive-forum-posts' %}" class="archive-card archive-card--posts">
@@ -139,16 +148,9 @@
                 </section>
 
                 <section class="settings-section card danger-zone">
-                    <div class="details-header">
-                        <h2>Danger Zone</h2>
-                        <p>These actions are irreversible.  Proceed with extreme caution.</p>
-                    </div>
-
+                    <h2>Danger Zone</h2>
                     <div class="danger-zone-notice">
-                        <p>
-                            Clicking Delete Account will open a password confirmation modal.
-                            You must enter your current password before the account is permanently removed.
-                        </p>
+                        <p>These actions are irreversible.  Proceed with extreme caution.</p>
                     </div>
 
                     <button type="button"

@@ -44,15 +44,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let mobileTrigger = document.querySelector('.mobile-sidebar-trigger');
+
   if (!mobileTrigger) {
-    mobileTrigger = document.createElement('button');
-    mobileTrigger.type = 'button';
-    mobileTrigger.className = 'mobile-sidebar-trigger';
-    mobileTrigger.setAttribute('aria-controls', 'sidebar');
-    mobileTrigger.setAttribute('aria-expanded', 'false');
-    mobileTrigger.setAttribute('aria-label', 'Open navigation sidebar');
-    mobileTrigger.innerHTML = '<span class="sr-only">Toggle sidebar</span><svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
-    body.appendChild(mobileTrigger);
+      // ----- create the element exactly as before --------------------
+      mobileTrigger = document.createElement('button');
+      mobileTrigger.type = 'button';
+      mobileTrigger.className = 'mobile-sidebar-trigger';
+      mobileTrigger.setAttribute('aria-controls', 'sidebar');
+      mobileTrigger.setAttribute('aria-expanded', 'false');
+      mobileTrigger.setAttribute('aria-label', 'Open navigation sidebar');
+      mobileTrigger.innerHTML =
+          '<span class="sr-only">Toggle sidebar</span>' +
+          '<svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+          '<path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' +
+          '</svg>';
+
+      // ----- insert it where we want it --------------------------------
+      const headerLeft = document.querySelector('.content-header .header-left');
+      if (headerLeft) {
+          // put it as the first child so the button appears before the text
+          headerLeft.insertBefore(mobileTrigger, headerLeft.firstChild);
+      } else {
+          // fallback – should never happen, but keep the original behaviour
+          document.body.appendChild(mobileTrigger);
+      }
   }
 
   const setExpandedState = (isExpanded) => {

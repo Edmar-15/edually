@@ -16,6 +16,24 @@
             <!-- Header -->
             <header class="content-header">
                 <div class="header-left">
+                    <button type="button"
+                            class="mobile-sidebar-trigger"
+                            aria-controls="sidebar"
+                            aria-expanded="false"
+                            aria-label="Open navigation sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg class="sidebar-trigger-icon"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false">
+                            <path d="M4 7h16M4 12h16M4 17h16"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- Existing welcome text -->
                     <p>Welcome back, {{ user.get_full_name|default:user.username|default:user.email }}! <i class="fas fa-wave"></i></p>
                 </div>
             </header>
@@ -23,14 +41,6 @@
             <!-- Dashboard Content -->
             <div class="dashboard-content">
                 <div class="container">
-                <!-- Welcome Section -->
-                <section class="welcome-section">
-                    <div class="welcome-card card animate-fade-up">
-                        <span class="section-chip">Daily focus</span>
-                        <h2>Ready to learn?</h2>
-                        <p>Use your dashboard to pick up momentum, review your study materials, and keep your next step clear with a calmer, more guided workspace.</p>
-                    </div>
-                </section>
 
                 <section class="journey-section">
                     <div class="journey-card card animate-fade-up">
