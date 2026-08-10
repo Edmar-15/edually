@@ -28,6 +28,7 @@ class Post(models.Model):
         Category,
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         related_name="posts",
     )
     title = models.CharField(max_length=200)

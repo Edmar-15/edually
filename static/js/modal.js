@@ -57,6 +57,7 @@
   const bindAjaxForm = (form) => {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      e.stopImmediatePropagation();
 
       const action = form.action;
       const method = form.method.toUpperCase();
@@ -76,12 +77,18 @@
 
       const data = await response.json();
 
-      // ---------- NEW LOGIC -------------------------------------------------
-      // If the server tells us to go somewhere, make sure we keep the current
-      // hash (unless the supplied URL already contains its own hash).
-      // If there is no redirect we simply reload – the hash is automatically
-      // preserved by `location.reload()`.
-      // ----------------------------------------------------------------------
+      if (!data.success) {
+        if (data.html) {
+          modal.innerHTML = data.html.trim();
+          modal.removeAttribute("hidden");
+          modal.classList.add("open");
+          bindCloseEvents();
+          const newForm = modal.querySelector("form[data-modal-form]");
+          if (newForm) bindAjaxForm(newForm);
+        }
+        return;
+      }
+
       if (data.success && data.redirect) {
         const currentHash = window.location.hash;
         let target = data.redirect;
@@ -94,14 +101,21 @@
           }));
         }
 
-        // Only append the hash when the target URL does NOT already have one.
         if (currentHash && !target.includes("#")) {
           target = target.replace(/\/?$/, "") + currentHash;
         }
         window.location.href = target;
-      } else {
-        window.location.reload();
+        return;
       }
+
+      if (data.message) {
+        sessionStorage.setItem('eduallyToastMessage', JSON.stringify({
+          message: data.message,
+          type: data.toastType || 'success',
+          duration: data.toastDuration || 4000,
+        }));
+      }
+      window.location.reload();
     });
   };
 

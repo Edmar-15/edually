@@ -2,7 +2,7 @@
 import re
 
 from django import forms
-from .models import Post, Reply, Category
+from .models import Post, Reply
 
 BAD_WORDS = {
     "fuck",
@@ -41,7 +41,7 @@ def contains_bad_word(text: str) -> bool:
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ["category", "title", "content"]
+        fields = ["title", "content"]
         widgets = {
             "title": forms.TextInput(
                 attrs={"class": "input", "placeholder": "Enter a concise title"}
@@ -53,7 +53,6 @@ class PostForm(forms.ModelForm):
                     "placeholder": "Describe your question in detail…",
                 }
             ),
-            "category": forms.Select(attrs={"class": "select"}),
         }
 
     def clean_title(self):
