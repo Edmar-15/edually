@@ -98,4 +98,6 @@ urlpatterns = [
     path('archives/personal-materials/<int:pk>/delete/',
         views.archive_personal_material_delete,
         name='archive-personal-material-delete'),
+    path("password-reset/", views.password_reset_request, name="password_reset_request"),
+    path("reset-password/", views.password_reset_confirm, name="password_reset_confirm"),
 ]

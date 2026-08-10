@@ -162,6 +162,27 @@ PWA_SW_VERSION = "20240810"
 VAPID_PUBLIC_KEY  = ""
 VAPID_PRIVATE_KEY = ""
 
+# settings.py
+
+# Use the standard SMTP backend
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Host and port for your SMTP provider (e.g., Mailgun, SendGrid, Gmail, AWS SES)
+EMAIL_HOST = ''
+EMAIL_PORT = 587  # Use 587 for TLS, or 465 for SSL
+
+# Authentication details
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+
+# Security settings (Use True for one, keep the other False)
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
+# Default sender address
+DEFAULT_FROM_EMAIL = 'EduAlly <no-reply@yourdomain.com>'
+
+
 # --------------------------------------------------------------
 # Google OAuth2 configuration
 # --------------------------------------------------------------

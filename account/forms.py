@@ -304,3 +304,84 @@ class ProfileForm(forms.ModelForm):
         if commit:
             profile.save()
         return user
+    
+    
+class PasswordResetRequestForm(forms.Form):
+    """
+    First step – ask for the e‑mail address that belongs to
+    an existing user.
+    """
+    email = forms.EmailField(
+        max_length=254,
+        widget=forms.EmailInput(attrs={"placeholder": "you@example.com"}),
+        label="E‑mail address",
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].lower()
+        if not User.objects.filter(email__iexact=email).exists():
+            # Do not reveal whether the e‑mail exists – avoid user‑enumeration.
+            raise forms.ValidationError(
+                "If an account with that e‑mail exists we will send an OTP."
+            )
+        return email
+
+
+class PasswordResetConfirmForm(forms.Form):
+    """
+    Second step – verify the OTP and set a new password.
+    """
+    otp = forms.CharField(
+        max_length=6,
+        min_length=6,
+        widget=forms.TextInput(attrs={"placeholder": "6‑digit code"}),
+        label="One‑time password (OTP)",
+    )
+    password1 = forms.CharField(
+        label="New password",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "Create a new password"}
+        ),
+    )
+    password2 = forms.CharField(
+        label="Confirm new password",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "Confirm your new password"}
+        ),
+    )
+
+    # -----------------------------------------------------------------
+    #  PASSWORD VALIDATORS – exactly the same rules used during registration
+    # -----------------------------------------------------------------
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1")
+        if not password:
+            return password
+
+        if len(password) < 8:
+            raise forms.ValidationError(
+                "Password must be at least 8 characters long."
+            )
+        if not re.search(r"[A-Z]", password):
+            raise forms.ValidationError(
+                "Password must include at least one uppercase letter."
+            )
+        if not re.search(r"\d", password):
+            raise forms.ValidationError(
+                "Password must include at least one number."
+            )
+        if not re.search(r"[!@#$%^&*()_+\-=[\]{};':\\\|,.<>\/?~`]", password):
+            raise forms.ValidationError(
+                "Password must include at least one special character."
+            )
+        return password
+
+    def clean(self):
+        cleaned = super().clean()
+        p1 = cleaned.get("password1")
+        p2 = cleaned.get("password2")
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("Passwords do not match.")
+        return cleaned

@@ -28,6 +28,9 @@ from django.views.generic import TemplateView
 from django.template.loader import render_to_string
 from functools import wraps
 from django.db import models
+import random
+from django.core.cache import cache
+from django.core.mail import send_mail
 
 # --------------------------------------------------------------
 # Local imports
@@ -37,6 +40,8 @@ from .forms import (
     ProfileForm,
     LoginForm,
     DeleteAccountForm,
+    PasswordResetConfirmForm,
+    PasswordResetRequestForm
 )
 from .models import UserConsent, User, StudentProfile, PushSubscription
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
@@ -920,3 +925,107 @@ def teacher_required_for_mutation(view_func):
             "Only teachers may create / edit / delete resources."
         )
     return _wrapped
+
+
+def _send_otp_helper(email: str, user: User) -> None:
+    """
+    **Plain helper** – generate a 6‑digit OTP, store it in the cache
+    and e‑mail it to the user.  This function must NOT be decorated with
+    ``@require_POST`` (or any view decorator) because it is invoked
+    directly from the view ``password_reset_request``.
+    """
+    otp = f"{random.randint(0, 999999):06d}"
+    # Cache key is scoped to the e‑mail address; expires after 10 minutes.
+    cache.set(f"pwd_reset_otp_{email}", otp, timeout=10 * 60)
+
+    subject = "Your EduAlly password‑reset code"
+    body = render_to_string(
+        "account/password_reset_email.txt",
+        {"user": user, "otp": otp, "site_name": "EduAlly"},
+    )
+    send_mail(
+        subject,
+        body,
+        django_settings.DEFAULT_FROM_EMAIL,
+        [email],
+        fail_silently=False,
+    )
+
+
+def password_reset_request(request):
+    """
+    Step 1 – ask for an e‑mail address and send an OTP.
+    """
+    if request.method == "POST":
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            user = User.objects.get(email__iexact=email)  # we know it exists from clean_email()
+            _send_otp_helper(email, user)
+
+            # Store the e‑mail in the session so we know which account we’re resetting.
+            request.session["pwd_reset_email"] = email
+            messages.success(
+                request,
+                "An OTP has been sent to the e‑mail address you entered.",
+            )
+            return redirect("account:password_reset_confirm")
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(
+        request,
+        "account/password_reset_request.html",
+        {"form": form},
+    )
+
+
+def password_reset_confirm(request):
+    """
+    Step 2 – verify OTP and set a new password.
+    """
+    email = request.session.get("pwd_reset_email")
+    if not email:
+        # No e‑mail in session → start over.
+        messages.info(request, "Please start the password‑reset process again.")
+        return redirect("account:password_reset_request")
+
+    # -------------------------------------------------
+    #   POST → validate OTP and new password
+    # -------------------------------------------------
+    if request.method == "POST":
+        form = PasswordResetConfirmForm(request.POST)
+        if form.is_valid():
+            otp_entered = form.cleaned_data["otp"]
+            cached_otp = cache.get(f"pwd_reset_otp_{email}")
+
+            if not cached_otp or cached_otp != otp_entered:
+                form.add_error(
+                    "otp", "Invalid or expired OTP. Please request a new one."
+                )
+            else:
+                # OTP is good – change the password.
+                try:
+                    user = User.objects.get(email__iexact=email)
+                except User.DoesNotExist:
+                    # Very unlikely – the e‑mail existed when we sent the OTP.
+                    messages.error(request, "User not found.")
+                    return redirect("account:password_reset_request")
+
+                user.set_password(form.cleaned_data["password1"])
+                user.save()
+
+                # Clean‑up
+                cache.delete(f"pwd_reset_otp_{email}")
+                request.session.pop("pwd_reset_email", None)
+
+                messages.success(request, "Your password has been reset. You can now log in.")
+                return redirect("account:login")
+    else:
+        form = PasswordResetConfirmForm()
+
+    return render(
+        request,
+        "account/password_reset_confirm.html",
+        {"form": form, "email": email},
+    )

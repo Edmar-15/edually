@@ -81,7 +81,7 @@
 
         <p class="auth-footer">
             No account yet? <a href="{% url 'account:register' %}">Register</a>
-            <br><a href="#">Forgot Password</a>
+            <br><a href="{% url 'account:password_reset_request' %}">Forgot Password</a>
         </p>
     </section>
 </main>
