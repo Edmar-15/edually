@@ -58,8 +58,8 @@ class StudentProfileAdmin(admin.ModelAdmin):
 
 @admin.register(TeacherProfile)
 class TeacherProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "employee_id", "department")
-    search_fields = ("user__email", "employee_id", "department")
+    list_display = ("user", "employee_id")
+    search_fields = ("user__email", "employee_id")
 
 
 @admin.register(UserConsent)

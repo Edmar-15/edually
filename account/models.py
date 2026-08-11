@@ -159,15 +159,24 @@ class StudentProfile(models.Model):
         blank=True,
         help_text="University‑assigned identifier.",
     )
+    # Default programme → “Information Technology”
     program = models.CharField(
         "Program / Course",
         max_length=100,
         blank=True,
+        default="Information Technology",
     )
+    # Year level is now required and limited to 1st‑4th year
+    YEAR_CHOICES = [
+        ("1st Year", "1st Year"),
+        ("2nd Year", "2nd Year"),
+        ("3rd Year", "3rd Year"),
+        ("4th Year", "4th Year"),
+    ]
     year_level = models.CharField(
         "Year Level",
         max_length=20,
-        blank=True,
+        choices=YEAR_CHOICES,
     )
 
     def __str__(self) -> str:
@@ -187,9 +196,11 @@ class TeacherProfile(models.Model):
         blank=True,
         help_text="Internal staff identifier.",
     )
+    # Department is now always “CCS”
     department = models.CharField(
         "Department",
         max_length=100,
+        default="CCS",
         blank=True,
     )
 

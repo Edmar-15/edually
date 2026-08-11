@@ -93,7 +93,6 @@ class PublicRegisterForm(forms.ModelForm):
 
     class Meta:
         model = User
-        # NOTE: we *don’t* include the profile‑specific fields here – they are extra fields only.
         fields = (
             "email",
             "username",
@@ -115,21 +114,22 @@ class PublicRegisterForm(forms.ModelForm):
         label="Student ID",
         widget=forms.TextInput(attrs={"placeholder": "Enter your student id"}),
     )
-    program = forms.CharField(
-        required=False,
-        max_length=100,
-        label="Program / Course",
-        widget=forms.TextInput(attrs={"placeholder": "Enter your Program/Course"}),
-    )
-    year_level = forms.CharField(
-        required=False,
-        max_length=20,
+    # PROGRAM is no longer asked – defaults to “Information Technology”
+
+    YEAR_CHOICES = [
+        ("1st Year", "1st Year"),
+        ("2nd Year", "2nd Year"),
+        ("3rd Year", "3rd Year"),
+        ("4th Year", "4th Year"),
+    ]
+    year_level = forms.ChoiceField(
+        required=True,
+        choices=YEAR_CHOICES,
         label="Year Level",
-        widget=forms.TextInput(attrs={"placeholder": "Enter your year level (1st Year)"}),
     )
 
     # -----------------------------------------------------------------
-    #  VALIDATORS
+    #  VALIDATORS (unchanged)
     # -----------------------------------------------------------------
     def clean_email(self):
         email = self.cleaned_data["email"].lower()
@@ -172,7 +172,6 @@ class PublicRegisterForm(forms.ModelForm):
         """
         # ----------- Pull the student‑only extra fields -------------
         student_id = self.cleaned_data.pop("student_id", "")
-        program = self.cleaned_data.pop("program", "")
         year_level = self.cleaned_data.pop("year_level", "")
 
         # ----------- Create the core User object ------------------
@@ -186,7 +185,7 @@ class PublicRegisterForm(forms.ModelForm):
             StudentProfile.objects.create(
                 user=user,
                 student_id=student_id,
-                program=program,
+                # program defaults automatically to “Information Technology”
                 year_level=year_level,
             )
             add_user_to_group(user, GROUP_STUDENT)
@@ -231,8 +230,6 @@ class ProfileForm(forms.ModelForm):
 
     # Extra fields that belong to the StudentProfile
     student_id = forms.CharField(required=False, max_length=30, label="Student ID")
-    program = forms.CharField(required=False, max_length=100, label="Program / Course")
-    year_level = forms.CharField(required=False, max_length=20, label="Year Level")
 
     class Meta:
         model = User
@@ -245,8 +242,6 @@ class ProfileForm(forms.ModelForm):
         if self.instance.pk and hasattr(self.instance, "student_profile"):
             profile = self.instance.student_profile
             self.fields["student_id"].initial = profile.student_id
-            self.fields["program"].initial = profile.program
-            self.fields["year_level"].initial = profile.year_level
 
     def save(self, commit=True):
         """Save core user fields **and** the linked StudentProfile."""
@@ -254,8 +249,6 @@ class ProfileForm(forms.ModelForm):
 
         profile, _ = StudentProfile.objects.get_or_create(user=user)
         profile.student_id = self.cleaned_data["student_id"]
-        profile.program = self.cleaned_data["program"]
-        profile.year_level = self.cleaned_data["year_level"]
         if commit:
             profile.save()
         return user
