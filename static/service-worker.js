@@ -120,7 +120,8 @@ self.addEventListener("fetch", (ev) => {
   // -----------------------------------------------------------------
   if (
     url.pathname.startsWith("/slm/api/") || 
-    url.pathname.startsWith("/aihelper/")
+    url.pathname.startsWith("/aihelper/") ||
+    url.pathname.startsWith("/account/logout-confirm/")
   ) {
     ev.respondWith(
       fetch(req).catch(() => {

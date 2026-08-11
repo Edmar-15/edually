@@ -147,6 +147,65 @@
                         <button type="submit" class="button primary-button" style="margin-top:1.5rem;" id="save-profile-button" disabled>Save changes</button>
                         <button type="button" class="button outline-button" style="margin-left:1rem;" id="cancel-edit-profile" disabled>Cancel</button>
                     </form>
+
+                    <hr class="form-section-divider">
+
+                    <h3>Change Password</h3>
+                    <p class="profile-form-note">
+                        Enter your current password and a new one.
+                    </p>
+
+                    <form method="post" class="profile-form"
+                          novalidate>
+                        {% csrf_token %}
+
+                        {{ password_form.non_field_errors }}
+
+                        <div class="floating-label-group input-group">
+                            {{ password_form.old_password }}
+                            <label for="{{ password_form.old_password.id_for_label }}">
+                                Current password
+                            </label>
+                            {% if password_form.old_password.errors %}
+                                <div class="validation-error">
+                                    {{ password_form.old_password.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="floating-label-group input-group">
+                            {{ password_form.new_password1 }}
+                            <label for="{{ password_form.new_password1.id_for_label }}">
+                                New password
+                            </label>
+                            {% if password_form.new_password1.errors %}
+                                <div class="validation-error">
+                                    {{ password_form.new_password1.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="floating-label-group input-group">
+                            {{ password_form.new_password2 }}
+                            <label for="{{ password_form.new_password2.id_for_label }}">
+                                Confirm new password
+                            </label>
+                            {% if password_form.new_password2.errors %}
+                                <div class="validation-error">
+                                    {{ password_form.new_password2.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- hidden marker used by the view to know which form posted -->
+                        <input type="hidden" name="change_password" value="1">
+
+                        <button type="submit"
+                                class="button primary-button"
+                                style="margin-top:1.5rem;">
+                            Update password
+                        </button>
+                    </form>
                 </section>
             </div>
         </section>

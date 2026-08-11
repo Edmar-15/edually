@@ -15,6 +15,7 @@ from django.contrib.auth import (
     get_user_model,
     login as auth_login,
     logout as auth_logout,
+    update_session_auth_hash,
 )
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseRedirect, HttpResponseForbidden
@@ -23,6 +24,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 from django.template.loader import render_to_string
@@ -41,7 +43,8 @@ from .forms import (
     LoginForm,
     DeleteAccountForm,
     PasswordResetConfirmForm,
-    PasswordResetRequestForm
+    PasswordResetRequestForm,
+    ChangePasswordForm
 )
 from .models import UserConsent, User, StudentProfile, PushSubscription
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
@@ -228,14 +231,31 @@ def dashboard(request):
     return render(request, "dashboard.html", context)
 
 
-@login_required(login_url="account:login")
+@login_required(login_url='account:login')
 def profile(request):
     """
-    Render the profile page.
-    GET → show form with current data.
-    POST → validate, save and redirect back to the same page.
+    GET  → show both the personal‑info form and the change‑password form.
+    POST → handle whichever form was submitted.
     """
-    if request.method == "POST":
+    # -----------------------------------------------------------------
+    # 1️⃣  Password‑change handling (POST from the new form)
+    # -----------------------------------------------------------------
+    if request.method == "POST" and "change_password" in request.POST:
+        password_form = ChangePasswordForm(user=request.user, data=request.POST)
+        if password_form.is_valid():
+            password_form.save()
+            # Keep the user logged‑in after the password change
+            update_session_auth_hash(request, request.user)
+            messages.success(request, "Your password was updated.")
+            return redirect("account:profile")
+        # If we fall through we will re‑render the page with errors
+    else:
+        password_form = ChangePasswordForm(user=request.user)
+
+    # -----------------------------------------------------------------
+    # 2️⃣  Personal‑info form handling (unchanged)
+    # -----------------------------------------------------------------
+    if request.method == "POST" and "profile_update" in request.POST:
         form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
@@ -245,7 +265,12 @@ def profile(request):
     else:
         form = ProfileForm(instance=request.user)
 
-    return render(request, "account/profile.html", {"user_obj": request.user, "profile_form": form})
+    context = {
+        "user_obj": request.user,
+        "profile_form": form,
+        "password_form": password_form,
+    }
+    return render(request, "account/profile.html", context)
 
 
 @login_required(login_url='account:login')
@@ -402,6 +427,7 @@ def delete_account(request):
     return redirect("landing")
 
 
+@never_cache
 @login_required(login_url='account:login')
 @ensure_csrf_cookie     # ← makes sure the GET includes a CSRF cookie
 def logout_confirm(request):

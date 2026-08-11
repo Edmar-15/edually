@@ -10,6 +10,7 @@ from django.contrib.auth.forms import (
     AuthenticationForm,
     UserCreationForm as DjangoUserCreationForm,
     UserChangeForm as DjangoUserChangeForm,
+    PasswordChangeForm
 )
 from django.utils import timezone
 from django.forms import DateTimeInput
@@ -333,3 +334,35 @@ class PasswordResetConfirmForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Passwords do not match.")
         return cleaned
+    
+    
+class ChangePasswordForm(PasswordChangeForm):
+    """
+    Uses the same password‑strength rules as registration / reset.
+    The ``old_password`` field is rendered by the base class; we only
+    need to enforce the custom validators on the new passwords.
+    """
+
+    def clean_new_password1(self):
+        password = self.cleaned_data.get("new_password1")
+        if not password:
+            return password
+
+        # ---- validations – identical to those in PublicRegisterForm ----
+        if len(password) < 8:
+            raise forms.ValidationError(
+                "Password must be at least 8 characters long."
+            )
+        if not re.search(r"[A-Z]", password):
+            raise forms.ValidationError(
+                "Password must include at least one uppercase letter."
+            )
+        if not re.search(r"\d", password):
+            raise forms.ValidationError(
+                "Password must include at least one number."
+            )
+        if not re.search(r"[!@#$%^&*()_+\-=[\]{};':\\\|,.<>\/?~`]", password):
+            raise forms.ValidationError(
+                "Password must include at least one special character."
+            )
+        return password
