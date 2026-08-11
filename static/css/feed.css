@@ -1135,7 +1135,7 @@ html.dark .post-form select {
     border-radius: 12px;
     overflow: hidden;
     flex: 0 0 56px;
-    background: linear-gradient(135deg, #f0fafb, #ffffff);
+    background: linear-gradient(135deg, #111827, rgba(20, 29, 48, 0.88));
     display: grid;
     place-items: center;
     border: 1px solid rgba(14,154,167,0.08);
