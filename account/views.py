@@ -266,16 +266,14 @@ def profile_modal(request, pk):
 
 def register(request):
     """
-    Public registration – uses ``PublicRegisterForm`` which now knows whether
-    the user wants to be a Student or a Teacher.
+    Public registration – uses ``PublicRegisterForm`` which now knows that
+    every registrant is a Student.
     """
     policy_context = {
         "policy_version": django_settings.POLICY_VERSION,
         "effective_date": datetime.strptime(
             django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
         ),
-        "GROUP_STUDENT": GROUP_STUDENT,
-        "GROUP_TEACHER": GROUP_TEACHER,
     }
 
     if request.method == "POST":
@@ -299,7 +297,6 @@ def register(request):
         form = PublicRegisterForm()
 
     return render(request, "account/register.html", {"form": form, **policy_context})
-
 
 
 @login_required(login_url='account:login')

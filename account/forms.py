@@ -17,9 +17,9 @@ from django.forms import DateTimeInput
 # -----------------------------------------------------------------
 # Local imports
 # -----------------------------------------------------------------
-from .models import UserConsent, StudentProfile, TeacherProfile
+from .models import UserConsent, StudentProfile
 from .utils import add_user_to_group
-from .constants import GROUP_STUDENT, GROUP_TEACHER
+from .constants import GROUP_STUDENT
 
 User = get_user_model()
 
@@ -61,26 +61,13 @@ class UserChangeForm(DjangoUserChangeForm):
 
 
 # -----------------------------------------------------------------
-#  PUBLIC REGISTRATION FORM – works for BOTH students AND teachers
+#  PUBLIC REGISTRATION FORM – **students only**
 # -----------------------------------------------------------------
 class PublicRegisterForm(forms.ModelForm):
     """
-    Public registration form that can create either a StudentProfile **or**
-    a TeacherProfile, then adds the user to the matching group.
+    Public registration form that creates a StudentProfile, adds the user
+    to the Student group, and records the initial consent.
     """
-    # ──────  ROLE selector (radio buttons)  ──────
-    ROLE_CHOICES = (
-        (GROUP_STUDENT, "Student"),
-        (GROUP_TEACHER, "Teacher"),
-    )
-    role = forms.ChoiceField(
-        choices=ROLE_CHOICES,
-        widget=forms.RadioSelect,
-        initial=GROUP_STUDENT,
-        label="I am a",
-        required=True,
-    )
-
     # ──────  PASSWORD fields  ──────
     password1 = forms.CharField(
         label="Password",
@@ -142,22 +129,6 @@ class PublicRegisterForm(forms.ModelForm):
     )
 
     # -----------------------------------------------------------------
-    #  TEACHER‑ONLY extra fields (these live only on the form)
-    # -----------------------------------------------------------------
-    employee_id = forms.CharField(
-        required=False,
-        max_length=30,
-        label="Employee ID",
-        widget=forms.TextInput(attrs={"placeholder": "Enter your employee id"}),
-    )
-    department = forms.CharField(
-        required=False,
-        max_length=100,
-        label="Department",
-        widget=forms.TextInput(attrs={"placeholder": "Enter your department (CSS)"}),
-    )
-
-    # -----------------------------------------------------------------
     #  VALIDATORS
     # -----------------------------------------------------------------
     def clean_email(self):
@@ -192,51 +163,35 @@ class PublicRegisterForm(forms.ModelForm):
         return cleaned
 
     # -----------------------------------------------------------------
-    #  SAVE – branch on role and create the correct profile + group
+    #  SAVE – always creates a StudentProfile and assigns the Student group
     # -----------------------------------------------------------------
     def save(self, commit=True):
         """
-        Create the User, the role‑specific profile, assign the proper group,
+        Create the User, a StudentProfile, assign the student group,
         and record the initial consent.
         """
-        # ----------- 1️⃣  Pull the role & the extra fields -------------
-        role = self.cleaned_data.get("role")   # "Student" or "Teacher"
-
-        # student‑only
+        # ----------- Pull the student‑only extra fields -------------
         student_id = self.cleaned_data.pop("student_id", "")
         program = self.cleaned_data.pop("program", "")
         year_level = self.cleaned_data.pop("year_level", "")
 
-        # teacher‑only
-        employee_id = self.cleaned_data.pop("employee_id", "")
-        department = self.cleaned_data.pop("department", "")
-
-        # ----------- 2️⃣  Create the core User object ------------------
+        # ----------- Create the core User object ------------------
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
 
         if commit:
             user.save()
 
-            # ---------- 3️⃣  Create the role‑specific profile ----------
-            if role == GROUP_STUDENT:
-                StudentProfile.objects.create(
-                    user=user,
-                    student_id=student_id,
-                    program=program,
-                    year_level=year_level,
-                )
-                add_user_to_group(user, GROUP_STUDENT)
+            # ---------- Create the StudentProfile ----------
+            StudentProfile.objects.create(
+                user=user,
+                student_id=student_id,
+                program=program,
+                year_level=year_level,
+            )
+            add_user_to_group(user, GROUP_STUDENT)
 
-            elif role == GROUP_TEACHER:
-                TeacherProfile.objects.create(
-                    user=user,
-                    employee_id=employee_id,
-                    department=department,
-                )
-                add_user_to_group(user, GROUP_TEACHER)
-
-            # ---------- 4️⃣  Record consent (unchanged) ----------------
+            # ---------- Record consent ----------
             UserConsent.objects.create(
                 user=user,
                 version=settings.POLICY_VERSION,

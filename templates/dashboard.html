@@ -166,29 +166,6 @@
                         </div>
                     </div>
                 </section>
-
-                <section class="recent-activity">
-                    <h3>Suggested next actions</h3>
-                    <div class="activity-list">
-                        {% for item in recent_activity %}
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="{{ item.icon }}"></i></div>
-                            <div class="activity-details">
-                                <h4>{{ item.title }}</h4>
-                                <p class="activity-meta">{{ item.detail }}</p>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-compass"></i></div>
-                            <div class="activity-details">
-                                <h4>Start with a small step</h4>
-                                <p class="activity-meta">Open a module or ask the AI helper to begin your next session.</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </section>
                 </div> <!-- /.container -->
             </div>
         </main>

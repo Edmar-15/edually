@@ -61,7 +61,7 @@ body.sidebar-mobile-open .sidebar-backdrop {
 
 html.dark .mobile-sidebar-trigger,
 html[data-theme="dark"] .mobile-sidebar-trigger {
-    background: rgba(17, 24, 39, 0.96) !important;
+    background: transparent;
     color: var(--text) !important;
 }
 
@@ -695,7 +695,7 @@ body.sidebar-animating .main-content {
 
 html.dark .sidebar-trigger,
 html[data-theme="dark"] .sidebar-trigger {
-    background: rgba(17, 24, 39, 0.96) !important;
+    background: transparent;
     border-color: rgba(148, 163, 184, 0.18) !important;
     color: var(--text) !important;
 }

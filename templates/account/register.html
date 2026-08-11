@@ -31,12 +31,6 @@
                 <div class="errorlist nonfield">{{ form.non_field_errors }}</div>
             {% endif %}
 
-            {# ----------------- ROLE SELECTOR ----------------- #}
-            <div class="form-group role-group">
-                {{ form.role.label_tag }}
-                <div class="radio-list">{{ form.role }}</div>
-            </div>
-
             <div class="form-row">
                 {% if form.username %}
                     <div class="floating-label-group input-group">
@@ -125,19 +119,6 @@
                 </div>
             </div>
 
-            {# ----------------- TEACHER‑ONLY FIELDS ----------------- #}
-            <div class="teacher-fields" data-section="Teacher details">
-                <div class="floating-label-group input-group">
-                    <label for="{{ form.employee_id.id_for_label }}">Employee ID (optional)</label>
-                    {{ form.employee_id }}
-                </div>
-
-                <div class="floating-label-group input-group">
-                    <label for="{{ form.department.id_for_label }}">Department</label>
-                    {{ form.department }}
-                </div>
-            </div>
-
             {# ----------------- TERMS & CONDITIONS ----------------- #}
             <div class="form-group terms-group">
                 <label class="checkbox-label">
@@ -178,7 +159,7 @@
 
                 <h2>1. Acceptance</h2>
                 <p>
-                    By creating an account, accessing or using EduAlly, you acknowledge that you have read,
+                    By creating an account, accessing or using EduAlly, you acknowledge you have read,
                     understood, and agree to be bound by these Terms &amp; Conditions.
                 </p>
 
@@ -319,32 +300,4 @@
 <script src="{% static 'js/account/floating_labels.js' %}"></script>
 <script src="{% static 'js/account/policy_modal.js' %}"></script>
 <script src="{% static 'js/account/form_validation.js' %}"></script>
-
-<script>
-    // -------------------------------------------------------------
-    // Show only the fields that belong to the selected role.
-    // -------------------------------------------------------------
-    document.addEventListener('DOMContentLoaded', function () {
-        const studentBox = document.querySelector('.student-fields');
-        const teacherBox = document.querySelector('.teacher-fields');
-        const roleRadios = document.querySelectorAll('input[name="role"]');
-
-        function toggleFields() {
-            const selected = document.querySelector('input[name="role"]:checked').value;
-            if (selected === "{{ GROUP_STUDENT }}") {
-                studentBox.style.display = 'block';
-                teacherBox.style.display = 'none';
-            } else {
-                studentBox.style.display = 'none';
-                teacherBox.style.display = 'block';
-            }
-        }
-
-        // Attach listeners
-        roleRadios.forEach(r => r.addEventListener('change', toggleFields));
-
-        // Run once on page load to set the right visibility
-        toggleFields();
-    });
-</script>
 {% endblock %}
