@@ -114,6 +114,26 @@ class SettingsPageTests(TestCase):
         self.assertContains(response, "1 module")
         self.assertContains(response, "Continue where you left off")
 
+    def test_student_dashboard_shows_available_module_counts(self):
+        subject = Subject.objects.create(
+            subject_code="GEC101",
+            subject_name="General Education",
+            author=self.user,
+        )
+        Module.objects.create(
+            subject=subject,
+            module_number=1,
+            module_name="Intro",
+            file=SimpleUploadedFile("module.pdf", b"pdf", content_type="application/pdf"),
+        )
+
+        response = self.client.get(reverse("account:dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "1 module")
+        self.assertContains(response, "Subjects in your space")
+        self.assertContains(response, '<span class="stat-number">1</span>', html=True)
+
     def test_dashboard_shows_onboarding_checklist_for_new_users(self):
         response = self.client.get(reverse("account:dashboard"))
 
@@ -199,6 +219,7 @@ class RecentModuleDashboardTests(TestCase):
         self.client.cookies["eduallyRecentModules"] = json.dumps([self.module_two.pk, self.module_one.pk])
         self.client.logout()
         self.client.force_login(self.user)
+        self.client.cookies["eduallyRecentModules"] = json.dumps([self.module_two.pk, self.module_one.pk])
 
         response = self.client.get(reverse("account:dashboard"))
 

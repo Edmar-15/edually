@@ -48,7 +48,7 @@ from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
 # Other apps used in the dashboard
-from slm.models import Module, PersonalMaterial
+from slm.models import Module, PersonalMaterial, Subject
 from forum.models import Post
 from aihelper.models import Conversation, Message
 
@@ -129,7 +129,12 @@ def _get_recent_module_ids(request):
     try:
         parsed = json.loads(cookie_value)
     except json.JSONDecodeError:
-        return []
+        # Some cookie transports escape commas as octal sequences like "\054".
+        cookie_value = cookie_value.replace("\\054", ",")
+        try:
+            parsed = json.loads(cookie_value)
+        except json.JSONDecodeError:
+            return []
 
     if not isinstance(parsed, list):
         return []
@@ -149,8 +154,17 @@ def _get_recent_module_ids(request):
 
 @login_required(login_url='account:login')
 def dashboard(request):
-    subjects = request.user.subjects.all()[:3]
-    modules = Module.objects.filter(subject__author=request.user).select_related("subject")[:3]
+    if user_is_in_group(request.user, GROUP_TEACHER):
+        subjects = request.user.subjects.filter(is_archived=False)[:3]
+        modules = Module.objects.filter(subject__author=request.user, is_archived=False).select_related("subject")[:3]
+        subject_count = request.user.subjects.filter(is_archived=False).count()
+        module_count = Module.objects.filter(subject__author=request.user, is_archived=False).count()
+    else:
+        subjects = Subject.objects.filter(is_archived=False)[:3]
+        modules = Module.objects.filter(is_archived=False, subject__is_archived=False).select_related("subject")[:3]
+        subject_count = Subject.objects.filter(is_archived=False).count()
+        module_count = Module.objects.filter(is_archived=False, subject__is_archived=False).count()
+
     recent_module_ids = _get_recent_module_ids(request)
     recent_modules = list(
         Module.objects.filter(pk__in=recent_module_ids)
@@ -190,7 +204,7 @@ def dashboard(request):
         {
             "title": "Open a module",
             "detail": "Review the latest materials and start building momentum with one small step.",
-            "done": modules.exists() or bool(recent_modules),
+            "done": bool(recent_modules),
         },
         {
             "title": "Ask one question",
@@ -207,8 +221,8 @@ def dashboard(request):
         "modules": modules,
         "recent_modules": recent_modules,
         "recent_activity": recent_activity,
-        "module_count": modules.count(),
-        "subject_count": subjects.count(),
+        "module_count": module_count,
+        "subject_count": subject_count,
         "onboarding_steps": onboarding_steps,
     }
     return render(request, "dashboard.html", context)
