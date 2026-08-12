@@ -49,13 +49,6 @@
                 }
             }
 
-            if (theme === 'light') {
-                const cookieTheme = getCookie(cookieName);
-                if (cookieTheme === 'dark' || cookieTheme === 'light') {
-                    theme = cookieTheme;
-                }
-            }
-
             if (!theme || (theme !== 'dark' && theme !== 'light')) {
                 theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
                     ? 'dark'

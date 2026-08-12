@@ -60,6 +60,11 @@
     }
 
     function getSavedTheme() {
+        const forcedTheme = htmlEl.dataset.forceTheme;
+        if (forcedTheme === 'dark' || forcedTheme === 'light') {
+            return forcedTheme;
+        }
+
         try {
             const stored = localStorage.getItem(key);
             if (stored === 'dark' || stored === 'light') {
