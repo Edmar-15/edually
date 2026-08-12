@@ -68,3 +68,32 @@ class UserConsentAdmin(admin.ModelAdmin):
     list_filter = ("version",)
     search_fields = ("user__email", "user__username")
     ordering = ("-accepted_at",)
+    
+    
+from django.contrib import admin
+from axes.admin import AccessAttemptAdmin
+from axes.models import AccessAttempt, AccessAttemptExpiration
+
+# 1. Unregister django-axes default admin layout
+admin.site.unregister(AccessAttempt)
+
+# 2. Subclass with corrected model attribute logic
+@admin.register(AccessAttempt)
+class CustomAccessAttemptAdmin(AccessAttemptAdmin):
+    
+    def __init__(self, model, admin_site):
+        super().__init__(model, admin_site)
+        # Drop the raw unformatted object string column out of your list layout
+        cleaned_list = [f for f in self.list_display if f != 'access_attempt_expiration']
+        self.list_display = tuple(cleaned_list + ['get_expiration_time'])
+
+    @admin.display(description='Access Attempt Expiration')
+    def get_expiration_time(self, obj):
+        # Match using the exact foreign key field name: access_attempt_id
+        expiration_record = AccessAttemptExpiration.objects.filter(access_attempt_id=obj.id).first()
+        
+        # Pull the correct timestamp column name: expires_at
+        if expiration_record and expiration_record.expires_at:
+            return expiration_record.expires_at.strftime("%b. %d, %Y, %I:%M %p")
+            
+        return "-"

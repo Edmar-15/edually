@@ -33,6 +33,7 @@ from django.db import models
 import random
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django_ratelimit.decorators import ratelimit
 
 # --------------------------------------------------------------
 # Local imports
@@ -988,7 +989,7 @@ def _send_otp_helper(email: str, user: User) -> None:
         fail_silently=False,
     )
 
-
+@ratelimit(key='ip', rate='3/h', method='POST', block=True)
 def password_reset_request(request):
     """
     Step 1 – ask for an e‑mail address and send an OTP.
@@ -1017,6 +1018,7 @@ def password_reset_request(request):
     )
 
 
+@ratelimit(key='ip', rate='5/h', method='POST', block=True)
 def password_reset_confirm(request):
     """
     Step 2 – verify OTP and set a new password.
@@ -1066,3 +1068,30 @@ def password_reset_confirm(request):
         "account/password_reset_confirm.html",
         {"form": form, "email": email},
     )
+    
+    
+@ratelimit(key='user', rate='5/d', method='POST', block=True)   # ≤ 5 password changes per day per user
+@login_required(login_url='account:login')
+def change_password(request):
+    """
+    Dedicated endpoint for changing a password.
+    The template already contains the ChangePasswordForm – we just POST to this URL.
+    """
+    if request.method != "POST":
+        return HttpResponseBadRequest("Invalid request method.")
+
+    form = ChangePasswordForm(user=request.user, data=request.POST)
+    if form.is_valid():
+        form.save()
+        # Keep the user logged‑in after the password change
+        update_session_auth_hash(request, request.user)
+        messages.success(request, "Your password was updated.")
+        return redirect('account:profile')
+    else:
+        # Show the same profile page but with the form errors rendered.
+        # Re‑use the same context we already build in `profile()`.
+        return render(request, "account/profile.html", {
+            "user_obj": request.user,
+            "profile_form": ProfileForm(instance=request.user),   # unchanged personal‑info form
+            "password_form": form,
+        })

@@ -155,8 +155,7 @@
                         Enter your current password and a new one.
                     </p>
 
-                    <form method="post" class="profile-form"
-                          novalidate>
+                    <form method="post" action="{% url 'account:password_change' %}" class="profile-form" novalidate>
                         {% csrf_token %}
 
                         {{ password_form.non_field_errors }}
@@ -196,9 +195,6 @@
                                 </div>
                             {% endif %}
                         </div>
-
-                        <!-- hidden marker used by the view to know which form posted -->
-                        <input type="hidden" name="change_password" value="1">
 
                         <button type="submit"
                                 class="button primary-button"

@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'forum',
     'aihelper',
     'slm',
+    'axes',
+    'django_ratelimit',
 ]
 
 MIDDLEWARE = [
@@ -51,6 +53,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.AxesMiddleware',
     "account.middleware.RequireLatestConsentMiddleware",
     'slm.middleware.NoCacheForDynamicPagesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -113,9 +116,21 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = "account.User"
 
 AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
     "account.backends.EmailOrUsernameModelBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+    },
+    'axes_cache': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}
 
 
 # Internationalization
@@ -127,7 +142,7 @@ TIME_ZONE = 'Asia/Manila'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -182,6 +197,21 @@ EMAIL_USE_SSL = False
 # Default sender address
 DEFAULT_FROM_EMAIL = 'EduAlly <no-reply@yourdomain.com>'
 
+# ── Axes configuration ─────────────────────────────────────────────────────
+# All values are optional – the defaults are safe – but we set them
+# explicitly so you can see what is happening.
+from datetime import timedelta
+AXES_LOCKOUT_PARAMETERS = [
+    ["username", "ip_address", "user_agent"],
+]
+AXES_FAILURE_LIMIT = 5             # how many bad tries before lock‑out
+AXES_COOLOFF_TIME = timedelta(minutes=15)   # 15 min block
+AXES_USE_ATTEMPT_EXPIRATION = True
+AXES_RESET_ON_SUCCESS = True          # clear counter on a successful login
+AXES_CACHE = 'axes_cache'
+# (Optional) If you sit behind a proxy that sets X‑Forwarded‑For, tell
+# Axes which header contains the real client IP:
+# AXES_PROXY_ORDER = ('HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR')
 
 # --------------------------------------------------------------
 # Google OAuth2 configuration
