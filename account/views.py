@@ -156,6 +156,45 @@ def _get_recent_module_ids(request):
     return recent_module_ids
 
 
+def _get_recent_personal_material_ids(request):
+    """
+    Mirrors ``_get_recent_module_ids`` but works for PersonalMaterial objects.
+    The IDs are stored under the session key ``recent_personal_materials``
+    and a cookie named ``eduallyRecentPersonalMaterials``.
+    """
+    recent_material_ids = request.session.get("recent_personal_materials", [])
+    if recent_material_ids:
+        return recent_material_ids
+
+    cookie_value = request.COOKIES.get("eduallyRecentPersonalMaterials")
+    if not cookie_value:
+        return []
+
+    try:
+        parsed = json.loads(cookie_value)
+    except json.JSONDecodeError:
+        # Handle escaped commas (legacy format)
+        cookie_value = cookie_value.replace("\\054", ",")
+        try:
+            parsed = json.loads(cookie_value)
+        except json.JSONDecodeError:
+            return []
+
+    if not isinstance(parsed, list):
+        return []
+
+    recent_material_ids = []
+    for item in parsed:
+        try:
+            recent_material_ids.append(int(item))
+        except (TypeError, ValueError):
+            continue
+
+    if recent_material_ids:
+        request.session["recent_personal_materials"] = recent_material_ids
+
+    return recent_material_ids
+
 @login_required(login_url='account:login')
 def dashboard(request):
     if user_is_in_group(request.user, GROUP_TEACHER):
@@ -180,6 +219,21 @@ def dashboard(request):
             )
         )
     ) if recent_module_ids else []
+
+    # -----------------------------------------------------------------
+    #  Personal materials – recent visits (new)
+    # -----------------------------------------------------------------
+    recent_material_ids = _get_recent_personal_material_ids(request)
+    recent_personal_materials = list(
+        PersonalMaterial.objects.filter(pk__in=recent_material_ids)
+        .select_related("author")
+        .order_by(
+            models.Case(
+                *[models.When(pk=pk, then=pos) for pos, pk in enumerate(recent_material_ids)],
+                output_field=models.IntegerField(),
+            )
+        )
+    ) if recent_material_ids else []
 
     recent_activity = [
         {
@@ -224,6 +278,7 @@ def dashboard(request):
         "subjects": subjects,
         "modules": modules,
         "recent_modules": recent_modules,
+        "recent_personal_materials": recent_personal_materials,
         "recent_activity": recent_activity,
         "module_count": module_count,
         "subject_count": subject_count,

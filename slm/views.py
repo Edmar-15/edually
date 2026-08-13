@@ -1,3 +1,4 @@
+# slm/views.py
 import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
@@ -888,7 +889,26 @@ def personal_material_detail(request, pk):
     context = {
         "pm": pm,                 # used by the template
     }
-    return render(request, "slm/personal_material_detail.html", context)
+    # -----------------------------------------------------------------
+    # Record the visit in the recent‑personal‑materials list.
+    # -----------------------------------------------------------------
+    recent_materials = request.session.get("recent_personal_materials", [])
+    recent_materials = [item for item in recent_materials if item != pm.pk]
+    recent_materials.insert(0, pm.pk)
+    request.session["recent_personal_materials"] = recent_materials[:10]
+    request.session.modified = True
+
+    context = {
+        "pm": pm,                 # used by the template
+    }
+    response = render(request, "slm/personal_material_detail.html", context)
+    response.set_cookie(
+        "eduallyRecentPersonalMaterials",
+        json.dumps(recent_materials),
+        max_age=30 * 24 * 60 * 60,
+        samesite="Lax",
+    )
+    return response
 
 
 @login_required

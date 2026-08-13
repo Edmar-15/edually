@@ -1,3 +1,4 @@
+# slm/views.py
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -183,6 +184,41 @@ class PersonalMaterial(models.Model):
 
     def __str__(self) -> str:
         return f"{self.title} ({self.author})"
+    
+    # -----------------------------------------------------------------
+    #  File‑type icon helpers – mirrors the logic used for ``Module``.
+    # -----------------------------------------------------------------
+    @property
+    def file_icon(self) -> str:
+        """Return the primary Font Awesome class for the uploaded file."""
+        return self.file_icon_classes.split()[0] if self.file_icon_classes else "fas"
+
+    @property
+    def file_icon_classes(self) -> str:
+        """
+        Return the Font Awesome class and colour modifier for the file type.
+        This is used by the dashboard to show a nice icon next to each
+        personal‑material entry.
+        """
+        name = (self.file.name or "").lower()
+
+        if name.endswith(".pdf"):
+            return "fas fa-file-pdf activity-icon--pdf"
+        if name.endswith((".ppt", ".pptx", ".key")):
+            return "fas fa-file-powerpoint activity-icon--ppt"
+        if name.endswith((".doc", ".docx", ".rtf")):
+            return "fas fa-file-word activity-icon--doc"
+        if name.endswith((".xls", ".xlsx", ".csv")):
+            return "fas fa-file-excel activity-icon--doc"
+        if name.endswith((".mp4", ".mov", ".avi", ".mkv", ".webm")):
+            return "fas fa-file-video activity-icon--ppt"
+        if name.endswith((".mp3", ".wav", ".aac", ".ogg")):
+            return "fas fa-file-audio activity-icon--doc"
+        if name.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")):
+            return "fas fa-file-image activity-icon--doc"
+        if name.endswith((".html", ".htm")):
+            return "fas fa-file-code activity-icon--ppt"
+        return "fas fa-file-alt activity-icon--default"
     
 
 class HighlightAnswer(models.Model):

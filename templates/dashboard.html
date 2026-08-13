@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load account_extras %}
+{% load visibility_tags %}
 
     {% block title %}EduAlly - Dashboard{% endblock %}
 {% block extra_head %}
@@ -119,26 +120,46 @@
                     </section>
 
                     <section class="recent-activity recent-activity--side">
-                        <h3>Recently visited modules</h3>
+                        <h3>Recently visited</h3>
                         <div class="activity-list">
-                            {% if recent_modules %}
+                            {% if recent_modules or recent_personal_materials %}
                                 {% for module in recent_modules %}
-                                <a href="{% url 'slm:module-detail' module.subject_id module.id %}" class="activity-item activity-item--link">
-                                    <div class="activity-icon {{ module.file_icon_classes }}">
-                                        <i class="{{ module.file_icon }}"></i>
-                                    </div>
-                                    <div class="activity-details">
-                                        <h4>{{ module.module_name }}</h4>
-                                        <p class="activity-meta">{{ module.subject.subject_name }} • Module {{ module.module_number }}</p>
-                                    </div>
-                                </a>
+                                    <a href="{% url 'slm:module-detail' module.subject_id module.id %}"
+                                    class="activity-item activity-item--link">
+                                        <div class="activity-icon {{ module.file_icon_classes }}">
+                                            <i class="{{ module.file_icon }}"></i>
+                                        </div>
+                                        <div class="activity-details">
+                                            <h4>{{ module.module_name }}</h4>
+                                            <p class="activity-meta">
+                                                {{ module.subject.subject_name }} • Module {{ module.module_number }}
+                                            </p>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+
+                                {% for material in recent_personal_materials %}
+                                    <a href="{% url 'slm:personalmaterial-detail' material.id %}"
+                                    class="activity-item activity-item--link">
+                                        <div class="activity-icon {{ material.file_icon_classes }}">
+                                            <i class="{{ material.file_icon }}"></i>
+                                        </div>
+                                        <div class="activity-details">
+                                            <h4>{{ material.title }}</h4>
+                                            <p class="activity-meta">
+                                                {{ material.get_visibility_display|short_vis }} • Personal Material
+                                            </p>
+                                        </div>
+                                    </a>
                                 {% endfor %}
                             {% else %}
                                 <div class="activity-item">
                                     <div class="activity-icon"><i class="fas fa-compass"></i></div>
                                     <div class="activity-details">
-                                        <h4>Start with a module</h4>
-                                        <p class="activity-meta">Open any module to see your recent visits here.</p>
+                                        <h4>Start exploring</h4>
+                                        <p class="activity-meta">
+                                            Open a module or a personal material to see recent visits here.
+                                        </p>
                                     </div>
                                 </div>
                             {% endif %}
