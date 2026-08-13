@@ -1233,9 +1233,35 @@ html[data-theme="dark"] .step-badge {
 }
 
 .activity-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
     font-size: 0.85rem;
     color: var(--muted);
     margin: 0;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+}
+
+.badge--private {
+    background: rgba(14, 154, 167, 0.12);
+    color: #0f766e;
+}
+
+.badge--public {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
 }
 
 .progress-and-recent {
@@ -1541,20 +1567,15 @@ html.dark .profile-details-card .input-group textarea:focus {
     padding-top: 12px;
     flex-wrap: nowrap;
     align-items: center;
-}
+        white-space: nowrap;
+    }
 
-.profile-actions .button,
-.profile-actions-inline .button {
-    min-width: 120px;
-    flex: 0 1 auto;
-    padding: 0.7rem 0.95rem;
-}
-
-.profile-actions-inline {
-    justify-content: flex-start;
-}
-
-.profile-details-card .details-header {
+    .profile-actions .button,
+    .profile-actions-inline .button {
+        min-width: 120px;
+        flex: 0 1 auto;
+        padding: 0.7rem 0.95rem;
+        white-space: nowrap;
     margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(148, 163, 184, 0.12);

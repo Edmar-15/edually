@@ -43,8 +43,11 @@
                     </a>
                 </div>
             </header>
-        <section class="profile-page profile-section">
-            <div class="profile-grid">
+
+        <div class="dashboard-content">
+            <div class="container">
+                <section class="profile-page profile-section">
+                    <div class="profile-grid">
                 <!-- LEFT – read‑only overview -->
                 <aside class="profile-overview-card">
                     <div class="profile-top">
@@ -94,19 +97,21 @@
 
                     <div class="profile-actions">
                         <button type="button" class="button primary-button" id="edit-profile-toggle">Edit Profile</button>
+                        <button type="button" class="button outline-button" id="show-password-section">Change Password</button>
                     </div>
                 </aside>
 
                 <!-- RIGHT – edit form (collapsed by default) -->
                 <section class="profile-details-card" id="edit-form">
-                    <div class="details-header">
-                        <h2>Edit Personal Information</h2>
-                        <p>Make changes and press Save. Required fields are marked.</p>
-                    </div>
+                    <div id="profile-edit-section">
+                        <div class="details-header">
+                            <h2>Edit Personal Information</h2>
+                            <p>Make changes and press Save. Required fields are marked.</p>
+                        </div>
 
-                    <div class="profile-form-note">Keep your profile current so classmates and staff can recognize you quickly.</div>
+                        <div class="profile-form-note">Keep your profile current so classmates and staff can recognize you quickly.</div>
 
-                    <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
+                        <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
 
                         {% if messages %}
@@ -147,13 +152,13 @@
                         <button type="submit" class="button primary-button" style="margin-top:1.5rem;" id="save-profile-button" disabled>Save changes</button>
                         <button type="button" class="button outline-button" style="margin-left:1rem;" id="cancel-edit-profile" disabled>Cancel</button>
                     </form>
+                </div>
 
-                    <hr class="form-section-divider">
-
-                    <h3>Change Password</h3>
-                    <p class="profile-form-note">
-                        Enter your current password and a new one.
-                    </p>
+                <div id="profile-password-section" style="display:none;">
+                    <div class="details-header">
+                        <h2>Change Password</h2>
+                        <p>Enter your current password and a new one.</p>
+                    </div>
 
                     <form method="post" action="{% url 'account:password_change' %}" class="profile-form" novalidate>
                         {% csrf_token %}
@@ -202,9 +207,11 @@
                             Update password
                         </button>
                     </form>
-                </section>
+                </div>
             </div>
         </section>
+            </div>
+        </div>
     </main>
 </div>
 <script src="{% static 'js/toast_notifications.js' %}"></script>
@@ -225,6 +232,10 @@
         const saveButton = document.getElementById('save-profile-button');
         const cancelButton = document.getElementById('cancel-edit-profile');
         const editableFields = form.querySelectorAll('input, select, textarea');
+        const profileEditSection = document.getElementById('profile-edit-section');
+        const profilePasswordSection = document.getElementById('profile-password-section');
+        const showPasswordSectionButton = document.getElementById('show-password-section');
+
         const setEditingState = (isEditing) => {
             editableFields.forEach((field) => {
                 field.disabled = !isEditing;
@@ -241,14 +252,34 @@
             }
         };
 
-        setEditingState(false);
+        const showSection = (section) => {
+            if (section === 'password') {
+                profileEditSection.style.display = 'none';
+                profilePasswordSection.style.display = '';
+                showPasswordSectionButton.classList.add('primary-button');
+                showPasswordSectionButton.classList.remove('outline-button');
+            } else {
+                profileEditSection.style.display = '';
+                profilePasswordSection.style.display = 'none';
+                showPasswordSectionButton.classList.remove('primary-button');
+                showPasswordSectionButton.classList.add('outline-button');
+                setEditingState(false);
+            }
+        };
+
+        showSection('edit');
 
         editButton.addEventListener('click', function () {
+            showSection('edit');
             setEditingState(true);
             const firstField = form.querySelector('input:not([type="hidden"]), select, textarea');
             if (firstField) {
                 firstField.focus();
             }
+        });
+
+        showPasswordSectionButton.addEventListener('click', function () {
+            showSection('password');
         });
 
         cancelButton.addEventListener('click', function () {

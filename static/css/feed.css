@@ -122,7 +122,7 @@ html.dark .post-form select {
 /* Page */
 .forum-page {
     max-width: 1180px;
-    margin: 0 auto;
+    margin: 0 auto 0 133px;
     padding: 24px 20px 36px;
     color: #111827;
 }
@@ -610,7 +610,6 @@ html.dark .post-form select {
     align-self: start;
     width: 320px;
     flex-shrink: 0;
-    margin-right: 12px;
 }
 
 .right-widgets {
@@ -1135,10 +1134,16 @@ html.dark .post-form select {
     border-radius: 12px;
     overflow: hidden;
     flex: 0 0 56px;
-    background: linear-gradient(135deg, #111827, rgba(20, 29, 48, 0.88));
+    background: linear-gradient(135deg, #ffffff, rgba(226, 232, 240, 0.95));
     display: grid;
     place-items: center;
-    border: 1px solid rgba(14,154,167,0.08);
+    border: 1px solid rgba(14, 154, 167, 0.12);
+}
+
+html.dark .avatar,
+html[data-theme="dark"] .avatar {
+    background: linear-gradient(135deg, #111827, rgba(20, 29, 48, 0.88));
+    border-color: rgba(14, 154, 167, 0.08);
 }
 
 .avatar img {
@@ -2327,19 +2332,12 @@ html.dark .post-form select {
     .top-user-meta a { font-size: 0.95rem; }
 }
 
-@media (max-width: 1180px) {
-    .dashboard-container {
+@media (max-width: 1024px) {
+    body > div {
         flex-direction: column;
         gap: 24px;
     }
 
-    .forum-sidebar {
-        position: static;
-        width: 100%;
-    }
-}
-
-@media (max-width: 1180px) {
     .dashboard-container {
         flex-direction: column;
         gap: 24px;
@@ -2356,6 +2354,49 @@ html.dark .post-form select {
 
     .forum-search {
         padding: 1.8rem 1.4rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .forum-page {
+        padding: 18px 12px 24px;
+    }
+
+    .forum-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding: 1.2rem 1rem;
+    }
+
+    .forum-search {
+        padding: 1.1rem 1rem;
+    }
+
+    .search-box {
+        grid-template-columns: 1fr;
+    }
+
+    .sort-group {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .post-item {
+        padding: 16px;
+    }
+
+    .post-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .post-side {
+        justify-content: space-between;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 10px;
     }
 }
 

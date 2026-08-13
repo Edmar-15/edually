@@ -51,6 +51,10 @@ class Subject(models.Model):
 
 
 class Module(models.Model):
+    class Visibility(models.TextChoices):
+        PRIVATE = "PR", _("Private – only the owner can see it")
+        PUBLIC = "PU", _("Public – any logged‑in user can see it")
+
     subject = models.ForeignKey(
         Subject,
         on_delete=models.CASCADE,
@@ -68,6 +72,12 @@ class Module(models.Model):
         upload_to="modules/%Y/%m/%d/",
         help_text="The file that contains the module’s content (PDF, Word, PowerPoint).",
         max_length=255,
+    )
+    visibility = models.CharField(
+        max_length=2,
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+        help_text=_("Who may view this module."),
     )
     # -------------------------------------------------------------
     #  NEW FIELD – stores the HTML version of the uploaded file
