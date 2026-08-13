@@ -43,12 +43,22 @@
                 {% endif %}
 
                 <div class="floating-label-group input-group">
+                    <label for="{{ form.student_id.id_for_label }}">Student ID (optional)</label>
+                    {{ form.student_id }}
+                </div>
+
+                <div class="floating-label-group input-group">
                     <label for="{{ form.email.id_for_label }}">Email</label>
                     {{ form.email }}
                     {% if form.email.errors %}
                         <div class="errorlist">{{ form.email.errors }}</div>
                     {% endif %}
                 </div>
+            </div>
+
+            <div class="floating-label-group input-group">
+                <label for="{{ form.year_level.id_for_label }}">Year Level</label>
+                {{ form.year_level }}
             </div>
 
             <div class="form-row">
@@ -98,19 +108,6 @@
                     {% if form.password2.errors %}
                         <div class="errorlist">{{ form.password2.errors }}</div>
                     {% endif %}
-                </div>
-            </div>
-
-            {# ----------------- STUDENT‑ONLY FIELDS ----------------- #}
-            <div class="student-fields" data-section="Student details">
-                <div class="floating-label-group input-group">
-                    <label for="{{ form.student_id.id_for_label }}">Student ID (optional)</label>
-                    {{ form.student_id }}
-                </div>
-
-                <div class="floating-label-group input-group">
-                    <label for="{{ form.year_level.id_for_label }}">Year Level</label>
-                    {{ form.year_level }}
                 </div>
             </div>
 
