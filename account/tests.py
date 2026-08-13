@@ -236,19 +236,3 @@ class RecentModuleDashboardTests(TestCase):
             f'href="{reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_one.pk})}"'
         )
         self.assertLess(second_link, first_link)
-
-    def test_dashboard_recent_modules_show_visibility_badge(self):
-        self.module_one.visibility = "PU"
-        self.module_one.save(update_fields=["visibility"])
-        self.module_two.visibility = "PR"
-        self.module_two.save(update_fields=["visibility"])
-
-        session = self.client.session
-        session["recent_modules"] = [self.module_two.pk, self.module_one.pk]
-        session.save()
-
-        response = self.client.get(reverse("account:dashboard"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Private")
-        self.assertContains(response, "Public")

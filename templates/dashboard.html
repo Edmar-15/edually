@@ -129,12 +129,7 @@
                                     </div>
                                     <div class="activity-details">
                                         <h4>{{ module.module_name }}</h4>
-                                        <p class="activity-meta">
-                                            <span>{{ module.subject.subject_name }} • Module {{ module.module_number }}</span>
-                                            <span class="badge {% if module.visibility == 'PR' %}badge--private{% else %}badge--public{% endif %}">
-                                                {% if module.visibility == 'PR' %}Private{% else %}Public{% endif %}
-                                            </span>
-                                        </p>
+                                        <p class="activity-meta">{{ module.subject.subject_name }} • Module {{ module.module_number }}</p>
                                     </div>
                                 </a>
                                 {% endfor %}
