@@ -12,3 +12,7 @@ pytesseract==0.3.13
 python_pptx==1.0.2
 pywebpush==2.3.0
 requests==2.34.2
+whitenoise
+pymemcache
+mysqlclient
+gunicorn
