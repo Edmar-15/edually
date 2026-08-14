@@ -42,6 +42,7 @@ const CORE_STATIC_ASSETS = [
   "/manifest.json",
   "/static/icons/icon-192x192.png",
   "/static/icons/icon-512x512.png",
+  "/offline/"
 ];
 
 /* ------------------------------------------------------------------
@@ -119,9 +120,10 @@ self.addEventListener("fetch", (ev) => {
   // 5.2  API requests – NEVER cache, always go to the network.
   // -----------------------------------------------------------------
   if (
-    url.pathname.startsWith("/slm/api/") || 
+    url.pathname.startsWith("/slm/") || 
     url.pathname.startsWith("/aihelper/") ||
-    url.pathname.startsWith("/account/logout-confirm/")
+    url.pathname.startsWith("/account/") ||
+    url.pathname.startsWith("/forum/")
   ) {
     ev.respondWith(
       fetch(req).catch(() => {
