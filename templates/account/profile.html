@@ -96,65 +96,14 @@
                     </div>
 
                     <div class="profile-actions">
-                        <button type="button" class="button primary-button" id="edit-profile-toggle">Edit Profile</button>
+                        <a href="{% url 'account:profile_edit' %}" class="button primary-button">Edit Profile</a>
                         <button type="button" class="button outline-button" id="show-password-section">Change Password</button>
                     </div>
                 </aside>
 
-                <!-- RIGHT – edit form (collapsed by default) -->
+                <!-- RIGHT – password section (collapsed by default) -->
                 <section class="profile-details-card" id="edit-form">
-                    <div id="profile-edit-section">
-                        <div class="details-header">
-                            <h2>Edit Personal Information</h2>
-                            <p>Make changes and press Save. Required fields are marked.</p>
-                        </div>
-
-                        <div class="profile-form-note">Keep your profile current so classmates and staff can recognize you quickly.</div>
-
-                        <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
-                        {% csrf_token %}
-
-                        {% if messages %}
-                            <ul class="messages" aria-live="polite">
-                                {% for message in messages %}
-                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-
-                        {{ profile_form.non_field_errors }}
-
-                        <div class="name-row">
-                            <div class="floating-label-group input-group">
-                                <label for="{{ profile_form.first_name.id_for_label }}">First name</label>
-                                {{ profile_form.first_name }}
-                            </div>
-
-                            <div class="floating-label-group input-group">
-                                <label for="{{ profile_form.last_name.id_for_label }}">Last name</label>
-                                {{ profile_form.last_name }}
-                            </div>
-                        </div>
-
-                        <div class="floating-label-group input-group">
-                            {{ profile_form.avatar }}
-                        </div>
-
-                        <hr class="form-section-divider">
-
-                        <div class="name-row">
-                            <div class="floating-label-group input-group">
-                                <label for="{{ profile_form.student_id.id_for_label }}">Student ID (optional)</label>
-                                {{ profile_form.student_id }}
-                            </div>
-                        </div>
-
-                        <button type="submit" class="button primary-button" style="margin-top:1.5rem;" id="save-profile-button" disabled>Save changes</button>
-                        <button type="button" class="button outline-button" style="margin-left:1rem;" id="cancel-edit-profile" disabled>Cancel</button>
-                    </form>
-                </div>
-
-                <div id="profile-password-section" style="display:none;">
+                    <div id="profile-password-section" style="display:none;">
                     <div class="details-header">
                         <h2>Change Password</h2>
                         <p>Enter your current password and a new one.</p>
@@ -225,65 +174,23 @@
 <script src="{% static 'js/account/form_validation.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('profile-form');
-        if (!form) return;
-
-        const editButton = document.getElementById('edit-profile-toggle');
-        const saveButton = document.getElementById('save-profile-button');
-        const cancelButton = document.getElementById('cancel-edit-profile');
-        const editableFields = form.querySelectorAll('input, select, textarea');
-        const profileEditSection = document.getElementById('profile-edit-section');
         const profilePasswordSection = document.getElementById('profile-password-section');
         const showPasswordSectionButton = document.getElementById('show-password-section');
 
-        const setEditingState = (isEditing) => {
-            editableFields.forEach((field) => {
-                field.disabled = !isEditing;
-            });
-            saveButton.disabled = !isEditing;
-            cancelButton.disabled = !isEditing;
-            form.classList.toggle('is-editing', isEditing);
-            if (isEditing) {
-                editButton.textContent = 'Editing...';
-                editButton.disabled = true;
-            } else {
-                editButton.textContent = 'Edit Profile';
-                editButton.disabled = false;
-            }
-        };
-
         const showSection = (section) => {
             if (section === 'password') {
-                profileEditSection.style.display = 'none';
                 profilePasswordSection.style.display = '';
                 showPasswordSectionButton.classList.add('primary-button');
                 showPasswordSectionButton.classList.remove('outline-button');
             } else {
-                profileEditSection.style.display = '';
                 profilePasswordSection.style.display = 'none';
                 showPasswordSectionButton.classList.remove('primary-button');
                 showPasswordSectionButton.classList.add('outline-button');
-                setEditingState(false);
             }
         };
 
-        showSection('edit');
-
-        editButton.addEventListener('click', function () {
-            showSection('edit');
-            setEditingState(true);
-            const firstField = form.querySelector('input:not([type="hidden"]), select, textarea');
-            if (firstField) {
-                firstField.focus();
-            }
-        });
-
         showPasswordSectionButton.addEventListener('click', function () {
             showSection('password');
-        });
-
-        cancelButton.addEventListener('click', function () {
-            setEditingState(false);
         });
     });
 </script>

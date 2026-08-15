@@ -1029,10 +1029,25 @@ html[data-theme="dark"] .step-badge {
         top: max(0px, env(safe-area-inset-top)); /* safe‑area on iPhone X+ */
         z-index: 40;   
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 0.6rem;
         padding: 0.85rem 0.9rem;
+    }
+
+    .header-left {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .header-right {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
     }
 
     .content-header h1 {
@@ -1406,12 +1421,16 @@ html[data-theme="dark"] .profile-page .profile-details-card {
     font-size: 1.35rem;
     overflow: hidden;
     border: 2px solid rgba(14, 154, 167, 0.14);
+    aspect-ratio: 1;
+    flex-shrink: 0;
 }
 
 .profile-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+    border-radius: inherit;
 }
 
 .profile-avatar .avatar-fallback {
@@ -1424,6 +1443,7 @@ html[data-theme="dark"] .profile-page .profile-details-card {
     color: #fff;
     font-weight: 800;
     font-size: 1.35rem;
+    line-height: 1;
     border-radius: 50%;
 }
 
@@ -1574,12 +1594,15 @@ html.dark .profile-details-card .input-group textarea:focus {
     .profile-actions-inline .button {
         min-width: 120px;
         flex: 0 1 auto;
-        padding: 0.7rem 0.95rem;
+        padding: 0.5rem 0.8rem;
         white-space: nowrap;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-}
+    }
+
+    .profile-actions {
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
 
 .profile-details-card .details-header h2 {
     margin: 0 0 8px;
@@ -1972,8 +1995,13 @@ html.dark .profile-details-card .input-group textarea:focus {
     }
 
     .profile-settings-link {
-        width: 100%;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        padding: 0;
+        border-radius: 50%;
         justify-content: center;
+        align-items: center;
         margin-left: 0;
     }
 
@@ -2001,9 +2029,22 @@ html.dark .profile-details-card .input-group textarea:focus {
     }
 
     .content-header,
-    .header-left,
-    .header-right {
+    .header-left {
+        width: auto;
+    }
+
+    .content-header {
         width: 100%;
+        justify-content: space-between;
+    }
+
+    .header-left {
+        flex: 1;
+    }
+
+    .header-right {
+        flex-shrink: 0;
+        margin-left: auto;
     }
 
     .profile-grid {
@@ -2011,14 +2052,6 @@ html.dark .profile-details-card .input-group textarea:focus {
         min-width: 0;
         grid-template-columns: 1fr;
         gap: 16px;
-    }
-
-    .profile-grid > *,
-    .profile-overview-card,
-    .profile-details-card {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
     }
 
     .content-header {
@@ -2073,18 +2106,22 @@ html.dark .profile-details-card .input-group textarea:focus {
         gap: 16px;
     }
 
-    .profile-grid > *,
-    .profile-overview-card,
-    .profile-details-card {
+    .content-header,
+    .header-left {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         width: 100%;
-        max-width: 100%;
-        min-width: 0;
     }
 
-    .content-header,
-    .header-left,
+    .header-left {
+        flex: 1;
+    }
+
     .header-right {
-        width: 100%;
+        flex-shrink: 0;
+        margin-left: auto;
     }
 
     .profile-actions {
@@ -2094,12 +2131,24 @@ html.dark .profile-details-card .input-group textarea:focus {
     .profile-actions .button {
         width: 100%;
         flex: 1 1 100%;
+        min-height: 22px;
+        padding: 0.200rem 0.875rem;
+    }
+
+    .header-right {
+        flex-shrink: 0;
+        margin-left: auto;
     }
 
     .profile-settings-link {
-        width: 100%;
-        max-width: 100%;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        max-width: 48px;
+        padding: 0;
+        border-radius: 50%;
         justify-content: center;
+        align-items: center;
         margin-left: 0;
     }
 

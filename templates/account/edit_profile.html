@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAlly – Edit Profile</title>
+    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-left">
+                <button type="button"
+                        class="mobile-sidebar-trigger"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        aria-label="Open navigation sidebar">
+                    <span class="sr-only">Toggle sidebar</span>
+                    <svg class="sidebar-trigger-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <p>Edit Profile</p>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="container">
+                <section class="profile-page profile-section">
+                    <div class="profile-details-card">
+                        <div class="details-header">
+                            <h2>Edit Personal Information</h2>
+                            <p>Make changes and press Save. Required fields are marked.</p>
+                        </div>
+
+                        <div class="profile-form-note">Keep your profile current so classmates and staff can recognize you quickly.</div>
+
+                        <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="profile_update" value="1">
+
+                        {% if messages %}
+                            <ul class="messages" aria-live="polite">
+                                {% for message in messages %}
+                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+
+                        {{ profile_form.non_field_errors }}
+
+                        <div class="name-row">
+                            <div class="floating-label-group input-group">
+                                <label for="{{ profile_form.first_name.id_for_label }}">First name</label>
+                                {{ profile_form.first_name }}
+                            </div>
+
+                            <div class="floating-label-group input-group">
+                                <label for="{{ profile_form.last_name.id_for_label }}">Last name</label>
+                                {{ profile_form.last_name }}
+                            </div>
+                        </div>
+
+                        <div class="floating-label-group input-group">
+                            {{ profile_form.avatar }}
+                        </div>
+
+                        <hr class="form-section-divider">
+
+                        <div class="name-row">
+                            <div class="floating-label-group input-group">
+                                <label for="{{ profile_form.student_id.id_for_label }}">Student ID (optional)</label>
+                                {{ profile_form.student_id }}
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="button primary-button" id="save-profile-button">Save changes</button>
+                            <a href="{% url 'account:profile' %}" class="button outline-button">Cancel</a>
+                        </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{% static 'js/toast_notifications.js' %}"></script>
+{# 1️⃣ Global modal placeholder – only once per page #}
+    {% include "components/global_modal.html" %}
+
+    {# 2️⃣ Modal JS – load after the DOM #}
+    <script src="{% static 'js/modal.js' %}" defer></script>
+
+<script src="{% static 'js/account/floating_labels.js' %}"></script>
+<script src="{% static 'js/account/form_validation.js' %}"></script>
+<script src="{% static 'js/sidebar-toggle.js' %}" defer></script>
+</body>
+</html>

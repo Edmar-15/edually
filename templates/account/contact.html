@@ -12,7 +12,12 @@
             <a href="{% url 'landing' %}" class="logo">
                 <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
             </a>
-            <nav class="main-nav">
+            <button class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="main-nav" id="main-nav" aria-label="Primary navigation">
                 <a href="{% url 'landing' %}">Home</a>
                 <a href="{% url 'landing' %}#about">About</a>
                 <a href="{% url 'account:contact' %}">Support</a>
@@ -33,5 +38,23 @@
             </div>
         </section>
     </main>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggle = document.querySelector('.mobile-nav-toggle');
+        const nav = document.querySelector('.main-nav');
+
+        if (!toggle || !nav) {
+            return;
+        }
+
+        toggle.addEventListener('click', function () {
+            const isOpen = nav.classList.toggle('is-open');
+            toggle.classList.toggle('is-open', isOpen);
+            toggle.setAttribute('aria-expanded', String(isOpen));
+        });
+    });
+</script>
 {% endblock %}
 

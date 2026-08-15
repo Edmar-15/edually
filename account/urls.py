@@ -29,6 +29,7 @@ urlpatterns = [
     path("consent-required/", ConsentRequiredView.as_view(), name="consent_required"),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("profile/", views.profile, name='profile'),
+    path("profile/edit/", views.profile_edit, name='profile_edit'),
     path("profile/password-change/", change_password, name='password_change'),
     path("profile/modal/<int:pk>/", views.profile_modal, name='profile_modal'),
     path("settings/", views.settings, name='settings'),

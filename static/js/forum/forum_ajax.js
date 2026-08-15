@@ -230,6 +230,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    /** -----------------------------------------------------------------
+     *  Sort trigger button toggle
+     *  ----------------------------------------------------------------- */
+    document.body.addEventListener('click', e => {
+        const sortTrigger = e.target.closest('.sort-trigger');
+        if (sortTrigger) {
+            const sortGroup = sortTrigger.closest('.sort-group');
+            if (!sortGroup) return;
+            const sortOptions = sortGroup.querySelector('.sort-options');
+            if (!sortOptions) return;
+            e.preventDefault();
+            e.stopPropagation();
+            sortOptions.classList.toggle('open');
+            sortTrigger.setAttribute('aria-expanded', String(sortOptions.classList.contains('open')));
+            return;
+        }
+
+        // Close sort options when clicking a sort option
+        const sortOption = e.target.closest('.sort-option');
+        if (sortOption) {
+            const sortOptions = sortOption.closest('.sort-options');
+            if (sortOptions) {
+                sortOptions.classList.remove('open');
+                const trigger = sortOptions.closest('.sort-group')?.querySelector('.sort-trigger');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            }
+            return;
+        }
+
+        // Close sort options when clicking outside
+        const inSortGroup = e.target.closest('.sort-group');
+        if (!inSortGroup) {
+            document.querySelectorAll('.sort-options.open').forEach(options => {
+                options.classList.remove('open');
+                const trigger = options.closest('.sort-group')?.querySelector('.sort-trigger');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            });
+        }
+    });
+
     document.addEventListener('click', async function (e) {
         // The button lives inside the global modal that is loaded via
         // the js‑modal‑trigger on the bell icon.

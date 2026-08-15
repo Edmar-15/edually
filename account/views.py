@@ -308,10 +308,20 @@ def profile(request):
     else:
         password_form = ChangePasswordForm(user=request.user)
 
-    # -----------------------------------------------------------------
-    # 2️⃣  Personal‑info form handling (unchanged)
-    # -----------------------------------------------------------------
-    if request.method == "POST" and "profile_update" in request.POST:
+    context = {
+        "user_obj": request.user,
+        "password_form": password_form,
+    }
+    return render(request, "account/profile.html", context)
+
+
+@login_required(login_url='account:login')
+def profile_edit(request):
+    """
+    GET  → show the edit personal information form.
+    POST → handle the form submission.
+    """
+    if request.method == "POST":
         form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
@@ -322,11 +332,9 @@ def profile(request):
         form = ProfileForm(instance=request.user)
 
     context = {
-        "user_obj": request.user,
         "profile_form": form,
-        "password_form": password_form,
     }
-    return render(request, "account/profile.html", context)
+    return render(request, "account/edit_profile.html", context)
 
 
 @login_required(login_url='account:login')

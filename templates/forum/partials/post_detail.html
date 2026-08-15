@@ -122,18 +122,15 @@
 
     <!-- REPLIES -->
     <section class="replies" id="reply-list">
-        <h3 id="reply-count">{{ post.replies_cnt }} Reply{{ post.replies_cnt|pluralize }}</h3>
 
         {% for reply in replies %}
             {% include "forum/partials/reply_item.html" %}
         {% empty %}
-            <p class="no-replies">No replies yet. Be the first to answer!</p>
         {% endfor %}
     </section>
 
     <!-- ADD REPLY FORM (AJAX) -->
     <section class="add-reply">
-        <h3>Leave a Reply</h3>
           <form method="post"
               action="{% url 'forum:post_detail' post.pk %}"
               class="reply-form ajax-form"
