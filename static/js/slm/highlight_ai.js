@@ -106,6 +106,32 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
+     * 4️⃣ Helper to show a visual feedback message (replaces alerts)
+     * ----------------------------------------------------------------- */
+    const showMessage = (container, text, type = "success") => {
+        // Remove any previous message
+        const old = container.querySelector(".annotation-message");
+        if (old) old.remove();
+
+        const msg = document.createElement("div");
+        msg.className = `annotation-message annotation-message--${type}`;
+        msg.textContent = text;
+
+        // Very lightweight inline styling – you can move this to CSS later
+        msg.style.fontSize = "0.9em";
+        msg.style.marginTop = "4px";
+        msg.style.color = type === "error" ? "#d00" : "#080";
+
+        container.appendChild(msg);
+        // Fade out after a short while
+        setTimeout(() => {
+            msg.style.transition = "opacity 0.4s";
+            msg.style.opacity = "0";
+            setTimeout(() => msg.remove(), 500);
+        }, 1500);
+    };
+
+    /* -----------------------------------------------------------------
      * 4️⃣ History UI helpers
      * ----------------------------------------------------------------- */
     const toggleHistoryPopover = () => {
@@ -340,6 +366,12 @@ export function initHighlightAI(
         });
     };
 
+    /**
+     * Render the annotation editor.
+     * This function is used both inside the tooltip and inside the stand‑alone
+     * annotation widget. It now loads any existing note and displays a visual
+     * feedback message instead of alerts.
+     */
     const renderAnnotationSection = (query, container) => {
         const q = normalise(query);
         const existing = annotationStore.get(q) || "";
@@ -358,10 +390,17 @@ export function initHighlightAI(
 
         saveBtn.addEventListener("click", async () => {
             const note = textarea.value.trim();
+
             if (!note) {
-                alert("Annotation cannot be empty.");
+                showMessage(wrapper, "Annotation cannot be empty.", "error");
                 return;
             }
+
+            // give user feedback while the request is in flight
+            saveBtn.disabled = true;
+            const oldBtnText = saveBtn.textContent;
+            saveBtn.textContent = "Saving…";
+
             try {
                 const resp = await fetch(
                     `${apiBase}${moduleId}/annotation/`,
@@ -378,10 +417,13 @@ export function initHighlightAI(
                 const data = await resp.json();
                 if (!resp.ok) throw new Error(data.error || "Failed");
                 setAnnotation(query, data.note ?? note);
-                alert("Annotation saved.");
+                showMessage(wrapper, "Saved!", "success");
             } catch (e) {
                 console.error("Saving annotation failed:", e);
-                alert("Could not save annotation.");
+                showMessage(wrapper, "Could not save annotation.", "error");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = oldBtnText;
             }
         });
 
@@ -405,9 +447,17 @@ export function initHighlightAI(
 
         const header = document.createElement("div");
         header.className = "highlight-tooltip-header";
+
+        // Decide which tab should be active by default.
+        const defaultTab = annotationStore.has(q) ? "annotation" : "ai";
+
         header.innerHTML = `
-            <button class="tooltip-tab tooltip-tab--active" data-target="ai">AI Answers</button>
-            <button class="tooltip-tab" data-target="annotation">Annotations</button>
+            <button class="tooltip-tab ${
+                defaultTab === "ai" ? "tooltip-tab--active" : ""
+            }" data-target="ai">AI Answers</button>
+            <button class="tooltip-tab ${
+                defaultTab === "annotation" ? "tooltip-tab--active" : ""
+            }" data-target="annotation">Annotations</button>
         `;
         tip.appendChild(header);
 
@@ -423,7 +473,8 @@ export function initHighlightAI(
                 renderAnnotationSection(q, body);
             }
         };
-        renderSection("ai"); // default tab
+        // Show the default section immediately.
+        renderSection(defaultTab);
 
         header.addEventListener("click", (e) => {
             const btn = e.target.closest("button[data-target]");
@@ -724,10 +775,6 @@ export function initHighlightAI(
     const createAnnotationWidget = (range) => {
         const ann = document.createElement("div");
         ann.className = "annotation-widget";
-        ann.innerHTML = `
-            <textarea rows="3" placeholder="Enter your note"></textarea>
-            <button class="annotation-save">Save</button>
-        `;
         document.body.appendChild(ann);
         const rect = range.getBoundingClientRect();
         const top = rect.bottom + window.scrollY + 6;
@@ -740,6 +787,12 @@ export function initHighlightAI(
         ann.style.top = `${top}px`;
         ann.style.left = `${left}px`;
 
+        // Compute the exact query text that was selected.
+        const query = range.toString().trim();
+
+        // Populate the widget with the annotation editor (pre‑filled if it exists)
+        renderAnnotationSection(query, ann);
+
         const clickOutside = (e) => {
             if (!ann.contains(e.target)) {
                 ann.remove();
@@ -748,39 +801,6 @@ export function initHighlightAI(
             }
         };
         document.addEventListener("mousedown", clickOutside);
-
-        const saveBtn = ann.querySelector(".annotation-save");
-        const textarea = ann.querySelector("textarea");
-        saveBtn.addEventListener("click", async () => {
-            const note = textarea.value.trim();
-            const query = range.toString().trim();
-
-            if (!note) {
-                alert("Annotation cannot be empty.");
-                return;
-            }
-            try {
-                const resp = await fetch(`${apiBase}${moduleId}/annotation/`, {
-                    method: "POST",
-                    credentials: "same-origin",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrftoken,
-                    },
-                    body: JSON.stringify({ query, note }),
-                });
-                const data = await resp.json();
-                if (!resp.ok) throw new Error(data.error || "Failed");
-                setAnnotation(query, data.note ?? note);
-                alert("Annotation saved.");
-            } catch (e) {
-                console.error("Annotation request failed:", e);
-                alert("Failed to save annotation.");
-            } finally {
-                ann.remove();
-                mini = null;
-            }
-        });
 
         return ann;
     };
