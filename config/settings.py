@@ -57,6 +57,7 @@ MIDDLEWARE = [
     "account.middleware.RequireLatestConsentMiddleware",
     'slm.middleware.NoCacheForDynamicPagesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'core.middleware.IdleTimeoutMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -172,7 +173,7 @@ OLLAMA_MODEL = ""
 OPENAI_API_KEY = "OPENAI_API_KEY"          
 OPENAI_MODEL   = "gpt-4o-mini"
 
-PWA_SW_VERSION = "20240810"
+PWA_SW_VERSION = "20260814"
 
 VAPID_PUBLIC_KEY  = ""
 VAPID_PRIVATE_KEY = ""
@@ -229,6 +230,10 @@ GOOGLE_CLIENT_SECRET = "YOUR_GOOGLE_CLIENT_SECRET"
 # If you use `django.contrib.sites` you could build it dynamically,
 # but a simple literal works fine for most projects.
 GOOGLE_OAUTH_REDIRECT_URI = "http://127.0.0.1:8000/account/login/google/callback/"
+
+SESSION_COOKIE_AGE = 30 * 60          # seconds (30 min)
+SESSION_SAVE_EVERY_REQUEST = True    # refresh the expiry on each request (sliding window)
+IDLE_TIMEOUT = 30 * 60
 
 try:          # pragma: no‑cover   (makes test coverage ignore the try/except)
     from .settings_local import *   # noqa: F403,F401

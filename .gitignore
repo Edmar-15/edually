@@ -76,6 +76,7 @@ coverage.xml
 # Local settings – keep them out of source control
 *.local.py
 settings_local.py
+settings_production.py
 # Secret keys / credentials
 .env
 .env.*

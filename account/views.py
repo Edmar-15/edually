@@ -35,6 +35,35 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django_ratelimit.decorators import ratelimit
 
+# Decorators
+def anonymous_required(view_func=None, *, redirect_to=None):
+    """
+    Decorator for views that should *only* be accessed by **anonymous** users.
+
+    If the request is from an authenticated user we redirect them to
+    ``redirect_to`` (defaults to the user‑specific dashboard).
+
+    Works with both function‑based views and class‑based view ``as_view`` callables.
+    """
+    redirect_target = redirect_to or "account:dashboard"
+
+    def decorator(func):
+        @wraps(func)
+        def _wrapped_view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                # The user is already logged in – send them to their dashboard.
+                return redirect(reverse(redirect_target))
+            return func(request, *args, **kwargs)
+
+        return _wrapped_view
+
+    # If the decorator is used without parentheses: @anonymous_required
+    if callable(view_func):
+        return decorator(view_func)
+
+    # If used with parentheses: @anonymous_required()
+    return decorator
+
 # --------------------------------------------------------------
 # Local imports
 # --------------------------------------------------------------
@@ -113,10 +142,12 @@ class RoleBasedLoginView(TemplateView):
 # -----------------------------------------------------------------
 #   LANDING / DASHBOARD / PROFILE etc.
 # -----------------------------------------------------------------
+@anonymous_required
 def landing(request):
     return render(request, "account/landing.html")
 
 
+@anonymous_required
 def contact_page(request):
     return render(request, "account/contact.html")
 
@@ -353,6 +384,7 @@ def profile_modal(request, pk):
     return JsonResponse({'html': html})
 
 
+@anonymous_required
 def register(request):
     """
     Public registration – uses ``PublicRegisterForm`` which now knows that

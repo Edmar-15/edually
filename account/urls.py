@@ -10,7 +10,8 @@ from .views import (
     TermsView,
     PrivacyView,
     RoleBasedLoginView,
-    change_password
+    change_password,
+    anonymous_required,
 )
 
 app_name = "account"
@@ -19,7 +20,7 @@ urlpatterns = [
     path("", views.landing, name="landing"),
     path("contact/", views.contact_page, name="contact"),
     path("register/", views.register, name="register"),
-    path("login/", RoleBasedLoginView.as_view(), name="login"),
+    path("login/", anonymous_required(RoleBasedLoginView.as_view()), name="login"),
     path(
         "logout/",
         auth_views.LogoutView.as_view(next_page=reverse_lazy("landing")),
