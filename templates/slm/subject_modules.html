@@ -10,12 +10,32 @@
 {% include "components/navigations.html" %}
     <main class="main-content">
         <header class="content-header">
-            {% if request.user|has_group:'Teacher' %}
-            <p class="breadcrumb"><i><a href="{% url "slm:management" %}">Module Management</a> &gt;
-            {% else %}
-            <p class="breadcrumb"><i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
-            {% endif %}
-            {{ subject.subject_code }} – {{ subject.subject_name }}</i></p>
+            <div class="header-left">
+                <button type="button"
+                            class="mobile-sidebar-trigger"
+                            aria-controls="sidebar"
+                            aria-expanded="false"
+                            aria-label="Open navigation sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg class="sidebar-trigger-icon"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false">
+                            <path d="M4 7h16M4 12h16M4 17h16"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"/>
+                        </svg>
+                    </button>
+
+                    {% if request.user|has_group:'Teacher' %}
+                    <p class="breadcrumb"><i><a href="{% url "slm:management" %}">Module Management</a> &gt;
+                    {% else %}
+                    <p class="breadcrumb"><i><a href="{% url "slm:slmlists" %}">Self Learning Modules</a> &gt;
+                    {% endif %}
+                    {{ subject.subject_code }} – {{ subject.subject_name }}</i></p>
+            </div>
+            
         </header>
 
         <section id="module-widget"
