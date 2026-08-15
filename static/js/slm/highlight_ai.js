@@ -417,7 +417,9 @@ export function initHighlightAI(
                 const data = await resp.json();
                 if (!resp.ok) throw new Error(data.error || "Failed");
                 setAnnotation(query, data.note ?? note);
-                showMessage(wrapper, "Saved!", "success");
+                textarea.classList.add("annotation-saved");
+                // Remove the class after a short pause (2 seconds works well)
+                setTimeout(() => textarea.classList.remove("annotation-saved"), 600);
             } catch (e) {
                 console.error("Saving annotation failed:", e);
                 showMessage(wrapper, "Could not save annotation.", "error");
