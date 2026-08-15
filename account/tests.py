@@ -94,6 +94,29 @@ class SettingsPageTests(TestCase):
         self.assertContains(response, 'class="switch"')
         self.assertNotContains(response, 'id="enable-push-toggle"')
 
+    def test_settings_page_shows_two_factor_auth_section(self):
+        response = self.client.get(reverse("account:settings"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Two-Factor Authentication")
+        self.assertContains(response, "Authenticator app")
+
+    def test_enable_two_factor_auth_sets_user_flag(self):
+        self.user.two_factor_secret = "JBSWY3DPEHPK3PXP"
+        self.user.save(update_fields=["two_factor_secret"])
+
+        otp_code = __import__("pyotp").TOTP(self.user.two_factor_secret).now()
+        response = self.client.post(
+            reverse("account:settings"),
+            {"enable_2fa": "1", "otp_code": otp_code},
+            follow=True,
+        )
+
+        self.user.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(self.user.two_factor_enabled)
+        self.assertContains(response, "Two-factor authentication enabled")
+
     def test_dashboard_displays_real_learning_summary(self):
         subject = Subject.objects.create(
             subject_code="GEC101",

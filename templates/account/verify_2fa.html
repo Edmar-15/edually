@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+{% block html_attrs %}data-force-theme="light"{% endblock %}
+{% block title %}EduAlly - Verify 2FA{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div class="header-inner">
+        <a href="{% url 'landing' %}" class="logo">
+            <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
+        </a>
+    </div>
+</header>
+
+<main class="auth-page">
+    <section class="auth-card">
+        <h1>Verify your identity</h1>
+        <p class="muted-text">Enter the 6-digit code from your authenticator app to continue.</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="errorlist nonfield">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="floating-label-group input-group">
+                <input type="text" name="otp_code" id="otp_code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" required>
+                <label for="otp_code">Authentication code</label>
+            </div>
+            <button type="submit" class="button">Verify</button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{% url 'account:login' %}">Back to login</a>
+        </p>
+    </section>
+</main>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/account/password_toggle.js' %}"></script>
+<script src="{% static 'js/account/floating_labels.js' %}"></script>
+{% endblock %}

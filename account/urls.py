@@ -21,6 +21,7 @@ urlpatterns = [
     path("contact/", views.contact_page, name="contact"),
     path("register/", views.register, name="register"),
     path("login/", anonymous_required(RoleBasedLoginView.as_view()), name="login"),
+    path("login/verify-2fa/", views.verify_2fa, name="verify_2fa"),
     path(
         "logout/",
         auth_views.LogoutView.as_view(next_page=reverse_lazy("landing")),

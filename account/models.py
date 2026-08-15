@@ -45,6 +45,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     date_joined = models.DateTimeField("date joined", default=timezone.now)
 
+    two_factor_enabled = models.BooleanField(
+        "two-factor authentication enabled",
+        default=False,
+        help_text="Require a one-time code from an authenticator app during login.",
+    )
+    two_factor_secret = models.CharField(
+        "two-factor secret",
+        max_length=64,
+        blank=True,
+        default="",
+        help_text="Base32 secret used for TOTP generation.",
+    )
+
     # Reputation system – kept unchanged
     karma = models.IntegerField(
         default=0,

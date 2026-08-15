@@ -69,6 +69,16 @@
         <div class="dashboard-content">
             <div class="container">
 
+                {% if messages %}
+                    <div class="settings-section" style="margin-bottom: 1rem;">
+                        <ul class="messages" aria-live="polite">
+                            {% for message in messages %}
+                                <li class="message {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
                 <section class="settings-section card">
                     <h2>Account Preferences</h2>
 
@@ -105,6 +115,53 @@
                             needing to check the announcements page manually.
                         </p>
                         <p id="push-notification-status" class="muted-text"></p>
+                    </div>
+                </section>
+
+                <section class="settings-section card">
+                    <h2>Two-Factor Authentication</h2>
+
+                    <div class="settings-stack">
+                        <div class="detail-row" style="align-items:center">
+                            <span>Authenticator app</span>
+                            <span>
+                                {% if two_factor_enabled %}
+                                    <form method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" name="disable_2fa" value="1" class="button button-outline danger-button">Disable</button>
+                                    </form>
+                                {% else %}
+                                    <label class="switch">
+                                        <input type="checkbox" aria-label="Enable two-factor authentication" disabled checked="false">
+                                        <span class="slider round"></span>
+                                    </label>
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        {% if not two_factor_enabled %}
+                            <div class="settings-tip">
+                                <h3>Set up 2FA</h3>
+                                <p>Scan this QR code with your authenticator app, then enter the 6-digit code below.</p>
+                                <div style="margin:1rem 0;">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ otp_uri|urlencode }}" alt="2FA QR code" style="max-width:180px; border-radius:12px; background:#fff; padding:8px;">
+                                </div>
+                                <p class="muted-text">Secret: <strong>{{ otp_secret }}</strong></p>
+                                <form method="post" class="inline-form" style="margin-top:1rem;">
+                                    {% csrf_token %}
+                                    <div class="floating-label-group" style="max-width:280px; margin:0;">
+                                        <input type="text" name="otp_code" id="otp_code" maxlength="6" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" aria-label="Authentication code">
+                                        <label for="otp_code">6-digit code</label>
+                                    </div>
+                                    <button type="submit" name="enable_2fa" value="1" class="button">Enable 2FA</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="settings-tip">
+                                <h3>Protection active</h3>
+                                <p>Your account requires a one-time code from your authenticator app at sign-in.</p>
+                            </div>
+                        {% endif %}
                     </div>
                 </section>
 

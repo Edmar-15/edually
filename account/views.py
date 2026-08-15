@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 from urllib.parse import urlencode
 
+import pyotp
 import requests
 from pywebpush import WebPusher
 from django.conf import settings as django_settings
@@ -100,43 +101,34 @@ class RoleBasedLoginView(TemplateView):
     redirect_authenticated_user = True
 
     def get(self, request, *args, **kwargs):
-        # Let the regular LoginView handle GET (display the form)
-        from django.contrib.auth.views import LoginView
-        return LoginView.as_view(
-            template_name=self.template_name,
-            authentication_form=self.form_class,
-            redirect_authenticated_user=self.redirect_authenticated_user,
-        )(request, *args, **kwargs)
+        if request.user.is_authenticated and self.redirect_authenticated_user:
+            return redirect(self.get_success_url())
+
+        return render(request, self.template_name, {"form": self.form_class()})
 
     def post(self, request, *args, **kwargs):
-        # Let the regular LoginView handle POST (authenticate)
-        from django.contrib.auth.views import LoginView
-        response = LoginView.as_view(
-            template_name=self.template_name,
-            authentication_form=self.form_class,
-            redirect_authenticated_user=self.redirect_authenticated_user,
-        )(request, *args, **kwargs)
+        form = self.form_class(request, data=request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {"form": form})
 
-        # If the login succeeded, ``LoginView`` will have already set
-        # request.user. We simply decide where to go next.
-        if request.user.is_authenticated:
-            return redirect(self.get_success_url())
-        return response
+        user = form.get_user()
+        if getattr(user, "two_factor_enabled", False):
+            request.session["pending_2fa_user_id"] = user.pk
+            request.session["pending_2fa_next"] = self.get_success_url_for_user(user)
+            return redirect("account:verify_2fa")
 
-    def get_success_url(self):
-        """Inspect groups and decide the final dashboard."""
-        user = self.request.user
+        auth_login(request, user)
+        return redirect(self.get_success_url_for_user(user))
 
-        # Superusers / staff → Django admin (or a staff‑specific view)
+    def get_success_url_for_user(self, user):
         if user.is_superuser or user.is_staff:
             return reverse("admin:index")
-
         if user_is_in_group(user, GROUP_TEACHER):
-            # You need to have a URL named "teacher:dashboard"
             return reverse("account:dashboard")
-
-        # Default → student dashboard
         return reverse("account:dashboard")
+
+    def get_success_url(self):
+        return self.get_success_url_for_user(self.request.user)
 
 
 # -----------------------------------------------------------------
@@ -449,6 +441,31 @@ def settings(request):
         modules **and** personal learning material.
     3️⃣  Danger Zone – permanent‑delete button.
     """
+    if request.method == "POST" and "enable_2fa" in request.POST:
+        otp_code = (request.POST.get("otp_code") or "").strip()
+        if not otp_code:
+            messages.error(request, "Enter the 6-digit code from your authenticator app.")
+            return redirect("account:settings")
+
+        secret = request.user.two_factor_secret or request.session.get("pending_2fa_secret") or pyotp.random_base32()
+        if pyotp.TOTP(secret).verify(otp_code, valid_window=1):
+            request.user.two_factor_secret = secret
+            request.user.two_factor_enabled = True
+            request.user.save(update_fields=["two_factor_secret", "two_factor_enabled"])
+            request.session.pop("pending_2fa_secret", None)
+            messages.success(request, "Two-factor authentication enabled.")
+        else:
+            messages.error(request, "That code is invalid or expired. Please try again.")
+        return redirect("account:settings")
+
+    if request.method == "POST" and "disable_2fa" in request.POST:
+        request.user.two_factor_enabled = False
+        request.user.two_factor_secret = ""
+        request.user.save(update_fields=["two_factor_enabled", "two_factor_secret"])
+        request.session.pop("pending_2fa_secret", None)
+        messages.success(request, "Two-factor authentication has been disabled.")
+        return redirect("account:settings")
+
     # ---- ARCHIVED FORUM POSTS -------------------------------------------------
     archived_posts = (
         Post.objects.filter(author=request.user, is_archived=True)
@@ -473,12 +490,23 @@ def settings(request):
         .order_by('-created_at')[:10]
     )
 
-    return render(request, "account/settings.html", _settings_context(
+    otp_secret = request.user.two_factor_secret or request.session.get("pending_2fa_secret") or pyotp.random_base32()
+    request.session["pending_2fa_secret"] = otp_secret
+    otp_uri = pyotp.TOTP(otp_secret).provisioning_uri(
+        name=request.user.email,
+        issuer_name="EduAlly",
+    )
+
+    context = _settings_context(
         request,
         posts=archived_posts,
         modules=archived_modules,
         personal_materials=archived_materials,
-    ))
+    )
+    context["otp_secret"] = otp_secret
+    context["otp_uri"] = otp_uri
+    context["two_factor_enabled"] = request.user.two_factor_enabled
+    return render(request, "account/settings.html", context)
 
 
 def _settings_context(request, delete_form=None, posts=None, modules=None, personal_materials=None):
@@ -488,6 +516,25 @@ def _settings_context(request, delete_form=None, posts=None, modules=None, perso
         "personal_materials": personal_materials,
         "delete_form": delete_form or DeleteAccountForm(user=request.user),
     }
+
+
+@anonymous_required
+def verify_2fa(request):
+    pending_user_id = request.session.get("pending_2fa_user_id")
+    if not pending_user_id:
+        return redirect("account:login")
+
+    user = get_object_or_404(User, pk=pending_user_id)
+    if request.method == "POST":
+        otp_code = (request.POST.get("otp_code") or "").strip()
+        if pyotp.TOTP(user.two_factor_secret).verify(otp_code, valid_window=1):
+            request.session.pop("pending_2fa_user_id", None)
+            next_url = request.session.pop("pending_2fa_next", None) or reverse("account:dashboard")
+            auth_login(request, user)
+            return redirect(next_url)
+        messages.error(request, "Invalid or expired verification code.")
+
+    return render(request, "account/verify_2fa.html", {"user": user})
 
 
 # -----------------------------------------------------------------

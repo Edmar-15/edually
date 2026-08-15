@@ -16,3 +16,4 @@ whitenoise
 pymemcache
 mysqlclient
 gunicorn
+pyotp==2.9.0
