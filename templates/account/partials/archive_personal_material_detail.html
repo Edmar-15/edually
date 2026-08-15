@@ -13,6 +13,44 @@
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static "css/slm/module_detail.css" %}">
     <link rel="stylesheet" href="{% static 'css/slm/highlight_ai.css' %}">
+    <style>
+        .archive-detail-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-left: auto;
+        }
+
+        html.dark .module-content-card,
+        html[data-theme="dark"] .module-content-card,
+        html.dark .module-content-card__header,
+        html[data-theme="dark"] .module-content-card__header,
+        html.dark .module-content,
+        html[data-theme="dark"] .module-content {
+            background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 28, 0.98));
+            color: var(--text, #e2e8f0);
+            border-color: rgba(148, 163, 184, 0.16);
+        }
+
+        html.dark .module-content-card__header h2,
+        html[data-theme="dark"] .module-content-card__header h2,
+        html.dark .module-content-card__header p,
+        html[data-theme="dark"] .module-content-card__header p,
+        html.dark .module-content,
+        html[data-theme="dark"] .module-content,
+        html.dark .module-content h1,
+        html[data-theme="dark"] .module-content h1,
+        html.dark .module-content h2,
+        html[data-theme="dark"] .module-content h2,
+        html.dark .module-content h3,
+        html[data-theme="dark"] .module-content h3,
+        html.dark .module-content h4,
+        html[data-theme="dark"] .module-content h4 {
+            color: var(--text, #e2e8f0);
+        }
+    </style>
 </head>
 <body>
 <div class="dashboard-container">
@@ -27,7 +65,7 @@
                 {{ pm.title }}
             </i></p>
 
-            <div class="header-actions">
+            <div class="header-actions archive-detail-actions">
 
                 {# 1️⃣  Un‑archive – tiny form #}
                 <form method="post" class="archive-action-form">

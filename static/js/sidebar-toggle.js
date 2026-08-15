@@ -61,9 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // ----- insert it where we want it --------------------------------
       const headerLeft = document.querySelector('.content-header .header-left');
+      const contentHeader = document.querySelector('.content-header');
+
       if (headerLeft) {
           // put it as the first child so the button appears before the text
           headerLeft.insertBefore(mobileTrigger, headerLeft.firstChild);
+      } else if (contentHeader) {
+          contentHeader.insertBefore(mobileTrigger, contentHeader.firstChild);
       } else {
           // fallback – should never happen, but keep the original behaviour
           document.body.appendChild(mobileTrigger);

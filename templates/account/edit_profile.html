@@ -33,65 +33,138 @@
                             stroke-linecap="round"/>
                     </svg>
                 </button>
-                <p>Edit Profile</p>
+                <span style="margin-left: 0.75rem;">Edit Profile</span>
             </div>
         </header>
 
         <div class="dashboard-content">
             <div class="container">
                 <section class="profile-page profile-section">
-                    <div class="profile-details-card">
-                        <div class="details-header">
-                            <h2>Edit Personal Information</h2>
-                            <p>Make changes and press Save. Required fields are marked.</p>
-                        </div>
+                    <div class="profile-grid">
+                        <!-- Edit Profile & Change Password Card with Tabs -->
+                        <div class="profile-details-card" style="grid-column: 1 / -1;">
+                            <div style="padding-bottom: 16px; border-bottom: 1px solid rgba(148, 163, 184, 0.12); margin-bottom: 16px;">
+                                <p style="margin: 0; font-size: 0.9rem; color: var(--muted); font-weight: 500;">Editing profile for</p>
+                                <h2 style="margin: 6px 0 0; font-size: 1.35rem; color: var(--text); font-weight: 700;">{{ user_obj.get_full_name|default:user_obj.email }}</h2>
+                            </div>
+                            <!-- EDIT PROFILE TAB -->
+                            <div id="edit-profile-tab" style="display: none;">
+                                <div class="details-header">
+                                    <h2>Edit Personal Information</h2>
+                                    <p>Make changes and press Save. Required fields are marked.</p>
+                                </div>
 
-                        <div class="profile-form-note">Keep your profile current so classmates and staff can recognize you quickly.</div>
+                                <div class="profile-form-note">Keep your profile current so classmates and staff can recognize you quickly.</div>
 
-                        <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
-                        {% csrf_token %}
-                        <input type="hidden" name="profile_update" value="1">
+                                <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
+                                {% csrf_token %}
+                                <input type="hidden" name="profile_update" value="1">
 
-                        {% if messages %}
-                            <ul class="messages" aria-live="polite">
-                                {% for message in messages %}
-                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                                {% if messages %}
+                                    <ul class="messages" aria-live="polite">
+                                        {% for message in messages %}
+                                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
 
-                        {{ profile_form.non_field_errors }}
+                                {{ profile_form.non_field_errors }}
 
-                        <div class="name-row">
-                            <div class="floating-label-group input-group">
-                                <label for="{{ profile_form.first_name.id_for_label }}">First name</label>
-                                {{ profile_form.first_name }}
+                                <div class="name-row">
+                                    <div class="floating-label-group input-group">
+                                        <label for="{{ profile_form.first_name.id_for_label }}">First name</label>
+                                        {{ profile_form.first_name }}
+                                    </div>
+
+                                    <div class="floating-label-group input-group">
+                                        <label for="{{ profile_form.last_name.id_for_label }}">Last name</label>
+                                        {{ profile_form.last_name }}
+                                    </div>
+                                </div>
+
+                                <div class="floating-label-group input-group">
+                                    {{ profile_form.avatar }}
+                                </div>
+
+                                <hr class="form-section-divider">
+
+                                <div class="name-row">
+                                    <div class="floating-label-group input-group">
+                                        <label for="{{ profile_form.student_id.id_for_label }}">Student ID (optional)</label>
+                                        {{ profile_form.student_id }}
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="button primary-button">Save changes</button>
+                                    <a href="{% url 'account:profile' %}" class="button outline-button">Cancel</a>
+                                </div>
+                                </form>
                             </div>
 
-                            <div class="floating-label-group input-group">
-                                <label for="{{ profile_form.last_name.id_for_label }}">Last name</label>
-                                {{ profile_form.last_name }}
+                            <!-- CHANGE PASSWORD TAB -->
+                            <div id="change-password-tab" style="display: block;">
+                                <div class="details-header">
+                                    <h2>Change Password</h2>
+                                    <p>Enter your current password and a new one.</p>
+                                </div>
+
+                                {% if messages %}
+                                    <ul class="messages" aria-live="polite">
+                                        {% for message in messages %}
+                                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+
+                            <form method="post" action="{% url 'account:password_change' %}" class="profile-form" novalidate>
+                                {% csrf_token %}
+
+                                {{ password_form.non_field_errors }}
+
+                                <div class="floating-label-group input-group">
+                                    {{ password_form.old_password }}
+                                    <label for="{{ password_form.old_password.id_for_label }}">
+                                        Current password
+                                    </label>
+                                    {% if password_form.old_password.errors %}
+                                        <div class="validation-error">
+                                            {{ password_form.old_password.errors|join:", " }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="floating-label-group input-group">
+                                    {{ password_form.new_password1 }}
+                                    <label for="{{ password_form.new_password1.id_for_label }}">
+                                        New password
+                                    </label>
+                                    {% if password_form.new_password1.errors %}
+                                        <div class="validation-error">
+                                            {{ password_form.new_password1.errors|join:", " }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="floating-label-group input-group">
+                                    {{ password_form.new_password2 }}
+                                    <label for="{{ password_form.new_password2.id_for_label }}">
+                                        Confirm new password
+                                    </label>
+                                    {% if password_form.new_password2.errors %}
+                                        <div class="validation-error">
+                                            {{ password_form.new_password2.errors|join:", " }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="button primary-button">Update password</button>
+                                    <a href="{% url 'account:profile' %}" class="button outline-button">Cancel</a>
+                                </div>
+                            </form>
                             </div>
                         </div>
-
-                        <div class="floating-label-group input-group">
-                            {{ profile_form.avatar }}
-                        </div>
-
-                        <hr class="form-section-divider">
-
-                        <div class="name-row">
-                            <div class="floating-label-group input-group">
-                                <label for="{{ profile_form.student_id.id_for_label }}">Student ID (optional)</label>
-                                {{ profile_form.student_id }}
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="button primary-button" id="save-profile-button">Save changes</button>
-                            <a href="{% url 'account:profile' %}" class="button outline-button">Cancel</a>
-                        </div>
-                        </form>
                     </div>
                 </section>
             </div>
@@ -109,5 +182,27 @@
 <script src="{% static 'js/account/floating_labels.js' %}"></script>
 <script src="{% static 'js/account/form_validation.js' %}"></script>
 <script src="{% static 'js/sidebar-toggle.js' %}" defer></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const editProfileTab = document.getElementById('edit-profile-tab');
+        const changePasswordTab = document.getElementById('change-password-tab');
+
+        const showTab = (tab) => {
+            if (tab === 'profile') {
+                editProfileTab.style.display = 'block';
+                changePasswordTab.style.display = 'none';
+            } else if (tab === 'password') {
+                editProfileTab.style.display = 'none';
+                changePasswordTab.style.display = 'block';
+            }
+        };
+
+        // Check if we came from profile page (default to password tab)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab') || 'password';
+        showTab(tab);
+    });
+</script>
 </body>
 </html>

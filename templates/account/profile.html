@@ -33,9 +33,7 @@
                                 stroke-linecap="round"/>
                         </svg>
                     </button>
-
-                    <!-- Existing welcome text -->
-                    <p>Profile</p>
+                    <span style="margin-left: 0.75rem;">Profile</span>
                 </div>
                 <div class="header-right">
                     <a href="{% url 'account:settings' %}" class="button primary-button profile-settings-link">
@@ -46,6 +44,14 @@
 
         <div class="dashboard-content">
             <div class="container">
+                {% if messages %}
+                    <ul class="messages" aria-live="polite">
+                        {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
                 <section class="profile-page profile-section">
                     <div class="profile-grid">
                 <!-- LEFT – read‑only overview -->
@@ -96,67 +102,10 @@
                     </div>
 
                     <div class="profile-actions">
-                        <a href="{% url 'account:profile_edit' %}" class="button primary-button">Edit Profile</a>
-                        <button type="button" class="button outline-button" id="show-password-section">Change Password</button>
+                        <a href="{% url 'account:profile_edit' %}?tab=profile" class="button primary-button">Edit Profile</a>
+                        <a href="{% url 'account:profile_edit' %}?tab=password" class="button outline-button">Change Password</a>
                     </div>
                 </aside>
-
-                <!-- RIGHT – password section (collapsed by default) -->
-                <section class="profile-details-card" id="edit-form">
-                    <div id="profile-password-section" style="display:none;">
-                    <div class="details-header">
-                        <h2>Change Password</h2>
-                        <p>Enter your current password and a new one.</p>
-                    </div>
-
-                    <form method="post" action="{% url 'account:password_change' %}" class="profile-form" novalidate>
-                        {% csrf_token %}
-
-                        {{ password_form.non_field_errors }}
-
-                        <div class="floating-label-group input-group">
-                            {{ password_form.old_password }}
-                            <label for="{{ password_form.old_password.id_for_label }}">
-                                Current password
-                            </label>
-                            {% if password_form.old_password.errors %}
-                                <div class="validation-error">
-                                    {{ password_form.old_password.errors|join:", " }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="floating-label-group input-group">
-                            {{ password_form.new_password1 }}
-                            <label for="{{ password_form.new_password1.id_for_label }}">
-                                New password
-                            </label>
-                            {% if password_form.new_password1.errors %}
-                                <div class="validation-error">
-                                    {{ password_form.new_password1.errors|join:", " }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="floating-label-group input-group">
-                            {{ password_form.new_password2 }}
-                            <label for="{{ password_form.new_password2.id_for_label }}">
-                                Confirm new password
-                            </label>
-                            {% if password_form.new_password2.errors %}
-                                <div class="validation-error">
-                                    {{ password_form.new_password2.errors|join:", " }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <button type="submit"
-                                class="button primary-button"
-                                style="margin-top:1.5rem;">
-                            Update password
-                        </button>
-                    </form>
-                </div>
             </div>
         </section>
             </div>
@@ -172,27 +121,6 @@
 
 <script src="{% static 'js/account/floating_labels.js' %}"></script>
 <script src="{% static 'js/account/form_validation.js' %}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const profilePasswordSection = document.getElementById('profile-password-section');
-        const showPasswordSectionButton = document.getElementById('show-password-section');
-
-        const showSection = (section) => {
-            if (section === 'password') {
-                profilePasswordSection.style.display = '';
-                showPasswordSectionButton.classList.add('primary-button');
-                showPasswordSectionButton.classList.remove('outline-button');
-            } else {
-                profilePasswordSection.style.display = 'none';
-                showPasswordSectionButton.classList.remove('primary-button');
-                showPasswordSectionButton.classList.add('outline-button');
-            }
-        };
-
-        showPasswordSectionButton.addEventListener('click', function () {
-            showSection('password');
-        });
-    });
-</script>
+<script src="{% static 'js/sidebar-toggle.js' %}" defer></script>
 </body>
 </html>

@@ -113,7 +113,7 @@ class PublicRegisterForm(forms.ModelForm):
         required=False,
         max_length=30,
         label="Student ID",
-        widget=forms.TextInput(attrs={"placeholder": "Enter your student id"}),
+        widget=forms.TextInput(),
     )
     # PROGRAM is no longer asked – defaults to “Information Technology”
 
@@ -230,19 +230,43 @@ class ProfileForm(forms.ModelForm):
     """Form displayed on the profile page for editing allowed fields."""
 
     # Extra fields that belong to the StudentProfile
-    student_id = forms.CharField(required=False, max_length=30, label="Student ID")
+    student_id = forms.CharField(
+        required=False, 
+        max_length=30, 
+        label="Student ID",
+        widget=forms.TextInput(attrs={"placeholder": ""})
+    )
 
     class Meta:
         model = User
         fields = ("first_name", "last_name", "avatar")  # core fields only
+        widgets = {
+            "first_name": forms.TextInput(attrs={"placeholder": ""}),
+            "last_name": forms.TextInput(attrs={"placeholder": ""}),
+        }
 
     def __init__(self, *args, **kwargs):
         """Populate the extra profile fields if they exist."""
         super().__init__(*args, **kwargs)
 
+        # Set initial values and placeholders to current values
+        if self.instance.pk:
+            # First name
+            if self.instance.first_name:
+                self.fields["first_name"].initial = self.instance.first_name
+                self.fields["first_name"].widget.attrs["placeholder"] = self.instance.first_name
+            
+            # Last name
+            if self.instance.last_name:
+                self.fields["last_name"].initial = self.instance.last_name
+                self.fields["last_name"].widget.attrs["placeholder"] = self.instance.last_name
+        
+        # Student ID from StudentProfile
         if self.instance.pk and hasattr(self.instance, "student_profile"):
             profile = self.instance.student_profile
-            self.fields["student_id"].initial = profile.student_id
+            if profile.student_id:
+                self.fields["student_id"].initial = profile.student_id
+                self.fields["student_id"].widget.attrs["placeholder"] = profile.student_id
 
     def save(self, commit=True):
         """Save core user fields **and** the linked StudentProfile."""

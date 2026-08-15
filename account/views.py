@@ -321,13 +321,50 @@ def dashboard(request):
 @login_required(login_url='account:login')
 def profile(request):
     """
-    GET  → show both the personal‑info form and the change‑password form.
+    GET  → show the read-only profile overview with edit buttons.
+    POST → handle profile update from the inline form.
+    """
+    # -----------------------------------------------------------------
+    # 1️⃣  Profile edit handling (POST from the profile form)
+    # -----------------------------------------------------------------
+    if request.method == "POST" and "profile_update" in request.POST:
+        profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
+        if profile_form.is_valid():
+            profile_form.save()
+            messages.success(request, "Your profile was updated.")
+            return redirect("account:profile")
+        messages.error(request, "Please correct the errors below.")
+    else:
+        profile_form = ProfileForm(instance=request.user)
+
+    context = {
+        "user_obj": request.user,
+        "profile_form": profile_form,
+    }
+    return render(request, "account/profile.html", context)
+
+
+@login_required(login_url='account:login')
+def profile_edit(request):
+    """
+    GET  → show both the edit personal information and change password forms.
     POST → handle whichever form was submitted.
     """
     # -----------------------------------------------------------------
-    # 1️⃣  Password‑change handling (POST from the new form)
+    # 1️⃣  Profile edit handling (POST from the profile form)
     # -----------------------------------------------------------------
-    if request.method == "POST" and "change_password" in request.POST:
+    if request.method == "POST" and "profile_update" in request.POST:
+        profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
+        if profile_form.is_valid():
+            profile_form.save()
+            messages.success(request, "Your profile was updated.")
+            return redirect("account:profile")
+        messages.error(request, "Please correct the errors below.")
+        password_form = ChangePasswordForm(user=request.user)
+    # -----------------------------------------------------------------
+    # 2️⃣  Password‑change handling (POST from the password form)
+    # -----------------------------------------------------------------
+    elif request.method == "POST" and "change_password" in request.POST:
         password_form = ChangePasswordForm(user=request.user, data=request.POST)
         if password_form.is_valid():
             password_form.save()
@@ -336,34 +373,15 @@ def profile(request):
             messages.success(request, "Your password was updated.")
             return redirect("account:profile")
         # If we fall through we will re‑render the page with errors
+        profile_form = ProfileForm(instance=request.user)
     else:
+        profile_form = ProfileForm(instance=request.user)
         password_form = ChangePasswordForm(user=request.user)
 
     context = {
-        "user_obj": request.user,
+        "profile_form": profile_form,
         "password_form": password_form,
-    }
-    return render(request, "account/profile.html", context)
-
-
-@login_required(login_url='account:login')
-def profile_edit(request):
-    """
-    GET  → show the edit personal information form.
-    POST → handle the form submission.
-    """
-    if request.method == "POST":
-        form = ProfileForm(request.POST, request.FILES, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Your profile was updated.")
-            return redirect("account:profile")
-        messages.error(request, "Please correct the errors below.")
-    else:
-        form = ProfileForm(instance=request.user)
-
-    context = {
-        "profile_form": form,
+        "user_obj": request.user,
     }
     return render(request, "account/edit_profile.html", context)
 
@@ -1167,6 +1185,7 @@ def password_reset_confirm(request):
     
 @ratelimit(key='user', rate='5/d', method='POST', block=True)   # ≤ 5 password changes per day per user
 @login_required(login_url='account:login')
+@login_required(login_url='account:login')
 def change_password(request):
     """
     Dedicated endpoint for changing a password.
@@ -1183,10 +1202,8 @@ def change_password(request):
         messages.success(request, "Your password was updated.")
         return redirect('account:profile')
     else:
-        # Show the same profile page but with the form errors rendered.
-        # Re‑use the same context we already build in `profile()`.
-        return render(request, "account/profile.html", {
-            "user_obj": request.user,
+        # Show the same edit profile page but with the form errors rendered.
+        return render(request, "account/edit_profile.html", {
             "profile_form": ProfileForm(instance=request.user),   # unchanged personal‑info form
             "password_form": form,
         })

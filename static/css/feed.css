@@ -572,8 +572,8 @@ html.dark .post-form select {
 }
 
 .forum-page {
-    width: min(140%, 1800px);
-    margin: 0 auto 0 250px;
+    width: min(100%, 1180px);
+    margin: 0 auto;
 }
 
 .flag-success-card {
@@ -2756,6 +2756,10 @@ html[data-theme="dark"] .avatar {
         border-radius: 10px;
     }
 
+    .avatar-fallback {
+        border-radius: 0;
+    }
+
     .post-title {
         font-size: 1.02rem;
         line-height: 1.35;
@@ -2907,6 +2911,10 @@ html[data-theme="dark"] .avatar {
 
     .forum-header h1 {
         font-size: 1.65rem;
+    }
+
+    .avatar-fallback {
+        border-radius: 0;
     }
 }
 

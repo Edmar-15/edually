@@ -11,12 +11,14 @@
     <link rel="stylesheet" href="{% static 'css/slm/slm.css' %}">
 </head>
 <body>
-    {% include "components/navigations.html" %}
+    <div class="dashboard-container">
+        {% include "components/navigations.html" %}
 
-    <main class="main-content">
-        <!-- Re‑use the full subject‑widget (with add / edit / delete) -->
-        {% include "slm/tabs/tab_self.html" %}
-    </main>
+        <main class="main-content">
+            <!-- Re‑use the full subject‑widget (with add / edit / delete) -->
+            {% include "slm/tabs/tab_self.html" %}
+        </main>
+    </div>
 
     {# 1️⃣ Global modal placeholder – only once per page #}
     {% include "components/global_modal.html" %}
