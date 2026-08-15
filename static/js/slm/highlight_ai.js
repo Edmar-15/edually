@@ -2,6 +2,7 @@
 // ---------------------------------------------------------------
 // Highlight → Ask‑AI widget (works for Modules *and* PersonalMaterials)
 // ---------------------------------------------------------------
+
 import { csrftoken } from "./utils.js";
 
 /**
@@ -44,6 +45,13 @@ export function initHighlightAI(
             : contentScope;
     if (!contentRoot) return;
 
+    // -----------------------------------------------------------
+    // 1️⃣ Keep the *original* HTML that we received from the server.
+    //    Every time a new query is added we will reset the container
+    //    to this clean copy and then re‑apply **all** stored highlights.
+    // -----------------------------------------------------------
+    const _originalHtml = contentRoot.innerHTML;
+
     /* -----------------------------------------------------------------
      * 2️⃣ History UI elements
      * ----------------------------------------------------------------- */
@@ -67,9 +75,9 @@ export function initHighlightAI(
     const normalise = (txt) => (txt || "").trim().toLowerCase();
 
     // Internal maps keyed by the *normalised* query.
-    const highlightStates = new Map(); // { simplified:bool, technical:bool }
-    const answerStore = new Map(); // { simplified:'html', technical:'html' }
-    const annotationStore = new Map(); // { query -> note }
+    const highlightStates = new Map(); // { simplified, technical, annotated }
+    const answerStore = new Map();     // { simplified:'HTML', technical:'HTML' }
+    const annotationStore = new Map(); // { query → note }
 
     /**
      * Store a note for a query, add visual cue, and refresh tooltip/ history.
@@ -78,33 +86,22 @@ export function initHighlightAI(
         const q = normalise(query);
         if (!q) return;
 
-        // 1️⃣ Remember it locally.
+        // 1️⃣ remember the note
         annotationStore.set(q, note);
 
-        // 2️⃣ Find existing highlighted spans (if any) and decorate them.
-        const existingSpans = contentRoot.querySelectorAll(
-            `.highlight-marked[data-highlight-query="${q}"]`
-        );
+        // 2️⃣ toggle the visual flag
+        const cur = highlightStates.get(q) || {
+            simplified: false,
+            technical: false,
+            annotated: false,
+        };
+        cur.annotated = true;
+        highlightStates.set(q, cur);
 
-        if (existingSpans.length) {
-            existingSpans.forEach((span) => {
-                span.classList.add("highlight-marked--annotated");
-                span.dataset.annotation = note;
-                span.dataset.answer = buildAnswerText(q);
-            });
-        } else {
-            // No span yet – create a neutral highlight and then tag it.
-            applyHighlightToQuery(query, {}); // creates a generic .highlight-marked
-            contentRoot
-                .querySelectorAll(`.highlight-marked[data-highlight-query="${q}"]`)
-                .forEach((span) => {
-                    span.classList.add("highlight-marked--annotated");
-                    span.dataset.annotation = note;
-                    span.dataset.answer = buildAnswerText(q);
-                });
-        }
+        // 3️⃣ rebuild UI
+        _refreshAllHighlights();
 
-        // 3️⃣ Add to the history UI (we call the level “annotation”).
+        // 4️⃣ add to history UI (layer = annotation)
         addHistoryEntry(query, "annotation");
     };
 
@@ -142,12 +139,10 @@ export function initHighlightAI(
             li.className = "module-content-history__item";
             li.tabIndex = 0;
 
-            // ---- term (left side) --------------------------------
             const termSpan = document.createElement("span");
             termSpan.className = "module-content-history__text";
             termSpan.textContent = entry.text;
 
-            // ---- stacked actions (right side) ----------------------
             const levelsDiv = document.createElement("div");
             levelsDiv.className = "module-content-history__levels";
             entry.levels.forEach((lvl) => {
@@ -158,8 +153,6 @@ export function initHighlightAI(
             });
 
             li.append(termSpan, levelsDiv);
-
-            // ---- focus on click / keyboard -------------------------
             li.addEventListener("click", () => focusHighlightByQuery(entry.text));
             li.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -231,10 +224,16 @@ export function initHighlightAI(
     const setHighlightState = (query, level) => {
         const q = normalise(query);
         if (!q) return;
-        const cur = highlightStates.get(q) || { simplified: false, technical: false };
+        const cur = highlightStates.get(q) || {
+            simplified: false,
+            technical: false,
+            annotated: false,
+        };
         cur[level] = true;
         highlightStates.set(q, cur);
+        _refreshAllHighlights();
     };
+
     const setHighlightAnswer = (query, level, answer) => {
         const q = normalise(query);
         if (!q) return;
@@ -243,6 +242,7 @@ export function initHighlightAI(
         answerStore.set(q, cur);
         setHighlightState(q, level);
     };
+
     const buildAnswerText = (query) => {
         const q = normalise(query);
         if (!q) return "";
@@ -257,7 +257,7 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 6️⃣ CSS class helper
+     * 6️⃣ CSS class helper (simplified / technical / both)
      * ----------------------------------------------------------------- */
     const getHighlightClassName = (state) => {
         const simp = !!state?.simplified;
@@ -280,10 +280,6 @@ export function initHighlightAI(
         }
     };
 
-    /**
-     * Small helper that talks to the AI endpoint and stores the answer.
-     * Used by the AI‑answers tab.
-     */
     const fetchAiAnswer = async (query, level) => {
         const payload = { query, level };
         const resp = await fetch(`${apiBase}${moduleId}/highlight/`, {
@@ -298,38 +294,30 @@ export function initHighlightAI(
         const data = await resp.json(); // {answer, cached}
         if (!data.cached && data.answer) {
             setHighlightAnswer(query, level, data.answer);
-            syncHighlightSpans();
         }
         return data;
     };
 
-    /**
-     * Render the **AI Answers** tab.
-     */
     const renderAiSection = (query, container) => {
         const q = normalise(query);
         const stored = answerStore.get(q) || {};
         const levels = ["simplified", "technical"];
-
         levels.forEach((lvl) => {
             const lvlCap = lvl.charAt(0).toUpperCase() + lvl.slice(1);
             const wrapper = document.createElement("div");
             wrapper.className = "ai-answer-level";
 
             if (stored[lvl]) {
-                // cached answer – just render it
                 wrapper.innerHTML = `
                     <h4>${lvlCap} answer</h4>
                     <div class="ai-answer-content">${renderMarkdown(
-                        stored[lvl]
-                    )}</div>
+                    stored[lvl]
+                )}</div>
                 `;
             } else {
-                // not cached – a button that will fetch it
                 const btn = document.createElement("button");
                 btn.className = "ai-get-level";
                 btn.textContent = `Get ${lvlCap} answer`;
-
                 btn.addEventListener("click", async () => {
                     btn.disabled = true;
                     const old = btn.textContent;
@@ -337,8 +325,7 @@ export function initHighlightAI(
                     try {
                         const data = await fetchAiAnswer(query, lvl);
                         if (data && data.answer) {
-                            // re‑render the whole AI tab – now the answer is cached
-                            renderAiSection(query, container);
+                            renderAiSection(query, container); // redraw with cached answer
                         } else {
                             console.error("AI answer error:", data);
                         }
@@ -347,17 +334,12 @@ export function initHighlightAI(
                         btn.disabled = false;
                     }
                 });
-
                 wrapper.appendChild(btn);
             }
-
             container.appendChild(wrapper);
         });
     };
 
-    /**
-     * Render the **Annotations** tab.
-     */
     const renderAnnotationSection = (query, container) => {
         const q = normalise(query);
         const existing = annotationStore.get(q) || "";
@@ -395,8 +377,6 @@ export function initHighlightAI(
                 );
                 const data = await resp.json();
                 if (!resp.ok) throw new Error(data.error || "Failed");
-
-                // Update local store & UI
                 setAnnotation(query, data.note ?? note);
                 alert("Annotation saved.");
             } catch (e) {
@@ -412,7 +392,7 @@ export function initHighlightAI(
         const q = normalise(query);
         if (!q) return;
 
-        // close any previous tooltip
+        // close any previous tooltip (toggle same fragment → hide)
         if (activeTooltip && activeTooltip.dataset.for === q) {
             removeTooltip();
             return;
@@ -423,7 +403,6 @@ export function initHighlightAI(
         tip.className = "highlight-answer-tooltip";
         tip.dataset.for = q;
 
-        /* ----- Header with two tabs ----- */
         const header = document.createElement("div");
         header.className = "highlight-tooltip-header";
         header.innerHTML = `
@@ -432,12 +411,10 @@ export function initHighlightAI(
         `;
         tip.appendChild(header);
 
-        /* ----- Body (will be filled by the selected tab) ----- */
         const body = document.createElement("div");
         body.className = "highlight-tooltip-body";
         tip.appendChild(body);
 
-        /* ----- Helper to render a chosen section ----- */
         const renderSection = (section) => {
             body.innerHTML = "";
             if (section === "ai") {
@@ -448,11 +425,9 @@ export function initHighlightAI(
         };
         renderSection("ai"); // default tab
 
-        /* ----- Tab‑click handling ----- */
         header.addEventListener("click", (e) => {
             const btn = e.target.closest("button[data-target]");
             if (!btn) return;
-            // mark the clicked tab as active
             header
                 .querySelectorAll(".tooltip-tab")
                 .forEach((t) =>
@@ -463,14 +438,10 @@ export function initHighlightAI(
                 );
             renderSection(btn.dataset.target);
         });
-
-        /* ----- Prevent the global "click‑outside‑to‑close" logic from
-               firing when the user clicks inside the tooltip ----- */
         tip.addEventListener("mousedown", (e) => e.stopPropagation());
 
         document.body.appendChild(tip);
 
-        // Position tooltip close to the highlighted fragment
         const rect = span.getBoundingClientRect();
         const maxW = Math.min(340, window.innerWidth - 24);
         const left = Math.min(
@@ -522,11 +493,14 @@ export function initHighlightAI(
             const state = highlightStates.get(query) || {
                 simplified: false,
                 technical: false,
+                annotated: false,
             };
+
+            // base colour (simplified / technical / both / none)
             span.className = getHighlightClassName(state);
 
-            // ---- annotation visual cue ----
-            if (annotationStore.has(query)) {
+            // annotation visual cue
+            if (state.annotated && annotationStore.has(query)) {
                 span.classList.add("highlight-marked--annotated");
                 span.dataset.annotation = annotationStore.get(query);
             } else {
@@ -558,12 +532,8 @@ export function initHighlightAI(
                     if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
                     if (!node.nodeValue.toLowerCase().includes(q))
                         return NodeFilter.FILTER_REJECT;
-                    if (
-                        node.parentNode &&
-                        node.parentNode.closest &&
-                        node.parentNode.closest(".highlight-marked")
-                    )
-                        return NodeFilter.FILTER_REJECT;
+                    // No “skip‑already‑highlighted” guard – we always start
+                    // from a clean copy of the preview HTML.
                     return NodeFilter.FILTER_ACCEPT;
                 },
             }
@@ -593,7 +563,7 @@ export function initHighlightAI(
                 span.className = className;
                 span.dataset.highlightQuery = q;
                 span.dataset.answer = buildAnswerText(q);
-                span.appendChild(document.createTextNode(match[1])); // preserve original case
+                span.appendChild(document.createTextNode(match[1])); // preserve case
                 attachHighlightEvents(span, q);
                 frag.appendChild(span);
                 last = match.index + match[1].length;
@@ -626,7 +596,9 @@ export function initHighlightAI(
         const top = rect.bottom + window.scrollY + 6;
         const left = Math.min(
             rect.left + window.scrollX,
-            document.documentElement.clientWidth - choice.offsetWidth - 8
+            document.documentElement.clientWidth -
+                choice.offsetWidth -
+                8
         );
         choice.style.top = `${top}px`;
         choice.style.left = `${left}px`;
@@ -680,7 +652,9 @@ export function initHighlightAI(
         const top = rect.bottom + window.scrollY + 6;
         const left = Math.min(
             rect.left + window.scrollX,
-            document.documentElement.clientWidth - mini.offsetWidth - 8
+            document.documentElement.clientWidth -
+                mini.offsetWidth -
+                8
         );
         mini.style.top = `${top}px`;
         mini.style.left = `${left}px`;
@@ -693,7 +667,6 @@ export function initHighlightAI(
         };
         document.addEventListener("mousedown", clickOutside);
 
-        // Bind the button to actually query the AI
         const btn = mini.querySelector(".ai-get");
         const levelSelect = mini.querySelector(".ai-level");
         btn.addEventListener("click", () => {
@@ -718,24 +691,19 @@ export function initHighlightAI(
         btn.disabled = true;
 
         try {
-            const resp = await fetch(
-                `${apiBase}${moduleId}/highlight/`,
-                {
-                    method: "POST",
-                    credentials: "same-origin",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrftoken,
-                    },
-                    body: JSON.stringify({ query, level }),
-                }
-            );
+            const resp = await fetch(`${apiBase}${moduleId}/highlight/`, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken,
+                },
+                body: JSON.stringify({ query, level }),
+            });
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json(); // {answer:"<html>", cached:true|false}
+            const data = await resp.json(); // {answer, cached}
             renderAnswer(mini, data.answer, !!data.cached);
             setHighlightAnswer(query, level, data.answer);
-            markSelection(range, level);
-            syncHighlightSpans();
             addHistoryEntry(query, level);
         } catch (err) {
             console.error("AI request failed:", err);
@@ -765,7 +733,9 @@ export function initHighlightAI(
         const top = rect.bottom + window.scrollY + 6;
         const left = Math.min(
             rect.left + window.scrollX,
-            document.documentElement.clientWidth - ann.offsetWidth - 8
+            document.documentElement.clientWidth -
+                ann.offsetWidth -
+                8
         );
         ann.style.top = `${top}px`;
         ann.style.left = `${left}px`;
@@ -789,20 +759,16 @@ export function initHighlightAI(
                 alert("Annotation cannot be empty.");
                 return;
             }
-
             try {
-                const resp = await fetch(
-                    `${apiBase}${moduleId}/annotation/`,
-                    {
-                        method: "POST",
-                        credentials: "same-origin",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRFToken": csrftoken,
-                        },
-                        body: JSON.stringify({ query, note }),
-                    }
-                );
+                const resp = await fetch(`${apiBase}${moduleId}/annotation/`, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken,
+                    },
+                    body: JSON.stringify({ query, note }),
+                });
                 const data = await resp.json();
                 if (!resp.ok) throw new Error(data.error || "Failed");
                 setAnnotation(query, data.note ?? note);
@@ -866,7 +832,7 @@ export function initHighlightAI(
             }
         };
         const flushTable = () => {
-            if (!inTable || tableRows.length === 0) return;
+            if (!inTable || !tableRows.length) return;
             const rows = tableRows
                 .map((r) => r.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()))
                 .filter((r) => r.length);
@@ -1008,17 +974,8 @@ export function initHighlightAI(
     const markSelection = (range, level) => {
         const selected = range.toString().trim();
         if (!selected) return;
-        const q = normalise(selected);
-        const span = document.createElement("span");
-        span.className = getHighlightClassName({
-            simplified: level === "simplified",
-            technical: level === "technical",
-        });
-        span.dataset.highlightQuery = q;
-        span.dataset.answer = buildAnswerText(q);
-        span.appendChild(range.extractContents());
-        attachHighlightEvents(span, q);
-        range.insertNode(span);
+        // Turn the flag on – the UI will be rebuilt automatically.
+        setHighlightState(selected, level);
     };
 
     /* -----------------------------------------------------------------
@@ -1074,74 +1031,58 @@ export function initHighlightAI(
     /* -----------------------------------------------------------------
      * 15️⃣ Pre‑load cached highlights *and* populate the history UI
      * ----------------------------------------------------------------- */
+    const _refreshAllHighlights = () => {
+        // 1️⃣ reset to the untouched preview
+        contentRoot.innerHTML = _originalHtml;
+
+        // 2️⃣ re‑apply every stored query according to its state
+        highlightStates.forEach((state, q) => {
+            applyHighlightToQuery(q, state);
+        });
+
+        // 3️⃣ make sure answer / annotation data‑attributes are up‑to‑date
+        syncHighlightSpans();
+    };
+
     const preloadExistingData = async () => {
-        if (!hasValidId) return;   // static pages (no id → nothing to preload)
+        if (!hasValidId) return; // static pages (no id → nothing to preload)
 
         try {
-            // ---------------------------------------------------------
-            // 1️⃣  Fire the two requests at the same time
-            // ---------------------------------------------------------
             const [answersResp, annResp] = await Promise.all([
                 fetch(`${apiBase}${moduleId}/highlight/`),
                 fetch(`${apiBase}${moduleId}/annotation/`),
             ]);
 
-            // ---------------------------------------------------------
-            // 2️⃣  Process cached **answers**
-            // ---------------------------------------------------------
+            // ----- cached answers -------------------------------------------------
             if (answersResp.ok) {
                 const data = await answersResp.json(); // {answers:[{query, answer:{…}}]}
                 (data.answers || []).forEach((item) => {
                     const query = (item.query || "").trim();
                     if (!query) return;
-
                     const ans = item.answer || {};
-                    const hasS = !!ans.simplified;
-                    const hasT = !!ans.technical;
-
-                    if (hasS) {
+                    if (ans.simplified) {
                         setHighlightAnswer(query, "simplified", ans.simplified);
                         addHistoryEntry(query, "simplified");
                     }
-                    if (hasT) {
+                    if (ans.technical) {
                         setHighlightAnswer(query, "technical", ans.technical);
                         addHistoryEntry(query, "technical");
                     }
-
-                    // Create the highlighted spans (state tells the class to use)
-                    applyHighlightToQuery(query, {
-                        simplified: hasS,
-                        technical: hasT,
-                    });
                 });
-            } else {
-                console.warn("Answers preload failed – status", answersResp.status);
             }
 
-            // ---------------------------------------------------------
-            // 3️⃣  Process saved **annotations**
-            // ---------------------------------------------------------
+            // ----- saved annotations -------------------------------------------------
             if (annResp.ok) {
                 const annData = await annResp.json(); // {annotations:[{query, note, …}]}
                 (annData.annotations || []).forEach((a) => {
                     const query = (a.query || "").trim();
                     if (!query) return;
-
-                    // Store the note locally and decorate existing spans.
                     setAnnotation(query, a.note);
-
-                    // Ensure a highlighted element exists – we do not have an
-                    // answer state, so pass an empty object (no simplified/technical).
-                    applyHighlightToQuery(query, {});
                 });
-            } else {
-                console.warn("Annotations preload failed – status", annResp.status);
             }
 
-            // ---------------------------------------------------------
-            // 4️⃣  Finally make sure every span reflects the latest maps
-            // ---------------------------------------------------------
-            syncHighlightSpans();
+            // ----- finally rebuild UI once -----------------------------------------
+            _refreshAllHighlights();
         } catch (e) {
             console.warn("Could not preload highlights/annotations:", e);
         }
@@ -1150,8 +1091,8 @@ export function initHighlightAI(
     // -----------------------------------------------------------------
     // Initialise everything
     // -----------------------------------------------------------------
-    preloadExistingData(); // fills maps, creates spans, populates history
-    updateHistoryUI(); // in case nothing was cached
+    preloadExistingData();          // fills the maps
+    updateHistoryUI();              // history UI (might be empty)
 
     if (historyToggle) {
         historyToggle.addEventListener("click", (ev) => {

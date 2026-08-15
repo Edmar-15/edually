@@ -44,19 +44,19 @@
     --c-bg-tooltip:       var(--c-bg);                         /* solid tooltip body (overridden)  */
     --c-bg-history:       var(--module-surface);               /* history pop‑over                 */
 
-    /* Highlight colours – light variants (the ones you had before) */
-    --c-hl-default-light:    #fef3c7;   /* buttery‑yellow   */
-    --c-hl-simplified-light: #b2ffcd;   /* mint‑green       */
-    --c-hl-technical-light: #ffeda6;   /* soft‑amber       */
-    --c-hl-both-light:       #9cc7ff;   /* pale‑blue        */
-    --c-hl-annotated-light:  #e0f7fa;   /* light‑cyan       */
+    /* Highlight colours – light variants (now semi‑transparent) */
+    --c-hl-default-light:    rgba(255,249,176,0.45);   /* buttery‑yellow */
+    --c-hl-simplified-light: rgba(  0,212,170,0.45);   /* vivid turquoise (simplified) */
+    --c-hl-technical-light:  rgba(255,111, 97,0.45);   /* coral‑orange (technical) */
+    --c-hl-both-light:       rgba(212,169,255,0.45);   /* fallback for non‑gradient browsers (lavender) */
+    --c-hl-annotated-light: rgba(255,182,193,0.45);   /* light pink – annotation */
 
-    /* Dark variants – ≥4.5:1 contrast on dark surface */
-    --c-hl-default-dark:     #5b5020;   /* deep‑goldenrod   */
-    --c-hl-simplified-dark:  #16643e;   /* forest‑green     */
-    --c-hl-technical-dark:   #6c5800;   /* burnt‑amber      */
-    --c-hl-both-dark:        #2c5aa0;   /* steel‑blue       */
-    --c-hl-annotated-dark:   #0c7a9d;   /* muted‑teal       */
+    /* Dark variants – also semi‑transparent (still ≥4.5:1 contrast) */
+    --c-hl-default-dark:    rgba(140,123, 15,0.45);   /* deep‑goldenrod */
+    --c-hl-simplified-dark: rgba(  0,163,121,0.45);   /* darker teal */
+    --c-hl-technical-dark:  rgba(211, 84, 0,0.45);   /* burnt orange */
+    --c-hl-both-dark:       rgba(139, 92,246,0.45);   /* deep violet */
+    --c-hl-annotated-dark:  rgba(194, 24, 91,0.45);   /* rich magenta */
 
     /* Public aliases (used throughout the file) */
     --c-hl-default:      var(--c-hl-default-light);
@@ -95,8 +95,8 @@
 
     /* History UI tokens */
     --c-history-toggle-bg:       linear-gradient(135deg,
-                               var(--surface-soft) 0%,
-                               var(--surface) 100%);   /* toggle gradient                 */
+                                   var(--surface-soft) 0%,
+                                   var(--surface) 100%);   /* toggle gradient                 */
     --c-history-toggle-border:   var(--module-accent);      /* border of toggle button         */
     --c-history-item-bg:         var(--surface);            /* history entry background        */
     --c-history-item-border:     var(--module-border);      /* history entry border            */
@@ -106,11 +106,11 @@
     --c-border:           var(--module-border);
     --c-border-input:    var(--border-slm);
     --c-code-bg:          rgba(15,23,42,.06);
-    --c-pre-bg:          rgba(15,23,42,.05);
+    --c-pre-bg:           rgba(15,23,42,.05);
 }
 
 /* -------------------------------------------------------------
-   2️⃣  Dark‑mode overrides
+   2️⃣  Dark‑mode overrides (keep the same opacity)
    ------------------------------------------------------------- */
 html[data-theme="dark"] {
     --c-hl-default:    var(--c-hl-default-dark);
@@ -143,7 +143,7 @@ a:hover {
 }
 
 /* -------------------------------------------------------------
-   4️⃣  Highlighted fragments (unchanged – colour tokens already fixed)
+   4️⃣  Highlighted fragments – now support all 4 visual layers
    ------------------------------------------------------------- */
 .highlight-marked {
     padding: 0 .16em;
@@ -159,9 +159,26 @@ a:hover {
     transform: translateY(-1px);
     outline: none;
 }
+
+/* single‑layer colours ------------------------------------------------ */
 .highlight-marked--simplified { background: var(--c-hl-simplified); }
 .highlight-marked--technical  { background: var(--c-hl-technical); }
-.highlight-marked--both       { background: var(--c-hl-both); }
+
+/* BOTH (simplified + technical) --------------------------------------- */
+.highlight-marked--both {
+    /* split‑gradient – left = simplified, right = technical.
+       The colours are semi‑transparent so any overlap shows the other layer. */
+    background: var(--c-hl-both);
+    background: linear-gradient(
+        to right,
+        var(--c-hl-simplified) 0%,
+        var(--c-hl-simplified) 50%,
+        var(--c-hl-technical) 50%,
+        var(--c-hl-technical) 100%
+    );
+}
+
+/* Annotation only ------------------------------------------------------ */
 .highlight-marked--annotated {
     position: relative;
     background: var(--c-hl-annotated);
@@ -174,6 +191,25 @@ a:hover {
     top: -.4rem;
     color: var(--c-primary-dark);
 }
+
+/* Combined – both answers **and** an annotation ---------------------- */
+.highlight-marked--both.highlight-marked--annotated {
+    /* Keep the split‑gradient, then add the orange dashed outline that marks an annotation. */
+    background: var(--c-hl-both);
+    background: linear-gradient(
+        to right,
+        var(--c-hl-simplified) 0%,
+        var(--c-hl-simplified) 50%,
+        var(--c-hl-technical) 50%,
+        var(--c-hl-technical) 100%
+    );
+    border: 2px dashed orange;
+    box-sizing: border-box;   /* keep the dash inside the span */
+}
+
+/* -----------------------------------------------------------------
+   5️⃣  Focus‑state for the History UI (pulse)
+   ----------------------------------------------------------------- */
 .highlight-marked.highlight-history-focused {
     box-shadow:
         0 0 0 3px rgba(255,255,255,.95),
@@ -187,8 +223,17 @@ a:hover {
     50%      { transform: scale(1.01); }
 }
 
+/* -----------------------------------------------------------------
+   6️⃣  Stacking order – higher‑information spans sit on top
+   ----------------------------------------------------------------- */
+.highlight-marked               { position: relative; z-index: 1; }
+.highlight-marked--simplified,
+.highlight-marked--technical    { z-index: 2; }
+.highlight-marked--both       { z-index: 3; }
+.highlight-marked--annotated   { z-index: 4; }
+
 /* -------------------------------------------------------------
-   5️⃣  Tooltip (solid background) – fixed tab colours
+   7️⃣  Tooltip (solid background) – fixed tab colours
    ------------------------------------------------------------- */
 .highlight-answer-tooltip {
     position: absolute;
@@ -294,7 +339,7 @@ a:hover {
 }
 
 /* -------------------------------------------------------------
-   6️⃣  AI Answers tab – colour‑fixed buttons
+   8️⃣  AI Answers tab – colour‑fixed buttons
    ------------------------------------------------------------- */
 .ai-answer-level {
     margin-bottom: 1rem;
@@ -321,7 +366,7 @@ a:hover {
 }
 
 /* -------------------------------------------------------------
-   7️⃣  Annotation editor (inside tooltip) – unchanged
+   9️⃣  Annotation editor (inside tooltip) – unchanged
    ------------------------------------------------------------- */
 .annotation-edit textarea.annotation-textarea {
     width: 100%;
@@ -346,7 +391,7 @@ a:hover {
 .annotation-save:hover { background: #1e7e34; }
 
 /* -------------------------------------------------------------
-   8️⃣  “Ask AI / Add annotation” choice widget – colour‑fixed
+   🔟  “Ask AI / Add annotation” choice widget – colour‑fixed
    ------------------------------------------------------------- */
 .highlight-choice {
     position: absolute;
@@ -381,7 +426,7 @@ a:hover {
 }
 
 /* -------------------------------------------------------------
-   9️⃣  Annotation widget that appears after “Add annotation”
+   1️⃣1️⃣  Annotation widget that appears after “Add annotation”
    ------------------------------------------------------------- */
 .annotation-widget {
     position: absolute;
@@ -407,7 +452,7 @@ a:hover {
 }
 
 /* -------------------------------------------------------------
-   🔟  Highlight‑history button & pop‑over (unchanged)
+   1️⃣2️⃣  Highlight‑history button & pop‑over (unchanged)
    ------------------------------------------------------------- */
 .module-content-history {
     position: fixed;
@@ -486,7 +531,7 @@ a:hover {
 }
 
 /* -------------------------------------------------------------
-   1️⃣1️⃣  Small utilities & animations (unchanged)
+   1️⃣3️⃣  Small utilities & animations (unchanged)
    ------------------------------------------------------------- */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }
@@ -495,7 +540,7 @@ a:hover {
 .highlight-answer-tooltip.hidden { display: none; }
 
 /* -------------------------------------------------------------
-   1️⃣2️⃣  Legacy class names – kept for compatibility (unchanged)
+   1️⃣4️⃣  Legacy class names – kept for compatibility (unchanged)
    ------------------------------------------------------------- */
 .ai-mini {
     position: absolute;
