@@ -88,6 +88,51 @@ from aihelper.models import Conversation, Message
 
 log = logging.getLogger(__name__)
 
+
+def _set_2fa_email_otp(user, otp, request=None):
+    """Persist the Gmail OTP in cache when available, otherwise fall back to the session."""
+    key = f"two_factor_email_otp_{user.pk}"
+    try:
+        cache.set(key, otp, timeout=10 * 60)
+        return
+    except Exception as exc:
+        log.warning("Falling back to session storage for 2FA Gmail OTP for user %s: %s", user.pk, exc)
+
+    if request is not None:
+        session_store = request.session.setdefault("two_factor_email_otp_map", {})
+        session_store[str(user.pk)] = otp
+        request.session.modified = True
+
+
+def _get_2fa_email_otp(user, request=None):
+    """Get the Gmail OTP from cache, falling back to the session if the cache backend is offline."""
+    key = f"two_factor_email_otp_{user.pk}"
+    try:
+        cached = cache.get(key)
+        if cached is not None:
+            return cached
+    except Exception as exc:
+        log.warning("Cache read failed while fetching 2FA Gmail OTP for user %s: %s", user.pk, exc)
+
+    if request is not None:
+        session_store = request.session.get("two_factor_email_otp_map", {})
+        return session_store.get(str(user.pk))
+    return None
+
+
+def _delete_2fa_email_otp(user, request=None):
+    """Delete the stored Gmail OTP from cache and session fallback when present."""
+    key = f"two_factor_email_otp_{user.pk}"
+    try:
+        cache.delete(key)
+    except Exception as exc:
+        log.warning("Cache delete failed while clearing 2FA Gmail OTP for user %s: %s", user.pk, exc)
+
+    if request is not None:
+        session_store = request.session.get("two_factor_email_otp_map", {})
+        session_store.pop(str(user.pk), None)
+        request.session.modified = True
+
 # -----------------------------------------------------------------
 #   ROLE‑BASED LOGIN VIEW
 # -----------------------------------------------------------------
@@ -441,18 +486,59 @@ def settings(request):
         modules **and** personal learning material.
     3️⃣  Danger Zone – permanent‑delete button.
     """
+    if request.method == "POST" and "send_2fa_email_otp" in request.POST:
+        otp_code = (request.POST.get("otp_code") or request.POST.get("authenticator_code") or "").strip()
+        secret = request.user.two_factor_secret or request.session.get("pending_2fa_secret")
+        if not otp_code:
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"valid": False, "message": "Enter the 6-digit code from your authenticator app before sending the Gmail verification code."}, status=400)
+            messages.error(request, "Enter the 6-digit code from your authenticator app before sending the Gmail verification code.")
+            return redirect("account:settings")
+
+        if not secret or not pyotp.TOTP(secret).verify(otp_code, valid_window=1):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"valid": False, "message": "That authenticator code is invalid or expired. Please try again."}, status=400)
+            messages.error(request, "That authenticator code is invalid or expired. Please try again.")
+            return redirect("account:settings")
+
+        _send_2fa_email_otp(request.user, request=request)
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"valid": True, "message": "A verification code was sent to your Gmail address."})
+        if not any(message.level >= messages.constants.WARNING for message in messages.get_messages(request)):
+            messages.info(request, "A verification code was sent to your Gmail address.")
+        return redirect("account:settings")
+
     if request.method == "POST" and "enable_2fa" in request.POST:
-        otp_code = (request.POST.get("otp_code") or "").strip()
+        otp_code = (request.POST.get("otp_code") or request.POST.get("authenticator_code") or "").strip()
+        gmail_otp = (request.POST.get("gmail_otp") or "").strip()
+
+        cached_email_otp = _get_2fa_email_otp(request.user, request=request)
+        if not gmail_otp or not cached_email_otp or cached_email_otp != gmail_otp:
+            messages.error(request, "Enter the 6-digit code sent to your Gmail account before enabling 2FA.")
+            return redirect("account:settings")
+
         if not otp_code:
             messages.error(request, "Enter the 6-digit code from your authenticator app.")
             return redirect("account:settings")
 
-        secret = request.user.two_factor_secret or request.session.get("pending_2fa_secret") or pyotp.random_base32()
-        if pyotp.TOTP(secret).verify(otp_code, valid_window=1):
+        saved_secret = request.user.two_factor_secret or ""
+        pending_secret = request.session.get("pending_2fa_secret") or ""
+        secret = saved_secret or pending_secret or pyotp.random_base32()
+        verified = False
+
+        if saved_secret and pyotp.TOTP(saved_secret).verify(otp_code, valid_window=1):
+            verified = True
+            secret = saved_secret
+        elif pending_secret and pyotp.TOTP(pending_secret).verify(otp_code, valid_window=1):
+            verified = True
+            secret = pending_secret
+
+        if verified:
             request.user.two_factor_secret = secret
             request.user.two_factor_enabled = True
             request.user.save(update_fields=["two_factor_secret", "two_factor_enabled"])
             request.session.pop("pending_2fa_secret", None)
+            _delete_2fa_email_otp(request.user, request=request)
             messages.success(request, "Two-factor authentication enabled.")
         else:
             messages.error(request, "That code is invalid or expired. Please try again.")
@@ -465,6 +551,20 @@ def settings(request):
         request.session.pop("pending_2fa_secret", None)
         messages.success(request, "Two-factor authentication has been disabled.")
         return redirect("account:settings")
+
+    if request.method == "POST" and "request_new_qr" in request.POST:
+        new_secret = pyotp.random_base32()
+        request.session["pending_2fa_secret"] = new_secret
+        messages.info(request, "A new QR code was generated. Please scan it and enter the new 6-digit code.")
+        return redirect("account:settings")
+
+    # Keep one stable pending secret while the user is setting up 2FA so the authenticator app
+    # and QR code remain in sync across refreshes until the user successfully enables 2FA.
+    if not request.user.two_factor_enabled:
+        current_secret = request.session.get("pending_2fa_secret")
+        if not current_secret:
+            current_secret = pyotp.random_base32()
+            request.session["pending_2fa_secret"] = current_secret
 
     # ---- ARCHIVED FORUM POSTS -------------------------------------------------
     archived_posts = (
@@ -1148,6 +1248,44 @@ def _send_otp_helper(email: str, user: User) -> None:
         [email],
         fail_silently=False,
     )
+
+
+def _send_2fa_email_otp(user: User, request=None) -> str:
+    """Send a one-time email code to confirm the user before enabling 2FA."""
+    otp = f"{random.randint(0, 999999):06d}"
+    _set_2fa_email_otp(user, otp, request=request)
+
+    try:
+        send_mail(
+            subject="Your EduAlly 2FA verification code",
+            message=(
+                f"Your EduAlly verification code is {otp}. "
+                "Enter it to enable two-factor authentication."
+            ),
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except OSError as exc:  # covers SMTP connection issues such as ConnectionRefusedError
+        log.warning("Failed to send 2FA Gmail OTP for user %s: %s", user.pk, exc)
+        if request is not None:
+            messages.warning(
+                request,
+                "Gmail is unavailable right now. For local testing, use the development code: %s",
+                otp,
+            )
+        return otp
+    except Exception as exc:
+        log.warning("Unexpected error while sending 2FA Gmail OTP for user %s: %s", user.pk, exc)
+        if request is not None:
+            messages.warning(
+                request,
+                "We could not send the Gmail verification code. For local testing, use the development code: %s",
+                otp,
+            )
+        return otp
+
+    return otp
 
 @ratelimit(key='ip', rate='3/h', method='POST', block=True)
 def password_reset_request(request):

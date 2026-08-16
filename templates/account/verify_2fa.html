@@ -43,4 +43,33 @@
 {% block extra_js %}
 <script src="{% static 'js/account/password_toggle.js' %}"></script>
 <script src="{% static 'js/account/floating_labels.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const otpInput = document.getElementById('otp_code');
+        const form = otpInput ? otpInput.closest('form') : null;
+        const submitButton = form ? form.querySelector('button[type="submit"]') : null;
+
+        if (!otpInput || !form) return;
+
+        const setSubmitting = (isSubmitting) => {
+            if (!submitButton) return;
+            submitButton.disabled = isSubmitting;
+            submitButton.textContent = isSubmitting ? 'Verifying...' : 'Verify';
+        };
+
+        otpInput.addEventListener('input', () => {
+            otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 6);
+            if (otpInput.value.length === 6) {
+                setSubmitting(true);
+                form.requestSubmit();
+            }
+        });
+
+        form.addEventListener('submit', () => {
+            if (otpInput.value.length === 6) {
+                setSubmitting(true);
+            }
+        });
+    });
+</script>
 {% endblock %}
