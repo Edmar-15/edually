@@ -68,7 +68,7 @@
                                 </div>
                             </a>
                             {% endif %}
-                            <a href="{% url 'forum:feed' %}" class="journey-step">
+                            <a href="{% url 'forum:list' %}" class="journey-step">
                                 <span class="step-badge">2</span>
                                 <div>
                                     <strong>Join the forum</strong>
@@ -76,11 +76,11 @@
                                 </div>
                             </a>
                             {% if request.user|has_group:'Teacher' %}
-                                <a href="{% url 'forum:moderation_dashboard' %}" class="journey-step">
+                                <a href="{% url 'forum:list' %}" class="journey-step">
                                     <span class="step-badge">3</span>
                                     <div>
-                                        <strong>Moderate Users</strong>
-                                        <p>Review flags, manage user reports, and enforce community guidelines.</p>
+                                        <strong>Manage Forum</strong>
+                                        <p>Review and manage the community discussion board.</p>
                                     </div>
                                 </a>
                             {% else %}

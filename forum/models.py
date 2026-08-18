@@ -1,201 +1,122 @@
-# forum/models.py
-from django.conf import settings
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
-from django.db.models import F          # <-- NEW import (used by signals)
+
 
 class Category(models.Model):
-    """Forum categories (e.g. General Discussion, Course Questions, …)"""
-    name = models.CharField(max_length=64, unique=True)
-    slug = models.SlugField(max_length=64, unique=True)
-
+    """Forum category for organizing discussions"""
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=50, blank=True, default='fa-comments')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
     class Meta:
-        ordering = ["name"]
-        verbose_name_plural = "Categories"
-
+        verbose_name_plural = 'Categories'
+        ordering = ['name']
+    
     def __str__(self):
         return self.name
+    
+    @property
+    def post_count(self):
+        return self.post_set.filter(is_deleted=False).count()
+    
+    @property
+    def recent_posts(self):
+        return self.post_set.filter(is_deleted=False).order_by('-created_at')[:5]
 
 
 class Post(models.Model):
-    """A single forum thread / question."""
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="forum_posts",
-    )
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="posts",
-    )
-    title = models.CharField(max_length=200)
+    """Main forum post/discussion"""
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_posts')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    title = models.CharField(max_length=300)
     content = models.TextField()
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    is_archived = models.BooleanField(default=False)
-
-    # moderation fields
-    verified = models.BooleanField(default=False)   # teacher‑approved
-    flagged = models.BooleanField(default=False)   # user‑reported
-    flag_reason = models.TextField(blank=True, help_text="Reason post was flagged")
-    is_deleted = models.BooleanField(default=False)  # soft delete
-
-    # engagement stats
     upvotes = models.PositiveIntegerField(default=0)
-    replies_cnt = models.PositiveIntegerField(default=0)
-
+    reply_count = models.PositiveIntegerField(default=0)
+    is_deleted = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
+    is_pinned = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
+    views = models.PositiveIntegerField(default=0)
+    
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ['-is_pinned', '-created_at']
         indexes = [
-            models.Index(fields=["title"], name="forum_post_title_idx"),
-            models.Index(fields=["created_at"], name="forum_post_created_idx"),
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['-upvotes']),
         ]
-
+    
     def __str__(self):
         return self.title
-
-
-class PostUpvote(models.Model):
-    """Many‑to‑many through model to prevent duplicate up‑votes."""
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="upvote_set")
-    voter = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="forum_upvotes",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("post", "voter")
-        ordering = ["-created_at"]
+    
+    @property
+    def status(self):
+        if self.is_locked:
+            return 'locked'
+        elif self.reply_count == 0:
+            return 'unanswered'
+        return 'answered'
 
 
 class Reply(models.Model):
-    """A reply to a post."""
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="replies")
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="forum_replies",
-    )
+    """Reply to a forum post"""
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='replies')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_replies')
     content = models.TextField()
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     upvotes = models.PositiveIntegerField(default=0)
-    is_deleted = models.BooleanField(default=False)  # soft delete
-
+    is_deleted = models.BooleanField(default=False)
+    is_best_answer = models.BooleanField(default=False)
+    
     class Meta:
-        ordering = ["created_at"]
-
+        ordering = ['-is_best_answer', '-upvotes', 'created_at']
+        indexes = [
+            models.Index(fields=['post', '-created_at']),
+        ]
+    
     def __str__(self):
-        return f"Reply by {self.author.username} on {self.post.title}"
+        return f"Reply to {self.post.title}"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Always update the post's reply count after saving
+        self.post.reply_count = self.post.replies.filter(is_deleted=False).count()
+        self.post.save(update_fields=['reply_count'])
+
+
+class PostUpvote(models.Model):
+    """Track user upvotes on posts"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_post_upvotes')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='upvoters')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'post')
+        indexes = [
+            models.Index(fields=['post', 'user']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} upvoted {self.post.title}"
 
 
 class ReplyUpvote(models.Model):
-    """Track upvotes on replies to prevent duplicates."""
-    reply = models.ForeignKey(Reply, on_delete=models.CASCADE, related_name="upvote_set")
-    voter = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="forum_reply_upvotes",
-    )
+    """Track user upvotes on replies"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_reply_upvotes')
+    reply = models.ForeignKey(Reply, on_delete=models.CASCADE, related_name='upvoters')
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     class Meta:
-        unique_together = ("reply", "voter")
-        ordering = ["-created_at"]
-
-
-class FlagReport(models.Model):
-    """Track user reports on inappropriate content."""
-    CONTENT_TYPE_CHOICES = [("post", "Post"), ("reply", "Reply")]
-    REASON_CHOICES = [
-        ("spam", "Spam"),
-        ("harassment", "Harassment/Abuse"),
-        ("inappropriate", "Inappropriate Content"),
-        ("misinformation", "Misinformation"),
-        ("other", "Other"),
-    ]
-
-    reporter = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="forum_reports",
-    )
-    content_type = models.CharField(max_length=10, choices=CONTENT_TYPE_CHOICES)
-    post = models.ForeignKey(
-        Post, on_delete=models.CASCADE, null=True, blank=True, related_name="flag_reports"
-    )
-    reply = models.ForeignKey(
-        Reply, on_delete=models.CASCADE, null=True, blank=True, related_name="flag_reports"
-    )
-    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    resolved = models.BooleanField(default=False)
-    action_taken = models.CharField(
-        max_length=50,
-        blank=True,
-        help_text="Action taken (e.g., 'content removed', 'user warned')",
-    )
-
-    class Meta:
-        ordering = ["-created_at"]
-        unique_together = ("reporter", "content_type", "post", "reply")
-
-
-class Notification(models.Model):
-    """
-    Simple notification model used throughout the forum.
-    - `recipient`   – the user who receives the notification
-    - `actor`      – the user who triggered it (e.g. the replier,
-                     the up‑voter, …)
-    - `verb`       – short text describing the action
-    - `target_post` / `target_reply` – optional FK to the related object
-    - `url`        – where the notification should send the user
-    - `read`       – Has the recipient marked it as read?
-    """
-    recipient = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='forum_notifications',
-    )
-    actor = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='forum_sent_notifications',
-    )
-    verb = models.CharField(max_length=255)
-
-    # optional “target” objects – either a post **or** a reply
-    target_post = models.ForeignKey(
-        'Post',
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name='notifications',
-    )
-    target_reply = models.ForeignKey(
-        'Reply',
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name='notifications',
-    )
-
-    # URL to jump to when the user clicks the notification.
-    # Stored as a plain string so it can be a fragment‑link.
-    url = models.CharField(max_length=500)
-
-    read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        ordering = ['-created_at']
-
+        unique_together = ('user', 'reply')
+        indexes = [
+            models.Index(fields=['reply', 'user']),
+        ]
+    
     def __str__(self):
-        return f'Notification({self.recipient}, {self.verb})'
+        return f"{self.user.username} upvoted a reply"
+

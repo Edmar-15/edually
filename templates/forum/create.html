@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}New Discussion – Forum – EduAlly{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/forum.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <!-- Header -->
+        <header class="content-header">
+            <div class="header-left">
+                <button type="button" class="mobile-sidebar-trigger" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation sidebar">
+                    <span class="sr-only">Toggle sidebar</span>
+                    <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="{% url 'forum:list' %}" class="back-link">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </header>
+
+        <div class="forum-container">
+            <section class="forum-main">
+                <div class="create-form-card">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                        <div style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, var(--forum-primary), #0d7d92); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </div>
+                        <div>
+                            <h1 style="margin: 0;">Start a New Discussion</h1>
+                            <p style="margin: 0.5rem 0 0; color: var(--forum-muted);">Ask questions, share ideas, and help the community</p>
+                        </div>
+                    </div>
+                    
+                    {% if error %}
+                        <div class="alert alert-error">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="post" class="create-form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="title">Discussion Title *</label>
+                            <input type="text" id="title" name="title" required placeholder="What's your question or topic?" class="form-input" maxlength="300">
+                            <p class="form-help">Be specific and descriptive to get better responses</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" name="category" class="form-select">
+                                <option value="">Select a category...</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="form-help">Choose a category to help others find your discussion</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="content">Details *</label>
+                            <textarea id="content" name="content" required placeholder="Provide context, code snippets, or detailed description..." class="form-textarea" rows="10"></textarea>
+                            <p class="form-help">Include relevant details to help others understand your question better</p>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary" style="flex: 1;">Post Discussion</button>
+                            <a href="{% url 'forum:list' %}" class="btn-secondary" style="flex: 1;">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tips-card">
+                    <h3>Tips for a Great Discussion</h3>
+                    <ul class="tips-list">
+                        <li><strong>Use a clear title</strong> — Make it specific and descriptive</li>
+                        <li><strong>Provide context</strong> — Explain the background and what you've tried</li>
+                        <li><strong>Include details</strong> — Add code snippets, error messages, or examples</li>
+                        <li><strong>Be respectful</strong> — Engage constructively with the community</li>
+                        <li><strong>Search first</strong> — Check if similar discussions already exist</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-^pnd!-+l5abcn+($yh+u*52ovk%safdcb$mc5w+b)%+jyu-*y%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -75,7 +75,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'account.context_processors.user_groups',
                 'account.context_processors.vapid_key',
-                'forum.context_processors.unread_notifications',
             ],
         },
     },

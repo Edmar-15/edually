@@ -8,21 +8,58 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/forum.css' %}">
     <link rel="stylesheet" href="{% static 'css/feed.css' %}">
     <link rel="stylesheet" href="{% static 'css/helper.css' %}">
 </head>
 <body>
-    {% include "components/navigations.html" %}
+    <div class="dashboard-container">
+        {% include "components/navigations.html" %}
 
-    <main class="main-content">
-        {% include "forum/partials/post_detail.html" %}
-    </main>
-</div>
+        <main class="main-content">
+            <header class="content-header">
+                <div class="header-left">
+                    <button type="button" class="mobile-sidebar-trigger" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <p>Discussion Thread</p>
+                </div>
+            </header>
 
-{% include "components/global_modal.html" %}
+            <div class="forum-shell">
+                <section class="forum-main-column">
+                    {% include "forum/partials/post_detail.html" %}
+                </section>
 
-<script src="{% static 'js/modal.js' %}" defer></script>
-<script src="{% static 'js/forum/forum-upvote.js' %}"></script>
-<script src="{% static 'js/forum/forum_ajax.js' %}"></script>
+                <aside class="forum-side-panel">
+                    <div class="sidebar-card">
+                        <h3>Discussion Tools</h3>
+                        <ul class="quick-links">
+                            <li><a href="{% url 'forum:list' %}">All Discussions</a></li>
+                            <li><a href="{% url 'forum:create' %}">New Discussion</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-card">
+                        <h3>Forum Tips</h3>
+                        <ul class="guidelines">
+                            <li>Be respectful and specific.</li>
+                            <li>Search before posting a question.</li>
+                            <li>Share context and screenshots when helpful.</li>
+                        </ul>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    {% include "components/global_modal.html" %}
+
+    <script src="{% static 'js/modal.js' %}" defer></script>
+    <script src="{% static 'js/forum/forum-upvote.js' %}"></script>
+    <script src="{% static 'js/forum/forum_ajax.js' %}"></script>
 </body>
 </html>

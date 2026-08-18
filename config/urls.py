@@ -42,5 +42,7 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    # This will map /static/... → <PROJECT_ROOT>/staticfiles/... for development
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     # This will map /media/... → <PROJECT_ROOT>/media/...
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

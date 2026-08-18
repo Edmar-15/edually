@@ -3,7 +3,7 @@
         <button class="modal-close" aria-label="Close post" onclick="document.querySelector('#global-modal').classList.remove('open')">×</button>
     {% else %}
         <div class="thread-topbar">
-            <a href="{% url 'forum:feed' %}"
+            <a href="{% url 'forum:list' %}"
                class="button secondary-circle small-button thread-back-button"
                aria-label="Back to Forum"
                title="Back to Forum">

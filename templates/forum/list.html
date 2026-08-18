@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Forum – EduAlly{% endblock %}
@@ -30,12 +30,14 @@
             </div>
         </header>
 
-        <div class="forum-shell">
-            <section class="forum-main-column">
+        <div class="forum-container">
+            <!-- Main Content -->
+            <section class="forum-main">
+                <!-- Search & Filters -->
                 <div class="forum-toolbar">
                     <div class="search-area">
                         <form method="get" action="{% url 'forum:list' %}" class="search-form">
-                            <input type="text" name="q" placeholder="Search discussions..." value="{{ search_query|default:'' }}" class="search-input">
+                            <input type="text" name="q" placeholder="Search discussions..." value="{{ search_query }}" class="search-input" aria-label="Search discussions">
                             {% if selected_category %}
                                 <input type="hidden" name="category" value="{{ selected_category }}">
                             {% endif %}
@@ -44,7 +46,7 @@
 
                     <div class="filter-area">
                         <div class="category-filter">
-                            <select name="category" onchange="window.location='{% url 'forum:list' %}?category=' + this.value" class="filter-select">
+                            <select name="category" onchange="window.location='{% url 'forum:list' %}?category=' + this.value" class="filter-select" aria-label="Filter by category">
                                 <option value="">All Categories</option>
                                 {% for cat in categories %}
                                     <option value="{{ cat.slug }}" {% if cat.slug == selected_category %}selected{% endif %}>{{ cat.name }}</option>
@@ -53,7 +55,7 @@
                         </div>
 
                         <div class="sort-filter">
-                            <select name="sort" onchange="window.location='{% url 'forum:list' %}{% if search_query %}?q={{ search_query }}&{% else %}?{% endif %}sort=' + this.value" class="filter-select">
+                            <select name="sort" onchange="window.location='{% url 'forum:list' %}{% if search_query %}?q={{ search_query }}&{% else %}?{% endif %}sort=' + this.value" class="filter-select" aria-label="Sort discussions">
                                 <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Latest</option>
                                 <option value="-upvotes" {% if sort_by == '-upvotes' %}selected{% endif %}>Most Popular</option>
                                 <option value="-reply_count" {% if sort_by == '-reply_count' %}selected{% endif %}>Most Replied</option>
@@ -64,12 +66,13 @@
                     </div>
                 </div>
 
+                <!-- Posts List -->
                 <div class="posts-list">
                     {% if posts %}
                         {% for post in posts %}
                             <article class="post-card" data-post-id="{{ post.id }}">
                                 <div class="post-meta">
-                                    <span class="post-author">by <strong>{{ post.author.get_full_name|default:post.author.username }}</strong></span>
+                                    <span class="post-author"><strong>{{ post.author.get_full_name|default:post.author.username }}</strong></span>
                                     <span class="post-date">{{ post.created_at|timesince }} ago</span>
                                     <span class="post-status status-{{ post.status }}">{{ post.status|upper }}</span>
                                 </div>
@@ -89,8 +92,17 @@
 
                                 <div class="post-footer">
                                     <div class="post-stats">
-                                        <span class="stat"><i class="fa-solid fa-arrow-up"></i> {{ post.upvotes }}</span>
-                                        <span class="stat"><i class="fa-solid fa-comments"></i> {{ post.reply_count }}</span>
+                                        <form method="post" action="{% url 'forum:upvote' post.id %}" class="upvote-form">
+                                            {% csrf_token %}
+                                            <button type="submit" class="upvote-btn {% if post.id in user_post_upvotes %}has-upvoted{% endif %}" data-post-id="{{ post.id }}" data-endpoint="{% url 'forum:upvote' post.id %}" title="Upvote this discussion">
+                                                <i class="fa-solid fa-thumbs-up"></i>
+                                                <span class="upvote-count">{{ post.upvotes }}</span>
+                                            </button>
+                                        </form>
+                                        <a href="{% url 'forum:post_detail' post.id %}" class="reply-btn" title="View responses">
+                                            <i class="fa-solid fa-comments"></i>
+                                            <span class="reply-count-badge">{{ post.reply_count }}</span>
+                                        </a>
                                     </div>
 
                                     <div class="action-menu">
@@ -114,15 +126,15 @@
                         {% endfor %}
                     {% else %}
                         <div class="empty-state">
-                            <i class="fa-solid fa-inbox"></i>
                             <h3>No discussions yet</h3>
-                            <p>Be the first to start a discussion!</p>
-                            <a href="{% url 'forum:create' %}" class="btn-primary">Create Discussion</a>
+                            <p>Be the first to start a discussion and help the community!</p>
+                            <a href="{% url 'forum:create' %}" class="btn-primary">Create First Discussion</a>
                         </div>
                     {% endif %}
                 </div>
             </section>
 
+            <!-- Sidebar -->
             <aside class="forum-sidebar">
                 <div class="sidebar-card">
                     <h3>Quick Links</h3>
@@ -139,7 +151,7 @@
                         {% for cat in categories %}
                             <li>
                                 <a href="{% url 'forum:list' %}?category={{ cat.slug }}">
-                                    {{ cat.name }}
+                                    <span>{{ cat.name }}</span>
                                     <span class="badge">{{ cat.post_count }}</span>
                                 </a>
                             </li>
@@ -148,12 +160,12 @@
                 </div>
 
                 <div class="sidebar-card">
-                    <h3>Guidelines</h3>
+                    <h3>Community Guidelines</h3>
                     <ul class="guidelines">
-                        <li>Be respectful.</li>
-                        <li>Search before asking.</li>
-                        <li>Provide context and detail.</li>
-                        <li>Help others with clear answers.</li>
+                        <li><strong>Be respectful</strong> — Keep discussions civil</li>
+                        <li><strong>Search first</strong> — Check existing solutions</li>
+                        <li><strong>Be clear</strong> — Provide context and details</li>
+                        <li><strong>Mark answers</strong> — Help others find solutions</li>
                     </ul>
                 </div>
             </aside>

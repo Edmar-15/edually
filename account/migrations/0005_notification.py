@@ -10,7 +10,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('account', '0004_user_karma'),
-        ('forum', '0003_post_flag_reason_post_is_deleted_reply_is_deleted_and_more'),
     ]
 
     operations = [

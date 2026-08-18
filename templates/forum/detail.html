@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ post.title }} – Forum – EduAlly{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/forum.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+        <!-- Header -->
+        <header class="content-header">
+            <div class="header-left">
+                <button type="button" class="mobile-sidebar-trigger" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation sidebar">
+                    <span class="sr-only">Toggle sidebar</span>
+                    <svg class="sidebar-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <a href="{% url 'forum:list' %}" class="back-link">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </header>
+
+        <div class="forum-container detail-view">
+            <!-- Main Content -->
+            <section class="forum-main">
+                <!-- Post -->
+                <article class="post-detail">
+                    <div class="post-header">
+                        <div>
+                            <h1 class="post-title">{{ post.title }}</h1>
+                            {% if post.category %}
+                                <span class="post-category">{{ post.category.name }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="post-meta-detail">
+                            <span class="status status-{{ post.status }}">{{ post.status|upper }}</span>
+                        </div>
+                    </div>
+
+                    <div class="post-body">
+                        {{ post.content|linebreaks }}
+                    </div>
+
+                    <div class="post-footer">
+                        <div class="post-author-info">
+                            <div class="author-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--forum-primary), #0d7d92); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                {{ post.author.get_full_name|default:post.author.username|first|upper }}
+                            </div>
+                            <div class="author-details">
+                                <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+                                <span class="text-muted">
+                                    <i class="fa-solid fa-clock"></i> {{ post.created_at|date:"M d, Y \a\t H:i" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="post-actions">
+                            <form method="post" action="{% url 'forum:upvote_post' post.id %}" class="upvote-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-upvote {% if post.id in user_post_upvotes %}active{% endif %}" title="Upvote this discussion">{{ post.upvotes }} upvotes</button>
+                            </form>
+                            <span class="stat" title="Number of views">{{ post.views }} views</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Replies -->
+                <section class="replies-section">
+                    <h2>{{ post.reply_count }} {% if post.reply_count == 1 %}Response{% else %}Responses{% endif %}</h2>
+
+                    {% if replies %}
+                        <div class="replies-list">
+                            {% for reply in replies %}
+                                <article class="reply-item{% if reply.is_best_answer %} best-answer{% endif %}">
+                                    <div class="reply-body">
+                                        {{ reply.content|linebreaks }}
+                                    </div>
+
+                                    <div class="reply-footer">
+                                        <div class="reply-author">
+                                            <div class="author-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #6366f1); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.8rem;">
+                                                {{ reply.author.get_full_name|default:reply.author.username|first|upper }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
+                                                <span class="text-muted">
+                                                    <i class="fa-solid fa-clock"></i> {{ reply.created_at|timesince }} ago
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="reply-actions">
+                                            <form method="post" action="{% url 'forum:upvote_reply' reply.id %}" class="upvote-form">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn-upvote {% if reply.id in user_reply_upvotes %}active{% endif %}" title="Upvote this response">{{ reply.upvotes }} upvotes</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No responses yet. Be the first to reply!</p>
+                    {% endif %}
+                </section>
+
+                <!-- Reply Form -->
+                {% if user.is_authenticated %}
+                    <section class="reply-form-section">
+                        <h3>Share Your Response</h3>
+                        <form method="post" action="{% url 'forum:create_reply' post.id %}" class="reply-form">
+                            {% csrf_token %}
+                            <textarea name="content" placeholder="Share your thoughts, insights, or solutions..." required class="reply-textarea" aria-label="Reply content" minlength="1"></textarea>
+                            <button type="submit" class="btn-primary" style="width: 100%;">Submit Response</button>
+                        </form>
+                    </section>
+                {% else %}
+                    <div class="login-prompt">
+                        <p>You must <a href="{% url 'account:login' %}">sign in</a> to reply to this discussion.</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="forum-sidebar">
+                <div class="sidebar-card">
+                    <h3>Discussion Info</h3>
+                    <ul class="info-list">
+                        <li>
+                            <strong>Created</strong>
+                            <span>{{ post.created_at|date:"M d, Y" }}</span>
+                        </li>
+                        <li>
+                            <strong>Views</strong>
+                            <span>{{ post.views }}</span>
+                        </li>
+                        <li>
+                            <strong>Responses</strong>
+                            <span>{{ post.reply_count }}</span>
+                        </li>
+                        <li>
+                            <strong>Upvotes</strong>
+                            <span>{{ post.upvotes }}</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3>Quick Links</h3>
+                    <ul class="quick-links">
+                        <li><a href="{% url 'forum:list' %}">All Discussions</a></li>
+                        <li><a href="{% url 'forum:create' %}">New Discussion</a></li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>
+{% endblock %}
