@@ -4,16 +4,12 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 class Subject(models.Model):
-    YEAR_FIRST = '1'
     YEAR_TWO = '2'
     YEAR_THREE = '3'
-    YEAR_FOUR = '4'
 
     YEAR_CHOICES = [
-        (YEAR_FIRST, "First"),
         (YEAR_TWO, "Second"),
         (YEAR_THREE, "Third"),
-        (YEAR_FOUR, "Four"),
     ]
 
     subject_code = models.CharField(
@@ -34,7 +30,7 @@ class Subject(models.Model):
     year = models.CharField(
         max_length=1,
         choices=YEAR_CHOICES,
-        default=YEAR_FIRST,
+        default=YEAR_TWO,
         help_text="Identifer for subject intended year.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
