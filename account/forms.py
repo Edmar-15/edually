@@ -103,25 +103,30 @@ class PublicRegisterForm(forms.ModelForm):
         )
         widgets = {
             "email": forms.EmailInput(attrs={"placeholder": "you@example.com"}),
-            "username": forms.TextInput(attrs={"placeholder": "Optional username"}),
+            "username": forms.TextInput(attrs={"placeholder": "Username"}),
         }
+
+    username = forms.CharField(
+        required=True,
+        max_length=150,
+        label="Username",
+        widget=forms.TextInput(attrs={"placeholder": "Username"}),
+    )
 
     # -----------------------------------------------------------------
     #  STUDENT‑ONLY extra fields (these live only on the form)
     # -----------------------------------------------------------------
     student_id = forms.CharField(
-        required=False,
+        required=True,
         max_length=30,
         label="Student ID",
-        widget=forms.TextInput(),
+        widget=forms.TextInput(attrs={"placeholder": "e.g. 20230001"}),
     )
     # PROGRAM is no longer asked – defaults to “Information Technology”
 
     YEAR_CHOICES = [
-        ("1st Year", "1st Year"),
         ("2nd Year", "2nd Year"),
         ("3rd Year", "3rd Year"),
-        ("4th Year", "4th Year"),
     ]
     year_level = forms.ChoiceField(
         required=True,

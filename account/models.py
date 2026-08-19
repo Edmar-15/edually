@@ -181,10 +181,8 @@ class StudentProfile(models.Model):
     )
     # Year level is now required and limited to 1st‑4th year
     YEAR_CHOICES = [
-        ("1st Year", "1st Year"),
         ("2nd Year", "2nd Year"),
         ("3rd Year", "3rd Year"),
-        ("4th Year", "4th Year"),
     ]
     year_level = models.CharField(
         "Year Level",
