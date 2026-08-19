@@ -16,6 +16,7 @@ from .ai_bridge import ask_ai_one_level
 from .file_utils import delete_file, replace_file
 from functools import wraps
 from django.db import transaction
+import re
 
 # Decorators
 def teacher_required_for_mutation(view_func):
@@ -131,8 +132,26 @@ def api_subject_list(request):
         "next_page_number": 2
     }
     """
+    # -----------------------------------------------------------------
+    # 1️⃣  Base queryset – public, non‑archived subjects
+    # -----------------------------------------------------------------
     qs = Subject.objects.select_related("author").filter(is_archived=False)
 
+    # -----------------------------------------------------------------
+    # 2️⃣  If the requester is a *student* we limit to *their* year level
+    # -----------------------------------------------------------------
+    if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
+        # ``year_level`` returns a string like “2nd Year” or “3rd Year”.
+        # We only need the leading digit (2 or 3) to match Subject.YEAR_CHOICES.
+        year_label = request.user.year_level            # e.g. "2nd Year"
+        match = re.search(r"\d+", year_label or "")
+        if match:
+            numeric_year = match.group()                # "2" or "3"
+            qs = qs.filter(year=numeric_year)
+
+    # -----------------------------------------------------------------
+    # 3️⃣  Pagination (unchanged)
+    # -----------------------------------------------------------------
     paginator = Paginator(qs, PAGE_SIZE)
     page_number = request.GET.get("page", 1)
 
@@ -141,7 +160,6 @@ def api_subject_list(request):
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
-        # If the page is out of range we return the last page (empty list is also fine)
         page_obj = paginator.page(paginator.num_pages)
 
     # Serialize only the objects that belong to this page
@@ -156,8 +174,12 @@ def api_subject_list(request):
         "total_pages": paginator.num_pages,
         "has_previous": page_obj.has_previous(),
         "has_next": page_obj.has_next(),
-        "previous_page_number": page_obj.previous_page_number() if page_obj.has_previous() else None,
-        "next_page_number": page_obj.next_page_number() if page_obj.has_next() else None,
+        "previous_page_number": page_obj.previous_page_number()
+        if page_obj.has_previous()
+        else None,
+        "next_page_number": page_obj.next_page_number()
+        if page_obj.has_next()
+        else None,
     }
     return JsonResponse(payload, safe=False)
 
@@ -253,6 +275,7 @@ def api_subject_delete(request, pk):
     return JsonResponse({}, status=204)   # empty body
 
 
+@login_required
 def subject_modules(request, subject_id):
     """
     Renders a normal HTML page that shows **all modules belonging to
@@ -260,16 +283,30 @@ def subject_modules(request, subject_id):
     """
     subject = get_object_or_404(Subject, pk=subject_id)
 
-    # If your `Module` model has a FK called `subject` use:
+    # --------------------------------------------------------------
+    # 1️⃣  Students may only view subjects that match their own year.
+    # --------------------------------------------------------------
+    if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
+        # ``year_level`` is like “2nd Year”.  Pull the digit.
+        year_label = request.user.year_level
+        match = re.search(r"\d+", year_label or "")
+        if match and subject.year != match.group():
+            # Not allowed – hide the subject (or you could 404 instead).
+            return HttpResponseForbidden(
+                "You cannot view subjects for a different year level."
+            )
+
+    # -----------------------------------------------------------------
+    # 2️⃣  Normal module query – unchanged.
+    # -----------------------------------------------------------------
     modules = Module.objects.filter(subject=subject).select_related('subject')
-    # If you used a related_name on the FK you could also do:
-    # modules = subject.modules.all()
 
     context = {
         "subject": subject,
         "modules": modules,
     }
     return render(request, "slm/subject_modules.html", context)
+
 
 
 @require_GET

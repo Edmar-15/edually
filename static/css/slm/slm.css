@@ -488,18 +488,6 @@ html[data-theme="dark"] .pm-card__header h3 {
 }
 
 /* Tab panels */
-.tab-panel {
-  border: 1px solid rgba(148,163,184,.18);
-  padding: var(--gap-lg);
-  background: var(--surface, #fff);
-  border-radius: 20px;
-  box-shadow: 0 14px 30px rgba(31,42,71,.05);
-}
-html.dark .tab-panel,
-html[data-theme="dark"] .tab-panel {
-  background: linear-gradient(180deg, rgba(17,24,39,.96) 0%, #0b1220 100%);
-  border-color: rgba(148,163,184,.18);
-}
 .tab-panel[hidden] {
   opacity: 0;
   transition: opacity .2s ease-out;
