@@ -3267,3 +3267,24 @@ html[data-theme="dark"] .modal__dialog select:focus {
     outline: 2px solid #0066cc;
     outline-offset: 2px;
 }
+
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(14, 154, 167, 0.3);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(14, 154, 167, 0.5);
+}

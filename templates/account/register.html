@@ -141,11 +141,8 @@
     <div class="policy-modal__content">
         <header class="policy-modal__header">
             <h2 id="terms-modal-title">Terms &amp; Conditions (Version {{ policy_version }})</h2>
-            <button type="button" class="policy-modal__close" aria-label="Close">&times;</button>
         </header>
         <section class="policy-modal__body">
-            <!-- Full terms content – copy‑pasted from your original file -->
-            <h1>Terms &amp; Conditions (Version {{ policy_version }})</h1>
             <section>
                 <p>Effective Date: {{ effective_date|date:"F j, Y" }}</p>
 
@@ -205,9 +202,6 @@
                 </p>
             </section>
         </section>
-        <footer class="policy-modal__footer">
-            <button type="button" class="policy-modal__close button primary-button">Close</button>
-        </footer>
     </div>
 </div>
 
@@ -217,11 +211,8 @@
     <div class="policy-modal__content">
         <header class="policy-modal__header">
             <h2 id="privacy-modal-title">Privacy Notice (Version {{ policy_version }})</h2>
-            <button type="button" class="policy-modal__close" aria-label="Close">&times;</button>
         </header>
         <section class="policy-modal__body">
-            <!-- Full privacy content – copy‑pasted from your original file -->
-            <h1>Privacy Notice (Version {{ policy_version }})</h1>
             <section>
                 <p>Effective Date: {{ effective_date|date:"F j, Y" }}</p>
 
@@ -281,9 +272,6 @@
                 </p>
             </section>
         </section>
-        <footer class="policy-modal__footer">
-            <button type="button" class="policy-modal__close button primary-button">Close</button>
-        </footer>
     </div>
 </div>
 {% endblock %}

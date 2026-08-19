@@ -28,6 +28,7 @@ def _is_exempt(request):
             "terms",
             "privacy",
             "consent_required",
+            "logout_confirm"
         }
         if resolver_match.namespace == "account" and resolver_match.url_name in exempt_names:
             return True

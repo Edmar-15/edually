@@ -1,24 +1,35 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Consent Required – EduAlly</title>
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% block title %}EduAlly - Consent Required{% endblock %}
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
     <link rel="stylesheet" href="{% static 'css/policy_modal.css' %}">
-</head>
-<body>
+{% endblock %}
+{% block content %}
 <header class="page-header">
     <div class="header-inner">
         <a href="{% url 'landing' %}" class="logo">
             <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
         </a>
         <nav class="main-nav">
-            <form method="post" action="{% url 'account:logout' %}" style="display: inline; margin: 0;">
-                {% csrf_token %}
-                <button type="submit" style="background: none; border: none; color: var(--text); cursor: pointer; text-decoration: none; font-size: 0.95rem; padding: 0;">Log out</button>
-            </form>
+            {# ---------- 1️⃣ JavaScript‑enabled trigger ---------- #}
+            <button type="button"
+                    class="nav-item logout js-modal-trigger"
+                    data-url="{% url 'account:logout_confirm' %}">
+                <i class="fas fa-sign-out-alt nav-icon"></i>
+                <span class="nav-label">Logout</span>
+            </button>
+
+            {# ---------- 2️⃣ Fallback when JS is disabled ---------- #}
+            <noscript>
+                <form method="post" action="{% url 'account:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-item logout">
+                        <i class="fas fa-sign-out-alt nav-icon"></i>
+                        <span class="nav-label">Logout</span>
+                    </button>
+                </form>
+            </noscript>
         </nav>
     </div>
 </header>
@@ -54,12 +65,8 @@
     <div class="policy-modal__content">
         <header class="policy-modal__header">
             <h2 id="terms-modal-title">Terms &amp; Conditions (Version {{ policy_version }})</h2>
-            <button type="button" class="policy-modal__close" aria-label="Close">&times;</button>
         </header>
         <section class="policy-modal__body">
-            <!-- paste the whole _terms_content.html here -->
-            <h1>Terms &amp; Conditions (Version {{ policy_version }})</h1>
-
             <section>
                 <p>Effective Date: {{ effective_date|date:"F j, Y" }}</p>
 
@@ -122,9 +129,6 @@
                 </p>
             </section>
         </section>
-        <footer class="policy-modal__footer">
-            <button type="button" class="policy-modal__close button primary-button">Close</button>
-        </footer>
     </div>
 </div>
 
@@ -134,12 +138,8 @@
     <div class="policy-modal__content">
         <header class="policy-modal__header">
             <h2 id="privacy-modal-title">Privacy Notice (Version {{ policy_version }})</h2>
-            <button type="button" class="policy-modal__close" aria-label="Close">&times;</button>
         </header>
         <section class="policy-modal__body">
-            <!-- paste the whole _privacy_content.html here -->
-            <h1>Privacy Notice (Version {{ policy_version }})</h1>
-
             <section>
                 <p>Effective Date: {{ effective_date|date:"F j, Y" }}</p>
 
@@ -199,12 +199,15 @@
                 </p>
             </section>
         </section>
-        <footer class="policy-modal__footer">
-            <button type="button" class="policy-modal__close button primary-button">Close</button>
-        </footer>
     </div>
 </div>
 
-<!--  JavaScript (open / close)  -->
+{% include "components/global_modal.html" %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/modal.js' %}" defer></script>
 <script src="{% static 'js/account/policy_modal.js' %}"></script>
     <script src="{% static 'js/account/form_validation.js' %}"></script>
+{% endblock %}
