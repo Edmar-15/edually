@@ -2,7 +2,7 @@
 {% load account_extras %}
 
 <div id="subject-widget"
-     class="subject-widget"
+     class="subject-widget widget-wrapper"
      data-list-url="{% url 'slm:subject-list' %}"
      data-create-url="{% url 'slm:subject-create' %}"
      data-update-url="{% url 'slm:subject-update' 0 %}"
@@ -35,7 +35,9 @@
     {% endif %}
 
     <!-- The list that the widget will fill -->
-    <div id="subject-list"></div>
+     <div class="list-area">
+        <div id="subject-list"></div>
+     </div>
 </div>
 
 <script type="module">

@@ -196,10 +196,16 @@ body {
 
 /* Each row – a responsive 2‑column/3‑column grid */
 .module-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--gap-sm);
-  align-items: stretch;
+    display: grid;
+    /* → auto‑fit creates as many columns as will fit (max 2 because of min‑max) */
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: var(--gap-sm);
+
+    /* stop vertical stretching */
+    align-items: start;           /* or `center` if you prefer vertical centering */
+
+    /* optional – keep the single card centered horizontally */
+    justify-content: start;      /* `center` if you want it centred */
 }
 
 /* ----------------------------------------------------------------------
@@ -213,7 +219,9 @@ body {
   padding: 1rem 1.05rem;
   box-shadow: 0 10px 24px rgba(15,23,42,.06);
   transition: transform .18s ease, box-shadow .18s ease;
-  width: 100%;
+  width: auto;                 /* remove the 100 % rule */
+  max-width: 100%;             /* still respect the container’s limits */
+  align-self: start;           /* ensures the card itself does not stretch */
 }
 
 html.dark .module-card,
@@ -1140,4 +1148,38 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
   .pm-card__icon { width: 44px; height: 44px; }
   .module-card__action,
   .pm-card__action { width: 30px; height:30px; }
+}
+
+/* -----------------------------------------------------------------
+   Flex‑box wrapper for all SLM widgets (Subjects, Modules, PMs)
+   --------------------------------------------------------------- */
+.widget-wrapper {
+    /** the widget becomes a column‑flex container that stretches
+     *  to at least the height of the viewport (minus the site header)
+     **/
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--header-height));                 /* full viewport height */
+    box-sizing: border-box;
+    padding: var(--gap-lg) var(--gap-md);
+}
+
+/* The area that holds the list (cards, rows, …) */
+.widget-wrapper .list-area {
+    flex: 1 1 auto;                  /* grow to fill remaining space */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Let the list itself expand – the cards/rows inside will wrap naturally */
+.widget-wrapper .list-area > div,
+.widget-wrapper .list-area > section {
+    flex: 1 1 auto;
+}
+
+/* ---------------------------------------------------------------
+   Paginator – push it to the bottom of the flex column.
+   --------------------------------------------------------------- */
+.widget-wrapper .paginator {
+    margin-top: auto;                 /* forces paginator to the very bottom */
 }

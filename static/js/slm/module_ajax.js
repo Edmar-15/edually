@@ -314,7 +314,7 @@ export function initModuleWidget(rootEl) {
       $list.innerHTML = "";
       let row;
       data.forEach((mod, idx) => {
-        if (idx % 4 === 0) {
+        if (idx % 2 === 0) {
           row = document.createElement("div");
           row.className = "module-row";
           $list.appendChild(row);
