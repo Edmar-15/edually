@@ -232,55 +232,90 @@ class DeleteAccountForm(forms.Form):
 # -----------------------------------------------------------------
 #  PROFILE FORM – unchanged (still edits the Student profile fields)
 # -----------------------------------------------------------------
+# account/forms.py
 class ProfileForm(forms.ModelForm):
     """Form displayed on the profile page for editing allowed fields."""
 
-    # Extra fields that belong to the StudentProfile
+    # ── extra profile fields ──
     student_id = forms.CharField(
-        required=False, 
-        max_length=30, 
+        required=False,
+        max_length=30,
         label="Student ID",
-        widget=forms.TextInput(attrs={"placeholder": ""})
+        widget=forms.TextInput(attrs={"placeholder": ""}),
+    )
+    YEAR_CHOICES = [
+        ("2nd Year", "2nd Year"),
+        ("3rd Year", "3rd Year"),
+    ]
+    year_level = forms.ChoiceField(
+        required=False,
+        choices=YEAR_CHOICES,
+        label="Year Level",
     )
 
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "avatar")  # core fields only
+        fields = ("first_name", "last_name", "avatar")
         widgets = {
             "first_name": forms.TextInput(attrs={"placeholder": ""}),
-            "last_name": forms.TextInput(attrs={"placeholder": ""}),
+            "last_name":  forms.TextInput(attrs={"placeholder": ""}),
         }
 
     def __init__(self, *args, **kwargs):
-        """Populate the extra profile fields if they exist."""
         super().__init__(*args, **kwargs)
 
-        # Set initial values and placeholders to current values
+        # ----- core user fields -------------------------------------------------
         if self.instance.pk:
-            # First name
             if self.instance.first_name:
                 self.fields["first_name"].initial = self.instance.first_name
                 self.fields["first_name"].widget.attrs["placeholder"] = self.instance.first_name
-            
-            # Last name
             if self.instance.last_name:
                 self.fields["last_name"].initial = self.instance.last_name
                 self.fields["last_name"].widget.attrs["placeholder"] = self.instance.last_name
-        
-        # Student ID from StudentProfile
+
+        # ----- student‑profile fields -------------------------------------------
         if self.instance.pk and hasattr(self.instance, "student_profile"):
             profile = self.instance.student_profile
+
+            # Student ID – allow edit at any time (optional)
             if profile.student_id:
                 self.fields["student_id"].initial = profile.student_id
                 self.fields["student_id"].widget.attrs["placeholder"] = profile.student_id
 
+            # Year level – **once set** it becomes read‑only
+            if profile.year_level:
+                # Keep the existing value, make the widget read‑only so the user sees it but
+                # cannot change it.  `readonly` works for <select> in most browsers and still
+                # sends the value on POST.
+                self.fields["year_level"].initial = profile.year_level
+                self.fields["year_level"].widget.attrs["readonly"] = True
+                self.fields["year_level"].widget.attrs["style"] = "background:#f5f5f5;cursor:not-allowed;"
+            else:
+                # Not set yet → required (the field already has `required=False` for the form,
+                # but we enforce it here so the user cannot skip it.)
+                self.fields["year_level"].required = True
+
+    # -------------------------- validation ------------------------------------
+    def clean_year_level(self):
+        """Enforce “set‑once‑only” semantics."""
+        new_value = self.cleaned_data.get("year_level") or ""
+        if self.instance.pk and hasattr(self.instance, "student_profile"):
+            profile = self.instance.student_profile
+            if profile.year_level:                         # already stored
+                # ignore whatever came from POST – keep the original
+                return profile.year_level
+        return new_value
+
     def save(self, commit=True):
-        """Save core user fields **and** the linked StudentProfile."""
+        """Persist both the core User fields and the linked StudentProfile."""
         user = super().save(commit=commit)
 
         profile, _ = StudentProfile.objects.get_or_create(user=user)
-        profile.student_id = self.cleaned_data["student_id"]
+        profile.student_id = self.cleaned_data.get("student_id", "")
+        profile.year_level = self.cleaned_data.get("year_level", "")
         if commit:
+            # The model's `clean()` will raise if we try to change year_level.
+            profile.full_clean()
             profile.save()
         return user
     

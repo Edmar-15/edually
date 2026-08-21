@@ -947,6 +947,21 @@ def google_callback(request):
     user.backend = "django.contrib.auth.backends.ModelBackend"
     auth_login(request, user)
 
+    if user_is_in_group(user, GROUP_STUDENT):
+        # Grab (or lazily create) the profile so we can inspect fields.
+        profile, _ = StudentProfile.objects.get_or_create(user=user)
+
+        missing = (
+            not profile.student_id or not profile.year_level
+        )
+        if missing:
+            messages.info(
+                request,
+                "Please complete your profile by adding a Student ID and selecting your Year Level."
+            )
+            # Send them straight to the edit‑profile page – they cannot skip it.
+            return redirect("account:profile_edit")
+
     next_url = request.GET.get("state") or request.session.get(
         "post_consent_redirect", reverse("account:dashboard")
     )

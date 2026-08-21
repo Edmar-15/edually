@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-
+from django.core.exceptions import ValidationError
 from .managers import UserManager
 
 
@@ -189,6 +189,16 @@ class StudentProfile(models.Model):
         max_length=20,
         choices=YEAR_CHOICES,
     )
+    
+    def clean(self):
+        """
+        Prevent a user from changing the year level after it has been saved once.
+        """
+        super().clean()
+        if self.pk:                                   # only on updates
+            orig = StudentProfile.objects.filter(pk=self.pk).first()
+            if orig and orig.year_level and self.year_level != orig.year_level:
+                raise ValidationError("Year level cannot be changed once set.")
 
     def __str__(self) -> str:
         return f"StudentProfile({self.user.email})"

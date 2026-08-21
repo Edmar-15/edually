@@ -57,39 +57,55 @@
                                 <div class="profile-form-note">Keep your profile current so classmates and staff can recognize you quickly.</div>
 
                                 <form id="profile-form" class="profile-form" method="post" enctype="multipart/form-data" novalidate>
-                                {% csrf_token %}
-                                <input type="hidden" name="profile_update" value="1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="profile_update" value="1">
+                                    {% if messages %}
+                                        <ul class="messages" aria-live="polite">
+                                            {% for message in messages %}
+                                                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                    {{ profile_form.non_field_errors }}
 
-                                {% if messages %}
-                                    <ul class="messages" aria-live="polite">
-                                        {% for message in messages %}
-                                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
+                                    <div class="name-row">
+                                        <div class="floating-label-group input-group">
+                                            <label for="{{ profile_form.first_name.id_for_label }}">First name</label>
+                                            {{ profile_form.first_name }}
+                                        </div>
 
-                                {{ profile_form.non_field_errors }}
+                                        <div class="floating-label-group input-group">
+                                            <label for="{{ profile_form.last_name.id_for_label }}">Last name</label>
+                                            {{ profile_form.last_name }}
+                                        </div>
+                                    </div>
 
-                                <div class="name-row">
+                                    {# ----- Student ID ----- #}
                                     <div class="floating-label-group input-group">
-                                        <label for="{{ profile_form.first_name.id_for_label }}">First name</label>
-                                        {{ profile_form.first_name }}
+                                        {{ profile_form.student_id }}
+                                        <label for="{{ profile_form.student_id.id_for_label }}">Student ID</label>
+                                        {% if profile_form.student_id.errors %}
+                                            <div class="validation-error">{{ profile_form.student_id.errors|join:", " }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    {# ----- Year Level (read‑only after first set) ----- #}
+                                    <div class="floating-label-group input-group">
+                                        {{ profile_form.year_level }}
+                                        <label for="{{ profile_form.year_level.id_for_label }}">Year Level</label>
+                                        {% if profile_form.year_level.errors %}
+                                            <div class="validation-error">{{ profile_form.year_level.errors|join:", " }}</div>
+                                        {% endif %}
                                     </div>
 
                                     <div class="floating-label-group input-group">
-                                        <label for="{{ profile_form.last_name.id_for_label }}">Last name</label>
-                                        {{ profile_form.last_name }}
+                                        {{ profile_form.avatar }}
                                     </div>
-                                </div>
 
-                                <div class="floating-label-group input-group">
-                                    {{ profile_form.avatar }}
-                                </div>
-
-                                <div class="form-actions">
-                                    <button type="submit" class="button primary-button">Save changes</button>
-                                    <a href="{% url 'account:profile' %}" class="button outline-button">Cancel</a>
-                                </div>
+                                    <div class="form-actions">
+                                        <button type="submit" class="button primary-button">Save changes</button>
+                                        <a href="{% url 'account:profile' %}" class="button outline-button">Cancel</a>
+                                    </div>
                                 </form>
                             </div>
 
