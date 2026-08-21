@@ -86,15 +86,6 @@
                                     {{ profile_form.avatar }}
                                 </div>
 
-                                <hr class="form-section-divider">
-
-                                <div class="name-row">
-                                    <div class="floating-label-group input-group">
-                                        <label for="{{ profile_form.student_id.id_for_label }}">Student ID (optional)</label>
-                                        {{ profile_form.student_id }}
-                                    </div>
-                                </div>
-
                                 <div class="form-actions">
                                     <button type="submit" class="button primary-button">Save changes</button>
                                     <a href="{% url 'account:profile' %}" class="button outline-button">Cancel</a>

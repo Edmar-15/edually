@@ -103,7 +103,12 @@
 
                     <div class="profile-actions">
                         <a href="{% url 'account:profile_edit' %}?tab=profile" class="button primary-button">Edit Profile</a>
-                        <a href="{% url 'account:profile_edit' %}?tab=password" class="button outline-button">Change Password</a>
+
+                        {% if request.user.has_usable_password %}
+                            <a href="{% url 'account:password_change' %}?tab=password" class="button outline-button">Change Password</a>
+                        {% else %}
+                            <a href="{% url 'account:add_password' %}?tab=password" class="button outline-button">Set Password</a>
+                        {% endif %}
                     </div>
                 </aside>
             </div>

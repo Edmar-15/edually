@@ -36,6 +36,30 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django_ratelimit.decorators import ratelimit
 
+# --------------------------------------------------------------
+# Local imports
+# --------------------------------------------------------------
+from .forms import (
+    PublicRegisterForm,
+    ProfileForm,
+    LoginForm,
+    DeleteAccountForm,
+    PasswordResetConfirmForm,
+    PasswordResetRequestForm,
+    ChangePasswordForm,
+    AddPasswordForm,
+)
+from .models import UserConsent, User, StudentProfile, PushSubscription
+from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
+from .utils import user_is_in_group, add_user_to_group
+
+# Other apps used in the dashboard
+from slm.models import Module, PersonalMaterial, Subject
+from forum.models import Post
+from aihelper.models import Conversation, Message
+
+log = logging.getLogger(__name__)
+
 # Decorators
 def anonymous_required(view_func=None, *, redirect_to=None):
     """
@@ -64,30 +88,6 @@ def anonymous_required(view_func=None, *, redirect_to=None):
 
     # If used with parentheses: @anonymous_required()
     return decorator
-
-# --------------------------------------------------------------
-# Local imports
-# --------------------------------------------------------------
-from .forms import (
-    PublicRegisterForm,
-    ProfileForm,
-    LoginForm,
-    DeleteAccountForm,
-    PasswordResetConfirmForm,
-    PasswordResetRequestForm,
-    ChangePasswordForm
-)
-from .models import UserConsent, User, StudentProfile, PushSubscription
-from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
-from .utils import user_is_in_group, add_user_to_group
-
-# Other apps used in the dashboard
-from slm.models import Module, PersonalMaterial, Subject
-from forum.models import Post
-from aihelper.models import Conversation, Message
-
-log = logging.getLogger(__name__)
-
 
 def _set_2fa_email_otp(user, otp, request=None):
     """Persist the Gmail OTP in cache when available, otherwise fall back to the session."""
@@ -1370,12 +1370,15 @@ def password_reset_confirm(request):
     
 @ratelimit(key='user', rate='5/d', method='POST', block=True)   # ≤ 5 password changes per day per user
 @login_required(login_url='account:login')
-@login_required(login_url='account:login')
 def change_password(request):
     """
     Dedicated endpoint for changing a password.
     The template already contains the ChangePasswordForm – we just POST to this URL.
     """
+    if not request.user.has_usable_password():
+        return redirect("account:add_password")
+
+    
     if request.method != "POST":
         return HttpResponseBadRequest("Invalid request method.")
 
@@ -1392,3 +1395,33 @@ def change_password(request):
             "profile_form": ProfileForm(instance=request.user),   # unchanged personal‑info form
             "password_form": form,
         })
+        
+        
+# -----------------------------------------------------------------
+#   ADD / SET PASSWORD – for OAuth‑only accounts
+# -----------------------------------------------------------------
+@login_required(login_url='account:login')
+def add_password(request):
+    """
+    Allows a user whose account currently has an *unusable* password
+    (i.e. was created via Google) to set a password for direct login.
+    If the user already has a usable password we redirect them to the
+    normal change‑password page.
+    """
+    if request.user.has_usable_password():
+        # This user already has a password → go to the regular page.
+        messages.info(request, "You already have a password; you can change it on the Change‑Password page.")
+        return redirect("account:password_change")
+
+    if request.method == "POST":
+        form = AddPasswordForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()                     # calls ``user.set_password()``
+            # Keep the user logged‑in after setting the password
+            update_session_auth_hash(request, request.user)
+            messages.success(request, "Your password has been set – you can now sign in with email & password.")
+            return redirect("account:profile")
+    else:
+        form = AddPasswordForm(user=request.user)
+
+    return render(request, "account/add_password.html", {"form": form})

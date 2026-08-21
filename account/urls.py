@@ -33,6 +33,7 @@ urlpatterns = [
     path("profile/", views.profile, name='profile'),
     path("profile/edit/", views.profile_edit, name='profile_edit'),
     path("profile/password-change/", change_password, name='password_change'),
+    path("settings/add-password/", views.add_password, name="add_password"),
     path("profile/modal/<int:pk>/", views.profile_modal, name='profile_modal'),
     path("settings/", views.settings, name='settings'),
     path("settings/delete-modal/", views.delete_account_modal, name="delete_account_modal"),

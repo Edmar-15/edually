@@ -10,7 +10,8 @@ from django.contrib.auth.forms import (
     AuthenticationForm,
     UserCreationForm as DjangoUserCreationForm,
     UserChangeForm as DjangoUserChangeForm,
-    PasswordChangeForm
+    PasswordChangeForm,
+    SetPasswordForm,
 )
 from django.utils import timezone
 from django.forms import DateTimeInput
@@ -391,6 +392,42 @@ class ChangePasswordForm(PasswordChangeForm):
                 "Password must include at least one number."
             )
         if not re.search(r"[!@#$%^&*()_+\-=[\]{};':\\\|,.<>\/?~`]", password):
+            raise forms.ValidationError(
+                "Password must include at least one special character."
+            )
+        return password
+    
+
+# -------------------------------------------------
+#  ADD / SET PASSWORD FORM (OAuth‑only accounts)
+# -------------------------------------------------
+class AddPasswordForm(SetPasswordForm):
+    """
+    Same validation rules as ``ChangePasswordForm`` but does NOT
+    ask for the old password – perfect for users whose account was
+    created with an unusable password (OAuth flow).
+    """
+    def clean_new_password1(self):
+        password = self.cleaned_data.get("new_password1")
+        if not password:
+            return password
+
+        # ---- replicate the custom strength checks from ChangePasswordForm ----
+        if len(password) < 8:
+            raise forms.ValidationError(
+                "Password must be at least 8 characters long."
+            )
+        if not re.search(r"[A-Z]", password):
+            raise forms.ValidationError(
+                "Password must include at least one uppercase letter."
+            )
+        if not re.search(r"\d", password):
+            raise forms.ValidationError(
+                "Password must include at least one number."
+            )
+        if not re.search(
+            r"[!@#$%^&*()_+\-=[\]{};':\\\|,.<>\/?~`]", password
+        ):
             raise forms.ValidationError(
                 "Password must include at least one special character."
             )
