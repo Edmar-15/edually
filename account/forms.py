@@ -174,30 +174,28 @@ class PublicRegisterForm(forms.ModelForm):
     # -----------------------------------------------------------------
     def save(self, commit=True):
         """
-        Create the User, a StudentProfile, assign the student group,
+        Create the User, a StudentProfile, assign the Student group,
         and record the initial consent.
         """
-        # ----------- Pull the student‑only extra fields -------------
         student_id = self.cleaned_data.pop("student_id", "")
         year_level = self.cleaned_data.pop("year_level", "")
 
-        # ----------- Create the core User object ------------------
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
+
+        # NEW – mark as unverified until they click the link
+        user.email_verified = False
 
         if commit:
             user.save()
 
-            # ---------- Create the StudentProfile ----------
             StudentProfile.objects.create(
                 user=user,
                 student_id=student_id,
-                # program defaults automatically to “Information Technology”
                 year_level=year_level,
             )
             add_user_to_group(user, GROUP_STUDENT)
 
-            # ---------- Record consent ----------
             UserConsent.objects.create(
                 user=user,
                 version=settings.POLICY_VERSION,

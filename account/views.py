@@ -35,6 +35,7 @@ import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django_ratelimit.decorators import ratelimit
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 
 # --------------------------------------------------------------
 # Local imports
@@ -89,6 +90,39 @@ def anonymous_required(view_func=None, *, redirect_to=None):
     # If used with parentheses: @anonymous_required()
     return decorator
 
+
+# -----------------------------------------------------------------
+#   EMAIL VERIFICATION HELPERS
+# -----------------------------------------------------------------
+signer = TimestampSigner()  # uses settings.SECRET_KEY automatically
+
+def _send_email_verification(request, user):
+    """
+    Send a one‑time verification link to the user.
+    The link contains a signed timestamp that expires after 48 h.
+    """
+    token = signer.sign(user.pk)   # “<user_id>:<signature>”
+    verify_url = request.build_absolute_uri(
+        reverse("account:verify_email", kwargs={"token": token})
+    )
+    subject = "Verify your EduAlly e‑mail address"
+    body = render_to_string(
+        "account/email_verification_email.txt",
+        {
+            "user": user,
+            "verify_url": verify_url,
+            "site_name": "EduAlly",
+        },
+    )
+    send_mail(
+        subject,
+        body,
+        django_settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )
+
+
 def _set_2fa_email_otp(user, otp, request=None):
     """Persist the Gmail OTP in cache when available, otherwise fall back to the session."""
     key = f"two_factor_email_otp_{user.pk}"
@@ -137,10 +171,6 @@ def _delete_2fa_email_otp(user, request=None):
 #   ROLE‑BASED LOGIN VIEW
 # -----------------------------------------------------------------
 class RoleBasedLoginView(TemplateView):
-    """
-    Sub‑class of Django's LoginView that redirects users to the dashboard
-    that matches their group membership.
-    """
     template_name = "account/login.html"
     form_class = LoginForm
     redirect_authenticated_user = True
@@ -148,7 +178,6 @@ class RoleBasedLoginView(TemplateView):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated and self.redirect_authenticated_user:
             return redirect(self.get_success_url())
-
         return render(request, self.template_name, {"form": self.form_class()})
 
     def post(self, request, *args, **kwargs):
@@ -157,6 +186,38 @@ class RoleBasedLoginView(TemplateView):
             return render(request, self.template_name, {"form": form})
 
         user = form.get_user()
+
+        if (user.is_staff or user.is_superuser) and not user.email_verified:
+            # Mark them as verified *once* so the same check never trips again.
+            # (Optional – you can also just skip the whole block.)
+            user.email_verified = True
+            user.save(update_fields=["email_verified"])
+        # -------------------------------------------------
+        # NEW – block login for un‑verified accounts
+        # -------------------------------------------------
+        if not user.email_verified:
+            # 1️⃣  Store where they wanted to go after they become verified.
+            request.session["post_verification_redirect"] = self.get_success_url_for_user(user)
+
+            # 2️⃣  Show the warning toast (your UI already does this)
+            messages.warning(
+                request,
+                "You need to verify your e‑mail address before you can log in. "
+                "A verification link has been sent – please check your inbox.",
+            )
+            # 3️⃣  (IMPORTANT) Log the user **temporarily** so that the
+            #     `login_required` decorator on the next view succeeds.
+            auth_login(request, user)
+
+            # 4️⃣  (Optional) Re‑send the e‑mail only if they missed it.
+            _send_email_verification(request, user)
+
+            # 5️⃣  Redirect to the page that tells them “check your inbox”.
+            return redirect("account:email_verification_required")
+
+        # -------------------------------------------------
+        # 2FA and normal login paths (unchanged)
+        # -------------------------------------------------
         if getattr(user, "two_factor_enabled", False):
             request.session["pending_2fa_user_id"] = user.pk
             request.session["pending_2fa_next"] = self.get_success_url_for_user(user)
@@ -164,7 +225,7 @@ class RoleBasedLoginView(TemplateView):
 
         auth_login(request, user)
         return redirect(self.get_success_url_for_user(user))
-
+    
     def get_success_url_for_user(self, user):
         if user.is_superuser or user.is_staff:
             return reverse("admin:index")
@@ -439,11 +500,14 @@ def profile_modal(request, pk):
     return JsonResponse({'html': html})
 
 
+# -----------------------------------------------------------------
+#   PUBLIC REGISTRATION
+# -----------------------------------------------------------------
 @anonymous_required
 def register(request):
     """
-    Public registration – uses ``PublicRegisterForm`` which now knows that
-    every registrant is a Student.
+    Public registration – uses ``PublicRegisterForm`` which now creates
+    an *unverified* user and immediately sends a verification e‑mail.
     """
     policy_context = {
         "policy_version": django_settings.POLICY_VERSION,
@@ -455,24 +519,86 @@ def register(request):
     if request.method == "POST":
         form = PublicRegisterForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save()
-            # Auto‑login after successful registration
-            raw_password = form.cleaned_data["password1"]
-            user = authenticate(request, email=user.email, password=raw_password)
-            if user is not None:
-                auth_login(request, user)
-                messages.success(request, "Welcome! Your account has been created.")
-                return redirect(reverse_lazy("account:dashboard"))
-            messages.warning(
+            user = form.save()                     # email_verified == False
+            _send_email_verification(request, user)
+
+            messages.success(
                 request,
-                "Account created but auto‑login failed. Please log in.",
+                "Your account has been created – check your e‑mail for a verification link.",
             )
-            return redirect(reverse_lazy("account:login"))
+            # Auto‑login **is not** performed; we force the user to verify first.
+            return redirect("account:email_verification_required")
         messages.error(request, "Please fix the errors below.")
     else:
         form = PublicRegisterForm()
 
     return render(request, "account/register.html", {"form": form, **policy_context})
+
+
+# -----------------------------------------------------------------
+#   EMAIL VERIFICATION REQUIRED PAGE
+# -----------------------------------------------------------------
+class EmailVerificationRequiredView(TemplateView):
+    """
+    Shown when a logged‑in user has ``email_verified=False``.
+    Gives a friendly message and a *Resend verification e‑mail* button.
+    """
+    template_name = "account/email_verification_required.html"
+
+    @method_decorator(login_required(login_url='account:login'))
+    def dispatch(self, *args, **kwargs):
+        # If the user is already verified – send them on their way.
+        if self.request.user.email_verified:
+            return redirect("account:dashboard")
+        return super().dispatch(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handles the *Resend* button.  After sending the e‑mail we log the user
+        out because the verification link will automatically log them back in.
+        """
+        _send_email_verification(request, request.user)
+        messages.info(request, "A fresh verification e‑mail has been sent.")
+        auth_logout(request)               # log out – the link will log them back in
+        return redirect("account:login")
+
+
+# -----------------------------------------------------------------
+#   VERIFY EMAIL LINK HANDLER
+# -----------------------------------------------------------------
+def verify_email(request, token: str):
+    """
+    Endpoint that the user clicks from the e‑mail.
+    It validates the signed token (max age 48 h) and marks the account as
+    verified.  The user is then logged in automatically and redirected.
+    """
+    try:
+        # ``max_age`` is in seconds – 48 h = 172 800 seconds.
+        user_pk = signer.unsign(token, max_age=48 * 60 * 60)
+    except SignatureExpired:
+        messages.error(request, "The verification link has expired – request a new one.")
+        return redirect("account:login")
+    except BadSignature:
+        messages.error(request, "Invalid verification link.")
+        return redirect("account:login")
+
+    # ``user_pk`` comes back as a string; cast to int.
+    try:
+        user = User.objects.get(pk=int(user_pk))
+    except (User.DoesNotExist, ValueError):
+        messages.error(request, "User not found.")
+        return redirect("account:login")
+
+    # Successful verification – flip the flag and log the user in.
+    user.email_verified = True
+    user.save(update_fields=["email_verified"])
+    user.backend = "django.contrib.auth.backends.ModelBackend"
+    auth_login(request, user)
+
+    messages.success(request, "Your e‑mail has been verified – welcome!")
+    # redirect to the page they originally wanted (if stored) or dashboard
+    next_url = request.session.pop("post_verification_redirect", reverse("account:dashboard"))
+    return redirect(next_url)
 
 
 @login_required(login_url='account:login')
@@ -918,6 +1044,8 @@ def google_callback(request):
     )
     if created:
         user.set_unusable_password()
+        # Google‑OAuth accounts are automatically verified because Google already validated the address.
+        user.email_verified = True
         user.save()
 
         # -------------------------------------------------------------

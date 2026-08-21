@@ -26,6 +26,7 @@ class UserAdmin(BaseUserAdmin):
         "first_name",
         "last_name",
         "is_staff",
+        "email_verified",
         "is_active",
     )
     list_filter = ("is_staff", "is_superuser", "is_active", "groups")
@@ -33,7 +34,7 @@ class UserAdmin(BaseUserAdmin):
     ordering = ("-date_joined",)
 
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        (None, {"fields": ("email", "password", "email_verified")}),
         ("Personal info", {"fields": ("username", "first_name", "last_name", "avatar")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Important dates", {"fields": ("last_login", "date_joined")}),

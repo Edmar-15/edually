@@ -1,0 +1,12 @@
+Hello {{ user.get_full_name|default:user.email }},
+
+Welcome to EduAlly! To finish creating your account you need to verify the e‑mail address you used to sign up.
+
+Please click the link below (or paste it into your browser) to verify your e‑mail address:
+
+{{ verify_url }}
+
+This link will expire in 48 hours. If you did not create an account, you can safely ignore this e‑mail.
+
+Thanks,
+The EduAlly Team

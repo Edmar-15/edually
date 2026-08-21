@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Verify your e‑mail – EduAlly{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div class="header-inner">
+        <a href="{% url 'landing' %}" class="logo">
+            <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
+        </a>
+    </div>
+</header>
+
+<main class="auth-page">
+    <section class="auth-card">
+        <h1>Verify your e‑mail address</h1>
+        <p class="auth-subtitle">
+            A verification link was sent to <strong>{{ request.user.email }}</strong>.
+            Click the link in that e‑mail to activate your account.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="button">Resend verification e‑mail</button>
+        </form>
+
+        <p class="auth-footer">
+            <form method="post" action="{% url 'account:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="nav-item logout">
+                    <i class="fas fa-sign-out-alt nav-icon"></i>
+                    <span class="nav-label">Logout</span>
+                </button>
+            </form>
+        </p>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/account/form_validation.js' %}"></script>
+{% endblock %}

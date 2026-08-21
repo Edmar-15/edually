@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'axes.middleware.AxesMiddleware',
     "account.middleware.RequireLatestConsentMiddleware",
+    "account.middleware.RequireEmailVerificationMiddleware",
     'slm.middleware.NoCacheForDynamicPagesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'core.middleware.IdleTimeoutMiddleware',

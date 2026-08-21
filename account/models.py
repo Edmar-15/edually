@@ -38,6 +38,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=False,
         help_text="Designates whether the user can log into the admin site.",
     )
+    
+    email_verified = models.BooleanField(
+        "email verified",
+        default=False,
+        help_text="True when the user has clicked the verification link sent to their e‑mail.",
+    )
+    
     is_active = models.BooleanField(
         "active",
         default=True,

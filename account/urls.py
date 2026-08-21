@@ -10,8 +10,10 @@ from .views import (
     TermsView,
     PrivacyView,
     RoleBasedLoginView,
+    EmailVerificationRequiredView,
     change_password,
     anonymous_required,
+    verify_email,
 )
 
 app_name = "account"
@@ -41,6 +43,20 @@ urlpatterns = [
     path("api/set-theme/", views.api_set_theme, name='api_set_theme'),
     path("api/push-subscribe/", views.api_push_subscribe, name='api_push_subscribe'),
     path("api/push-unsubscribe/", views.api_push_unsubscribe, name='api_push_unsubscribe'),
+    
+    # -----------------------------------------------------------------
+    #   EMAIL VERIFICATION
+    # -----------------------------------------------------------------
+    path(
+        "email-verification-required/",
+        EmailVerificationRequiredView.as_view(),
+        name="email_verification_required",
+    ),
+    path(
+        "verify-email/<str:token>/",
+        verify_email,
+        name="verify_email",
+    ),
 
     # ---------------------------------------------------------
     # OAuth
