@@ -1,9 +1,14 @@
 {% load static %}
 <div class="modal__backdrop" data-close-modal></div>
-<div class="modal__content">
-    <div class="create-post-container">
-        <h2>Report Inappropriate Content</h2>
-        <p class="intro-text">Help us keep the forum safe. Please let us know why you&apos;re reporting this content.</p>
+<div class="modal__content forum-action-modal forum-action-modal--report">
+    <div class="forum-modal-heading">
+        <span class="forum-modal-icon forum-modal-icon--report" aria-hidden="true"><i class="fa-solid fa-flag"></i></span>
+        <div>
+            <p class="forum-modal-kicker">Community safety</p>
+            <h2>Report Content</h2>
+        </div>
+    </div>
+    <p class="forum-modal-intro">Help us keep the forum safe. Tell us what needs review.</p>
 
         {% if error %}
             <div class="form-error-message">
@@ -20,7 +25,7 @@
                 data-modal-form>
             {% csrf_token %}
 
-            <div>
+            <div class="forum-modal-field">
                 <label for="id_reason">Report category:</label>
                 <select id="id_reason" name="reason" required>
                     <option value="">-- Select a category --</option>
@@ -30,19 +35,14 @@
                 </select>
             </div>
 
-            <div>
+            <div class="forum-modal-field">
                 <label for="id_description">Additional details (optional):</label>
                 <textarea id="id_description" name="description" rows="4" placeholder="Provide any additional context..."></textarea>
             </div>
 
             <div class="modal__actions">
-                <button type="submit" class="button primary-button">
-                    <i class="fa-solid fa-flag"></i> Submit Report
-                </button>
-                <button type="button" class="button secondary-button" data-close-modal>
-                    Cancel
-                </button>
+                <button type="button" class="button secondary-button" data-close-modal>Cancel</button>
+                <button type="submit" class="button primary-button"><i class="fa-solid fa-paper-plane"></i> Submit Report</button>
             </div>
         </form>
-    </div>
 </div>

@@ -1,9 +1,13 @@
 <div class="modal__backdrop" data-close-modal></div>
-<div class="modal__content edit-post-container">
-    <div class="edit-post-header">
-        <h2>Edit Question</h2>
-        <button type="button" class="modal-close" aria-label="Close edit dialog" data-close-modal>×</button>
+<div class="modal__content forum-action-modal edit-post-container">
+    <div class="forum-modal-heading">
+        <span class="forum-modal-icon forum-modal-icon--edit" aria-hidden="true"><i class="fa-solid fa-pen-to-square"></i></span>
+        <div>
+            <p class="forum-modal-kicker">Post management</p>
+            <h2>Edit Question</h2>
+        </div>
     </div>
+    <p class="forum-modal-intro">Update the details of your discussion before saving.</p>
     <form method="post"
             action="{% url 'forum:post_edit' post.pk %}"
             class="post-edit-form ajax-form"

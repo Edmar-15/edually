@@ -1,6 +1,5 @@
 <section class="forum-page">
     {% if in_modal %}
-        <button class="modal-close" aria-label="Close post" onclick="document.querySelector('#global-modal').classList.remove('open')">×</button>
     {% else %}
         <div class="thread-topbar">
             <a href="{% url 'forum:list' %}"
@@ -61,7 +60,7 @@
 
         <div class="post-side">
             <div class="side-upvote">
-                <button class="button upvote-circle upvote-btn{% if post.pk in user_post_upvotes %} has-upvoted{% endif %}"
+                <button type="button" class="button upvote-circle upvote-btn{% if post.pk in user_post_upvotes %} has-upvoted{% endif %}"
                         data-post-id="{{ post.pk }}"
                         data-endpoint="{% url 'forum:upvote' post.pk %}">
                     <i class="fa-solid fa-thumbs-up"></i>
@@ -132,7 +131,7 @@
     <!-- ADD REPLY FORM (AJAX) -->
     <section class="add-reply">
           <form method="post"
-              action="{% url 'forum:post_detail' post.pk %}"
+              action="{% url 'forum:create_reply' post.pk %}"
               class="reply-form ajax-form"
               data-post-id="{{ post.pk }}"
               data-target="{% if in_modal %}#global-modal #reply-list{% else %}#reply-list{% endif %}"

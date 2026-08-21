@@ -1799,6 +1799,26 @@ html.dark .profile-details-card .input-group textarea:focus {
     box-shadow: 0 0 0 4px rgba(14, 154, 167, 0.12);
 }
 
+html.dark .profile-details-card .floating-label-group label,
+html[data-theme="dark"] .profile-details-card .floating-label-group label {
+    background: rgba(15, 23, 42, 0.92) !important;
+    color: #cbd5e1 !important;
+}
+
+html.dark .profile-details-card .floating-label-group input:focus ~ label,
+html.dark .profile-details-card .floating-label-group input:not(:placeholder-shown) ~ label,
+html.dark .profile-details-card .floating-label-group select ~ label,
+html.dark .profile-details-card .floating-label-group textarea:focus ~ label,
+html.dark .profile-details-card .floating-label-group textarea:not(:placeholder-shown) ~ label,
+html[data-theme="dark"] .profile-details-card .floating-label-group input:focus ~ label,
+html[data-theme="dark"] .profile-details-card .floating-label-group input:not(:placeholder-shown) ~ label,
+html[data-theme="dark"] .profile-details-card .floating-label-group select ~ label,
+html[data-theme="dark"] .profile-details-card .floating-label-group textarea:focus ~ label,
+html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not(:placeholder-shown) ~ label {
+    background: rgba(15, 23, 42, 0.98) !important;
+    color: var(--primary, #0e9aa7) !important;
+}
+
 .highlight-label {
     display: block;
     margin-bottom: 8px;
@@ -2927,7 +2947,8 @@ html.dark .profile-details-card .input-group textarea:focus {
     background: rgba(0,0,0,.5);   /* semi‑transparent backdrop */
     align-items: center;
     justify-content: center;
-    padding: 1rem;
+    padding: clamp(.65rem, 2vw, 1rem);
+    box-sizing: border-box;
 }
 
 /* When we want it visible */
@@ -3032,8 +3053,11 @@ html.dark .profile-details-card .input-group textarea:focus {
     color: #0f172a;
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: .5rem;
-    max-width: 420px;           /* same as the original .modal__dialog */
+    max-width: min(440px, 100%);
     width: 100%;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    box-sizing: border-box;
     padding: 1rem;
     box-shadow: 0 4px 18px rgba(0,0,0,.15);
     animation: fadeIn .15s ease-out forwards;
@@ -3047,8 +3071,11 @@ html[data-theme="dark"] .modal__content,
 html[data-theme="dark"] .modal__dialog {
     background: #0b1220 !important;
     border-radius: .5rem;
-    max-width: 420px;
+    max-width: min(440px, 100%);
     width: 100%;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    box-sizing: border-box;
     padding: 1rem;
     box-shadow: 0 4px 18px rgba(14, 154, 167, 0.2) !important;
     animation: fadeIn .15s ease-out forwards;
@@ -3266,6 +3293,277 @@ html[data-theme="dark"] .modal__dialog select:focus {
 .modal select:focus {
     outline: 2px solid #0066cc;
     outline-offset: 2px;
+}
+
+/* Forum action modals */
+.forum-action-modal {
+    max-width: min(440px, 100%);
+    padding: 1.15rem 1.25rem;
+    border: 1px solid rgba(148, 163, 184, .24);
+    border-radius: 14px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .18);
+    animation: forumModalIn .18s ease-out both;
+}
+
+.forum-modal-heading {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+}
+
+.forum-modal-heading > div {
+    min-width: 0;
+    flex: 1;
+}
+
+.forum-modal-heading h2 {
+    margin: 0;
+    color: var(--text, #0f172a);
+    font-size: 1.16rem;
+    font-weight: 750;
+    letter-spacing: -.01em;
+    line-height: 1.2;
+}
+
+.forum-modal-kicker {
+    margin: 0 0 .15rem;
+    color: var(--primary, #0e9aa7);
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.forum-modal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: rgba(245, 158, 11, .13);
+    color: #b45309;
+    font-size: .95rem;
+}
+
+.forum-modal-icon--edit {
+    background: rgba(14, 154, 167, .13);
+    color: #0e7f89;
+}
+
+.forum-modal-icon--report {
+    background: rgba(220, 38, 38, .11);
+    color: #c62828;
+}
+
+.forum-modal-intro {
+    margin: .75rem 0 .9rem;
+    color: var(--text-muted, #64748b);
+    font-size: .88rem;
+    line-height: 1.55;
+}
+
+.forum-modal-content-title {
+    display: grid;
+    gap: .3rem;
+    margin: .75rem 0 1rem;
+    padding: .65rem .8rem;
+    border-left: 2px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    background: rgba(245, 158, 11, .09);
+    color: var(--text, #0f172a);
+    overflow-wrap: anywhere;
+}
+
+.forum-modal-content-title span {
+    color: #a16207;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.forum-modal-field {
+    display: grid;
+    gap: .45rem;
+    margin-top: .75rem;
+}
+
+.forum-modal-field label {
+    color: var(--text, #0f172a);
+    font-size: .9rem;
+    font-weight: 700;
+}
+
+.forum-action-modal .form-field-wrapper {
+    display: grid;
+    gap: .7rem;
+}
+
+.forum-action-modal .form-field-wrapper p {
+    display: grid;
+    gap: .4rem;
+    margin: 0;
+}
+
+.forum-action-modal input,
+.forum-action-modal textarea,
+.forum-action-modal select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: .58rem .7rem;
+    border: 1px solid rgba(148, 163, 184, .36);
+    border-radius: 8px;
+    background: rgba(248, 250, 252, .78);
+    color: var(--text, #0f172a);
+    font: inherit;
+    line-height: 1.4;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.forum-action-modal textarea {
+    min-height: 82px;
+    resize: vertical;
+}
+
+.forum-action-modal .post-edit-form .edit-content-textarea {
+    height: 86px;
+    min-height: 86px;
+    max-height: 150px;
+    padding: .5rem .65rem;
+    font-size: .86rem;
+}
+
+.forum-action-modal input:focus,
+.forum-action-modal textarea:focus,
+.forum-action-modal select:focus {
+    outline: none;
+    border-color: var(--primary, #0e9aa7);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(14, 154, 167, .12);
+}
+
+.forum-action-modal .modal__actions {
+    margin-top: 1rem;
+    padding-top: .8rem;
+    border-top: 1px solid rgba(148, 163, 184, .2);
+}
+
+.forum-action-modal .modal__actions .button {
+    min-height: 36px;
+    border-radius: 8px;
+    padding: .45rem .8rem;
+    font-size: .88rem;
+    font-weight: 700;
+    transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.forum-action-modal .modal__actions .button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 16px rgba(15, 23, 42, .12);
+}
+
+.forum-action-modal textarea,
+.forum-action-modal select {
+    border-radius: 10px;
+}
+
+html.dark .forum-action-modal,
+html[data-theme="dark"] .forum-action-modal {
+    background: #0f172a !important;
+}
+
+html.dark .forum-modal-heading h2,
+html.dark .forum-modal-content-title,
+html.dark .forum-modal-field label,
+html[data-theme="dark"] .forum-modal-heading h2,
+html[data-theme="dark"] .forum-modal-content-title,
+html[data-theme="dark"] .forum-modal-field label {
+    color: var(--text, #e2e8f0);
+}
+
+html.dark .forum-modal-intro,
+html[data-theme="dark"] .forum-modal-intro {
+    color: #94a3b8;
+}
+
+html.dark .forum-action-modal input,
+html.dark .forum-action-modal textarea,
+html.dark .forum-action-modal select,
+html[data-theme="dark"] .forum-action-modal input,
+html[data-theme="dark"] .forum-action-modal textarea,
+html[data-theme="dark"] .forum-action-modal select {
+    background: rgba(30, 41, 59, .72);
+    border-color: rgba(148, 163, 184, .28);
+    color: var(--text, #e2e8f0);
+}
+
+html.dark .forum-action-modal input:focus,
+html.dark .forum-action-modal textarea:focus,
+html.dark .forum-action-modal select:focus,
+html[data-theme="dark"] .forum-action-modal input:focus,
+html[data-theme="dark"] .forum-action-modal textarea:focus,
+html[data-theme="dark"] .forum-action-modal select:focus {
+    background: rgba(15, 23, 42, .92);
+}
+
+@keyframes forumModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 520px) {
+    .modal {
+        align-items: center;
+        justify-content: center;
+        padding: .75rem;
+    }
+
+    .forum-action-modal {
+        max-width: 100%;
+        padding: 1rem;
+    }
+
+    .modal__content,
+    .modal__dialog {
+        max-height: calc(100dvh - 1.5rem);
+    }
+
+    .forum-action-modal .modal__actions {
+        flex-direction: column-reverse;
+    }
+
+    .forum-action-modal .modal__actions .button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar-header .sidebar-trigger {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border: 1px solid rgba(14, 154, 167, .18);
+        border-radius: 10px;
+        background: rgba(14, 154, 167, .08);
+        color: var(--text);
+    }
+
+    .sidebar-header .sidebar-trigger:hover,
+    .sidebar-header .sidebar-trigger:focus-visible {
+        background: rgba(14, 154, 167, .16);
+        border-color: rgba(14, 154, 167, .3);
+    }
 }
 
 

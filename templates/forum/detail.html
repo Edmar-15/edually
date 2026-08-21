@@ -27,11 +27,11 @@
             </div>
         </header>
 
-        <div class="forum-container detail-view">
+        <div class="forum-container detail-view reply-page-layout">
             <!-- Main Content -->
             <section class="forum-main">
                 <!-- Post -->
-                <article class="post-detail">
+                <article class="post-detail question-card">
                     <div class="post-header">
                         <div>
                             <h1 class="post-title">{{ post.title }}</h1>
@@ -64,26 +64,27 @@
                         <div class="post-actions">
                             <form method="post" action="{% url 'forum:upvote_post' post.id %}" class="upvote-form">
                                 {% csrf_token %}
-                                <button type="submit" class="btn-upvote {% if post.id in user_post_upvotes %}active{% endif %}" title="Upvote this discussion">{{ post.upvotes }} upvotes</button>
+                                <button type="button" class="btn-upvote upvote-btn {% if post.id in user_post_upvotes %}active{% endif %}" data-endpoint="{% url 'forum:upvote' post.id %}" title="Upvote this discussion">{{ post.upvotes }} upvotes</button>
                             </form>
-                            <span class="stat" title="Number of views">{{ post.views }} views</span>
                         </div>
                     </div>
                 </article>
 
                 <!-- Replies -->
                 <section class="replies-section">
-                    <h2>{{ post.reply_count }} {% if post.reply_count == 1 %}Response{% else %}Responses{% endif %}</h2>
+                    <div class="replies-heading">
+                        <div>
+                            <p class="section-eyebrow">Community conversation</p>
+                            <h2 id="reply-count">{{ post.reply_count }} {% if post.reply_count == 1 %}Response{% else %}Responses{% endif %}</h2>
+                        </div>
+                        <span class="replies-heading-icon" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
+                    </div>
 
-                    {% if replies %}
-                        <div class="replies-list">
+                    <div class="replies-list" id="reply-list">
+                        {% if replies %}
                             {% for reply in replies %}
                                 <article class="reply-item{% if reply.is_best_answer %} best-answer{% endif %}">
-                                    <div class="reply-body">
-                                        {{ reply.content|linebreaks }}
-                                    </div>
-
-                                    <div class="reply-footer">
+                                    <div class="reply-header">
                                         <div class="reply-author">
                                             <div class="author-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #6366f1); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.8rem;">
                                                 {{ reply.author.get_full_name|default:reply.author.username|first|upper }}
@@ -95,30 +96,45 @@
                                                 </span>
                                             </div>
                                         </div>
+                                    </div>
 
+                                    <div class="reply-body">
+                                        {{ reply.content|linebreaks }}
+                                    </div>
+
+                                    <div class="reply-footer">
                                         <div class="reply-actions">
                                             <form method="post" action="{% url 'forum:upvote_reply' reply.id %}" class="upvote-form">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn-upvote {% if reply.id in user_reply_upvotes %}active{% endif %}" title="Upvote this response">{{ reply.upvotes }} upvotes</button>
+                                                <button type="button" class="btn-upvote reply-upvote-btn {% if reply.id in user_reply_upvotes %}active{% endif %}" data-endpoint="{% url 'forum:reply_upvote' reply.id %}" title="Upvote this response"><span class="reply-upvote-count">{{ reply.upvotes }}</span> upvotes</button>
                                             </form>
                                         </div>
                                     </div>
                                 </article>
                             {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted">No responses yet. Be the first to reply!</p>
-                    {% endif %}
+                        {% else %}
+                            <p class="text-muted reply-empty-state">No responses yet. Be the first to reply!</p>
+                        {% endif %}
+                    </div>
                 </section>
 
                 <!-- Reply Form -->
                 {% if user.is_authenticated %}
-                    <section class="reply-form-section">
-                        <h3>Share Your Response</h3>
-                        <form method="post" action="{% url 'forum:create_reply' post.id %}" class="reply-form">
+                    <section class="reply-form-section reply-composer">
+                        <form method="post"
+                            action="{% url 'forum:create_reply' post.id %}"
+                            class="reply-form ajax-form"
+                            data-target="#reply-list"
+                            data-insert="append"
+                            data-after="#reply-count"
+                            data-close-modal="false">
                             {% csrf_token %}
-                            <textarea name="content" placeholder="Share your thoughts, insights, or solutions..." required class="reply-textarea" aria-label="Reply content" minlength="1"></textarea>
-                            <button type="submit" class="btn-primary" style="width: 100%;">Submit Response</button>
+                            <div class="reply-input-row">
+                                <textarea name="content" placeholder="Write a reply..." required class="reply-textarea" aria-label="Reply content" minlength="1"></textarea>
+                                <button type="submit" class="btn-primary reply-send-button" aria-label="Send reply" title="Send reply">
+                                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                </button>
+                            </div>
                         </form>
                     </section>
                 {% else %}
@@ -138,10 +154,6 @@
                             <span>{{ post.created_at|date:"M d, Y" }}</span>
                         </li>
                         <li>
-                            <strong>Views</strong>
-                            <span>{{ post.views }}</span>
-                        </li>
-                        <li>
                             <strong>Responses</strong>
                             <span>{{ post.reply_count }}</span>
                         </li>
@@ -156,11 +168,15 @@
                     <h3>Quick Links</h3>
                     <ul class="quick-links">
                         <li><a href="{% url 'forum:list' %}">All Discussions</a></li>
-                        <li><a href="{% url 'forum:create' %}">New Discussion</a></li>
+                        <li><a href="{% url 'forum:create' %}" class="js-modal-trigger">New Discussion</a></li>
                     </ul>
                 </div>
             </aside>
         </div>
     </main>
 </div>
+{% include "components/global_modal.html" %}
+<script src="{% static 'js/modal.js' %}" defer></script>
+<script src="{% static 'js/forum/forum-upvote.js' %}"></script>
+<script src="{% static 'js/forum/forum_ajax.js' %}"></script>
 {% endblock %}

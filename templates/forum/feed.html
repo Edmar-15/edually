@@ -1,5 +1,6 @@
 ﻿{% extends "base.html" %}
 {% load static %}
+{% load account_extras %}
 
 {% block title %}Forum – EduAlly{% endblock %}
 
@@ -9,6 +10,7 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script src="{% static 'js/modal.js' %}" defer></script>
     <script src="{% static 'js/forum/forum-upvote.js' %}"></script>
     <script src="{% static 'js/forum/forum_ajax.js' %}"></script>
 {% endblock %}
@@ -60,7 +62,7 @@
                             </select>
                         </div>
 
-                        <a href="{% url 'forum:create' %}" class="btn-primary">New Discussion</a>
+                        <a href="{% url 'forum:create' %}" class="btn-primary js-modal-trigger">New Discussion</a>
                     </div>
                 </div>
 
@@ -69,7 +71,16 @@
                         {% for post in posts %}
                             <article class="post-card" data-post-id="{{ post.id }}">
                                 <div class="post-meta">
-                                    <span class="post-author">by <strong>{{ post.author.get_full_name|default:post.author.username }}</strong></span>
+                                    <span class="post-author post-card-author">
+                                        <span class="post-card-avatar" aria-hidden="true">
+                                            {% if post.author.avatar %}
+                                                <img src="{{ post.author.avatar.url }}" alt="">
+                                            {% else %}
+                                                {{ post.author|initials }}
+                                            {% endif %}
+                                        </span>
+                                        <span>by <strong>{{ post.author.get_full_name|default:post.author.username }}</strong></span>
+                                    </span>
                                     <span class="post-date">{{ post.created_at|timesince }} ago</span>
                                     <span class="post-status status-{{ post.status }}">{{ post.status|upper }}</span>
                                 </div>
@@ -98,12 +109,14 @@
                                             <i class="fa-solid fa-ellipsis"></i>
                                         </button>
                                         <div class="action-menu-panel" role="menu" aria-hidden="true">
-                                            <a href="{% url 'forum:post_edit' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item" role="menuitem">
-                                                <i class="fa-solid fa-edit"></i> Edit
-                                            </a>
-                                            <a href="{% url 'forum:post_archive' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item" role="menuitem">
-                                                <i class="fa-solid fa-archive"></i> Archive
-                                            </a>
+                                            {% if request.user == post.author %}
+                                                <a href="{% url 'forum:post_edit' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item" role="menuitem">
+                                                    <i class="fa-solid fa-edit"></i> Edit
+                                                </a>
+                                                <a href="{% url 'forum:post_archive' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item" role="menuitem">
+                                                    <i class="fa-solid fa-archive"></i> Archive
+                                                </a>
+                                            {% endif %}
                                             <a href="{% url 'forum:flag_content' 'post' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item" role="menuitem">
                                                 <i class="fa-solid fa-flag"></i> Report
                                             </a>
@@ -117,7 +130,7 @@
                             <i class="fa-solid fa-inbox"></i>
                             <h3>No discussions yet</h3>
                             <p>Be the first to start a discussion!</p>
-                            <a href="{% url 'forum:create' %}" class="btn-primary">Create Discussion</a>
+                            <a href="{% url 'forum:create' %}" class="btn-primary js-modal-trigger">Create Discussion</a>
                         </div>
                     {% endif %}
                 </div>
@@ -160,4 +173,5 @@
         </div>
     </main>
 </div>
+{% include "components/global_modal.html" %}
 {% endblock %}

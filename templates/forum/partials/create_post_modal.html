@@ -1,0 +1,48 @@
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content forum-action-modal forum-action-modal--create">
+    <div class="forum-modal-heading">
+        <span class="forum-modal-icon forum-modal-icon--create" aria-hidden="true"><i class="fa-solid fa-pen-to-square"></i></span>
+        <div>
+            <p class="forum-modal-kicker">Community forum</p>
+            <h2>Start a New Discussion</h2>
+        </div>
+    </div>
+    <p class="forum-modal-intro">Ask a question, share an idea, or help someone learn.</p>
+
+    <form method="post"
+          action="{% url 'forum:create' %}"
+          class="ajax-form create-discussion-modal-form"
+          data-modal-form>
+        {% csrf_token %}
+
+        {% if error %}
+            <div class="form-error-message">{{ error }}</div>
+        {% endif %}
+
+        <div class="forum-modal-field">
+            <label for="modal-title">Discussion title <span aria-hidden="true">*</span></label>
+            <input type="text" id="modal-title" name="title" value="{{ title|default:'' }}" required maxlength="300" placeholder="What's your question or topic?">
+            <small>Be specific and descriptive.</small>
+        </div>
+
+        <div class="forum-modal-field">
+            <label for="modal-category">Category</label>
+            <select id="modal-category" name="category">
+                <option value="">Select a category...</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:'s' %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="forum-modal-field">
+            <label for="modal-content">Details <span aria-hidden="true">*</span></label>
+            <textarea id="modal-content" name="content" required rows="5" placeholder="Provide context and details to help others understand.">{{ content|default:'' }}</textarea>
+        </div>
+
+        <div class="modal__actions">
+            <button type="button" class="button secondary-button" data-close-modal>Cancel</button>
+            <button type="submit" class="button primary-button"><i class="fa-solid fa-paper-plane"></i> Post Discussion</button>
+        </div>
+    </form>
+</div>

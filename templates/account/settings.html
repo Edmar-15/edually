@@ -48,6 +48,39 @@
             display: none;
         }
 
+        .authenticator-code-input {
+            background: #ffffff;
+            color: #1f2937;
+            border-color: rgba(148, 163, 184, 0.36);
+        }
+
+        .authenticator-code-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .authenticator-code-input + label {
+            color: #64748b;
+            background: #ffffff;
+        }
+
+        html.dark .authenticator-code-input,
+        html[data-theme="dark"] .authenticator-code-input {
+            background: #0f172a !important;
+            color: #e2e8f0 !important;
+            border-color: rgba(148, 163, 184, 0.3) !important;
+        }
+
+        html.dark .authenticator-code-input::placeholder,
+        html[data-theme="dark"] .authenticator-code-input::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .authenticator-code-input + label,
+        html[data-theme="dark"] .authenticator-code-input + label {
+            color: #cbd5e1 !important;
+            background: #0f172a !important;
+        }
+
         .status-spinner {
             width: 0.9rem;
             height: 0.9rem;
@@ -266,7 +299,7 @@
                                 <p class="muted-text">Secret: <strong>{{ otp_secret }}</strong></p>
 
                                 <div class="floating-label-group" style="max-width:280px; margin:1rem 0 0.5rem;">
-                                    <input type="text" name="otp_code" id="otp_code" maxlength="6" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" aria-label="Authentication code">
+                                    <input type="text" name="otp_code" id="otp_code" class="authenticator-code-input" maxlength="6" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" aria-label="Authentication code">
                                     <label for="otp_code">Authenticator code</label>
                                 </div>
                                 <div class="authenticator-status" id="authenticator-status" hidden aria-live="polite">

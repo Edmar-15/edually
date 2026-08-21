@@ -3450,9 +3450,88 @@ html[data-theme="dark"] .avatar {
     box-shadow: 0 32px 80px rgba(15, 23, 42, 0.14);
 }
 
+#global-modal .forum-action-modal {
+    width: min(100%, 440px);
+    max-width: 440px;
+    max-height: calc(100dvh - 2rem);
+    box-sizing: border-box;
+    padding: 1.15rem 1.25rem;
+    overflow-y: auto;
+}
+
+#global-modal .forum-action-modal--create {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+html.dark #global-modal .forum-action-modal--create,
+html[data-theme="dark"] #global-modal .forum-action-modal--create {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(148, 163, 184, .2);
+}
+
+html.dark #global-modal .forum-action-modal--create h2,
+html[data-theme="dark"] #global-modal .forum-action-modal--create h2,
+html.dark #global-modal .forum-action-modal--create label,
+html[data-theme="dark"] #global-modal .forum-action-modal--create label {
+    color: #e2e8f0;
+}
+
+html.dark #global-modal .forum-action-modal--create .forum-modal-intro,
+html[data-theme="dark"] #global-modal .forum-action-modal--create .forum-modal-intro,
+html.dark #global-modal .forum-action-modal--create small,
+html[data-theme="dark"] #global-modal .forum-action-modal--create small {
+    color: #94a3b8;
+}
+
+html.dark #global-modal .forum-action-modal--create input,
+html.dark #global-modal .forum-action-modal--create select,
+html.dark #global-modal .forum-action-modal--create textarea,
+html[data-theme="dark"] #global-modal .forum-action-modal--create input,
+html[data-theme="dark"] #global-modal .forum-action-modal--create select,
+html[data-theme="dark"] #global-modal .forum-action-modal--create textarea {
+    background: #111c32 !important;
+    border-color: rgba(148, 163, 184, .3) !important;
+    color: #e2e8f0 !important;
+}
+
+html.dark #global-modal .forum-action-modal--create input::placeholder,
+html.dark #global-modal .forum-action-modal--create textarea::placeholder,
+html[data-theme="dark"] #global-modal .forum-action-modal--create input::placeholder,
+html[data-theme="dark"] #global-modal .forum-action-modal--create textarea::placeholder {
+    color: #94a3b8;
+}
+
 @media (max-width: 640px) {
     #global-modal.modal {
         padding: 0.75rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .posts-list .post-card .post-meta {
+        justify-content: flex-start !important;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .posts-list .post-card .post-meta .post-card-author,
+    .posts-list .post-card .post-meta .post-date,
+    .posts-list .post-card .post-meta .post-status {
+        align-self: flex-start;
+        margin-left: 0;
+        margin-right: 0;
+        text-align: left;
+    }
+}
+
+@media (max-width: 520px) {
+    #global-modal .forum-action-modal {
+        width: 100%;
+        max-width: 100%;
+        max-height: calc(100dvh - 1.5rem);
+        padding: 1rem;
     }
 }
 

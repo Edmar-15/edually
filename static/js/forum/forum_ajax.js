@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (insertMode === 'prepend') {
                     container.insertAdjacentHTML('afterbegin', data.html);
                 } else if (insertMode === 'append') {
+                    container.querySelector('.reply-empty-state')?.remove();
                     container.insertAdjacentHTML('beforeend', data.html);
                 } else if (insertMode === 'replace') {
                     if (container.classList.contains('modal')) {
@@ -89,6 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     container.innerHTML = data.html;
                 }
+            }
+
+            if (form.classList.contains('reply-form')) {
+                form.reset();
             }
 
             const removalId = data.deleted_id || data.archived_id;

@@ -47,7 +47,7 @@
     <div class="reply-content">{{ reply.content|linebreaks }}</div>
 
     <div class="reply-footer">
-        <button class="reply-upvote-btn{% if reply.pk in user_reply_upvotes %} has-upvoted{% endif %}"
+        <button type="button" class="reply-upvote-btn{% if reply.pk in user_reply_upvotes %} has-upvoted{% endif %}"
                 data-reply-id="{{ reply.pk }}"
                 data-endpoint="{% url 'forum:reply_upvote' reply.pk %}">
             <i class="fa-solid fa-thumbs-up"></i>

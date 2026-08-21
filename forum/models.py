@@ -120,3 +120,47 @@ class ReplyUpvote(models.Model):
     def __str__(self):
         return f"{self.user.username} upvoted a reply"
 
+
+class Report(models.Model):
+    """A user's report of a forum post or reply."""
+    POST = 'post'
+    REPLY = 'reply'
+    CONTENT_TYPE_CHOICES = [(POST, 'Post'), (REPLY, 'Reply')]
+
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='forum_reports',
+    )
+    content_type = models.CharField(max_length=10, choices=CONTENT_TYPE_CHOICES)
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, null=True, blank=True, related_name='reports'
+    )
+    reply = models.ForeignKey(
+        Reply, on_delete=models.CASCADE, null=True, blank=True, related_name='reports'
+    )
+    reason = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+    is_resolved = models.BooleanField(default=False)
+    action_taken = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(content_type='post', post__isnull=False, reply__isnull=True)
+                    | models.Q(content_type='reply', post__isnull=True, reply__isnull=False)
+                ),
+                name='report_matches_content_type',
+            ),
+            models.UniqueConstraint(
+                fields=['reporter', 'content_type', 'post', 'reply'],
+                name='one_report_per_user_content',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.reporter} reported {self.content_type}"
+
