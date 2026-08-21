@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 from django.http import JsonResponse
@@ -27,19 +27,82 @@ def notifications(request):
     return redirect('forum:list')
 
 
+def _is_moderator(user):
+    return user.is_authenticated and user.is_admin_member
+
+
+moderator_required = user_passes_test(_is_moderator)
+
+
+@moderator_required
 def moderation_dashboard(request):
-    """Legacy moderation dashboard route kept for template compatibility."""
-    return redirect('forum:list')
+    """Review unresolved reports grouped by the content they reference."""
+    reports = Report.objects.filter(is_resolved=False).select_related(
+        'reporter', 'post__author', 'post__category', 'reply__author', 'reply__post'
+    )
+    grouped = {}
+    for report in reports:
+        content_id = report.post_id if report.content_type == Report.POST else report.reply_id
+        key = (report.content_type, content_id)
+        item = grouped.setdefault(key, {
+            'content_type': report.content_type,
+            'post': report.post if report.content_type == Report.POST else None,
+            'reply': report.reply if report.content_type == Report.REPLY else None,
+            'reports': [],
+            'reporters': [],
+            'reasons': [],
+            'latest_report': report,
+        })
+        item['reports'].append(report)
+        item['reporters'].append(report.reporter.get_full_name() or report.reporter.username)
+        reason = report.get_reason_display()
+        if reason not in item['reasons']:
+            item['reasons'].append(reason)
+
+    reported_items = list(grouped.values())
+    context = {
+        'reported_items': reported_items,
+        'report_count': reports.count(),
+        'flagged_posts_count': Post.objects.filter(is_deleted=False, reports__is_resolved=False).distinct().count(),
+        'flagged_replies_count': Reply.objects.filter(is_deleted=False, reports__is_resolved=False).distinct().count(),
+    }
+    return render(request, 'forum/moderation_dashboard.html', context)
 
 
+@moderator_required
 def moderation_deleted_history(request):
-    """Legacy deleted-history route kept for template compatibility."""
-    return redirect('forum:list')
+    """List content removed through moderation."""
+    context = {
+        'deleted_posts': Post.objects.filter(is_deleted=True).select_related('author', 'category'),
+        'deleted_replies': Reply.objects.filter(is_deleted=True).select_related('author', 'post'),
+        'deleted_posts_count': Post.objects.filter(is_deleted=True).count(),
+        'deleted_replies_count': Reply.objects.filter(is_deleted=True).count(),
+    }
+    return render(request, 'forum/moderation_deleted_history.html', context)
 
 
+@moderator_required
 def moderation_deleted_content_detail(request, content_type, content_id):
-    """Legacy detail route kept for template compatibility."""
-    return redirect('forum:list')
+    """Inspect or restore deleted forum content."""
+    if content_type == Report.POST:
+        deleted_item = get_object_or_404(Post, pk=content_id, is_deleted=True)
+        related_reports = deleted_item.reports.select_related('reporter')
+    elif content_type == Report.REPLY:
+        deleted_item = get_object_or_404(Reply, pk=content_id, is_deleted=True)
+        related_reports = deleted_item.reports.select_related('reporter')
+    else:
+        return redirect('forum:moderation_deleted_history')
+
+    if request.method == 'POST' and request.POST.get('action') == 'restore':
+        deleted_item.is_deleted = False
+        deleted_item.save(update_fields=['is_deleted', 'updated_at'])
+        return redirect('forum:moderation_deleted_history')
+
+    return render(request, 'forum/moderation_deleted_content_detail.html', {
+        'content_type': content_type,
+        'deleted_item': deleted_item,
+        'related_reports': related_reports,
+    })
 
 
 @login_required
@@ -166,9 +229,26 @@ def notification_mark_all_read(request):
     return redirect('forum:list')
 
 
+@moderator_required
+@require_http_methods(['POST'])
 def resolve_report(request, report_id):
-    """Legacy moderation report route kept for compatibility."""
-    return redirect('forum:list')
+    """Apply a moderation decision to a report and its referenced content."""
+    report = get_object_or_404(Report, pk=report_id, is_resolved=False)
+    action = request.POST.get('action')
+    if action not in {'dismiss', 'delete', 'verify'}:
+        return redirect('forum:moderation_dashboard')
+
+    if action == 'delete':
+        target = report.post if report.content_type == Report.POST else report.reply
+        target.is_deleted = True
+        target.save(update_fields=['is_deleted', 'updated_at'])
+
+    Report.objects.filter(
+        is_resolved=False,
+        content_type=report.content_type,
+        **({'post': report.post} if report.content_type == Report.POST else {'reply': report.reply}),
+    ).update(is_resolved=True, action_taken=action)
+    return redirect('forum:moderation_dashboard')
 
 
 def conversation_map_json(request, post_id):

@@ -53,11 +53,11 @@
                     <div class="stat-number">{{ report_count }}</div>
                     <div class="stat-label">Unresolved Reports</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; color: white;">
+                <div class="stat-card stat-card--flagged">
                     <div class="stat-number">{{ flagged_posts_count }}</div>
                     <div class="stat-label">Flagged Posts</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border: none; color: white;">
+                <div class="stat-card stat-card--flagged stat-card--replies">
                     <div class="stat-number">{{ flagged_replies_count }}</div>
                     <div class="stat-label">Flagged Replies</div>
                 </div>
@@ -112,10 +112,10 @@
                         <div class="report-actions">
                             <form method="post" action="{% url 'forum:resolve_report' item.latest_report.id %}">
                                 {% csrf_token %}
-                                <button type="submit" name="action" value="dismiss" class="button secondary-button small-button">Dismiss</button>
-                                <button type="submit" name="action" value="delete" class="button danger-button small-button">Remove Content</button>
+                                <button type="submit" name="action" value="dismiss" class="button secondary-button small-button"><i class="fa-solid fa-check"></i> Dismiss</button>
+                                <button type="submit" name="action" value="delete" class="button danger-button small-button"><i class="fa-solid fa-trash"></i> Remove Content</button>
                                 {% if item.content_type == 'post' %}
-                                    <button type="submit" name="action" value="verify" class="button primary-button small-button">Verify Post</button>
+                                    <button type="submit" name="action" value="verify" class="button primary-button small-button"><i class="fa-solid fa-shield-check"></i> Verify Post</button>
                                 {% endif %}
                             </form>
                         </div>

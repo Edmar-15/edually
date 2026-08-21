@@ -4,6 +4,7 @@
 {% block title %}{{ post.title }} – Forum – EduAlly{% endblock %}
 
 {% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/forum.css' %}">
 {% endblock %}
 
@@ -64,10 +65,38 @@
                         <div class="post-actions">
                             <form method="post" action="{% url 'forum:upvote_post' post.id %}" class="upvote-form">
                                 {% csrf_token %}
-                                <button type="button" class="btn-upvote upvote-btn {% if post.id in user_post_upvotes %}active{% endif %}" data-endpoint="{% url 'forum:upvote' post.id %}" title="Upvote this discussion">{{ post.upvotes }} upvotes</button>
+                                <button type="button" class="btn-upvote upvote-btn {% if post.id in user_post_upvotes %}active{% endif %}" data-endpoint="{% url 'forum:upvote' post.id %}" title="Upvote this discussion">
+                                    <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+                                    <span>{{ post.upvotes }}</span>
+                                </button>
                             </form>
                         </div>
                     </div>
+
+                    {% if user.is_authenticated %}
+                        <section class="reply-form-section reply-composer">
+                            <form method="post"
+                                action="{% url 'forum:create_reply' post.id %}"
+                                class="reply-form ajax-form"
+                                data-target="#reply-list"
+                                data-insert="append"
+                                data-after="#reply-count"
+                                data-close-modal="false">
+                                {% csrf_token %}
+                                <div class="reply-input-row">
+                                    <textarea name="content" placeholder="Write a reply..." required class="reply-textarea" aria-label="Reply content" minlength="1"></textarea>
+                                    <button type="submit" class="btn-primary reply-send-button" aria-label="Send reply" title="Send reply">
+                                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+                    {% else %}
+                        <div class="login-prompt">
+                            <p>You must <a href="{% url 'account:login' %}">sign in</a> to reply to this discussion.</p>
+                        </div>
+                    {% endif %}
+
                 </article>
 
                 <!-- Replies -->
@@ -79,6 +108,7 @@
                         </div>
                         <span class="replies-heading-icon" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
                     </div>
+
 
                     <div class="replies-list" id="reply-list">
                         {% if replies %}
@@ -106,7 +136,10 @@
                                         <div class="reply-actions">
                                             <form method="post" action="{% url 'forum:upvote_reply' reply.id %}" class="upvote-form">
                                                 {% csrf_token %}
-                                                <button type="button" class="btn-upvote reply-upvote-btn {% if reply.id in user_reply_upvotes %}active{% endif %}" data-endpoint="{% url 'forum:reply_upvote' reply.id %}" title="Upvote this response"><span class="reply-upvote-count">{{ reply.upvotes }}</span> upvotes</button>
+                                                <button type="button" class="btn-upvote reply-upvote-btn {% if reply.id in user_reply_upvotes %}active{% endif %}" data-endpoint="{% url 'forum:reply_upvote' reply.id %}" title="Upvote this response">
+                                                    <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+                                                    <span class="reply-upvote-count">{{ reply.upvotes }}</span>
+                                                </button>
                                             </form>
                                         </div>
                                     </div>
@@ -116,32 +149,9 @@
                             <p class="text-muted reply-empty-state">No responses yet. Be the first to reply!</p>
                         {% endif %}
                     </div>
+
                 </section>
 
-                <!-- Reply Form -->
-                {% if user.is_authenticated %}
-                    <section class="reply-form-section reply-composer">
-                        <form method="post"
-                            action="{% url 'forum:create_reply' post.id %}"
-                            class="reply-form ajax-form"
-                            data-target="#reply-list"
-                            data-insert="append"
-                            data-after="#reply-count"
-                            data-close-modal="false">
-                            {% csrf_token %}
-                            <div class="reply-input-row">
-                                <textarea name="content" placeholder="Write a reply..." required class="reply-textarea" aria-label="Reply content" minlength="1"></textarea>
-                                <button type="submit" class="btn-primary reply-send-button" aria-label="Send reply" title="Send reply">
-                                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                        </form>
-                    </section>
-                {% else %}
-                    <div class="login-prompt">
-                        <p>You must <a href="{% url 'account:login' %}">sign in</a> to reply to this discussion.</p>
-                    </div>
-                {% endif %}
             </section>
 
             <!-- Sidebar -->

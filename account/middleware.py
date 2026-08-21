@@ -87,6 +87,7 @@ def _email_verification_exempt(request) -> bool:
             "register",
             "verify_email",
             "email_verification_required",
+            "logout_confirm",
             # consent & policies
             "consent_required",
             "terms",
@@ -123,7 +124,11 @@ class RequireEmailVerificationMiddleware(MiddlewareMixin):
             return None
 
         # If the user is logged in but still un‑verified → redirect.
-        if request.user.is_authenticated and not getattr(request.user, "email_verified", False):
+        if (
+            request.user.is_authenticated
+            and getattr(request.user, "two_factor_enabled", False)
+            and not getattr(request.user, "email_verified", False)
+        ):
             # Remember where they wanted to go so we can send them back after verification.
             request.session["post_verification_redirect"] = request.get_full_path()
             # Optional: give a one‑off toast/message (your templates already read

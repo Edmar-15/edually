@@ -469,10 +469,13 @@ html[data-theme="dark"] .nav-item.logout:hover {
     display: grid;
     grid-template-columns: 1fr 320px;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 2rem;
     background: linear-gradient(180deg, rgba(247, 250, 252, 0.98), rgba(240, 245, 248, 0.96));
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 18px;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.06);
     min-height: calc(100vh - 100px);
 }
 
@@ -856,11 +859,12 @@ html[data-theme="dark"] .forum-side-panel .sidebar-card {
    ================================================================ */
 
 .post-detail {
-    padding: 2rem;
-    background: var(--forum-bg);
-    border: 1px solid var(--forum-border);
-    border-radius: 16px;
+    padding: 2.25rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 18px;
     margin-bottom: 2rem;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
 }
 
 .post-detail .post-header {

@@ -195,7 +195,7 @@ class RoleBasedLoginView(TemplateView):
         # -------------------------------------------------
         # NEW – block login for un‑verified accounts
         # -------------------------------------------------
-        if not user.email_verified:
+        if not user.email_verified and user.two_factor_enabled:
             # 1️⃣  Store where they wanted to go after they become verified.
             request.session["post_verification_redirect"] = self.get_success_url_for_user(user)
 
@@ -548,7 +548,7 @@ class EmailVerificationRequiredView(TemplateView):
     @method_decorator(login_required(login_url='account:login'))
     def dispatch(self, *args, **kwargs):
         # If the user is already verified – send them on their way.
-        if self.request.user.email_verified:
+        if self.request.user.email_verified or not self.request.user.two_factor_enabled:
             return redirect("account:dashboard")
         return super().dispatch(*args, **kwargs)
 
