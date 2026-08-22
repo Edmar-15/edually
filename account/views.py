@@ -49,6 +49,7 @@ from .forms import (
     PasswordResetRequestForm,
     ChangePasswordForm,
     AddPasswordForm,
+    ContactForm,
 )
 from .models import UserConsent, User, StudentProfile, PushSubscription
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
@@ -247,7 +248,55 @@ def landing(request):
 
 @anonymous_required
 def contact_page(request):
-    return render(request, "account/contact.html")
+    """
+    Public “Contact Us” page.
+    GET  – renders the empty contact form.
+    POST – validates the form, sends an e‑mail to the support address,
+           shows a success/error message and redirects to avoid double‑post.
+    """
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            # Gather cleaned data
+            name = form.cleaned_data.get("name") or "Anonymous"
+            email = form.cleaned_data["email"]
+            subject = form.cleaned_data.get("subject") or "Contact Form Submission"
+            message_body = form.cleaned_data["message"]
+
+            # Build the e‑mail body
+            full_message = (
+                f"From: {name} <{email}>\n\n"
+                f"Subject: {subject}\n\n"
+                f"Message:\n{message_body}"
+            )
+
+            # Destination – use a custom SUPPORT_EMAIL if you have one,
+            # otherwise fall back to the project's default FROM address.
+            recipient = getattr(django_settings, "SUPPORT_EMAIL",
+                                 django_settings.DEFAULT_FROM_EMAIL)
+
+            try:
+                send_mail(
+                    subject=subject,
+                    message=full_message,
+                    from_email=email,
+                    recipient_list=[recipient],
+                    fail_silently=False,
+                )
+                messages.success(request,
+                                 "Your message has been sent. We'll get back to you shortly.")
+            except Exception as exc:        # pragma: no cover – email backend may be mocked
+                log.error("Failed to send contact e‑mail: %s", exc)
+                messages.error(request,
+                               "There was a problem sending your message. Please try again later.")
+
+            # Redirect (POST‑Redirect‑GET) so a refresh won’t resend the mail
+            return redirect("account:contact")
+    else:
+        form = ContactForm()
+
+    return render(request, "account/contact.html", {"form": form})
+
 
 
 def _get_recent_module_ids(request):

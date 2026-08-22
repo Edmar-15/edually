@@ -25,9 +25,6 @@
   --type-sm:   clamp(0.75rem, 0.9vw + 0.4rem, 0.875rem);/* ≈13‑14px */
   --type-lg:   clamp(1rem, 1.2vw + 0.5rem, 1.125rem);    /* ≈16‑18px */
   --type-xl:   clamp(1.125rem, 1.4vw + 0.6rem, 1.25rem);/* ≈18‑20px */
-
-  /* Toast life – can be overridden in JS */
-  --toast-life: 3000ms;
 }
 
 /* Global body tweaks – ensure the root type size is used everywhere */
@@ -1000,66 +997,6 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
     min-width: 1.8rem;
     padding: .35rem .45rem;
     font-size: .85rem;
-  }
-}
-
-/* ----------------------------------------------------------------------
-   16️⃣ TOAST NOTIFICATIONS
-   ---------------------------------------------------------------------- */
-.toast-container {
-  position: fixed;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--gap-xs);
-  z-index: 99999;
-  pointer-events: none;                 /* clicks fall through empty space */
-  width: 90%;                           /* on small screens use most of the width */
-  max-width: 380px;
-}
-.toast-container .toast {
-  min-width: 220px;
-  max-width: 360px;
-  padding: 0.75rem 1rem;
-  border-radius: 0.4rem;
-  font-size: var(--type-sm);
-  line-height: 1.4;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,.2);
-  pointer-events: auto;                /* the toast itself is clickable */
-  cursor: pointer;
-  animation:
-    toastIn .3s ease-out,
-    toastOut .4s ease-in forwards var(--toast-life);
-}
-.toast--success { background: #28a745; }
-.toast--error   { background: #dc3545; }
-.toast--info    { background: #17a2b8; }
-.toast--warning { background: #ffc107; color: #212529; }
-.toast__icon { margin-right: .5rem; flex-shrink: 0; }
-
-/* Animations (single definition) */
-@keyframes toastIn {
-  from { opacity:0; transform: translateY(-120%); }
-  to   { opacity:1; transform: translateY(0); }
-}
-@keyframes toastOut {
-  from { opacity:1; transform: translateY(0); }
-  to   { opacity:0; transform: translateY(-120%); }
-}
-
-/* ----------------------------------------------------------------------
-   17️⃣ REDUCED MOTION (respect user preference)
-   ---------------------------------------------------------------------- */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    transition-duration: .001ms !important;
-    animation-duration: .001ms !important;
   }
 }
 

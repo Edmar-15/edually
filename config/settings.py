@@ -198,6 +198,8 @@ EMAIL_USE_SSL = False
 # Default sender address
 DEFAULT_FROM_EMAIL = 'EduAlly <no-reply@yourdomain.com>'
 
+SUPPORT_EMAIL = "0323-3644@lspu.edu.ph"
+
 # ── Axes configuration ─────────────────────────────────────────────────────
 # All values are optional – the defaults are safe – but we set them
 # explicitly so you can see what is happening.

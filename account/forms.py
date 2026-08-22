@@ -465,3 +465,43 @@ class AddPasswordForm(SetPasswordForm):
                 "Password must include at least one special character."
             )
         return password
+
+
+# --------------------------------------------------------------
+#  CONTACT FORM – allows visitors to send a message to the site admins.
+# --------------------------------------------------------------
+class ContactForm(forms.Form):
+    """
+    Simple contact form displayed on the public support page.
+    Users can optionally provide their name, must provide an e‑mail
+    address and a message.  The view sends an e‑mail to the address
+    configured in ``DEFAULT_FROM_EMAIL`` (or ``SUPPORT_EMAIL`` if you
+    define one) and shows a success message.
+    """
+    name = forms.CharField(
+        required=False,
+        max_length=150,
+        widget=forms.TextInput(attrs={"placeholder": "Your name (optional)"}),
+        label="Name",
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={"placeholder": "you@example.com"}),
+        label="Your e‑mail",
+    )
+    subject = forms.CharField(
+        required=False,
+        max_length=200,
+        widget=forms.TextInput(attrs={"placeholder": "Subject (optional)"}),
+        label="Subject",
+    )
+    message = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={"placeholder": "Your message", "rows": 5}),
+        label="Message",
+    )
+
+    def clean_email(self):
+        """Normalize e‑mail to lower‑case."""
+        email = self.cleaned_data["email"].strip().lower()
+        return email

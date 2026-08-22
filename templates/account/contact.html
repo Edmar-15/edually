@@ -2,7 +2,7 @@
 {% load static %}
 {% block html_attrs %}data-force-theme="light"{% endblock %}
 
-{% block title %}Contact Us - EduAlly{% endblock %}
+{% block title %}Support - EduAlly{% endblock %}
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/landing.css' %}">
 {% endblock %}
@@ -31,11 +31,46 @@
         <section class="info-section">
             <h2>Customer Service</h2>
             <p>Need help, have feedback, or want to report a moderation issue? Our customer service team is here for you.</p>
-            <div class="hero-card" style="margin-top: 20px;">
-                <h3>Customer Service</h3>
-                <p>Email: <a href="mailto:edually.support@example.com">edually.support@example.com</a></p>
-                <p>We aim to respond to support requests as quickly as possible.</p>
-            </div>
+
+            <!-- Contact Form -->
+            <form method="post" class="contact-form" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <div class="floating-label-group input-group">
+                    {{ form.name }}
+                    <label for="{{ form.name.id_for_label }}">Name (optional)</label>
+                    {% if form.name.errors %}
+                        <div class="validation-error">{{ form.name.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="floating-label-group input-group">
+                    {{ form.email }}
+                    <label for="{{ form.email.id_for_label }}">Your e‑mail</label>
+                    {% if form.email.errors %}
+                        <div class="validation-error">{{ form.email.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="floating-label-group input-group">
+                    {{ form.subject }}
+                    <label for="{{ form.subject.id_for_label }}">Subject (optional)</label>
+                    {% if form.subject.errors %}
+                        <div class="validation-error">{{ form.subject.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="floating-label-group input-group">
+                    {{ form.message }}
+                    <label for="{{ form.message.id_for_label }}">Message</label>
+                    {% if form.message.errors %}
+                        <div class="validation-error">{{ form.message.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="button primary-button">Send</button>
+            </form>
         </section>
     </main>
 {% endblock %}
