@@ -79,9 +79,7 @@
             return cookieTheme;
         }
 
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light';
+        return 'light';
     }
 
     const initialTheme = getSavedTheme();

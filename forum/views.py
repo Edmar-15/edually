@@ -4,17 +4,13 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.urls import reverse
 from .forms import PostForm, ReplyForm
 from .models import Post, Category, Reply, PostUpvote, ReplyUpvote, Report
+from account.utils import send_push_notification
 
 
-REPORT_REASONS = (
-    ('spam', 'Spam'),
-    ('harassment', 'Harassment or bullying'),
-    ('inappropriate', 'Inappropriate content'),
-    ('misinformation', 'Misinformation'),
-    ('other', 'Other'),
-)
+REPORT_REASONS = Report.REASON_CHOICES
 
 
 def feed_redirect(request):
@@ -28,7 +24,7 @@ def notifications(request):
 
 
 def _is_moderator(user):
-    return user.is_authenticated and user.is_admin_member
+    return user.is_authenticated and user.is_teacher_member
 
 
 moderator_required = user_passes_test(_is_moderator)
@@ -409,6 +405,15 @@ def create_reply(request, post_id):
         reply.post = post
         reply.author = request.user
         reply.save()
+
+        if post.author_id != request.user.id:
+            send_push_notification(
+                post.author,
+                "New reply to your discussion",
+                f"{request.user.get_full_name() or request.user.username} replied to {post.title}",
+                reverse('forum:post_detail', kwargs={'post_id': post.pk}),
+                tag=f"forum-post-{post.pk}",
+            )
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({

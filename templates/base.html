@@ -50,9 +50,7 @@
             }
 
             if (!theme || (theme !== 'dark' && theme !== 'light')) {
-                theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-                    ? 'dark'
-                    : 'light';
+                theme = 'light';
             }
 
             html.classList.toggle('dark', theme === 'dark');
@@ -94,7 +92,7 @@
         }
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
+            navigator.serviceWorker.register('/service-worker.js?v={{ PWA_SW_VERSION|default:"20260819" }}')
                 .then(reg => {
                 // If a new SW is waiting, tell it to activate now.
                 if (reg.waiting) {
@@ -120,14 +118,22 @@
                 return false;
             }
 
+            if (!window.isSecureContext) {
+                throw new Error('Push notifications require HTTPS or localhost');
+            }
+
             if (Notification.permission === 'default') {
-                console.warn('Notification permission is not granted yet. Enable it in the browser site settings for this website first.');
-                return false;
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    if (permission === 'denied') {
+                        throw new Error('Edge is blocking notifications for this site; allow localhost in Edge site permissions');
+                    }
+                    throw new Error('Edge did not grant notification permission; choose Allow in the browser prompt');
+                }
             }
 
             if (Notification.permission === 'denied') {
-                console.warn('Notification permission is denied for this site. Enable it in the browser site settings before subscribing.');
-                return false;
+                throw new Error('Edge is blocking notifications for this site; allow localhost in Edge site permissions');
             }
 
             const registration = await navigator.serviceWorker.ready;
@@ -138,10 +144,10 @@
 
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}')
+                applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}').buffer
             });
 
-            await fetch('{% url "account:api_push_subscribe" %}', {
+            const response = await fetch('{% url "account:api_push_subscribe" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -155,6 +161,11 @@
                     }
                 })
             });
+
+            if (!response.ok) {
+                await subscription.unsubscribe();
+                return false;
+            }
 
             return true;
         };

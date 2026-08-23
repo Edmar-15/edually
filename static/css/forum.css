@@ -469,7 +469,8 @@ html[data-theme="dark"] .nav-item.logout:hover {
     display: grid;
     grid-template-columns: 1fr 320px;
     gap: 2rem;
-    max-width: 1600px;
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
     padding: 2rem;
     background: linear-gradient(180deg, rgba(247, 250, 252, 0.98), rgba(240, 245, 248, 0.96));
@@ -481,6 +482,41 @@ html[data-theme="dark"] .nav-item.logout:hover {
 
 .forum-main {
     min-width: 0;
+}
+
+.forum-push-button {
+    margin-left: auto;
+}
+
+.forum-push-button.is-enabled {
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.12);
+}
+
+.forum-push-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.forum-push-modal {
+    max-width: 480px;
+}
+
+.forum-push-modal .modal__body p {
+    margin: 0;
+    color: var(--muted, #64748b);
+    line-height: 1.6;
+}
+
+.forum-push-modal .modal__body p + p {
+    margin-top: 0.75rem;
+}
+
+.forum-push-modal__status {
+    min-height: 1.5em;
+    color: #b45309 !important;
+    font-size: 0.9rem;
 }
 
 .forum-sidebar {

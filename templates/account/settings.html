@@ -547,16 +547,16 @@
 
     async function ensureServiceWorkerRegistration() {
         if (!('serviceWorker' in navigator)) {
-            return false;
+            throw new Error('This browser does not support service workers');
         }
 
         try {
-            const version = '{{ settings.PWA_SW_VERSION|default:"20240727" }}';
+            const version = '{{ PWA_SW_VERSION|default:"20260819" }}';
             await navigator.serviceWorker.register('{% url "service-worker" %}?v=' + version);
             return true;
         } catch (error) {
             console.error('Failed to register service worker for push alerts.', error);
-            return false;
+                throw new Error('The service worker could not be registered. Use localhost or HTTPS.');
         }
     }
 
@@ -633,9 +633,17 @@
             return false;
         }
 
-        if (Notification.permission === 'default') {
-            setNotificationStatus('Notifications are not enabled for this website yet. Please allow Notifications in Brave site settings for this site, then refresh the page and try again.');
+        if (!window.isSecureContext) {
+            setNotificationStatus('Push notifications require HTTPS or localhost.');
             return false;
+        }
+
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                setNotificationStatus('Notifications were not enabled for this site.');
+                return false;
+            }
         }
 
         if (Notification.permission === 'denied') {
@@ -652,10 +660,10 @@
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}')
+            applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}').buffer
         });
 
-        await fetch('{% url "account:api_push_subscribe" %}', {
+        const response = await fetch('{% url "account:api_push_subscribe" %}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -669,6 +677,12 @@
                 }
             })
         });
+
+        if (!response.ok) {
+            await subscription.unsubscribe();
+            setNotificationStatus('Push notifications could not be enabled. Please try again.');
+            return false;
+        }
 
         applyNotificationToggleState(true);
         setNotificationStatus('Push notifications are enabled. New announcements will now show as browser notifications.');
@@ -692,7 +706,7 @@
         const endpoint = existingSubscription.endpoint;
         await existingSubscription.unsubscribe();
 
-        await fetch('{% url "account:api_push_unsubscribe" %}', {
+        const response = await fetch('{% url "account:api_push_unsubscribe" %}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -700,6 +714,11 @@
             },
             body: JSON.stringify({ endpoint })
         });
+
+        if (!response.ok) {
+            setNotificationStatus('Push notifications could not be disabled. Please try again.');
+            return false;
+        }
 
         applyNotificationToggleState(false);
         setNotificationStatus('Push notifications are now turned off for this browser.');
@@ -728,6 +747,9 @@
                 }
             } catch (error) {
                 console.error('Failed to update browser notification preference.', error);
+                setNotificationStatus(error && error.message
+                    ? error.message
+                    : 'Could not update push notifications. Check your browser push settings and try again.');
                 event.target.checked = !shouldEnable;
             }
         });

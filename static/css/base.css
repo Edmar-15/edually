@@ -122,16 +122,6 @@ html {
   transition: background-color var(--transition), color var(--transition) !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pgn-bg:        var(--pgn-bg-dark);
-    --pgn-fg:        var(--pgn-fg-dark);
-    --pgn-muted:     var(--pgn-muted-dark);
-    --pgn-border:   var(--pgn-border-dark);
-    --pgn-primary:  var(--pgn-primary-dark);
-  }
-}
-
 html.dark {
   --bg: #0b1220;
   --surface: #111827;

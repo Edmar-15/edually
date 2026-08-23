@@ -1,20 +1,18 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moderation Dashboard – EduAlly Admin</title>
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+{% block title %}Moderation Dashboard – EduAlly{% endblock %}
+
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/feed.css' %}">
     <link rel="stylesheet" href="{% static 'css/helper.css' %}">
-</head>
-<body>
-    {% include 'components/navigations.html' %}
+{% endblock %}
 
+{% block content %}
+<div class="dashboard-container">
+    {% include 'components/navigations.html' %}
     <main class="main-content">
         <header class="content-header">
             <div class="header-left">
@@ -41,7 +39,7 @@
         <section class="forum-page">
             <header class="forum-header">
                 <div>
-                    <p class="eyebrow">Admin Panel</p>
+                    <p class="eyebrow">Teacher Moderation</p>
                     <h1>Moderation Dashboard</h1>
                     <p class="intro-text">Review reported content and manage forum moderation.</p>
                 </div>
@@ -131,11 +129,10 @@
 
         </section>
     </main>
-    {# 1️⃣ Global modal placeholder – only once per page #}
     {% include "components/global_modal.html" %}
-
-    {# 2️⃣ Modal JS – load after the DOM #}
-    <script src="{% static 'js/modal.js' %}" defer></script>
 </div>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/modal.js' %}" defer></script>
+{% endblock %}

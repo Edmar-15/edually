@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="{% static 'css/forum.css' %}">
 {% endblock %}
 
+{% block extra_js %}
+    <script src="{% static 'js/forum/forum-push.js' %}" defer></script>
+{% endblock %}
+
 {% block content %}
 <div class="dashboard-container">
     {% include "components/navigations.html" %}
@@ -26,6 +30,9 @@
                     <i class="fa-solid fa-arrow-left"></i> Back
                 </a>
             </div>
+            <button type="button" class="button secondary-circle small-button forum-push-button" data-forum-push aria-label="Enable push notifications" title="Enable push notifications">
+                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+            </button>
         </header>
 
         <div class="forum-container detail-view reply-page-layout">

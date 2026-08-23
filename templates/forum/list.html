@@ -14,6 +14,7 @@
     <script src="{% static 'js/modal.js' %}" defer></script>
     <script src="{% static 'js/forum/forum-upvote.js' %}"></script>
     <script src="{% static 'js/forum/forum_ajax.js' %}"></script>
+    <script src="{% static 'js/forum/forum-push.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -31,6 +32,9 @@
                 </button>
                 <p>Community Forum</p>
             </div>
+            <button type="button" class="button secondary-circle small-button forum-push-button" data-forum-push aria-label="Enable push notifications" title="Enable push notifications">
+                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+            </button>
         </header>
 
         <div class="forum-container">

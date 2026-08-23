@@ -126,6 +126,13 @@ class Report(models.Model):
     POST = 'post'
     REPLY = 'reply'
     CONTENT_TYPE_CHOICES = [(POST, 'Post'), (REPLY, 'Reply')]
+    REASON_CHOICES = (
+        ('spam', 'Spam'),
+        ('harassment', 'Harassment or bullying'),
+        ('inappropriate', 'Inappropriate content'),
+        ('misinformation', 'Misinformation'),
+        ('other', 'Other'),
+    )
 
     reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -139,7 +146,7 @@ class Report(models.Model):
     reply = models.ForeignKey(
         Reply, on_delete=models.CASCADE, null=True, blank=True, related_name='reports'
     )
-    reason = models.CharField(max_length=50)
+    reason = models.CharField(max_length=50, choices=REASON_CHOICES)
     description = models.TextField(blank=True)
     is_resolved = models.BooleanField(default=False)
     action_taken = models.CharField(max_length=50, blank=True)
