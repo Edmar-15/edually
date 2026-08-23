@@ -233,7 +233,7 @@ class DeleteAccountForm(forms.Form):
 # account/forms.py
 class ProfileForm(forms.ModelForm):
     """Form displayed on the profile page for editing allowed fields."""
-
+    
     # ── extra profile fields ──
     student_id = forms.CharField(
         required=False,
@@ -289,8 +289,11 @@ class ProfileForm(forms.ModelForm):
                 self.fields["year_level"].widget.attrs["readonly"] = True
                 self.fields["year_level"].widget.attrs["style"] = "background:#f5f5f5;cursor:not-allowed;"
             else:
-                # Not set yet → required (the field already has `required=False` for the form,
-                # but we enforce it here so the user cannot skip it.)
+                # -----------------------------------------------------------------
+                #  No year set yet → make the field required and show a placeholder
+                # -----------------------------------------------------------------
+                placeholder = ("", "Select year level…")
+                self.fields["year_level"].choices = [placeholder] + self.YEAR_CHOICES
                 self.fields["year_level"].required = True
 
     # -------------------------- validation ------------------------------------

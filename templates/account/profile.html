@@ -33,7 +33,7 @@
                                 stroke-linecap="round"/>
                         </svg>
                     </button>
-                    <span style="margin-left: 0.75rem;">Profile</span>
+                    <p>Profile</p>
                 </div>
                 <div class="header-right">
                     <a href="{% url 'account:settings' %}" class="button primary-button profile-settings-link">
@@ -55,7 +55,7 @@
                 <section class="profile-page profile-section">
                     <div class="profile-grid">
                 <!-- LEFT – read‑only overview -->
-                <aside class="profile-overview-card">
+                <div class="profile-overview-card">
                     <div class="profile-top">
                         <div class="profile-avatar">
                             {% load account_extras %}
@@ -105,12 +105,12 @@
                         <a href="{% url 'account:profile_edit' %}?tab=profile" class="button primary-button">Edit Profile</a>
 
                         {% if request.user.has_usable_password %}
-                            <a href="{% url 'account:password_change' %}?tab=password" class="button outline-button">Change Password</a>
+                            <a href="{% url 'account:profile_edit' %}?tab=password" class="button outline-button">Change Password</a>
                         {% else %}
                             <a href="{% url 'account:add_password' %}?tab=password" class="button outline-button">Set Password</a>
                         {% endif %}
                     </div>
-                </aside>
+                </div>
             </div>
         </section>
             </div>

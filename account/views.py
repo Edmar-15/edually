@@ -1137,7 +1137,7 @@ def google_callback(request):
                 "Please complete your profile by adding a Student ID and selecting your Year Level."
             )
             # Send them straight to the edit‑profile page – they cannot skip it.
-            return redirect("account:profile_edit")
+            return redirect(reverse("account:profile_edit") + "?tab=profile")
 
     next_url = request.GET.get("state") or request.session.get(
         "post_consent_redirect", reverse("account:dashboard")
