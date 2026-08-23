@@ -26,7 +26,7 @@ def teacher_required_for_mutation(view_func):
     for users that belong to the *Teacher* group.
     """
     @wraps(view_func)
-    @login_required                     # always require a logged‑in user
+    @login_required(login_url='account:login')      # always require a logged‑in user
     def _wrapped(request, *args, **kwargs):
         # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
         # 1️⃣  GET → public read‑only
@@ -116,6 +116,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 PAGE_SIZE = 9                     # 3 cards per row × 2 rows = 6 cards (matches your static layout)
 
+@login_required(login_url='account:login')
 @require_GET
 @ensure_csrf_cookie               # sets csrftoken for later POSTs
 def api_subject_list(request):
@@ -187,7 +188,7 @@ def api_subject_list(request):
 # -----------------------------------------------------------------
 # 2️⃣  POST – create a new subject (logged‑in users only)
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_POST
 def api_subject_create(request):
@@ -223,7 +224,7 @@ def api_subject_create(request):
 # -----------------------------------------------------------------
 # 3️⃣  PUT – update a subject (owner only)
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["PUT", "PATCH"])
 def api_subject_update(request, pk):
@@ -259,7 +260,7 @@ def api_subject_update(request, pk):
 # -----------------------------------------------------------------
 # 4️⃣  DELETE – remove a subject (owner only)
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["DELETE"])
 def api_subject_delete(request, pk):
@@ -275,7 +276,7 @@ def api_subject_delete(request, pk):
     return JsonResponse({}, status=204)   # empty body
 
 
-@login_required
+@login_required(login_url='account:login')
 def subject_modules(request, subject_id):
     """
     Renders a normal HTML page that shows **all modules belonging to
@@ -308,7 +309,7 @@ def subject_modules(request, subject_id):
     return render(request, "slm/subject_modules.html", context)
 
 
-
+@login_required(login_url='account:login')
 @require_GET
 def api_subject_year_choices(request):
     """
@@ -326,6 +327,7 @@ def api_subject_year_choices(request):
         {"choices": [{"value": v, "label": l} for v, l in Subject.YEAR_CHOICES]}
     )
     
+
 def module_to_dict(module, request_user=None):
     """
     Convert a Module instance into the flat dict the front‑end expects.
@@ -365,6 +367,7 @@ def validate_module_file(file_obj):
     return True
 
 
+@login_required(login_url='account:login')
 @require_GET
 @ensure_csrf_cookie
 def api_module_list(request, subject_id):
@@ -400,7 +403,7 @@ def api_module_list(request, subject_id):
     return JsonResponse(payload, safe=False)
 
 
-@login_required
+@login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["POST"])
 def api_module_create(request, subject_id):
@@ -462,7 +465,7 @@ def api_module_create(request, subject_id):
 # -----------------------------------------------------------------
 # 6️⃣  UPDATE – PUT a module (JSON only – no file change)
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["PUT", "PATCH"])
 def api_module_update(request, pk):
@@ -533,7 +536,7 @@ def api_module_update(request, pk):
     return JsonResponse(module_to_dict(module, request_user=request.user))
 
 
-@login_required
+@login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["DELETE"])
 def api_module_delete(request, pk):
@@ -561,7 +564,7 @@ def api_module_delete(request, pk):
     return JsonResponse({}, status=204)
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["POST"])
 def api_module_file_replace(request, pk):
     """
@@ -631,7 +634,7 @@ def api_module_file_replace(request, pk):
     )
 
 
-@login_required
+@login_required(login_url='account:login')
 def module_detail(request, subject_id, module_id):
     """
     Render a page that shows the extracted HTML of a module.
@@ -685,6 +688,7 @@ def personal_material_to_dict(pm, request_user=None):
 # -------------------------------------------------------------
 # 1️⃣  LIST – GET (paginated)
 # -------------------------------------------------------------
+@login_required(login_url='account:login')
 @require_GET
 @ensure_csrf_cookie
 def api_personal_material_list(request):
@@ -758,7 +762,7 @@ def api_personal_material_list(request):
 # -------------------------------------------------------------
 # 2️⃣  CREATE – POST (multipart/form‑data)
 # -------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["POST"])
 def api_personal_material_create(request):
     """
@@ -812,7 +816,7 @@ def api_personal_material_create(request):
 # -------------------------------------------------------------
 # 3️⃣  UPDATE – PUT / PATCH (JSON only – metadata)
 # -------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["PUT", "PATCH"])
 def api_personal_material_update(request, pk):
     """PUT /slm/api/personal-materials/<pk>/ – edit title / visibility."""
@@ -845,7 +849,7 @@ def api_personal_material_update(request, pk):
 # -------------------------------------------------------------
 # 4️⃣  DELETE – DELETE
 # -------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["DELETE"])
 def api_personal_material_delete(request, pk):
     """DELETE /api/personal-materials/<pk>/delete/"""
@@ -868,7 +872,7 @@ def api_personal_material_delete(request, pk):
 # -------------------------------------------------------------
 # 5️⃣  FILE REPLACE – POST (multipart)
 # -------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["POST"])
 def api_personal_material_file_replace(request, pk):
     """
@@ -910,7 +914,7 @@ def api_personal_material_file_replace(request, pk):
     return JsonResponse(personal_material_to_dict(pm, request_user=request.user))
 
 
-@login_required
+@login_required(login_url='account:login')
 def personal_material_detail(request, pk):
     """
     Show the extracted HTML preview (if any) for a PersonalMaterial.
@@ -948,7 +952,7 @@ def personal_material_detail(request, pk):
     return response
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["GET", "POST"])
 def api_highlight(request, pk, target_type):
     """
@@ -1050,7 +1054,7 @@ def api_highlight(request, pk, target_type):
     )
     
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["GET", "POST"])
 def api_annotation(request, pk, target_type):
     """
@@ -1137,7 +1141,7 @@ def management(request):
     return render(request, "slm/management.html")
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["GET", "POST"])
 def subject_edit_modal(request, pk):
     """
@@ -1174,7 +1178,7 @@ def subject_edit_modal(request, pk):
     return JsonResponse({"html": html})
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["GET", "POST"])
 def module_edit_modal(request, pk):
     module = get_object_or_404(Module, pk=pk)
@@ -1246,7 +1250,7 @@ def module_edit_modal(request, pk):
     return JsonResponse({"html": html})
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["GET", "POST"])
 def personal_material_edit_modal(request, pk):
     pm = get_object_or_404(PersonalMaterial, pk=pk)
@@ -1295,7 +1299,7 @@ def personal_material_edit_modal(request, pk):
 # -----------------------------------------------------------------
 #  ARCHIVE – GET returns the modal HTML, POST toggles the flag
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 @teacher_required_for_mutation                     # teachers only for subjects / modules
 @require_http_methods(["GET", "POST"])
 def api_subject_archive(request, pk):
@@ -1333,7 +1337,7 @@ def api_subject_archive(request, pk):
     )
 
 
-@login_required
+@login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["GET", "POST"])
 def api_module_archive(request, pk):
@@ -1364,7 +1368,7 @@ def api_module_archive(request, pk):
     )
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["GET", "POST"])
 def api_personal_material_archive(request, pk):
     """Same structure but for a PersonalMaterial (no teacher‑only restriction)."""

@@ -105,7 +105,7 @@ def moderation_deleted_content_detail(request, content_type, content_id):
     })
 
 
-@login_required
+@login_required(login_url='account:login')
 def flag_content(request, content_type, content_id):
     """Display and save a report for a post or reply."""
     if content_type == 'reply':
@@ -163,7 +163,7 @@ def flag_content(request, content_type, content_id):
     return render(request, 'forum/flag_content.html', context)
 
 
-@login_required
+@login_required(login_url='account:login')
 def post_edit(request, post_id):
     post = get_object_or_404(Post, pk=post_id, author=request.user, is_deleted=False)
     form = PostForm(request.POST or None, instance=post)
@@ -184,7 +184,7 @@ def post_edit(request, post_id):
     return render(request, 'forum/partials/post_edit_form.html', context)
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(['GET', 'POST'])
 def post_archive(request, post_id):
     post = get_object_or_404(Post, pk=post_id, author=request.user, is_deleted=False)
@@ -202,33 +202,39 @@ def post_archive(request, post_id):
     return JsonResponse({'html': html})
 
 
+@login_required(login_url='account:login')
 def verify_post(request, post_id):
     """Backward-compatible alias for older verification actions."""
     return redirect('forum:post_detail', post_id=post_id)
 
 
+@login_required(login_url='account:login')
 def reply_edit(request, reply_id):
     """Backward-compatible alias for older reply edit links."""
     reply = get_object_or_404(Reply, pk=reply_id, is_deleted=False)
     return redirect('forum:post_detail', post_id=reply.post_id)
 
 
+@login_required(login_url='account:login')
 def reply_delete(request, reply_id):
     """Backward-compatible alias for older reply deletion links."""
     reply = get_object_or_404(Reply, pk=reply_id, is_deleted=False)
     return redirect('forum:post_detail', post_id=reply.post_id)
 
 
+@login_required(login_url='account:login')
 def notification_goto(request, notification_id):
     """Legacy notification route kept for compatibility."""
     return redirect('forum:list')
 
 
+@login_required(login_url='account:login')
 def notification_mark_all_read(request):
     """Legacy notification route kept for compatibility."""
     return redirect('forum:list')
 
 
+@login_required(login_url='account:login')
 @moderator_required
 @require_http_methods(['POST'])
 def resolve_report(request, report_id):
@@ -251,12 +257,14 @@ def resolve_report(request, report_id):
     return redirect('forum:moderation_dashboard')
 
 
+@login_required(login_url='account:login')
 def conversation_map_json(request, post_id):
     """Compatibility route for legacy conversation map data loads."""
     post = get_object_or_404(Post, pk=post_id, is_deleted=False)
     return JsonResponse({'post_id': post.pk, 'title': post.title})
 
 
+@login_required(login_url='account:login')
 def forum_list(request):
     """List all forum posts with optional filtering"""
     posts = Post.objects.filter(
@@ -297,6 +305,7 @@ def forum_list(request):
     return render(request, 'forum/list.html', context)
 
 
+@login_required(login_url='account:login')
 def post_detail(request, post_id):
     """Show a single post with all replies"""
     post = get_object_or_404(Post, pk=post_id, is_deleted=False, is_archived=False)
@@ -323,7 +332,7 @@ def post_detail(request, post_id):
     return render(request, 'forum/detail.html', context)
 
 
-@login_required
+@login_required(login_url='account:login')
 def create_post(request):
     """Create a new forum post"""
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -381,7 +390,7 @@ def create_post(request):
     return render(request, 'forum/create.html', {'categories': categories})
 
 
-@login_required
+@login_required(login_url='account:login')
 def create_reply(request, post_id):
     """Add a reply to a post"""
     post = get_object_or_404(Post, pk=post_id, is_deleted=False, is_archived=False)
@@ -415,7 +424,7 @@ def create_reply(request, post_id):
     return redirect('forum:post_detail', post_id=post.pk)
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["POST"])
 def upvote_post(request, post_id):
     """Upvote or un-upvote a forum post."""
@@ -443,7 +452,7 @@ def upvote_post(request, post_id):
     return redirect('forum:post_detail', post_id=post.pk)
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_http_methods(["POST"])
 def upvote_reply(request, reply_id):
     """Upvote or un-upvote a reply."""

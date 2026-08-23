@@ -815,7 +815,7 @@ def verify_2fa(request):
 # -----------------------------------------------------------------
 #   DANGER ZONE – account deletion (updated to require password confirm)
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 def delete_account_modal(request):
     form = DeleteAccountForm(user=request.user)
     html = render_to_string(
@@ -829,7 +829,7 @@ def delete_account_modal(request):
     return JsonResponse({"html": html})
 
 
-@login_required
+@login_required(login_url='account:login')
 @require_POST
 def delete_account(request):
     """Hard-delete the user after confirming the current password."""
@@ -1145,7 +1145,7 @@ def google_callback(request):
     return redirect(next_url)
 
 
-@login_required
+@login_required(login_url='account:login')
 def archives_home(request):
     """
     Tiny landing page for the archive section.
@@ -1158,7 +1158,7 @@ def archives_home(request):
 # -----------------------------------------------------------------
 #   Forum posts
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 def archive_forum_post_list(request):
     posts = (
         Post.objects.filter(author=request.user, is_archived=True)
@@ -1168,7 +1168,7 @@ def archive_forum_post_list(request):
                   {'posts': posts})
 
 
-@login_required
+@login_required(login_url='account:login')
 def archive_forum_post_detail(request, pk):
     post = get_object_or_404(
         Post,
@@ -1192,7 +1192,7 @@ def archive_forum_post_detail(request, pk):
 # -----------------------------------------------------------------
 #   Modules (subject owner only)
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 def archive_module_list(request):
     modules = (
         Module.objects.filter(
@@ -1206,7 +1206,7 @@ def archive_module_list(request):
                   {'modules': modules})
 
 
-@login_required
+@login_required(login_url='account:login')
 def archive_module_detail(request, pk):
     module = get_object_or_404(
         Module,
@@ -1230,7 +1230,7 @@ def archive_module_detail(request, pk):
 # -----------------------------------------------------------------
 #   Personal Materials (owner only)
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 def archive_personal_material_list(request):
     materials = (
         PersonalMaterial.objects.filter(
@@ -1244,7 +1244,7 @@ def archive_personal_material_list(request):
                   {'materials': materials})
 
 
-@login_required
+@login_required(login_url='account:login')
 def archive_personal_material_detail(request, pk):
     pm = get_object_or_404(
         PersonalMaterial,
@@ -1265,7 +1265,7 @@ def archive_personal_material_detail(request, pk):
                   'account/partials/archive_personal_material_detail.html',
                   {'pm': pm})
     
-@login_required
+@login_required(login_url='account:login')
 def archive_forum_post_delete_modal(request, pk):
     """
     Return the modal HTML that asks the user to confirm permanent deletion
@@ -1286,7 +1286,7 @@ def archive_forum_post_delete_modal(request, pk):
 
 
 @require_POST
-@login_required
+@login_required(login_url='account:login')
 def archive_forum_post_delete(request, pk):
     """AJAX endpoint – actually delete the archived post."""
     post = get_object_or_404(
@@ -1308,7 +1308,7 @@ def archive_forum_post_delete(request, pk):
 # -----------------------------------------------------------------
 #  DELETE MODAL – Module
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 def archive_module_delete_modal(request, pk):
     """Return the modal that confirms permanent deletion of an archived module."""
     module = get_object_or_404(
@@ -1326,7 +1326,7 @@ def archive_module_delete_modal(request, pk):
 
 
 @require_POST
-@login_required
+@login_required(login_url='account:login')
 def archive_module_delete(request, pk):
     """AJAX endpoint – delete the archived module (file removed as well)."""
     module = get_object_or_404(
@@ -1351,7 +1351,7 @@ def archive_module_delete(request, pk):
 # -----------------------------------------------------------------
 #  DELETE MODAL – Personal material
 # -----------------------------------------------------------------
-@login_required
+@login_required(login_url='account:login')
 def archive_personal_material_delete_modal(request, pk):
     """Return the modal that confirms permanent deletion of an archived material."""
     pm = get_object_or_404(
@@ -1369,7 +1369,7 @@ def archive_personal_material_delete_modal(request, pk):
 
 
 @require_POST
-@login_required
+@login_required(login_url='account:login')
 def archive_personal_material_delete(request, pk):
     """AJAX endpoint – delete the archived personal material."""
     pm = get_object_or_404(
@@ -1397,7 +1397,7 @@ def teacher_required_for_mutation(view_func):
     for users that belong to the *Teacher* group.
     """
     @wraps(view_func)
-    @login_required                     # always require a logged‑in user
+    @login_required(login_url='account:login')               # always require a logged‑in user
     def _wrapped(request, *args, **kwargs):
         # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
         # 1️⃣  GET → public read‑only
