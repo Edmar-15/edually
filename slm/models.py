@@ -237,45 +237,62 @@ class HighlightAnswer(models.Model):
         blank=True,
         help_text="PersonalMaterial the answer belongs to (null when it belongs to a module).",
     )
-    # -----------------------------------------------------------------
-    # NEW – the user that created the answer
-    # -----------------------------------------------------------------
-    owner    = models.ForeignKey(
+    owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="highlight_answers",
         help_text="User that asked the question – guarantees a private cache."
     )
-
-    # store the *canonical* version of the highlighted text (lower‑case)
+    # store the *canonical* version of the highlighted text (lower‑cased)
     query = models.CharField(max_length=255,
                              help_text="Exact highlighted text (lower‑cased).")
-
     # -----------------------------------------------------------------
-    # NEW columns – one per level (still keep the old JSON field for a migration
-    # window – it will be left untouched)
+    # NEW – character offsets of the highlighted fragment within the
+    # extracted HTML (the string that is shown on the preview page).
+    # ``start_offset`` is inclusive, ``end_offset`` is exclusive.
     # -----------------------------------------------------------------
-    answer_simplified = models.TextField(blank=True, null=True,
-                                         help_text="Simplified explanation.")
-    answer_technical  = models.TextField(blank=True, null=True,
-                                         help_text="Technical explanation.")
+    start_offset = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Character offset where the highlight starts in the extracted HTML.",
+    )
+    end_offset = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Character offset where the highlight ends (exclusive).",
+    )
 
+    answer_simplified = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Simplified explanation."
+    )
+    answer_technical = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Technical explanation."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # now unique per module + query + owner
-        unique_together = ("module", "personal_material", "query", "owner")
+        # a user can have many highlights for the same text – they are
+        # distinguished by the character offsets.
+        unique_together = (
+            "module",
+            "personal_material",
+            "query",
+            "owner",
+            "start_offset",
+            "end_offset",
+        )
         ordering = ["-created_at"]
         verbose_name = "Highlight answer"
         verbose_name_plural = "Highlight answers"
-        
+
 
 class HighlightAnnotation(models.Model):
     """
     A free‑form note attached to a highlighted fragment.
-    One row per (owner, query, target) – the same query can be
-    annotated many times (different owners).  For a given owner we keep
-    only the newest one.
     """
     module = models.ForeignKey(
         Module,
@@ -299,10 +316,22 @@ class HighlightAnnotation(models.Model):
         related_name="highlight_annotations",
         help_text="User that created the annotation.",
     )
-    # store the *canonical* (lower‑cased) version of the highlighted text
     query = models.CharField(
         max_length=255,
         help_text="Exact highlighted text (lower‑cased).",
+    )
+    # -----------------------------------------------------------------
+    # NEW – offsets so the annotation is tied to the exact occurrence.
+    # -----------------------------------------------------------------
+    start_offset = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Character offset where the annotation starts.",
+    )
+    end_offset = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Character offset where the annotation ends (exclusive).",
     )
     note = models.TextField(
         blank=True,
@@ -311,8 +340,15 @@ class HighlightAnnotation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # a user may have only one annotation per query per target
-        unique_together = ("module", "personal_material", "query", "owner")
+        # a user may have only one annotation per query + offset per target
+        unique_together = (
+            "module",
+            "personal_material",
+            "query",
+            "owner",
+            "start_offset",
+            "end_offset",
+        )
         ordering = ["-created_at"]
         verbose_name = "Highlight annotation"
         verbose_name_plural = "Highlight annotations"

@@ -1,25 +1,10 @@
 // static/js/slm/highlight_ai.js
 // ---------------------------------------------------------------
-// Highlight → Ask‑AI widget (works for Modules *and* PersonalMaterials)
+// Highlight → Ask‑AI widget (occurrence‑aware)
 // ---------------------------------------------------------------
 
 import { csrftoken } from "./utils.js";
 
-/**
- * Initialise the Highlight‑→‑Ask‑AI behaviour.
- *
- * @param {HTMLElement} toolbar        – the floating toolbar that already exists
- *                                      (it will be hidden after a selection).
- * @param {number|null} moduleId      – PK of the current object (Module or
- *                                      PersonalMaterial).  Pass `null` if the
- *                                      page does **not** have a highlight API.
- * @param {HTMLElement|string} contentScope – selector or element that should
- *                                            accept highlighting.
- * @param {string} apiBase           – base URL for the highlight API.
- *                                      Defaults to the original “modules” endpoint.
- *                                      Example for personal material:
- *                                      '/slm/api/personal-materials/'
- */
 export function initHighlightAI(
     toolbar,
     moduleId,
@@ -31,9 +16,7 @@ export function initHighlightAI(
      * ----------------------------------------------------------------- */
     const hasValidId = Number.isInteger(moduleId) && moduleId > 0;
     if (!hasValidId) {
-        console.info(
-            "[highlight_ai] No valid id supplied – highlight cache disabled."
-        );
+        console.info("[highlight_ai] No valid id supplied – highlight cache disabled.");
     }
 
     /* -----------------------------------------------------------------
@@ -48,7 +31,8 @@ export function initHighlightAI(
     // -----------------------------------------------------------
     // 1️⃣ Keep the *original* HTML that we received from the server.
     //    Every time a new query is added we will reset the container
-    //    to this clean copy and then re‑apply **all** stored highlights.
+    //    to this clean copy and then re‑apply **only the stored
+    //    occurrences**.
     // -----------------------------------------------------------
     const _originalHtml = contentRoot.innerHTML;
 
@@ -62,7 +46,7 @@ export function initHighlightAI(
         "highlight-history-popover"
     );
 
-    const historyEntries = [];
+    const historyEntries = []; // [{text,start,end,levels:[]}]
     let historyFocusTimer = null;
 
     // Reset any stale UI when the script initialises on a new page.
@@ -74,56 +58,99 @@ export function initHighlightAI(
      * ----------------------------------------------------------------- */
     const normalise = (txt) => (txt || "").trim().toLowerCase();
 
-    // Internal maps keyed by the *normalised* query.
-    const highlightStates = new Map(); // { simplified, technical, annotated }
-    const answerStore = new Map();     // { simplified:'HTML', technical:'HTML' }
-    const annotationStore = new Map(); // { query → note }
+    /* -----------------------------------------------------------------
+     * 4️⃣ Internal storage – keyed by a *unique occurrence key*
+     * ----------------------------------------------------------------- */
+    const occurrenceKey = (q, s, e) => `${q}|${s}-${e}`; // q is lower‑cased
+    const occurrences = new Map(); // key → {queryOrig, queryLC, start, end,
+                                  // simplified, technical, annotated,
+                                  // note, simplifiedAnswer, technicalAnswer}
 
-    /**
-     * Store a note for a query, add visual cue, and refresh tooltip/ history.
-     */
-    const setAnnotation = (query, note) => {
-        const q = normalise(query);
-        if (!q) return;
+    /* -----------------------------------------------------------------
+     * 5️⃣ Helpers – compute offsets and reverse‑lookup nodes
+     * ----------------------------------------------------------------- */
+    const computeOffsets = (range) => {
+        const walker = document.createTreeWalker(
+            contentRoot,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        let node;
+        let running = 0;
+        let start = null;
+        let end = null;
 
-        // 1️⃣ remember the note
-        annotationStore.set(q, note);
+        while ((node = walker.nextNode())) {
+            if (start === null && node === range.startContainer) {
+                start = running + range.startOffset;
+            }
+            if (end === null && node === range.endContainer) {
+                end = running + range.endOffset;
+            }
+            running += node.textContent.length;
+            if (start !== null && end !== null) break;
+        }
+        if (start === null) start = 0;
+        if (end === null) end = start;
+        return { start, end };
+    };
 
-        // 2️⃣ toggle the visual flag
-        const cur = highlightStates.get(q) || {
-            simplified: false,
-            technical: false,
-            annotated: false,
-        };
-        cur.annotated = true;
-        highlightStates.set(q, cur);
-
-        // 3️⃣ rebuild UI
-        _refreshAllHighlights();
-
-        // 4️⃣ add to history UI (layer = annotation)
-        addHistoryEntry(query, "annotation");
+    /** Convert a character offset back into a (node, offset) pair. */
+    const nodeFromOffset = (root, charIndex) => {
+        const walker = document.createTreeWalker(
+            root,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        let node;
+        let count = 0;
+        while ((node = walker.nextNode())) {
+            const len = node.textContent.length;
+            if (count + len >= charIndex) {
+                return { node, offset: charIndex - count };
+            }
+            count += len;
+        }
+        return null;
     };
 
     /* -----------------------------------------------------------------
-     * 4️⃣ Helper to show a visual feedback message (replaces alerts)
+     * 6️⃣ CSS class helper (simplified / technical / both)
+     * ----------------------------------------------------------------- */
+    const getHighlightClassName = (occ) => {
+        const simp = !!occ.simplified;
+        const tech = !!occ.technical;
+        if (simp && tech) return "highlight-marked highlight-marked--both";
+        if (simp) return "highlight-marked highlight-marked--simplified";
+        if (tech) return "highlight-marked highlight-marked--technical";
+        return "highlight-marked";
+    };
+
+    const buildAnswerText = (occ) => {
+        const parts = [];
+        if (occ.simplifiedAnswer) parts.push(`Simplified:\n${occ.simplifiedAnswer}`);
+        if (occ.technicalAnswer) parts.push(`Technical:\n${occ.technicalAnswer}`);
+        if (occ.note) parts.push(`Annotation:\n${occ.note}`);
+        return parts.join("\n\n");
+    };
+
+    /* -----------------------------------------------------------------
+     * 7️⃣ UI helpers (messages, history UI, badge, etc.)
      * ----------------------------------------------------------------- */
     const showMessage = (container, text, type = "success") => {
-        // Remove any previous message
         const old = container.querySelector(".annotation-message");
         if (old) old.remove();
 
         const msg = document.createElement("div");
         msg.className = `annotation-message annotation-message--${type}`;
         msg.textContent = text;
-
-        // Very lightweight inline styling – you can move this to CSS later
         msg.style.fontSize = "0.9em";
         msg.style.marginTop = "4px";
         msg.style.color = type === "error" ? "#d00" : "#080";
 
         container.appendChild(msg);
-        // Fade out after a short while
         setTimeout(() => {
             msg.style.transition = "opacity 0.4s";
             msg.style.opacity = "0";
@@ -131,14 +158,11 @@ export function initHighlightAI(
         }, 1500);
     };
 
-    /* -----------------------------------------------------------------
-     * 4️⃣ History UI helpers
-     * ----------------------------------------------------------------- */
     const toggleHistoryPopover = () => {
         if (!historyPopover || !historyToggle) return;
         const next = historyPopover.hidden;
         historyPopover.hidden = !next;
-        historyToggle.setAttribute("aria-expanded", String(next));
+        historyToggle.setAttribute("aria-expanded", String(!next));
     };
     const closeHistoryPopover = () => {
         if (!historyPopover || !historyToggle) return;
@@ -159,7 +183,7 @@ export function initHighlightAI(
             return;
         }
 
-        // newest first (the UI already shows the newest at the bottom – we keep that)
+        // newest first (UI shows newest at the bottom)
         historyEntries.slice().reverse().forEach((entry) => {
             const li = document.createElement("li");
             li.className = "module-content-history__item";
@@ -179,31 +203,32 @@ export function initHighlightAI(
             });
 
             li.append(termSpan, levelsDiv);
-            li.addEventListener("click", () => focusHighlightByQuery(entry.text));
+            li.addEventListener("click", () => focusHighlight(entry.start, entry.end));
             li.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    focusHighlightByQuery(entry.text);
+                    focusHighlight(entry.start, entry.end);
                 }
             });
-
             historyList.appendChild(li);
         });
 
         if (historyCount) {
-            historyCount.textContent = `${historyEntries.length} ${
-                historyEntries.length === 1 ? "item" : "items"
-            }`;
+            const n = historyEntries.length;
+            historyCount.textContent = `${n} ${n === 1 ? "item" : "items"}`;
         }
     };
-    const addHistoryEntry = (text, level) => {
+
+    const addHistoryEntry = (text, level, start, end) => {
         const clean = (text || "").trim();
         if (!clean) return;
-        const existing = historyEntries.find((e) => e.text === clean);
+        const existing = historyEntries.find(
+            (e) => e.text === clean && e.start === start && e.end === end
+        );
         if (existing) {
             if (!existing.levels.includes(level)) existing.levels.push(level);
         } else {
-            historyEntries.push({ text: clean, levels: [level] });
+            historyEntries.push({ text: clean, start, end, levels: [level] });
         }
         updateHistoryUI();
     };
@@ -218,84 +243,113 @@ export function initHighlightAI(
             .forEach((span) => span.classList.remove("highlight-history-focused"));
     };
 
-    const focusHighlightByQuery = (query) => {
-        const q = normalise(query);
-        if (!q) return;
-
-        const matches = Array.from(
-            contentRoot.querySelectorAll(
-                ".highlight-marked[data-highlight-query]"
-            )
-        ).filter(
-            (span) => normalise(span.dataset.highlightQuery) === q
-        );
-
+    const focusHighlight = (start, end) => {
+        const selector = `.highlight-marked[data-start="${start}"][data-end="${end}"]`;
+        const matches = Array.from(contentRoot.querySelectorAll(selector));
         if (!matches.length) return;
-
         clearHistoryFocus();
         matches.forEach((span) => span.classList.add("highlight-history-focused"));
-
         const target = matches[0];
         target.scrollIntoView({ behavior: "smooth", block: "center" });
         closeHistoryPopover();
-
-        historyFocusTimer = window.setTimeout(() => {
-            clearHistoryFocus();
-        }, 2200);
+        historyFocusTimer = window.setTimeout(clearHistoryFocus, 2200);
     };
 
     /* -----------------------------------------------------------------
-     * 5️⃣ Highlight state / answer storage
+     * 8️⃣ Create / update occurrence data structures
      * ----------------------------------------------------------------- */
-    const setHighlightState = (query, level) => {
-        const q = normalise(query);
-        if (!q) return;
-        const cur = highlightStates.get(q) || {
-            simplified: false,
-            technical: false,
-            annotated: false,
-        };
-        cur[level] = true;
-        highlightStates.set(q, cur);
+    const getOrCreateOccurrence = (queryOrig, start, end) => {
+        const queryLC = normalise(queryOrig);
+        const key = occurrenceKey(queryLC, start, end);
+        let occ = occurrences.get(key);
+        if (!occ) {
+            occ = {
+                queryOrig,
+                queryLC,
+                start,
+                end,
+                simplified: false,
+                technical: false,
+                annotated: false,
+                note: "",
+                simplifiedAnswer: "",
+                technicalAnswer: "",
+            };
+            occurrences.set(key, occ);
+        }
+        return occ;
+    };
+
+    const setOccurrenceState = (queryOrig, start, end, level) => {
+        const occ = getOrCreateOccurrence(queryOrig, start, end);
+        occ[level] = true;
         _refreshAllHighlights();
     };
 
-    const setHighlightAnswer = (query, level, answer) => {
-        const q = normalise(query);
-        if (!q) return;
-        const cur = answerStore.get(q) || {};
-        cur[level] = answer;
-        answerStore.set(q, cur);
-        setHighlightState(q, level);
-    };
-
-    const buildAnswerText = (query) => {
-        const q = normalise(query);
-        if (!q) return "";
-        const ans = answerStore.get(q) || {};
-        const parts = [];
-        if (ans.simplified) parts.push(`Simplified:\n${ans.simplified}`);
-        if (ans.technical) parts.push(`Technical:\n${ans.technical}`);
-        if (annotationStore.has(q)) {
-            parts.push(`Annotation:\n${annotationStore.get(q)}`);
+    const setOccurrenceAnswer = (queryOrig, start, end, level, answer) => {
+        const occ = getOrCreateOccurrence(queryOrig, start, end);
+        if (level === "simplified") {
+            occ.simplifiedAnswer = answer;
+            occ.simplified = true;
+        } else {
+            occ.technicalAnswer = answer;
+            occ.technical = true;
         }
-        return parts.join("\n\n");
+        _refreshAllHighlights();
+    };
+
+    const setOccurrenceAnnotation = (queryOrig, start, end, note) => {
+        const occ = getOrCreateOccurrence(queryOrig, start, end);
+        occ.note = note;
+        occ.annotated = true;
+        _refreshAllHighlights();
     };
 
     /* -----------------------------------------------------------------
-     * 6️⃣ CSS class helper (simplified / technical / both)
+     * 9️⃣ Apply a single stored occurrence (by offset) to the DOM
      * ----------------------------------------------------------------- */
-    const getHighlightClassName = (state) => {
-        const simp = !!state?.simplified;
-        const tech = !!state?.technical;
-        if (simp && tech) return "highlight-marked highlight-marked--both";
-        if (simp) return "highlight-marked highlight-marked--simplified";
-        if (tech) return "highlight-marked highlight-marked--technical";
-        return "highlight-marked";
+    const applyOccurrence = (occ) => {
+        const { start, end, queryOrig } = occ;
+        const startInfo = nodeFromOffset(contentRoot, start);
+        const endInfo = nodeFromOffset(contentRoot, end);
+        if (!startInfo || !endInfo) return;
+
+        const range = document.createRange();
+        range.setStart(startInfo.node, startInfo.offset);
+        range.setEnd(endInfo.node, endInfo.offset);
+
+        const span = document.createElement("span");
+        span.className = getHighlightClassName(occ);
+        span.dataset.highlightQuery = queryOrig;
+        span.dataset.start = occ.start;
+        span.dataset.end = occ.end;
+        span.dataset.answer = buildAnswerText(occ);
+        span.appendChild(range.extractContents());
+        range.insertNode(span);
+        attachHighlightEvents(span, queryOrig);
     };
 
     /* -----------------------------------------------------------------
-     * 7️⃣ Tooltip handling (click‑to‑show) – now tab‑bed
+     * 10️⃣ Refresh all highlights – implementation
+     * ----------------------------------------------------------------- */
+    const refreshAllHighlightsImpl = () => {
+        // 1️⃣ reset to the untouched preview
+        contentRoot.innerHTML = _originalHtml;
+
+        // 2️⃣ re‑apply every stored occurrence (sorted by start so offsets stay valid)
+        const occs = Array.from(occurrences.values()).sort((a, b) => a.start - b.start);
+        occs.forEach(applyOccurrence);
+    };
+
+    /* -----------------------------------------------------------------
+     * 11️⃣ Refresh wrapper – used throughout the code
+     * ----------------------------------------------------------------- */
+    const _refreshAllHighlights = () => {
+        refreshAllHighlightsImpl();
+    };
+
+    /* -----------------------------------------------------------------
+     * 12️⃣ Tooltip handling (click‑to‑show) – now offset‑aware.
      * ----------------------------------------------------------------- */
     let activeTooltip = null; // only one tooltip at a time
 
@@ -306,8 +360,13 @@ export function initHighlightAI(
         }
     };
 
-    const fetchAiAnswer = async (query, level) => {
-        const payload = { query, level };
+    const fetchAiAnswer = async (query, level, start, end) => {
+        const payload = {
+            query,
+            level,
+            start_offset: start,
+            end_offset: end,
+        };
         const resp = await fetch(`${apiBase}${moduleId}/highlight/`, {
             method: "POST",
             credentials: "same-origin",
@@ -317,28 +376,26 @@ export function initHighlightAI(
             },
             body: JSON.stringify(payload),
         });
-        const data = await resp.json(); // {answer, cached}
+        const data = await resp.json();
         if (!data.cached && data.answer) {
-            setHighlightAnswer(query, level, data.answer);
+            setOccurrenceAnswer(query, start, end, level, data.answer);
         }
         return data;
     };
 
-    const renderAiSection = (query, container) => {
-        const q = normalise(query);
-        const stored = answerStore.get(q) || {};
+    const renderAiSection = (query, start, end, container) => {
+        const occ = getOrCreateOccurrence(query, start, end);
         const levels = ["simplified", "technical"];
         levels.forEach((lvl) => {
             const lvlCap = lvl.charAt(0).toUpperCase() + lvl.slice(1);
             const wrapper = document.createElement("div");
             wrapper.className = "ai-answer-level";
 
-            if (stored[lvl]) {
+            const storedAns = lvl === "simplified" ? occ.simplifiedAnswer : occ.technicalAnswer;
+            if (storedAns) {
                 wrapper.innerHTML = `
                     <h4>${lvlCap} answer</h4>
-                    <div class="ai-answer-content">${renderMarkdown(
-                    stored[lvl]
-                )}</div>
+                    <div class="ai-answer-content">${renderMarkdown(storedAns)}</div>
                 `;
             } else {
                 const btn = document.createElement("button");
@@ -349,9 +406,9 @@ export function initHighlightAI(
                     const old = btn.textContent;
                     btn.textContent = "Thinking…";
                     try {
-                        const data = await fetchAiAnswer(query, lvl);
+                        const data = await fetchAiAnswer(query, lvl, start, end);
                         if (data && data.answer) {
-                            renderAiSection(query, container); // redraw with cached answer
+                            renderAiSection(query, start, end, container); // redraw with cached answer
                         } else {
                             console.error("AI answer error:", data);
                         }
@@ -362,19 +419,14 @@ export function initHighlightAI(
                 });
                 wrapper.appendChild(btn);
             }
+
             container.appendChild(wrapper);
         });
     };
 
-    /**
-     * Render the annotation editor.
-     * This function is used both inside the tooltip and inside the stand‑alone
-     * annotation widget. It now loads any existing note and displays a visual
-     * feedback message instead of alerts.
-     */
-    const renderAnnotationSection = (query, container) => {
-        const q = normalise(query);
-        const existing = annotationStore.get(q) || "";
+    const renderAnnotationSection = (query, start, end, container) => {
+        const occ = getOrCreateOccurrence(query, start, end);
+        const existing = occ.note || "";
         const wrapper = document.createElement("div");
         wrapper.className = "annotation-edit";
         wrapper.innerHTML = `
@@ -390,68 +442,80 @@ export function initHighlightAI(
 
         saveBtn.addEventListener("click", async () => {
             const note = textarea.value.trim();
-
             if (!note) {
                 showMessage(wrapper, "Annotation cannot be empty.", "error");
                 return;
             }
-
-            // give user feedback while the request is in flight
             saveBtn.disabled = true;
-            const oldBtnText = saveBtn.textContent;
+            const old = saveBtn.textContent;
             saveBtn.textContent = "Saving…";
 
             try {
-                const resp = await fetch(
-                    `${apiBase}${moduleId}/annotation/`,
-                    {
-                        method: "POST",
-                        credentials: "same-origin",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRFToken": csrftoken,
-                        },
-                        body: JSON.stringify({ query, note }),
-                    }
-                );
+                const resp = await fetch(`${apiBase}${moduleId}/annotation/`, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken,
+                    },
+                    body: JSON.stringify({
+                        query,
+                        note,
+                        start_offset: start,
+                        end_offset: end,
+                    }),
+                });
                 const data = await resp.json();
                 if (!resp.ok) throw new Error(data.error || "Failed");
-                setAnnotation(query, data.note ?? note);
+                setOccurrenceAnnotation(query, start, end, data.note ?? note);
                 textarea.classList.add("annotation-saved");
-                // Remove the class after a short pause (2 seconds works well)
                 setTimeout(() => textarea.classList.remove("annotation-saved"), 600);
             } catch (e) {
                 console.error("Saving annotation failed:", e);
                 showMessage(wrapper, "Could not save annotation.", "error");
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.textContent = oldBtnText;
+                saveBtn.textContent = old;
             }
         });
 
         container.appendChild(wrapper);
     };
 
-    const showTooltip = (span, query) => {
-        const q = normalise(query);
-        if (!q) return;
+    const showTooltip = (span) => {
+        const query = span.dataset.highlightQuery;
+        const start = Number(span.dataset.start);
+        const end = Number(span.dataset.end);
+        if (!query) return;
 
-        // close any previous tooltip (toggle same fragment → hide)
-        if (activeTooltip && activeTooltip.dataset.for === q) {
+        // toggle same fragment → hide
+        if (
+            activeTooltip &&
+            activeTooltip.dataset.for === query &&
+            activeTooltip.dataset.start === `${start}`
+        ) {
             removeTooltip();
             return;
         }
         removeTooltip();
 
+        // -------------------------------------------------------------
+        // Find the stored occurrence that matches this span.
+        // -------------------------------------------------------------
+        const occKey = occurrenceKey(normalise(query), start, end);
+        const occ = occurrences.get(occKey);
+
         const tip = document.createElement("div");
         tip.className = "highlight-answer-tooltip";
-        tip.dataset.for = q;
+        tip.dataset.for = query;
+        tip.dataset.start = `${start}`;
+        tip.dataset.end = `${end}`;
 
         const header = document.createElement("div");
         header.className = "highlight-tooltip-header";
 
-        // Decide which tab should be active by default.
-        const defaultTab = annotationStore.has(q) ? "annotation" : "ai";
+        // Default tab – give preference to annotation if it exists.
+        const defaultTab = occ && occ.annotated ? "annotation" : "ai";
 
         header.innerHTML = `
             <button class="tooltip-tab ${
@@ -470,9 +534,9 @@ export function initHighlightAI(
         const renderSection = (section) => {
             body.innerHTML = "";
             if (section === "ai") {
-                renderAiSection(q, body);
+                renderAiSection(query, start, end, body);
             } else {
-                renderAnnotationSection(q, body);
+                renderAnnotationSection(query, start, end, body);
             }
         };
         // Show the default section immediately.
@@ -483,12 +547,7 @@ export function initHighlightAI(
             if (!btn) return;
             header
                 .querySelectorAll(".tooltip-tab")
-                .forEach((t) =>
-                    t.classList.toggle(
-                        "tooltip-tab--active",
-                        t === btn
-                    )
-                );
+                .forEach((t) => t.classList.toggle("tooltip-tab--active", t === btn));
             renderSection(btn.dataset.target);
         });
         tip.addEventListener("mousedown", (e) => e.stopPropagation());
@@ -514,14 +573,14 @@ export function initHighlightAI(
 
         span.addEventListener("click", (e) => {
             e.stopPropagation();
-            showTooltip(span, query);
+            showTooltip(span);
         });
 
         span.setAttribute("tabindex", "0");
         span.addEventListener("keydown", (e) => {
             if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                showTooltip(span, query);
+                showTooltip(span);
             }
         });
 
@@ -529,111 +588,7 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 8️⃣ Keep existing spans in sync with internal maps
-     * ----------------------------------------------------------------- */
-    const syncHighlightSpans = () => {
-        if (!contentRoot) return;
-        const spans = Array.from(
-            contentRoot.querySelectorAll(".highlight-marked")
-        );
-        spans.forEach((span) => {
-            const query =
-                span.dataset.highlightQuery ||
-                span.textContent?.trim().toLowerCase() ||
-                "";
-            if (!query) return;
-
-            const state = highlightStates.get(query) || {
-                simplified: false,
-                technical: false,
-                annotated: false,
-            };
-
-            // base colour (simplified / technical / both / none)
-            span.className = getHighlightClassName(state);
-
-            // annotation visual cue
-            if (state.annotated && annotationStore.has(query)) {
-                span.classList.add("highlight-marked--annotated");
-                span.dataset.annotation = annotationStore.get(query);
-            } else {
-                span.classList.remove("highlight-marked--annotated");
-                delete span.dataset.annotation;
-            }
-
-            span.dataset.answer = buildAnswerText(query);
-            attachHighlightEvents(span, query);
-        });
-    };
-
-    /* -----------------------------------------------------------------
-     * 9️⃣ Apply a highlight to *all* occurrences of a query
-     * ----------------------------------------------------------------- */
-    const applyHighlightToQuery = (query, state) => {
-        const q = normalise(query);
-        if (!q) return;
-
-        const className = getHighlightClassName(state);
-        const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const regex = new RegExp(`(${escaped})`, "gi"); // case‑insensitive
-
-        const walker = document.createTreeWalker(
-            contentRoot,
-            NodeFilter.SHOW_TEXT,
-            {
-                acceptNode: (node) => {
-                    if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
-                    if (!node.nodeValue.toLowerCase().includes(q))
-                        return NodeFilter.FILTER_REJECT;
-                    // No “skip‑already‑highlighted” guard – we always start
-                    // from a clean copy of the preview HTML.
-                    return NodeFilter.FILTER_ACCEPT;
-                },
-            }
-        );
-
-        const textNodes = [];
-        let cur = walker.nextNode();
-        while (cur) {
-            textNodes.push(cur);
-            cur = walker.nextNode();
-        }
-
-        textNodes.forEach((textNode) => {
-            const txt = textNode.nodeValue || "";
-            if (!regex.test(txt)) return;
-            regex.lastIndex = 0;
-            const frag = document.createDocumentFragment();
-            let last = 0;
-            let match;
-            while ((match = regex.exec(txt)) !== null) {
-                if (match.index > last) {
-                    frag.appendChild(
-                        document.createTextNode(txt.slice(last, match.index))
-                    );
-                }
-                const span = document.createElement("span");
-                span.className = className;
-                span.dataset.highlightQuery = q;
-                span.dataset.answer = buildAnswerText(q);
-                span.appendChild(document.createTextNode(match[1])); // preserve case
-                attachHighlightEvents(span, q);
-                frag.appendChild(span);
-                last = match.index + match[1].length;
-            }
-            if (last < txt.length) {
-                frag.appendChild(document.createTextNode(txt.slice(last)));
-            }
-            if (frag.childNodes.length) {
-                textNode.parentNode.replaceChild(frag, textNode);
-            }
-        });
-
-        syncHighlightSpans();
-    };
-
-    /* -----------------------------------------------------------------
-     * 🔟 UI: Choice widget (Ask AI | Annotate)
+     * 13️⃣ UI: Choice widget (Ask AI | Annotate)
      * ----------------------------------------------------------------- */
     const createChoiceWidget = (range) => {
         const choice = document.createElement("div");
@@ -649,9 +604,7 @@ export function initHighlightAI(
         const top = rect.bottom + window.scrollY + 6;
         const left = Math.min(
             rect.left + window.scrollX,
-            document.documentElement.clientWidth -
-                choice.offsetWidth -
-                8
+            document.documentElement.clientWidth - choice.offsetWidth - 8
         );
         choice.style.top = `${top}px`;
         choice.style.left = `${left}px`;
@@ -687,7 +640,7 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 🔟 Mini‑AI widget (the small box that appears after selecting “Ask AI”)
+     * 14️⃣ Mini‑AI widget (the small box that appears after selecting “Ask AI”)
      * ----------------------------------------------------------------- */
     const createAIMiniWidget = (range) => {
         const mini = document.createElement("div");
@@ -705,9 +658,7 @@ export function initHighlightAI(
         const top = rect.bottom + window.scrollY + 6;
         const left = Math.min(
             rect.left + window.scrollX,
-            document.documentElement.clientWidth -
-                mini.offsetWidth -
-                8
+            document.documentElement.clientWidth - mini.offsetWidth - 8
         );
         mini.style.top = `${top}px`;
         mini.style.left = `${left}px`;
@@ -731,13 +682,14 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 🔟 Perform the AI request (used by the mini‑AI widget)
+     * 15️⃣ Perform the AI request (used by the mini‑AI widget)
      * ----------------------------------------------------------------- */
     const performAIQuery = async (range, level) => {
         const sel = window.getSelection();
         const query = sel.toString().trim();
         if (!query) return;
 
+        const { start, end } = computeOffsets(range);
         const btn = mini.querySelector(".ai-get");
         const old = btn.textContent;
         btn.textContent = "Thinking…";
@@ -751,13 +703,19 @@ export function initHighlightAI(
                     "Content-Type": "application/json",
                     "X-CSRFToken": csrftoken,
                 },
-                body: JSON.stringify({ query, level }),
+                body: JSON.stringify({
+                    query,
+                    level,
+                    start_offset: start,
+                    end_offset: end,
+                }),
             });
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json(); // {answer, cached}
-            renderAnswer(mini, data.answer, !!data.cached);
-            setHighlightAnswer(query, level, data.answer);
-            addHistoryEntry(query, level);
+            if (data && data.answer) {
+                setOccurrenceAnswer(query, start, end, level, data.answer);
+                addHistoryEntry(query, level, start, end);
+            }
         } catch (err) {
             console.error("AI request failed:", err);
             renderAnswer(
@@ -772,7 +730,7 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 🔟 Annotation widget (simple textarea + save) – used from the choice widget
+     * 16️⃣ Annotation widget (simple textarea + save) – used from the choice widget
      * ----------------------------------------------------------------- */
     const createAnnotationWidget = (range) => {
         const ann = document.createElement("div");
@@ -782,18 +740,21 @@ export function initHighlightAI(
         const top = rect.bottom + window.scrollY + 6;
         const left = Math.min(
             rect.left + window.scrollX,
-            document.documentElement.clientWidth -
-                ann.offsetWidth -
-                8
+            document.documentElement.clientWidth - ann.offsetWidth - 8
         );
         ann.style.top = `${top}px`;
         ann.style.left = `${left}px`;
 
-        // Compute the exact query text that was selected.
+        // Compute offsets once and store them on the widget.
+        const { start, end } = computeOffsets(range);
+        ann.dataset.startOffset = start;
+        ann.dataset.endOffset = end;
+
+        // The exact selected text (preserve case)
         const query = range.toString().trim();
 
         // Populate the widget with the annotation editor (pre‑filled if it exists)
-        renderAnnotationSection(query, ann);
+        renderAnnotationSection(query, start, end, ann);
 
         const clickOutside = (e) => {
             if (!ann.contains(e.target)) {
@@ -808,7 +769,7 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 11️⃣ Markdown → HTML (tiny renderer – no external libs)
+     * 17️⃣ Markdown → HTML (tiny renderer – unchanged)
      * ----------------------------------------------------------------- */
     const escapeHtml = (v) =>
         v.replace(/&/g, "&amp;")
@@ -845,7 +806,6 @@ export function initHighlightAI(
             listOpen = false,
             tableRows = [],
             inTable = false;
-
         const closeList = () => {
             if (listOpen) {
                 html += listType === "ol" ? "</ol>" : "</ul>";
@@ -862,7 +822,6 @@ export function initHighlightAI(
                 sep = rows[1] || [],
                 body = rows.slice(2);
             const isTable = sep.every((c) => /^:?-+:?$/.test(c));
-
             if (isTable) {
                 html += "<table class=\"message-table\"><thead><tr>";
                 header.forEach((c) => (html += `<th>${inlineFormatting(c)}</th>`));
@@ -879,7 +838,6 @@ export function initHighlightAI(
             tableRows = [];
             inTable = false;
         };
-
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const t = line.trim();
@@ -901,9 +859,7 @@ export function initHighlightAI(
             if (/^>\s?/.test(t)) {
                 closeList();
                 flushTable();
-                html += `<blockquote>${inlineFormatting(
-                    t.replace(/^>\s?/, "")
-                )}</blockquote>`;
+                html += `<blockquote>${inlineFormatting(t.replace(/^>\s?/, ""))}</blockquote>`;
                 continue;
             }
             if (/^```/.test(t)) {
@@ -975,7 +931,6 @@ export function initHighlightAI(
             flushTable();
             html += `<p>${inlineFormatting(t)}</p>`;
         }
-
         closeList();
         flushTable();
         return html;
@@ -991,17 +946,7 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 13️⃣ Visual marking of the selected fragment
-     * ----------------------------------------------------------------- */
-    const markSelection = (range, level) => {
-        const selected = range.toString().trim();
-        if (!selected) return;
-        // Turn the flag on – the UI will be rebuilt automatically.
-        setHighlightState(selected, level);
-    };
-
-    /* -----------------------------------------------------------------
-     * 14️⃣ Bind selection → choice widget
+     * 18️⃣ Bind selection → choice widget
      * ----------------------------------------------------------------- */
     let mini = null; // currently open mini/choice/annotation widget
 
@@ -1051,23 +996,10 @@ export function initHighlightAI(
     };
 
     /* -----------------------------------------------------------------
-     * 15️⃣ Pre‑load cached highlights *and* populate the history UI
+     * 19️⃣ Pre‑load cached highlights & annotations (with offsets)
      * ----------------------------------------------------------------- */
-    const _refreshAllHighlights = () => {
-        // 1️⃣ reset to the untouched preview
-        contentRoot.innerHTML = _originalHtml;
-
-        // 2️⃣ re‑apply every stored query according to its state
-        highlightStates.forEach((state, q) => {
-            applyHighlightToQuery(q, state);
-        });
-
-        // 3️⃣ make sure answer / annotation data‑attributes are up‑to‑date
-        syncHighlightSpans();
-    };
-
     const preloadExistingData = async () => {
-        if (!hasValidId) return; // static pages (no id → nothing to preload)
+        if (!hasValidId) return; // static pages – nothing to preload
 
         try {
             const [answersResp, annResp] = await Promise.all([
@@ -1077,33 +1009,42 @@ export function initHighlightAI(
 
             // ----- cached answers -------------------------------------------------
             if (answersResp.ok) {
-                const data = await answersResp.json(); // {answers:[{query, answer:{…}}]}
+                const data = await answersResp.json(); // {answers:[{query,start_offset,end_offset,answer:{…}}]}
                 (data.answers || []).forEach((item) => {
                     const query = (item.query || "").trim();
-                    if (!query) return;
-                    const ans = item.answer || {};
-                    if (ans.simplified) {
-                        setHighlightAnswer(query, "simplified", ans.simplified);
-                        addHistoryEntry(query, "simplified");
-                    }
-                    if (ans.technical) {
-                        setHighlightAnswer(query, "technical", ans.technical);
-                        addHistoryEntry(query, "technical");
+                    const start = item.start_offset;
+                    const end = item.end_offset;
+                    if (!query || start == null || end == null) return;
+                    const occ = getOrCreateOccurrence(query, start, end);
+                    if (item.answer) {
+                        if (item.answer.simplified) {
+                            occ.simplifiedAnswer = item.answer.simplified;
+                            occ.simplified = true;
+                            addHistoryEntry(query, "simplified", start, end);
+                        }
+                        if (item.answer.technical) {
+                            occ.technicalAnswer = item.answer.technical;
+                            occ.technical = true;
+                            addHistoryEntry(query, "technical", start, end);
+                        }
                     }
                 });
             }
 
             // ----- saved annotations -------------------------------------------------
             if (annResp.ok) {
-                const annData = await annResp.json(); // {annotations:[{query, note, …}]}
+                const annData = await annResp.json(); // {annotations:[{query,start_offset,end_offset,note,…}]}
                 (annData.annotations || []).forEach((a) => {
                     const query = (a.query || "").trim();
-                    if (!query) return;
-                    setAnnotation(query, a.note);
+                    const start = a.start_offset;
+                    const end = a.end_offset;
+                    if (!query || start == null || end == null) return;
+                    setOccurrenceAnnotation(query, start, end, a.note);
+                    addHistoryEntry(query, "annotation", start, end);
                 });
             }
 
-            // ----- finally rebuild UI once -----------------------------------------
+            // ----- finally rebuild UI -------------------------------------------------
             _refreshAllHighlights();
         } catch (e) {
             console.warn("Could not preload highlights/annotations:", e);
@@ -1113,8 +1054,8 @@ export function initHighlightAI(
     // -----------------------------------------------------------------
     // Initialise everything
     // -----------------------------------------------------------------
-    preloadExistingData();          // fills the maps
-    updateHistoryUI();              // history UI (might be empty)
+    preloadExistingData(); // fills the maps
+    updateHistoryUI(); // history UI (may be empty)
 
     if (historyToggle) {
         historyToggle.addEventListener("click", (ev) => {
@@ -1124,21 +1065,16 @@ export function initHighlightAI(
     }
 
     // -----------------------------------------------------------------
-    // Mouse / touch handling (same as before, but we keep the tooltip
-    // alive when the click is inside it)
+    // Mouse / touch handling (same as before, but tooltips stay when
+    // clicking inside them)
     // -----------------------------------------------------------------
     document.addEventListener("mouseup", onSelectionDone);
     document.addEventListener("touchend", (e) => setTimeout(() => onSelectionDone(e), 10));
 
     document.addEventListener("selectionchange", () => {
         const sel = window.getSelection();
-
         const hasSelection =
-            sel &&
-            sel.toString().trim() &&
-            isSelectionWithinContent(sel);
-
-        // If an annotation widget is open we must keep it.
+            sel && sel.toString().trim() && isSelectionWithinContent(sel);
         const keepOpen = mini && mini.classList.contains("annotation-widget");
 
         if (!hasSelection && !keepOpen) {
@@ -1149,16 +1085,13 @@ export function initHighlightAI(
     });
 
     document.addEventListener("mousedown", (e) => {
-        // Click outside of an open tooltip → close it.
         if (activeTooltip && !activeTooltip.contains(e.target)) removeTooltip();
 
-        // Click outside any mini‑AI/choice/annotation widget → close that widget.
         if (mini && !mini.contains(e.target) && !toolbar.contains(e.target)) {
             mini.remove();
             mini = null;
         }
 
-        // Click outside toolbar → hide toolbar.
         if (!toolbar.contains(e.target)) toolbar.style.display = "none";
     });
     document.addEventListener("touchstart", (e) => {
@@ -1171,9 +1104,4 @@ export function initHighlightAI(
 
         if (!toolbar.contains(e.target)) toolbar.style.display = "none";
     });
-
-    // NOTE: The scroll‑listener that previously forced the tooltip to
-    // disappear has been removed deliberately – the tooltip now stays
-    // visible while the page is scrolled, allowing you to read the AI
-    // answer or edit an annotation without it vanishing.
 }

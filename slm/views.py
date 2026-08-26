@@ -957,9 +957,8 @@ def personal_material_detail(request, pk):
 def api_highlight(request, pk, target_type):
     """
     `target_type` is either "module" or "personal".
-    The same JSON contract as before is kept:
-        GET  → {answers: [{query, answer:{simplified, technical}}]}
-        POST → {query, answer, cached}
+    The same JSON contract is kept but now also transports the
+    start / end offsets of the highlighted fragment.
     """
     # -----------------------------------------------------------------
     # Resolve the target object
@@ -969,29 +968,34 @@ def api_highlight(request, pk, target_type):
         fk_name = "module"
     else:   # personal material
         target = get_object_or_404(PersonalMaterial, pk=pk)
-
-        # Visibility guard – owners may see private, others only public
         if (
             target.visibility == PersonalMaterial.Visibility.PRIVATE
             and target.author_id != request.user.id
         ):
             return JsonResponse({"error": "Permission denied"}, status=403)
-
         fk_name = "personal_material"
 
     # -----------------------------------------------------------------
-    # GET – list cached answers for the *current* user only
+    # GET – list cached answers + offsets for the *current* user only
     # -----------------------------------------------------------------
     if request.method == "GET":
         filter_kwargs = {fk_name: target, "owner": request.user}
         qs = (
             HighlightAnswer.objects.filter(**filter_kwargs)
             .order_by("query")
-            .values("query", "answer_simplified", "answer_technical")
+            .values(
+                "query",
+                "answer_simplified",
+                "answer_technical",
+                "start_offset",
+                "end_offset",
+            )
         )
         answers = [
             {
                 "query": item["query"],
+                "start_offset": item["start_offset"],
+                "end_offset": item["end_offset"],
                 "answer": {
                     "simplified": item["answer_simplified"],
                     "technical": item["answer_technical"],
@@ -1008,48 +1012,96 @@ def api_highlight(request, pk, target_type):
         payload = json.loads(request.body)
         raw_query = payload.get("query", "").strip()
         level = payload.get("level", "simplified").strip().lower()
+        start_offset = int(payload.get("start_offset"))
+        end_offset = int(payload.get("end_offset"))
         if not raw_query:
             raise ValueError("Empty query")
         if level not in {"simplified", "technical"}:
             raise ValueError("Invalid level")
-    except (json.JSONDecodeError, ValueError) as exc:
+        if start_offset < 0 or end_offset <= start_offset:
+            raise ValueError("Invalid offsets")
+    except (json.JSONDecodeError, ValueError, TypeError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
     # canonical (lower‑case) key that we store in the DB
     query = raw_query.lower()
 
-    # -------------------------------------------------------------
-    # Retrieve (or create) a row for *this* user & target
-    # -------------------------------------------------------------
+    # -----------------------------------------------------------------
+    # Find *any* existing answer for this query on this target – it can be
+    # reused for a different occurrence.
+    # -----------------------------------------------------------------
+    existing_common = (
+        HighlightAnswer.objects.filter(
+            owner=request.user, query=query, **{fk_name: target}
+        )
+        .exclude(start_offset__isnull=True, end_offset__isnull=True)
+        .first()
+    )
+    # -----------------------------------------------------------------
+    # Retrieve (or create) the row for *this* exact occurrence.
+    # -----------------------------------------------------------------
     get_kwargs = {
         "owner": request.user,
         "query": query,
         fk_name: target,
+        "start_offset": start_offset,
+        "end_offset": end_offset,
     }
     stored, created = HighlightAnswer.objects.get_or_create(
         defaults={"answer_simplified": "", "answer_technical": ""},
         **get_kwargs,
     )
 
-    # -------------------------------------------------------------
-    # If we already have an answer for the requested level → return it
-    # -------------------------------------------------------------
+    # -----------------------------------------------------------------
+    # If the specific occurrence already has an answer for the level → return it.
+    # -----------------------------------------------------------------
     cached_answer = getattr(stored, f"answer_{level}")
     if cached_answer:
         return JsonResponse(
-            {"query": raw_query, "answer": cached_answer, "cached": True},
+            {
+                "query": raw_query,
+                "answer": cached_answer,
+                "cached": True,
+                "start_offset": start_offset,
+                "end_offset": end_offset,
+            },
             status=200,
         )
 
-    # -------------------------------------------------------------
-    # Otherwise ask the AI (once) and store the result
-    # -------------------------------------------------------------
+    # -----------------------------------------------------------------
+    # If another occurrence already has an answer for this level, reuse it.
+    # -----------------------------------------------------------------
+    if existing_common:
+        existing_answer = getattr(existing_common, f"answer_{level}")
+        if existing_answer:
+            setattr(stored, f"answer_{level}", existing_answer)
+            stored.save(update_fields=[f"answer_{level}"])
+            return JsonResponse(
+                {
+                    "query": raw_query,
+                    "answer": existing_answer,
+                    "cached": True,
+                    "start_offset": start_offset,
+                    "end_offset": end_offset,
+                },
+                status=200,
+            )
+
+    # -----------------------------------------------------------------
+    # Otherwise ask the AI (once) and store the result.
+    # -----------------------------------------------------------------
     answer_body = ask_ai_one_level(raw_query, level)
     setattr(stored, f"answer_{level}", answer_body)
     stored.save(update_fields=[f"answer_{level}"])
 
     return JsonResponse(
-        {"query": raw_query, "answer": answer_body, "cached": False},
+        {
+            "query": raw_query,
+            "answer": answer_body,
+            "cached": False,
+            "start_offset": start_offset,
+            "end_offset": end_offset,
+        },
         status=200,
     )
     
@@ -1060,9 +1112,9 @@ def api_annotation(request, pk, target_type):
     """
     ``target_type`` – ``module`` or ``personal`` (same as the highlight view).
 
-    GET   →  {annotations: [{id, query, note, created_at}, …]}
-    POST  →  {id, query, note, created_at}
-            expects JSON: {query: "...", note: "..."}
+    GET   →  {annotations: [{id, query, note, start_offset, end_offset, created_at}, …]}
+    POST  →  {id, query, note, start_offset, end_offset, created_at}
+            expects JSON: {query: "...", note: "...", start_offset: 123, end_offset: 135}
     """
     # -----------------------------------------------------------------
     # Resolve target object
@@ -1072,7 +1124,6 @@ def api_annotation(request, pk, target_type):
         fk_name = "module"
     else:   # personal material
         target = get_object_or_404(PersonalMaterial, pk=pk)
-        # visibility guard – owners may see private, others only public
         if (
             target.visibility == PersonalMaterial.Visibility.PRIVATE
             and target.author_id != request.user.id
@@ -1081,7 +1132,7 @@ def api_annotation(request, pk, target_type):
         fk_name = "personal_material"
 
     # -----------------------------------------------------------------
-    # GET – list the current user’s annotations for this object
+    # GET – list the current user’s annotations (with offsets) for this object
     # -----------------------------------------------------------------
     if request.method == "GET":
         ann_qs = HighlightAnnotation.objects.filter(**{fk_name: target, "owner": request.user})
@@ -1090,6 +1141,8 @@ def api_annotation(request, pk, target_type):
                 "id": a.id,
                 "query": a.query,
                 "note": a.note,
+                "start_offset": a.start_offset,
+                "end_offset": a.end_offset,
                 "created_at": a.created_at.isoformat(),
             }
             for a in ann_qs
@@ -1097,25 +1150,31 @@ def api_annotation(request, pk, target_type):
         return JsonResponse({"annotations": data}, safe=False)
 
     # -----------------------------------------------------------------
-    # POST – **create OR update** an annotation (upsert)
+    # POST – create OR update an annotation (upsert) for a *specific* occurrence.
     # -----------------------------------------------------------------
     try:
         payload = json.loads(request.body)
         raw_query = payload.get("query", "").strip()
         note = payload.get("note", "").strip()
+        start_offset = int(payload.get("start_offset"))
+        end_offset = int(payload.get("end_offset"))
         if not raw_query:
             raise ValueError("Empty query")
-    except (json.JSONDecodeError, ValueError) as exc:
+        if start_offset < 0 or end_offset <= start_offset:
+            raise ValueError("Invalid offsets")
+    except (json.JSONDecodeError, ValueError, TypeError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # Normalise the query (lower‑case) for DB‑uniqueness
     query = raw_query.lower()
-
-    # ``update_or_create`` will INSERT if the row does not exist,
-    # otherwise it will UPDATE the ``note`` field.
     ann, created = HighlightAnnotation.objects.update_or_create(
         defaults={"note": note},
-        **{fk_name: target, "owner": request.user, "query": query},
+        **{
+            fk_name: target,
+            "owner": request.user,
+            "query": query,
+            "start_offset": start_offset,
+            "end_offset": end_offset,
+        },
     )
 
     return JsonResponse(
@@ -1124,6 +1183,8 @@ def api_annotation(request, pk, target_type):
             "query": raw_query,
             "note": ann.note,
             "created_at": ann.created_at.isoformat(),
+            "start_offset": ann.start_offset,
+            "end_offset": ann.end_offset,
             "created": created,
         },
         status=201,
