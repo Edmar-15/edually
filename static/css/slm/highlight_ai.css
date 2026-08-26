@@ -45,7 +45,7 @@
     --c-bg-history:       var(--module-surface);               /* history pop‑over                 */
 
     /* Highlight colours – light variants (now semi‑transparent) */
-    --c-hl-default-light:    rgba(255,249,176,0.45);   /* buttery‑yellow */
+    --c-hl-default-light:    rgba(250, 238, 107, 0.45);   /* buttery‑yellow */
     --c-hl-simplified-light: rgba(  0,212,170,0.45);   /* vivid turquoise (simplified) */
     --c-hl-technical-light:  rgba(255,111, 97,0.45);   /* coral‑orange (technical) */
     --c-hl-both-light:       rgba(212,169,255,0.45);   /* fallback for non‑gradient browsers (lavender) */
