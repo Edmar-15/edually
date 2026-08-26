@@ -70,29 +70,22 @@ export function initHighlightAI(
      * 5️⃣ Helpers – compute offsets and reverse‑lookup nodes
      * ----------------------------------------------------------------- */
     const computeOffsets = (range) => {
-        const walker = document.createTreeWalker(
-            contentRoot,
-            NodeFilter.SHOW_TEXT,
-            null,
-            false
-        );
-        let node;
-        let running = 0;
-        let start = null;
-        let end = null;
+        // The original implementation only worked when the range boundaries
+        // were text nodes.  By building a temporary range that starts at the
+        // very beginning of `contentRoot` and ends at the required boundary,
+        // `Range.toString()` gives us the exact character offset (counting only
+        // text nodes) – this works for element‑node boundaries as well.
+        const tmp = document.createRange();
 
-        while ((node = walker.nextNode())) {
-            if (start === null && node === range.startContainer) {
-                start = running + range.startOffset;
-            }
-            if (end === null && node === range.endContainer) {
-                end = running + range.endOffset;
-            }
-            running += node.textContent.length;
-            if (start !== null && end !== null) break;
-        }
-        if (start === null) start = 0;
-        if (end === null) end = start;
+        // start offset
+        tmp.setStart(contentRoot, 0);
+        tmp.setEnd(range.startContainer, range.startOffset);
+        const start = tmp.toString().length;
+
+        // end offset
+        tmp.setEnd(range.endContainer, range.endOffset);
+        const end = tmp.toString().length;
+
         return { start, end };
     };
 
@@ -314,19 +307,40 @@ export function initHighlightAI(
         const endInfo = nodeFromOffset(contentRoot, end);
         if (!startInfo || !endInfo) return;
 
+        // Build a range that exactly spans the stored offsets.
         const range = document.createRange();
         range.setStart(startInfo.node, startInfo.offset);
         range.setEnd(endInfo.node, endInfo.offset);
 
-        const span = document.createElement("span");
-        span.className = getHighlightClassName(occ);
-        span.dataset.highlightQuery = queryOrig;
-        span.dataset.start = occ.start;
-        span.dataset.end = occ.end;
-        span.dataset.answer = buildAnswerText(occ);
-        span.appendChild(range.extractContents());
-        range.insertNode(span);
-        attachHighlightEvents(span, queryOrig);
+        // Extract the fragment. This operation splits the start/end text nodes
+        // as needed while preserving every other element untouched.
+        const fragment = range.extractContents();
+
+        // Walk through **all** text nodes inside the fragment and wrap each
+        // one in its own highlight span.  This keeps the original layout
+        // (e.g. <br>, <a>, <strong>) intact – only the actual text gets a span.
+        const walker = document.createTreeWalker(
+            fragment,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        let txtNode;
+        while ((txtNode = walker.nextNode())) {
+            const span = document.createElement("span");
+            span.className = getHighlightClassName(occ);
+            span.dataset.highlightQuery = queryOrig;
+            span.dataset.start = occ.start;
+            span.dataset.end = occ.end;
+            span.dataset.answer = buildAnswerText(occ);
+            // Replace the raw text node with the span.
+            txtNode.parentNode.replaceChild(span, txtNode);
+            span.appendChild(txtNode);
+            attachHighlightEvents(span, queryOrig);
+        }
+
+        // Insert the now‑highlighted fragment back where the range used to be.
+        range.insertNode(fragment);
     };
 
     /* -----------------------------------------------------------------
@@ -711,7 +725,7 @@ export function initHighlightAI(
                 }),
             });
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json(); // {answer, cached}
+            const data = await resp.json();
             if (data && data.answer) {
                 setOccurrenceAnswer(query, start, end, level, data.answer);
                 addHistoryEntry(query, level, start, end);
