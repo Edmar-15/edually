@@ -76,7 +76,7 @@ export function initHighlightAI(
   //     simplifiedAnswer,
   //     technicalAnswer
   // }
-const pendingAiRequests = new Set();
+  const pendingAiRequests = new Set();
 
   /* -----------------------------------------------------------------
    * 5️⃣ Helpers – compute offsets and selection data
@@ -84,100 +84,89 @@ const pendingAiRequests = new Set();
 
   const getTextNodes = () => {
     const walker = document.createTreeWalker(
-        contentRoot,
-        NodeFilter.SHOW_TEXT,
-        {
-            acceptNode(node) {
-                if (!node.nodeValue) {
-                    return NodeFilter.FILTER_REJECT;
-                }
+      contentRoot,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          if (!node.nodeValue) {
+            return NodeFilter.FILTER_REJECT;
+          }
 
-                return NodeFilter.FILTER_ACCEPT;
-            },
+          return NodeFilter.FILTER_ACCEPT;
         },
+      },
     );
 
     const nodes = [];
     let node;
 
     while ((node = walker.nextNode())) {
-        nodes.push(node);
+      nodes.push(node);
     }
 
     return nodes;
-};
+  };
 
-/*
- * Calculate an offset using the exact same text-node order
- * that applyOccurrences() uses when rebuilding highlights.
- *
- * This keeps selection offsets and highlight offsets consistent.
- */
-const getBoundaryOffset = (container, offset) => {
+  /*
+   * Calculate an offset using the exact same text-node order
+   * that applyOccurrences() uses when rebuilding highlights.
+   *
+   * This keeps selection offsets and highlight offsets consistent.
+   */
+  const getBoundaryOffset = (container, offset) => {
     const nodes = getTextNodes();
 
     let total = 0;
 
     for (const node of nodes) {
-        if (node === container) {
-            return total + Math.min(
-                Math.max(offset, 0),
-                node.nodeValue.length,
-            );
+      if (node === container) {
+        return total + Math.min(Math.max(offset, 0), node.nodeValue.length);
+      }
+
+      /*
+       * The boundary may be an element node.
+       * Check whether this text node occurs before that boundary.
+       */
+      const boundaryRange = document.createRange();
+
+      try {
+        boundaryRange.setStart(contentRoot, 0);
+        boundaryRange.setEnd(node, node.nodeValue.length);
+
+        const targetRange = document.createRange();
+        targetRange.setStart(contentRoot, 0);
+        targetRange.setEnd(container, offset);
+
+        if (
+          boundaryRange.compareBoundaryPoints(Range.END_TO_END, targetRange) <=
+          0
+        ) {
+          total += node.nodeValue.length;
+        } else {
+          break;
         }
-
-        /*
-         * The boundary may be an element node.
-         * Check whether this text node occurs before that boundary.
-         */
-        const boundaryRange = document.createRange();
-
-        try {
-            boundaryRange.setStart(contentRoot, 0);
-            boundaryRange.setEnd(node, node.nodeValue.length);
-
-            const targetRange = document.createRange();
-            targetRange.setStart(contentRoot, 0);
-            targetRange.setEnd(container, offset);
-
-            if (
-                boundaryRange.compareBoundaryPoints(
-                    Range.END_TO_END,
-                    targetRange,
-                ) <= 0
-            ) {
-                total += node.nodeValue.length;
-            } else {
-                break;
-            }
-        } catch {
-            break;
-        }
+      } catch {
+        break;
+      }
     }
 
     return total;
-};
+  };
 
-const computeOffsets = (range) => {
-    const start = getBoundaryOffset(
-        range.startContainer,
-        range.startOffset,
-    );
+  const computeOffsets = (range) => {
+    const start = getBoundaryOffset(range.startContainer, range.startOffset);
 
-    const end = getBoundaryOffset(
-        range.endContainer,
-        range.endOffset,
-    );
+    const end = getBoundaryOffset(range.endContainer, range.endOffset);
 
     return { start, end };
-};
+  };
 
-const getSelectionData = (range) => {
+  const getSelectionData = (range) => {
     const rawText = range.toString();
     const query = rawText.trim();
 
     if (!query) {
-        return null;
+      return null;
     }
 
     const { start: rawStart, end: rawEnd } = computeOffsets(range);
@@ -193,15 +182,15 @@ const getSelectionData = (range) => {
     const end = rawEnd - trailing;
 
     if (end <= start) {
-        return null;
+      return null;
     }
 
     return {
-        query,
-        start,
-        end,
+      query,
+      start,
+      end,
     };
-};
+  };
 
   /* -----------------------------------------------------------------
    * 6️⃣ CSS class helper
@@ -639,13 +628,16 @@ const getSelectionData = (range) => {
           span.textContent = selectedText;
 
           /*
-          * A single logical highlight may contain several DOM fragments
-          * when the selection crosses <strong>, <em>, <a>, <li>, etc.
-          *
-          * Give every fragment the same occurrence identifier.
-          */
-          span.dataset.highlightOccurrence =
-              occurrenceKey(occ.queryLC, occ.start, occ.end);
+           * A single logical highlight may contain several DOM fragments
+           * when the selection crosses <strong>, <em>, <a>, <li>, etc.
+           *
+           * Give every fragment the same occurrence identifier.
+           */
+          span.dataset.highlightOccurrence = occurrenceKey(
+            occ.queryLC,
+            occ.start,
+            occ.end,
+          );
 
           attachHighlightEvents(span, occ.queryOrig);
 
@@ -688,48 +680,46 @@ const getSelectionData = (range) => {
      * Mark the first/middle/last fragments belonging to the
      * same logical highlight.
      */
-    contentRoot
-        .querySelectorAll(".highlight-marked")
-        .forEach((span) => {
-            span.classList.remove(
-                "highlight-fragment-first",
-                "highlight-fragment-middle",
-                "highlight-fragment-last",
-            );
-        });
+    contentRoot.querySelectorAll(".highlight-marked").forEach((span) => {
+      span.classList.remove(
+        "highlight-fragment-first",
+        "highlight-fragment-middle",
+        "highlight-fragment-last",
+      );
+    });
 
     const grouped = new Map();
 
     contentRoot
-        .querySelectorAll(".highlight-marked[data-highlight-occurrence]")
-        .forEach((span) => {
-            const key = span.dataset.highlightOccurrence;
+      .querySelectorAll(".highlight-marked[data-highlight-occurrence]")
+      .forEach((span) => {
+        const key = span.dataset.highlightOccurrence;
 
-            if (!grouped.has(key)) {
-                grouped.set(key, []);
-            }
-
-            grouped.get(key).push(span);
-        });
-
-    grouped.forEach((spans) => {
-        if (spans.length === 1) {
-            spans[0].classList.add("highlight-fragment-first");
-            spans[0].classList.add("highlight-fragment-last");
-            return;
+        if (!grouped.has(key)) {
+          grouped.set(key, []);
         }
 
-        spans.forEach((span, index) => {
-            if (index === 0) {
-                span.classList.add("highlight-fragment-first");
-            } else if (index === spans.length - 1) {
-                span.classList.add("highlight-fragment-last");
-            } else {
-                span.classList.add("highlight-fragment-middle");
-            }
-        });
+        grouped.get(key).push(span);
+      });
+
+    grouped.forEach((spans) => {
+      if (spans.length === 1) {
+        spans[0].classList.add("highlight-fragment-first");
+        spans[0].classList.add("highlight-fragment-last");
+        return;
+      }
+
+      spans.forEach((span, index) => {
+        if (index === 0) {
+          span.classList.add("highlight-fragment-first");
+        } else if (index === spans.length - 1) {
+          span.classList.add("highlight-fragment-last");
+        } else {
+          span.classList.add("highlight-fragment-middle");
+        }
+      });
     });
-};
+  };
 
   /* -----------------------------------------------------------------
    * 11️⃣ Refresh wrapper
@@ -754,55 +744,44 @@ const getSelectionData = (range) => {
 
   const fetchAiAnswer = async (query, level, start, end) => {
     const payload = {
-        query,
-        level,
-        start_offset: start,
-        end_offset: end,
+      query,
+      level,
+      start_offset: start,
+      end_offset: end,
     };
 
     const resp = await fetch(`${apiBase}${moduleId}/highlight/`, {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken,
-        },
-        body: JSON.stringify(payload),
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken,
+      },
+      body: JSON.stringify(payload),
     });
 
     let data = null;
 
     try {
-        data = await resp.json();
+      data = await resp.json();
     } catch {
-        data = {};
+      data = {};
     }
 
     if (!resp.ok) {
-        throw new Error(
-            data?.error ||
-            `AI request failed (${resp.status}).`,
-        );
+      throw new Error(data?.error || `AI request failed (${resp.status}).`);
     }
 
     if (!data.answer) {
-        throw new Error(
-            "The AI did not return an explanation.",
-        );
+      throw new Error("The AI did not return an explanation.");
     }
 
-    if (!data.cached) {
-        setOccurrenceAnswer(
-            query,
-            start,
-            end,
-            level,
-            data.answer,
-        );
+    if (data.answer) {
+      setOccurrenceAnswer(query, start, end, level, data.answer);
     }
 
     return data;
-};
+  };
 
   const renderAiSection = (query, start, end, container) => {
     const occ = getOrCreateOccurrence(query, start, end);
@@ -832,11 +811,10 @@ const getSelectionData = (range) => {
         btn.textContent = `Get ${lvlCap} answer`;
 
         btn.addEventListener("click", async () => {
-          const requestKey =
-              `${normalise(query)}|${start}-${end}|${lvl}`;
+          const requestKey = `${normalise(query)}|${start}-${end}|${lvl}`;
 
           if (pendingAiRequests.has(requestKey)) {
-              return;
+            return;
           }
 
           pendingAiRequests.add(requestKey);
@@ -847,37 +825,27 @@ const getSelectionData = (range) => {
           btn.textContent = "Thinking…";
 
           try {
-              const data = await fetchAiAnswer(
-                  query,
-                  lvl,
-                  start,
-                  end,
-              );
+            const data = await fetchAiAnswer(query, lvl, start, end);
 
-              if (data && data.answer) {
-                  renderAiSection(
-                      query,
-                      start,
-                      end,
-                      container,
-                  );
-              }
+            if (data && data.answer) {
+              renderAiSection(query, start, end, container);
+            }
           } catch (error) {
-              console.error("AI answer failed:", error);
+            console.error("AI answer failed:", error);
 
-              showMessage(
-                  wrapper,
-                  error.message ||
-                      "Unable to generate an AI explanation. Please try again.",
-                  "error",
-              );
+            showMessage(
+              wrapper,
+              error.message ||
+                "Unable to generate an AI explanation. Please try again.",
+              "error",
+            );
           } finally {
-              pendingAiRequests.delete(requestKey);
+            pendingAiRequests.delete(requestKey);
 
-              btn.textContent = old;
-              btn.disabled = false;
+            btn.textContent = old;
+            btn.disabled = false;
           }
-      });
+        });
 
         wrapper.appendChild(btn);
       }
