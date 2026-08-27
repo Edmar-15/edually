@@ -1772,9 +1772,10 @@ html.dark .profile-details-card .messages li,
 html.dark .profile-page .profile-details-card .messages li,
 html.dark .profile-page .profile-details-card .profile-form-note,
 html.dark .profile-page .profile-details-card .details-header {
-    background: rgba(15, 23, 42, 0.92) !important;
+    background: #0b1220 !important;
     border-color: rgba(148, 163, 184, 0.18) !important;
     color: var(--text) !important;
+    border-radius: 10px !important;
 }
 
 html.dark .profile-highlight-card strong,
@@ -2920,6 +2921,24 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
 
 .sidebar::-webkit-scrollbar {
     width: 6px;
+}
+
+@media (max-width: 640px) {
+    .profile-actions {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .profile-actions .button {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        flex: 0 0 auto;
+        justify-content: center;
+        white-space: normal;
+    }
 }
 
 .sidebar::-webkit-scrollbar-track {
