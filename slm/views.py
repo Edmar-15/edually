@@ -1067,17 +1067,6 @@ def api_highlight(request, pk, target_type):
     query = raw_query.lower()
 
     # -----------------------------------------------------------------
-    # Find *any* existing answer for this query on this target – it can be
-    # reused for a different occurrence.
-    # -----------------------------------------------------------------
-    existing_common = (
-        HighlightAnswer.objects.filter(
-            owner=request.user, query=query, **{fk_name: target}
-        )
-        .exclude(start_offset__isnull=True, end_offset__isnull=True)
-        .first()
-    )
-    # -----------------------------------------------------------------
     # Retrieve (or create) the row for *this* exact occurrence.
     # -----------------------------------------------------------------
     get_kwargs = {

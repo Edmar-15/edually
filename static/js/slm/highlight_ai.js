@@ -76,6 +76,7 @@ export function initHighlightAI(
   //     simplifiedAnswer,
   //     technicalAnswer
   // }
+const pendingAiRequests = new Set();
 
   /* -----------------------------------------------------------------
    * 5️⃣ Helpers – compute offsets and selection data
@@ -753,30 +754,55 @@ const getSelectionData = (range) => {
 
   const fetchAiAnswer = async (query, level, start, end) => {
     const payload = {
-      query,
-      level,
-      start_offset: start,
-      end_offset: end,
+        query,
+        level,
+        start_offset: start,
+        end_offset: end,
     };
 
     const resp = await fetch(`${apiBase}${moduleId}/highlight/`, {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrftoken,
-      },
-      body: JSON.stringify(payload),
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+        },
+        body: JSON.stringify(payload),
     });
 
-    const data = await resp.json();
+    let data = null;
 
-    if (!data.cached && data.answer) {
-      setOccurrenceAnswer(query, start, end, level, data.answer);
+    try {
+        data = await resp.json();
+    } catch {
+        data = {};
+    }
+
+    if (!resp.ok) {
+        throw new Error(
+            data?.error ||
+            `AI request failed (${resp.status}).`,
+        );
+    }
+
+    if (!data.answer) {
+        throw new Error(
+            "The AI did not return an explanation.",
+        );
+    }
+
+    if (!data.cached) {
+        setOccurrenceAnswer(
+            query,
+            start,
+            end,
+            level,
+            data.answer,
+        );
     }
 
     return data;
-  };
+};
 
   const renderAiSection = (query, start, end, container) => {
     const occ = getOrCreateOccurrence(query, start, end);
@@ -806,26 +832,52 @@ const getSelectionData = (range) => {
         btn.textContent = `Get ${lvlCap} answer`;
 
         btn.addEventListener("click", async () => {
+          const requestKey =
+              `${normalise(query)}|${start}-${end}|${lvl}`;
+
+          if (pendingAiRequests.has(requestKey)) {
+              return;
+          }
+
+          pendingAiRequests.add(requestKey);
+
           btn.disabled = true;
 
           const old = btn.textContent;
-
           btn.textContent = "Thinking…";
 
           try {
-            const data = await fetchAiAnswer(query, lvl, start, end);
+              const data = await fetchAiAnswer(
+                  query,
+                  lvl,
+                  start,
+                  end,
+              );
 
-            if (data && data.answer) {
-              renderAiSection(query, start, end, container);
-            } else {
-              console.error("AI answer error:", data);
-            }
+              if (data && data.answer) {
+                  renderAiSection(
+                      query,
+                      start,
+                      end,
+                      container,
+                  );
+              }
+          } catch (error) {
+              console.error("AI answer failed:", error);
+
+              showMessage(
+                  wrapper,
+                  error.message ||
+                      "Unable to generate an AI explanation. Please try again.",
+                  "error",
+              );
           } finally {
-            btn.textContent = old;
+              pendingAiRequests.delete(requestKey);
 
-            btn.disabled = false;
+              btn.textContent = old;
+              btn.disabled = false;
           }
-        });
+      });
 
         wrapper.appendChild(btn);
       }
