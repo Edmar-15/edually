@@ -45,6 +45,39 @@ def teacher_required_for_mutation(view_func):
         )
     return _wrapped
 
+
+def get_highlight_context(target, start_offset, end_offset, window=900):
+    """
+    Return the selected SLM text plus nearby SLM content.
+
+    Offsets are based on the rendered text content, so the same
+    text representation used by the browser is used here.
+    """
+    from bs4 import BeautifulSoup
+
+    html_content = target.extracted_html or ""
+
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # Match the browser's text-node representation as closely as possible.
+    full_text = soup.get_text()
+
+    start = max(0, min(start_offset, len(full_text)))
+    end = max(start, min(end_offset, len(full_text)))
+
+    selected = full_text[start:end].strip()
+
+    context_start = max(0, start - window)
+    context_end = min(len(full_text), end + window)
+
+    context = full_text[context_start:context_end].strip()
+
+    return {
+        "selected": selected,
+        "context": context,
+    }
+    
+
 # Create your views here.
 @login_required(login_url='account:login')
 def slmlists(request):
@@ -1020,6 +1053,13 @@ def api_highlight(request, pk, target_type):
             raise ValueError("Invalid level")
         if start_offset < 0 or end_offset <= start_offset:
             raise ValueError("Invalid offsets")
+        context_data = get_highlight_context(
+            target,
+            start_offset,
+            end_offset,
+        )
+
+        selected_context = context_data["context"]
     except (json.JSONDecodeError, ValueError, TypeError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
@@ -1069,28 +1109,13 @@ def api_highlight(request, pk, target_type):
         )
 
     # -----------------------------------------------------------------
-    # If another occurrence already has an answer for this level, reuse it.
-    # -----------------------------------------------------------------
-    if existing_common:
-        existing_answer = getattr(existing_common, f"answer_{level}")
-        if existing_answer:
-            setattr(stored, f"answer_{level}", existing_answer)
-            stored.save(update_fields=[f"answer_{level}"])
-            return JsonResponse(
-                {
-                    "query": raw_query,
-                    "answer": existing_answer,
-                    "cached": True,
-                    "start_offset": start_offset,
-                    "end_offset": end_offset,
-                },
-                status=200,
-            )
-
-    # -----------------------------------------------------------------
     # Otherwise ask the AI (once) and store the result.
     # -----------------------------------------------------------------
-    answer_body = ask_ai_one_level(raw_query, level)
+    answer_body = ask_ai_one_level(
+        raw_query,
+        level,
+        context=selected_context,
+    )
     setattr(stored, f"answer_{level}", answer_body)
     stored.save(update_fields=[f"answer_{level}"])
 

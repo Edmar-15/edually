@@ -81,59 +81,126 @@ export function initHighlightAI(
    * 5️⃣ Helpers – compute offsets and selection data
    * ----------------------------------------------------------------- */
 
-  const computeOffsets = (range) => {
-    /*
-     * Calculate offsets against the clean text inside contentRoot.
-     *
-     * Using Range.toString() here also works when the selection
-     * boundaries are element nodes rather than text nodes.
-     */
-    const tmp = document.createRange();
+  const getTextNodes = () => {
+    const walker = document.createTreeWalker(
+        contentRoot,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode(node) {
+                if (!node.nodeValue) {
+                    return NodeFilter.FILTER_REJECT;
+                }
 
-    // Start offset
-    tmp.setStart(contentRoot, 0);
-    tmp.setEnd(range.startContainer, range.startOffset);
+                return NodeFilter.FILTER_ACCEPT;
+            },
+        },
+    );
 
-    const start = tmp.toString().length;
+    const nodes = [];
+    let node;
 
-    // End offset
-    tmp.setEnd(range.endContainer, range.endOffset);
+    while ((node = walker.nextNode())) {
+        nodes.push(node);
+    }
 
-    const end = tmp.toString().length;
+    return nodes;
+};
+
+/*
+ * Calculate an offset using the exact same text-node order
+ * that applyOccurrences() uses when rebuilding highlights.
+ *
+ * This keeps selection offsets and highlight offsets consistent.
+ */
+const getBoundaryOffset = (container, offset) => {
+    const nodes = getTextNodes();
+
+    let total = 0;
+
+    for (const node of nodes) {
+        if (node === container) {
+            return total + Math.min(
+                Math.max(offset, 0),
+                node.nodeValue.length,
+            );
+        }
+
+        /*
+         * The boundary may be an element node.
+         * Check whether this text node occurs before that boundary.
+         */
+        const boundaryRange = document.createRange();
+
+        try {
+            boundaryRange.setStart(contentRoot, 0);
+            boundaryRange.setEnd(node, node.nodeValue.length);
+
+            const targetRange = document.createRange();
+            targetRange.setStart(contentRoot, 0);
+            targetRange.setEnd(container, offset);
+
+            if (
+                boundaryRange.compareBoundaryPoints(
+                    Range.END_TO_END,
+                    targetRange,
+                ) <= 0
+            ) {
+                total += node.nodeValue.length;
+            } else {
+                break;
+            }
+        } catch {
+            break;
+        }
+    }
+
+    return total;
+};
+
+const computeOffsets = (range) => {
+    const start = getBoundaryOffset(
+        range.startContainer,
+        range.startOffset,
+    );
+
+    const end = getBoundaryOffset(
+        range.endContainer,
+        range.endOffset,
+    );
 
     return { start, end };
-  };
+};
 
-  /*
-   * Return the selected text together with offsets that exclude
-   * accidental leading/trailing whitespace from the browser selection.
-   *
-   * This prevents whitespace-only highlight spans from appearing before
-   * or after a phrase.
-   */
-  const getSelectionData = (range) => {
+const getSelectionData = (range) => {
     const rawText = range.toString();
     const query = rawText.trim();
 
-    if (!query) return null;
+    if (!query) {
+        return null;
+    }
 
     const { start: rawStart, end: rawEnd } = computeOffsets(range);
 
+    /*
+     * Trim only whitespace from the actual selection.
+     * Do not change internal whitespace.
+     */
     const leading = rawText.length - rawText.trimStart().length;
-
     const trailing = rawText.length - rawText.trimEnd().length;
 
     const start = rawStart + leading;
     const end = rawEnd - trailing;
 
-    if (end <= start) return null;
+    if (end <= start) {
+        return null;
+    }
 
     return {
-      query,
-      start,
-      end,
+        query,
+        start,
+        end,
     };
-  };
+};
 
   /* -----------------------------------------------------------------
    * 6️⃣ CSS class helper
@@ -564,14 +631,20 @@ export function initHighlightAI(
           span.className = getHighlightClassName(occ);
 
           span.dataset.highlightQuery = occ.queryOrig;
-
           span.dataset.start = String(occ.start);
-
           span.dataset.end = String(occ.end);
-
           span.dataset.answer = buildAnswerText(occ);
 
           span.textContent = selectedText;
+
+          /*
+          * A single logical highlight may contain several DOM fragments
+          * when the selection crosses <strong>, <em>, <a>, <li>, etc.
+          *
+          * Give every fragment the same occurrence identifier.
+          */
+          span.dataset.highlightOccurrence =
+              occurrenceKey(occ.queryLC, occ.start, occ.end);
 
           attachHighlightEvents(span, occ.queryOrig);
 
@@ -604,19 +677,58 @@ export function initHighlightAI(
    * ----------------------------------------------------------------- */
 
   const refreshAllHighlightsImpl = () => {
-    /*
-     * Always start from the untouched server-rendered HTML.
-     */
     contentRoot.innerHTML = _originalHtml;
 
-    /*
-     * Rebuild all saved occurrences from
-     * the original DOM.
-     */
     const occs = Array.from(occurrences.values());
 
     applyOccurrences(occs);
-  };
+
+    /*
+     * Mark the first/middle/last fragments belonging to the
+     * same logical highlight.
+     */
+    contentRoot
+        .querySelectorAll(".highlight-marked")
+        .forEach((span) => {
+            span.classList.remove(
+                "highlight-fragment-first",
+                "highlight-fragment-middle",
+                "highlight-fragment-last",
+            );
+        });
+
+    const grouped = new Map();
+
+    contentRoot
+        .querySelectorAll(".highlight-marked[data-highlight-occurrence]")
+        .forEach((span) => {
+            const key = span.dataset.highlightOccurrence;
+
+            if (!grouped.has(key)) {
+                grouped.set(key, []);
+            }
+
+            grouped.get(key).push(span);
+        });
+
+    grouped.forEach((spans) => {
+        if (spans.length === 1) {
+            spans[0].classList.add("highlight-fragment-first");
+            spans[0].classList.add("highlight-fragment-last");
+            return;
+        }
+
+        spans.forEach((span, index) => {
+            if (index === 0) {
+                span.classList.add("highlight-fragment-first");
+            } else if (index === spans.length - 1) {
+                span.classList.add("highlight-fragment-last");
+            } else {
+                span.classList.add("highlight-fragment-middle");
+            }
+        });
+    });
+};
 
   /* -----------------------------------------------------------------
    * 11️⃣ Refresh wrapper

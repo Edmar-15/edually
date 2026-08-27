@@ -146,13 +146,41 @@ a:hover {
    4️⃣  Highlighted fragments – now support all 4 visual layers
    ------------------------------------------------------------- */
 .highlight-marked {
-    padding: 0 .16em;
-    border-radius: .3em;
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
     background: var(--c-hl-default);
     color: var(--c-text);
     box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
     transition: filter 120ms ease, transform 120ms ease;
 }
+
+/*
+ * A logical highlight can consist of several spans when it crosses
+ * formatted HTML elements.
+ *
+ * Only the outer fragments receive rounded corners and horizontal
+ * breathing room. Middle fragments stay flush so the highlight
+ * appears continuous.
+ */
+.highlight-marked.highlight-fragment-first {
+    padding-left: .16em;
+    border-radius: .3em 0 0 .3em;
+}
+
+.highlight-marked.highlight-fragment-last {
+    padding-right: .16em;
+    border-radius: 0 .3em .3em 0;
+}
+
+.highlight-marked.highlight-fragment-first.highlight-fragment-last {
+    border-radius: .3em;
+}
+
+.highlight-marked.highlight-fragment-middle {
+    border-radius: 0;
+}
+
 .highlight-marked:hover,
 .highlight-marked:focus-visible {
     filter: brightness(.97);

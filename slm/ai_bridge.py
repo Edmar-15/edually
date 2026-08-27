@@ -5,18 +5,61 @@ from aihelper.views import _call_openai   # reuse the private function that actu
 
 log = logging.getLogger(__name__)
 
-def ask_ai_one_level(question: str, level: str) -> str:
+def ask_ai_one_level(
+    question: str,
+    level: str,
+    context: str = "",
+) -> str:
     """
-    Calls the AI **once** for the requested level (``simplified`` or ``technical``)
-    and returns the raw HTML answer.
+    Generate a single explanation grounded in the relevant SLM content.
     """
+
     try:
-        system_prompt = system_prompt_for(level, question)
+        context = (context or "").strip()
+
+        system_prompt = system_prompt_for(
+            level,
+            question,
+        )
+
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user",   "content": question},
+            {
+                "role": "system",
+                "content": (
+                    f"{system_prompt}\n\n"
+                    "GROUNDING RULES:\n"
+                    "- Use the provided SLM context as the primary source.\n"
+                    "- Explain the selected text according to its meaning "
+                    "in that SLM context.\n"
+                    "- Do not introduce unrelated concepts.\n"
+                    "- Do not rely on outside information when the SLM "
+                    "context provides the needed meaning.\n"
+                    "- If the context is insufficient, say so briefly "
+                    "instead of inventing details."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Selected text:\n"
+                    f"{question}\n\n"
+                    f"Relevant SLM content:\n"
+                    f"{context}"
+                ),
+            },
         ]
+
         return _call_openai(messages)
-    except Exception as exc:                     # pragma: no cover
-        log.error("OpenAI failed for level %s: %s", level, exc)
-        return f"[{level.title()} fallback] Here is a brief answer to “{question}”."
+
+    except Exception as exc:
+        log.error(
+            "AI failed for level %s: %s",
+            level,
+            exc,
+        )
+
+        return (
+            f"[{level.title()} fallback] "
+            f"Unable to generate an explanation for "
+            f"“{question}”."
+        )
