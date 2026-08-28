@@ -18,7 +18,7 @@
 
     <main class="main-content">
         <!-- Header -->
-        <header class="content-header">
+        <header class="content-header reply-page-header">
             <div class="header-left">
                 <button type="button" class="mobile-sidebar-trigger" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation sidebar">
                     <span class="sr-only">Toggle sidebar</span>
@@ -58,8 +58,13 @@
 
                     <div class="post-footer">
                         <div class="post-author-info">
-                            <div class="author-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--forum-primary), #0d7d92); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                                {{ post.author.get_full_name|default:post.author.username|first|upper }}
+                            <div class="author-avatar">
+                                {% load account_extras %}
+                                {% if post.author.avatar %}
+                                    <img src="{{ post.author.avatar.url }}" alt="{{ post.author.get_full_name|default:post.author.username }}">
+                                {% else %}
+                                    <span class="avatar-fallback">{{ post.author|initials }}</span>
+                                {% endif %}
                             </div>
                             <div class="author-details">
                                 <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
@@ -118,43 +123,11 @@
 
 
                     <div class="replies-list" id="reply-list">
-                        {% if replies %}
-                            {% for reply in replies %}
-                                <article class="reply-item{% if reply.is_best_answer %} best-answer{% endif %}">
-                                    <div class="reply-header">
-                                        <div class="reply-author">
-                                            <div class="author-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #6366f1); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.8rem;">
-                                                {{ reply.author.get_full_name|default:reply.author.username|first|upper }}
-                                            </div>
-                                            <div>
-                                                <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
-                                                <span class="text-muted">
-                                                    <i class="fa-solid fa-clock"></i> {{ reply.created_at|timesince }} ago
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="reply-body">
-                                        {{ reply.content|linebreaks }}
-                                    </div>
-
-                                    <div class="reply-footer">
-                                        <div class="reply-actions">
-                                            <form method="post" action="{% url 'forum:upvote_reply' reply.id %}" class="upvote-form">
-                                                {% csrf_token %}
-                                                <button type="button" class="btn-upvote reply-upvote-btn {% if reply.id in user_reply_upvotes %}active{% endif %}" data-endpoint="{% url 'forum:reply_upvote' reply.id %}" title="Upvote this response">
-                                                    <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
-                                                    <span class="reply-upvote-count">{{ reply.upvotes }}</span>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </article>
-                            {% endfor %}
-                        {% else %}
+                        {% for reply in replies %}
+                            {% include "forum/partials/reply_item.html" %}
+                        {% empty %}
                             <p class="text-muted reply-empty-state">No responses yet. Be the first to reply!</p>
-                        {% endif %}
+                        {% endfor %}
                     </div>
 
                 </section>

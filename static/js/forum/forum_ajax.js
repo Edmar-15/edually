@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (headingSelector) {
                      const heading = document.querySelector(headingSelector);
                      if (heading) {
-                        heading.textContent = `${data.replies_cnt} Reply${data.replies_cnt === 1 ? '' : 's'}`;
+                        heading.textContent = `${data.replies_cnt} ${data.replies_cnt === 1 ? 'Response' : 'Responses'}`;
                     }
                 }
 
