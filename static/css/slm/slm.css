@@ -1108,3 +1108,101 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
 .widget-wrapper .paginator {
     margin-top: auto;                 /* forces paginator to the very bottom */
 }
+
+/* ==========================================================================
+   SLM TAB PAGE — DESKTOP CONTAINED VIEWPORT
+   --------------------------------------------------------------------------
+   Hierarchy:
+   Sidebar → Global Content Header → SLM Tab Navigation → Tab Content
+
+   This applies only to the SLM tab page.
+   Mobile behavior remains controlled by the existing responsive rules.
+   ========================================================================== */
+
+@media (min-width: 769px) {
+
+    /* The SLM page itself owns exactly the available viewport height. */
+    .main-content.slm-tab-page {
+        height: 100vh;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /*
+     * The global content header is part of normal document flow.
+     * It is NOT a sticky workaround.
+     */
+    .main-content.slm-tab-page > .content-header {
+        position: relative;
+        top: auto;
+        flex: 0 0 auto;
+        z-index: 1;
+    }
+
+    /*
+     * Everything below the global header occupies the remaining
+     * viewport height.
+     */
+    .main-content.slm-tab-page > .tabs {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /*
+     * SLM tabs are page navigation.
+     * They consume only their own natural height.
+     */
+    .main-content.slm-tab-page .tab-header {
+        flex: 0 0 auto;
+        min-height: 0;
+    }
+
+    /*
+     * Tab panels receive all remaining vertical space.
+     */
+    .main-content.slm-tab-page .tab-panels {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /*
+     * Only the active panel participates in the layout.
+     */
+    .main-content.slm-tab-page .tab-panel:not([hidden]) {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+    }
+
+    /*
+     * IMPORTANT:
+     * tab_self.html already has .widget-wrapper.
+     * Its existing 100vh-based min-height must NOT create another
+     * viewport inside the tab panel.
+     */
+    .main-content.slm-tab-page .tab-panel:not([hidden]) .widget-wrapper {
+        min-height: 0;
+        height: 100%;
+        flex: 1 1 auto;
+        box-sizing: border-box;
+    }
+
+    /*
+     * The subject widget should fill the panel instead of creating
+     * additional page height.
+     */
+    .main-content.slm-tab-page #subject-widget {
+        min-height: 0;
+        height: 100%;
+        flex: 1 1 auto;
+    }
+
+}

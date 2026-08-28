@@ -1,25 +1,76 @@
 {% extends "base.html" %}
+
 {% load static %}
+
 {% block title %}EduAlly - Modules{% endblock %}
+
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
-    <link rel="stylesheet" href="{% static 'css/slm/slm.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/slm/slm.css' %}">
 {% endblock %}
+
 {% block content %}
-    <div class="dashboard-container">
-        {% include "components/navigations.html" %}
-        <main class="main-content">
-            <div class="tabs">
-                <header class="tab-header">
-                        {% include "slm/tabs/tab_list.html" with tabs=tabs %}
-                </header>
-                {% include "slm/tabs/tab_panels.html" with tabs=tabs %}
-            </div>
-        </main>
+
+{% include "components/navigations.html" %}
+
+<main class="main-content slm-tab-page">
+
+    <!-- Global content header -->
+    <header class="content-header">
+        <div class="header-left">
+
+            <button type="button"
+                    class="mobile-sidebar-trigger"
+                    aria-controls="sidebar"
+                    aria-expanded="false"
+                    aria-label="Open navigation sidebar">
+
+                <span class="sr-only">Toggle sidebar</span>
+
+                <svg class="sidebar-trigger-icon"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
+
+                    <path d="M4 7h16M4 12h16M4 17h16"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"/>
+                </svg>
+
+            </button>
+
+            <p class="breadcrumb">
+                <i>Modules</i>
+            </p>
+
+        </div>
+    </header>
+
+    <!-- SLM page content -->
+    <div class="tabs">
+
+        <!-- Page navigation, NOT the global content header -->
+        <nav class="tab-header" aria-label="Self Learning Module navigation">
+            {% include "slm/tabs/tab_list.html" with tabs=tabs %}
+        </nav>
+
+        <!-- Active tab content -->
+        <div class="tab-panels">
+            {% include "slm/tabs/tab_panels.html" with tabs=tabs %}
+        </div>
+
     </div>
-    {% include "components/global_modal.html" %}
+
+</main>
+
+{% include "components/global_modal.html" %}
+
 {% endblock %}
+
 {% block extra_js %}
-    <script src="{% static 'js/modal.js' %}" defer></script>
-    <script src="{% static "js/slm/tab_switching.js" %}"></script>
+
+<script src="{% static 'js/modal.js' %}" defer></script>
+<script src="{% static 'js/slm/tab_switching.js' %}"></script>
+
 {% endblock %}
