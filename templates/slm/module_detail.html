@@ -99,7 +99,7 @@
 {% endblock %}
 {% block extra_js %}
     <script src="{% static 'js/modal.js' %}" defer></script>
-    {% if request.user|has_group:'Teacher' %}
+    {% if request.user|has_group:'Student' %}
     <script type="module">
         import { initHighlightAI } from "{% static 'js/slm/highlight_ai.js' %}";
         const toolbar   = document.getElementById('selection-toolbar');
