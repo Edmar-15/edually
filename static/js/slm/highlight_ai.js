@@ -1498,22 +1498,23 @@ export function initHighlightAI(
       }
 
       /*
-       * Never close the annotation widget when interacting
-       * with anything inside it.
+       * Clicking/tapping anything inside the annotation editor
+       * must NEVER close it.
        */
       if (ann.contains(e.target)) {
         return;
       }
 
       /*
-       * Mobile browsers may dispatch the interaction differently
-       * when focusing a textarea. If the target is still inside
-       * an annotation widget, keep it open.
+       * Extra protection for mobile/browser-generated targets.
        */
       if (e.target.closest?.(".annotation-widget")) {
         return;
       }
 
+      /*
+       * This is a genuine outside interaction.
+       */
       ann.remove();
 
       document.removeEventListener("mousedown", clickOutside);
@@ -1524,7 +1525,6 @@ export function initHighlightAI(
       }
 
       window.getSelection().removeAllRanges();
-
       latestSelectionRange = null;
     };
 
@@ -1819,6 +1819,30 @@ export function initHighlightAI(
 
   const onSelectionDone = (e) => {
     /*
+     * IMPORTANT:
+     *
+     * Once the annotation widget is open, the browser's
+     * selection system must NOT process touches/clicks
+     * intended for the annotation editor.
+     *
+     * On mobile, focusing the textarea can change/collapse
+     * window.getSelection(). That must not cause this function
+     * to rebuild or destroy the selection UI.
+     */
+    if (annotationWidget && annotationWidget.isConnected) {
+      if (annotationWidget.contains(e.target)) {
+        return;
+      }
+
+      /*
+       * Also ignore the touchend/mouseup generated while the
+       * annotation editor is being interacted with.
+       */
+      if (e.type === "touchend" || e.type === "mouseup") {
+        return;
+      }
+    }
+    /*
      * Ignore UI interactions.
      */
     if (
@@ -2039,10 +2063,32 @@ export function initHighlightAI(
   document.addEventListener("touchend", (e) => {
     requestAnimationFrame(() => {
       /*
-       * If the custom choice widget already exists, this touch
-       * may be the end of native selection-handle manipulation.
+       * -----------------------------------------------------------
+       * Annotation editor owns the interaction.
        *
-       * Just capture the browser's final selection.
+       * DO NOT run selection logic when the user is typing,
+       * focusing, scrolling, or otherwise interacting with it.
+       * -----------------------------------------------------------
+       */
+      if (annotationWidget && annotationWidget.isConnected) {
+        if (annotationWidget.contains(e.target)) {
+          return;
+        }
+
+        /*
+         * While the annotation widget is open, do not allow a
+         * mobile touchend to re-enter the selection workflow.
+         *
+         * The annotation's own outside handler is responsible
+         * for closing it when appropriate.
+         */
+        return;
+      }
+
+      /*
+       * -----------------------------------------------------------
+       * Existing selection-handle protection.
+       * -----------------------------------------------------------
        */
       if (choiceWidget && choiceWidget.isConnected) {
         const currentRange = cloneCurrentSelectionRange();
@@ -2060,9 +2106,8 @@ export function initHighlightAI(
       }
 
       /*
-       * No choice widget exists yet.
-       *
-       * This is a new selection, so create our custom widget.
+       * No active annotation or choice widget.
+       * This is a genuinely new selection.
        */
       onSelectionDone(e);
     });
