@@ -98,6 +98,8 @@ export function initHighlightAI(
 
   let choiceWidget = null;
 
+  let annotationWidget = null;
+
   /*
    * True while the user is physically manipulating a native
    * selection. This prevents our document-level touch handlers
@@ -1442,6 +1444,8 @@ export function initHighlightAI(
 
     ann.className = "annotation-widget";
 
+    annotationWidget = ann;
+
     document.body.appendChild(ann);
 
     ann.addEventListener("mousedown", (e) => e.stopPropagation());
@@ -1484,21 +1488,40 @@ export function initHighlightAI(
     const clickOutside = (e) => {
       if (!ann.isConnected) {
         document.removeEventListener("mousedown", clickOutside);
-
         document.removeEventListener("touchstart", clickOutside);
+
+        if (annotationWidget === ann) {
+          annotationWidget = null;
+        }
 
         return;
       }
 
+      /*
+       * Never close the annotation widget when interacting
+       * with anything inside it.
+       */
       if (ann.contains(e.target)) {
+        return;
+      }
+
+      /*
+       * Mobile browsers may dispatch the interaction differently
+       * when focusing a textarea. If the target is still inside
+       * an annotation widget, keep it open.
+       */
+      if (e.target.closest?.(".annotation-widget")) {
         return;
       }
 
       ann.remove();
 
       document.removeEventListener("mousedown", clickOutside);
-
       document.removeEventListener("touchstart", clickOutside);
+
+      if (annotationWidget === ann) {
+        annotationWidget = null;
+      }
 
       window.getSelection().removeAllRanges();
 
@@ -2132,6 +2155,10 @@ export function initHighlightAI(
       return;
     }
 
+    if (annotationWidget && annotationWidget.isConnected) {
+      return;
+    }
+
     /*
      * No active choice widget and no valid selection.
      */
@@ -2150,6 +2177,14 @@ export function initHighlightAI(
   // ---------------------------------------------------------------
 
   document.addEventListener("mousedown", (e) => {
+    /*
+     * Never treat interaction inside the annotation widget
+     * as an outside click.
+     */
+    if (annotationWidget && annotationWidget.contains(e.target)) {
+      return;
+    }
+
     if (activeTooltip && !activeTooltip.contains(e.target)) {
       removeTooltip();
     }
@@ -2191,6 +2226,11 @@ export function initHighlightAI(
       if (choiceWidget) {
         choiceWidget.remove();
         choiceWidget = null;
+      }
+
+      if (annotationWidget) {
+        annotationWidget.remove();
+        annotationWidget = null;
       }
 
       removeTooltip();
