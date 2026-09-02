@@ -1204,22 +1204,27 @@ export function initHighlightAI(
       e.stopPropagation();
 
       /*
-       * Resolve the FINAL browser selection.
+       * ALWAYS prefer the browser's CURRENT selection.
        *
-       * This is the selection after the user has dragged
-       * the native handles.
+       * This is important because the user may have dragged
+       * the native selection handles after the choice widget
+       * appeared.
        */
       const finalRange =
         cloneCurrentSelectionRange() ||
         latestSelectionRange?.cloneRange() ||
         initialRange.cloneRange();
 
+      if (!finalRange) {
+        console.warn("[highlight_ai] No valid final selection.");
+        return;
+      }
+
       latestSelectionRange = finalRange.cloneRange();
 
       choice.remove();
 
       document.removeEventListener("mousedown", clickOutside);
-
       document.removeEventListener("touchstart", clickOutside);
 
       if (choiceWidget === choice) {
@@ -1236,17 +1241,26 @@ export function initHighlightAI(
     choice.querySelector(".choice-annotate").addEventListener("click", (e) => {
       e.stopPropagation();
 
+      /*
+       * Use the selection that exists NOW.
+       *
+       * Do not blindly use initialRange.
+       */
       const finalRange =
         cloneCurrentSelectionRange() ||
         latestSelectionRange?.cloneRange() ||
         initialRange.cloneRange();
+
+      if (!finalRange) {
+        console.warn("[highlight_ai] No valid final selection.");
+        return;
+      }
 
       latestSelectionRange = finalRange.cloneRange();
 
       choice.remove();
 
       document.removeEventListener("mousedown", clickOutside);
-
       document.removeEventListener("touchstart", clickOutside);
 
       if (choiceWidget === choice) {
@@ -1354,6 +1368,13 @@ export function initHighlightAI(
         cloneCurrentSelectionRange() ||
         latestSelectionRange?.cloneRange() ||
         originalRange.cloneRange();
+
+      if (!finalRange) {
+        console.warn("[highlight_ai] No final selection available.");
+        return null;
+      }
+
+      latestSelectionRange = finalRange.cloneRange();
 
       const selData = getSelectionData(finalRange);
 
@@ -1972,23 +1993,54 @@ export function initHighlightAI(
 
   /*
    * Desktop:
-   * mouseup is sufficient.
+   *
+   * mouseup creates the choice widget for a new selection.
    */
   document.addEventListener("mouseup", onSelectionDone);
 
   /*
    * Mobile:
    *
-   * touchend is used only to detect the completed
-   * selection. The actual selection state is maintained
-   * by selectionchange.
+   * IMPORTANT:
+   *
+   * The first touchend creates the choice widget.
+   *
+   * Once the choice widget already exists, subsequent touchend
+   * events may be caused by the user dragging the browser's
+   * native selection handles.
+   *
+   * In that case we MUST NOT call onSelectionDone().
+   *
+   * selectionchange has already updated latestSelectionRange.
    */
   document.addEventListener("touchend", (e) => {
-    /*
-     * Give the browser a chance to finish updating
-     * its native selection before reading it.
-     */
     requestAnimationFrame(() => {
+      /*
+       * If the custom choice widget already exists, this touch
+       * may be the end of native selection-handle manipulation.
+       *
+       * Just capture the browser's final selection.
+       */
+      if (choiceWidget && choiceWidget.isConnected) {
+        const currentRange = cloneCurrentSelectionRange();
+
+        if (currentRange) {
+          latestSelectionRange = currentRange.cloneRange();
+
+          console.log(
+            "[highlight_ai] Mobile selection finalized:",
+            currentRange.toString(),
+          );
+        }
+
+        return;
+      }
+
+      /*
+       * No choice widget exists yet.
+       *
+       * This is a new selection, so create our custom widget.
+       */
       onSelectionDone(e);
     });
   });
@@ -1999,22 +2051,17 @@ export function initHighlightAI(
 
   document.addEventListener(
     "touchstart",
-    (e) => {
-      /*
-       * If the touch starts inside the content while a
-       * selection exists, treat it as potentially related
-       * to selection manipulation.
-       */
+    () => {
       const sel = window.getSelection();
 
       if (
         sel &&
         sel.rangeCount > 0 &&
+        !sel.isCollapsed &&
         sel.toString().trim() &&
         isSelectionWithinContent(sel)
       ) {
         selectionInteractionActive = true;
-
         return;
       }
 
@@ -2047,57 +2094,55 @@ export function initHighlightAI(
     const validSelection =
       sel &&
       sel.rangeCount > 0 &&
+      !sel.isCollapsed &&
       sel.toString().trim() &&
       isSelectionWithinContent(sel);
 
     /*
-     * THIS IS THE IMPORTANT MOBILE FIX.
+     * The browser's native selection is the source of truth.
      *
-     * Every time the user moves a native selection
-     * handle, the browser updates window.getSelection().
-     *
-     * We immediately snapshot that new Range.
+     * This fires when the user drags either native selection
+     * handle on mobile.
      */
     if (validSelection) {
       latestSelectionRange = sel.getRangeAt(0).cloneRange();
+
+      console.log(
+        "[highlight_ai] Native selection changed:",
+        latestSelectionRange.toString(),
+      );
 
       return;
     }
 
     /*
-     * Do NOT destroy a widget merely because the browser
-     * temporarily reports an empty selection during
-     * handle manipulation.
+     * Do not clear anything while the browser is manipulating
+     * the selection.
      */
     if (selectionInteractionActive) {
       return;
     }
 
     /*
-     * If the selection genuinely collapsed,
-     * clean up the UI.
+     * If our choice widget is visible, preserve the last valid
+     * selection. Mobile browsers can temporarily report a
+     * collapsed selection during selection-handle interaction.
      */
-    if (!validSelection) {
-      /*
-       * If a choice widget exists, don't destroy it merely
-       * because the browser briefly collapses selection.
-       *
-       * The next touchend will determine whether the
-       * interaction really ended.
-       */
-      if (choiceWidget && choiceWidget.isConnected) {
-        return;
-      }
-
-      if (mini) {
-        mini.remove();
-        mini = null;
-      }
-
-      toolbar.style.display = "none";
-
-      latestSelectionRange = null;
+    if (choiceWidget && choiceWidget.isConnected) {
+      return;
     }
+
+    /*
+     * No active choice widget and no valid selection.
+     */
+    if (mini) {
+      mini.remove();
+      mini = null;
+    }
+
+    toolbar.style.display = "none";
+
+    latestSelectionRange = null;
   });
 
   // ---------------------------------------------------------------
