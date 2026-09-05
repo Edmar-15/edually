@@ -243,7 +243,15 @@ class RoleBasedLoginView(TemplateView):
 # -----------------------------------------------------------------
 @anonymous_required
 def landing(request):
-    return render(request, "account/landing.html")
+    
+    policy_context = {
+            "policy_version": django_settings.POLICY_VERSION,
+            "effective_date": datetime.strptime(
+                django_settings.POLICY_EFFECTIVE_DATE, "%Y-%m-%d"
+            ),
+        }
+    
+    return render(request, "account/landing.html", {**policy_context})
 
 
 @anonymous_required
