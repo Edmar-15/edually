@@ -12,14 +12,10 @@
         <a href="{% url 'landing' %}" class="logo">
             <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
         </a>
-        <nav class="main-nav">
-            <a class="button button-outline" href="{% url 'landing' %}">Home</a>
-            <a class="button" href="{% url 'account:login' %}">Login</a>
-        </nav>
     </div>
 </header>
 
-<main class="auth-page">
+<main class="auth-page register-page">
     <section class="auth-card">
         <h1>Create your account</h1>
         <p class="auth-subtitle">Join EduAlly and start learning with confidence.</p>
@@ -43,7 +39,7 @@
                 {% endif %}
 
                 <div class="floating-label-group input-group">
-                    <label for="{{ form.student_id.id_for_label }}">Student ID (optional)</label>
+                    <label for="{{ form.student_id.id_for_label }}">Student ID</label>
                     {{ form.student_id }}
                 </div>
 

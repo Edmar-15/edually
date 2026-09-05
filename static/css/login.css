@@ -1,9 +1,15 @@
-/* Reset */
+/* ============================================================= */
+/* RESET */
+/* ============================================================= */
+
 * {
     box-sizing: border-box;
 }
 
-/* Base */
+/* ============================================================= */
+/* BASE */
+/* ============================================================= */
+
 body {
     margin: 0;
     min-height: 100vh;
@@ -16,7 +22,10 @@ body {
     text-size-adjust: 100%;
 }
 
-/* Header */
+/* ============================================================= */
+/* HEADER */
+/* ============================================================= */
+
 .page-header {
     width: 100%;
     padding: 22px 28px;
@@ -70,11 +79,15 @@ body {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     font-weight: 700;
     box-shadow: 0 12px 24px rgba(14, 154, 167, 0.16);
-    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, color 0.25s ease;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease,
+        color 0.25s ease;
 }
 
 .main-nav .button-outline {
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     color: var(--primary);
     border: 1px solid rgba(14, 154, 167, 0.2);
     box-shadow: none;
@@ -86,7 +99,10 @@ body {
     box-shadow: 0 16px 30px rgba(14, 154, 167, 0.2);
 }
 
-/* Page */
+/* ============================================================= */
+/* PAGE */
+/* ============================================================= */
+
 .auth-page {
     min-height: calc(100vh - 84px);
     display: flex;
@@ -95,10 +111,13 @@ body {
     padding: 24px 22px 36px;
 }
 
-/* Card */
+/* ============================================================= */
+/* CARD */
+/* ============================================================= */
+
 .auth-card {
     width: min(560px, 100%);
-    background: rgba(255,255,255,0.98);
+    background: rgba(255, 255, 255, 0.98);
     border-radius: 28px;
     padding: 28px 30px 32px;
     box-shadow: 0 30px 80px rgba(14, 154, 167, 0.14);
@@ -119,15 +138,20 @@ body {
     line-height: 1.7;
 }
 
-/* Labels */
+/* ============================================================= */
+/* GENERAL LABELS */
+/* ============================================================= */
+
 label {
     display: block;
-    margin-bottom: 8px;
     font-size: 0.95rem;
     color: #334155;
 }
 
-/* Form layout */
+/* ============================================================= */
+/* FORM LAYOUT */
+/* ============================================================= */
+
 .auth-card form {
     display: grid;
     gap: 18px;
@@ -152,8 +176,8 @@ label {
     gap: 12px;
     padding: 16px;
     border-radius: 20px;
-    background: rgba(14,154,167,0.06);
-    border: 1px solid rgba(14,154,167,0.14);
+    background: rgba(14, 154, 167, 0.06);
+    border: 1px solid rgba(14, 154, 167, 0.14);
 }
 
 .role-group label {
@@ -174,7 +198,7 @@ label {
     padding: 0 4px;
 }
 
-.radio-list > div {
+.radio-list>div {
     display: grid;
     grid-template-columns: repeat(2, minmax(140px, 220px));
     gap: 10px;
@@ -182,7 +206,7 @@ label {
     min-width: 0;
 }
 
-.radio-list > div label {
+.radio-list>div label {
     width: auto;
 }
 
@@ -195,9 +219,12 @@ label {
     padding: 10px 12px;
     border-radius: 16px;
     border: 1px solid rgba(148, 163, 184, 0.22);
-    background: rgba(255,255,255,0.95);
+    background: rgba(255, 255, 255, 0.95);
     cursor: pointer;
-    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
     min-height: 44px;
     white-space: nowrap;
 }
@@ -206,9 +233,9 @@ label {
     margin: 0;
 }
 
-.radio-list input[type="radio"]:checked + span,
-.radio-list input[type="radio"]:checked + strong,
-.radio-list input[type="radio"]:checked + label {
+.radio-list input[type="radio"]:checked+span,
+.radio-list input[type="radio"]:checked+strong,
+.radio-list input[type="radio"]:checked+label {
     color: #0f172a;
 }
 
@@ -218,8 +245,8 @@ label {
     gap: 14px;
     padding: 18px 16px;
     border-radius: 22px;
-    background: rgba(238,247,249,0.85);
-    border: 1px solid rgba(14,154,167,0.12);
+    background: rgba(238, 247, 249, 0.85);
+    border: 1px solid rgba(14, 154, 167, 0.12);
 }
 
 .student-fields::before,
@@ -237,8 +264,8 @@ label {
     gap: 10px;
     padding: 16px 18px;
     border-radius: 20px;
-    background: rgba(248,250,252,0.95);
-    border: 1px solid rgba(148,163,184,0.18);
+    background: rgba(248, 250, 252, 0.95);
+    border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 .terms-group .checkbox-label {
@@ -257,36 +284,93 @@ label {
     accent-color: var(--primary);
 }
 
+/* ============================================================= */
+/* FLOATING LABELS */
+/* ============================================================= */
 .floating-label-group,
 .input-group {
-    display: grid;
-    gap: 8px;
     width: 100%;
     margin-bottom: 0;
 }
 
-.floating-label-group label,
-.input-group label {
-    position: static;
-    transform: none;
-    opacity: 1;
-    font-size: 0.95rem;
-    color: #334155;
-    pointer-events: auto;
+.floating-label-group {
+    position: relative;
 }
 
-.input-group:hover label,
-.input-group input:focus + label,
-.input-group input:valid + label,
-.input-group:focus-within label,
-.input-group.focused label,
-.input-group.has-value label {
-    top: auto;
-    left: auto;
-    transform: none;
-    color: #0f172a;
+/* ------------------------------------------------------------- */
+/* Inputs */
+/* ------------------------------------------------------------- */
+.floating-label-group>input,
+.floating-label-group .password-input-wrapper input {
+    width: 100%;
+    margin: 0;
+    padding: 17px 18px;
+    border-radius: 18px;
 }
 
+/* Password input */
+.floating-label-group .password-input-wrapper input {
+    padding-right: 56px;
+}
+
+/* ------------------------------------------------------------- */
+/* Floating label - shared */
+/* ------------------------------------------------------------- */
+.floating-label-group>label,
+.floating-label-group>.password-input-wrapper+label {
+    position: absolute;
+    left: 18px;
+    z-index: 3;
+    margin: 0;
+    padding: 0 5px;
+    background: rgba(255, 255, 255, 0.96);
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1;
+    transform: translateY(-50%);
+    pointer-events: none;
+    transition: top 0.2s ease, transform 0.2s ease, font-size 0.2s ease, color 0.2s ease;
+}
+
+/* ------------------------------------------------------------- */
+/* LOGIN - desktop/tablet */
+/* ------------------------------------------------------------- */
+.login-page .floating-label-group>label,
+.login-page .floating-label-group>.password-input-wrapper+label {
+    top: 28px;
+}
+
+/* ------------------------------------------------------------- */
+/* REGISTER - desktop/tablet */
+/* ------------------------------------------------------------- */
+.register-page .floating-label-group>label,
+.register-page .floating-label-group>.password-input-wrapper+label {
+    top: 28px;
+}
+
+/* ------------------------------------------------------------- */
+/* Floating state - shared */
+/* ------------------------------------------------------------- */
+.floating-label-group:focus-within>label,
+.floating-label-group.focused>label,
+.floating-label-group.has-value>label {
+    top: 0;
+    transform: translateY(-50%);
+    font-size: 0.78rem;
+    color: var(--primary);
+}
+
+/* ------------------------------------------------------------- */
+/* Hide actual placeholder */
+/* ------------------------------------------------------------- */
+.floating-label-group input::placeholder {
+    color: transparent;
+    opacity: 0;
+}
+
+/* ------------------------------------------------------------- */
+/* Input stacking */
+/* ------------------------------------------------------------- */
 .floating-label-group input,
 .input-group input {
     position: relative;
@@ -294,29 +378,23 @@ label {
     margin-bottom: 0;
 }
 
-.floating-label-group input::placeholder,
-.input-group input::placeholder {
-    color: #94a3b8;
-    opacity: 1;
-    transition: color 0.25s ease;
-}
+/* ============================================================= */
+/* INPUTS */
+/* ============================================================= */
 
-.input-group:hover input::placeholder,
-.input-group:focus-within input::placeholder {
-    color: transparent;
-}
-
-/* Inputs */
 input,
 select {
     width: 100%;
     padding: 17px 18px;
     border-radius: 18px;
     border: 1px solid rgba(148, 163, 184, 0.22);
-    background: rgba(255,255,255,0.96);
+    background: rgba(255, 255, 255, 0.96);
     font-size: 1rem;
     color: var(--text);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.2s ease;
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease,
+        background-color 0.2s ease;
 }
 
 input {
@@ -330,7 +408,10 @@ select:focus {
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
 }
 
-/* Buttons */
+/* ============================================================= */
+/* BUTTONS */
+/* ============================================================= */
+
 button {
     width: 100%;
     padding: 15px 18px;
@@ -354,7 +435,9 @@ form button[type="submit"] {
     width: 100%;
     padding: 15px 20px;
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(135deg,
+            var(--primary) 0%,
+            var(--primary-dark) 100%);
     box-shadow: 0 12px 24px rgba(14, 154, 167, 0.16);
 }
 
@@ -364,23 +447,163 @@ form button[type="submit"]:hover {
     box-shadow: 0 10px 22px rgba(14, 154, 167, 0.16);
 }
 
+/* ============================================================= */
+/* PASSWORD TOGGLE */
+/* ============================================================= */
+
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.password-input-wrapper input {
+    width: 100%;
+    padding-right: 56px;
+    position: relative;
+    z-index: 1;
+}
+
 .toggle-password {
-    width: auto;
-    padding: 0.5rem;
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+
+    width: 38px;
+    height: 38px;
+    padding: 0.65rem;
+
+    border: none;
     border-radius: 999px;
-    background: transparent;
-    color: var(--muted);
-    box-shadow: none;
-}
 
-.toggle-password:hover {
     background: rgba(14, 154, 167, 0.08);
-    color: var(--primary);
-    transform: none;
-    box-shadow: none;
+    color: #0f172a;
+
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 2;
+
+    transition:
+        background-color 0.16s ease,
+        color 0.16s ease;
 }
 
-/* OAuth */
+.toggle-password:hover,
+.toggle-password:active,
+.toggle-password:focus-visible {
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(14, 154, 167, 0.16);
+    color: #075985;
+}
+
+.toggle-password:focus-visible {
+    outline: 2px solid rgba(79, 70, 229, 0.5);
+    outline-offset: 2px;
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
+
+.toggle-password .eye-icon,
+.toggle-password .eye-off-icon {
+    position: absolute;
+    inset: 0;
+
+    width: 20px;
+    height: 20px;
+    margin: auto;
+
+    transition: opacity 160ms ease;
+
+    opacity: 1;
+    pointer-events: none;
+    display: block;
+}
+
+.toggle-password .eye-off-icon {
+    opacity: 0;
+}
+
+.password-input-wrapper.password-visible .toggle-password .eye-icon {
+    opacity: 0;
+}
+
+.password-input-wrapper.password-visible .toggle-password .eye-off-icon {
+    opacity: 1;
+}
+
+/* ============================================================= */
+/* PASSWORD STRENGTH */
+/* ============================================================= */
+
+.password-strength-wrapper {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.password-strength-bar {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.18);
+    overflow: hidden;
+}
+
+.strength-meter {
+    display: block;
+    width: 0%;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #ef4444, #f87171);
+    transition:
+        width 0.25s ease,
+        background 0.25s ease;
+}
+
+.strength-meter.very-weak {
+    width: 20%;
+    background: linear-gradient(90deg, #dc2626, #f87171);
+}
+
+.strength-meter.weak {
+    width: 40%;
+    background: linear-gradient(90deg, #f97316, #fb923c);
+}
+
+.strength-meter.medium {
+    width: 70%;
+    background: linear-gradient(90deg, #eab308, #facc15);
+}
+
+.strength-meter.strong {
+    width: 100%;
+    background: linear-gradient(90deg, #22c55e, #10b981);
+}
+
+.password-strength-info {
+    display: grid;
+    gap: 4px;
+    color: #475569;
+    font-size: 0.92rem;
+}
+
+.password-strength-info .strength-label strong {
+    color: #0f172a;
+}
+
+/* ============================================================= */
+/* OAUTH */
+/* ============================================================= */
+
 .oauth-button {
     width: 100%;
     display: inline-flex;
@@ -394,11 +617,13 @@ form button[type="submit"]:hover {
     color: var(--text);
     font-weight: 700;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
     margin-bottom: 20px;
 }
 
-/* Google CTA specific */
 .google-cta {
     padding: 12px 18px;
     gap: 14px;
@@ -420,7 +645,7 @@ form button[type="submit"]:hover {
 }
 
 .google-cta:focus-visible {
-    outline: 3px solid rgba(14,154,167,0.18);
+    outline: 3px solid rgba(14, 154, 167, 0.18);
     outline-offset: 3px;
 }
 
@@ -435,7 +660,10 @@ form button[type="submit"]:hover {
     border-color: rgba(79, 70, 229, 0.32);
 }
 
-/* Divider */
+/* ============================================================= */
+/* DIVIDER */
+/* ============================================================= */
+
 .oauth-divider {
     margin: 18px 0;
     display: flex;
@@ -453,7 +681,10 @@ form button[type="submit"]:hover {
     background: rgba(148, 163, 184, 0.28);
 }
 
-/* Footer */
+/* ============================================================= */
+/* FOOTER */
+/* ============================================================= */
+
 .auth-footer {
     margin-top: 24px;
     font-size: 0.96rem;
@@ -472,7 +703,10 @@ form button[type="submit"]:hover {
     color: rgba(100, 116, 139, 0.9);
 }
 
-/* Policy Update Section */
+/* ============================================================= */
+/* POLICY UPDATE */
+/* ============================================================= */
+
 .policy-update-info {
     background: rgba(99, 102, 241, 0.06);
     border: 1px solid rgba(99, 102, 241, 0.2);
@@ -524,7 +758,131 @@ form button[type="submit"]:hover {
     box-shadow: 0 12px 28px rgba(79, 70, 229, 0.15);
 }
 
-/* Responsive */
+/* ============================================================= */
+/* TERMS */
+/* ============================================================= */
+
+.terms-group .checkbox-label {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.4;
+    font-size: 0.95rem;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.terms-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 3px 0 0 0;
+    align-self: flex-start;
+}
+
+.terms-text {
+    display: inline-block;
+}
+
+.policy-link {
+    color: var(--primary);
+    text-decoration: underline;
+    margin: 0 4px;
+}
+
+.policy-link:hover {
+    color: var(--primary-dark);
+}
+
+/* ============================================================= */
+/* ERRORS */
+/* ============================================================= */
+
+.errorlist,
+.messages {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.errorlist {
+    border: 1px solid rgba(239, 68, 68, 0.18);
+    background: rgba(254, 226, 226, 0.5);
+    color: #991b1b;
+    padding: 12px 14px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+}
+
+.errorlist li {
+    margin-bottom: 6px;
+}
+
+.messages li {
+    margin-bottom: 10px;
+}
+
+.messages li:last-child,
+.errorlist li:last-child {
+    margin-bottom: 0;
+}
+
+.message {
+    font-weight: 600;
+}
+
+/* ============================================================= */
+/* INPUT VALIDATION */
+/* ============================================================= */
+
+.input-error input,
+.input-error textarea {
+    border-color: #ef4444 !important;
+    background-color: rgba(239, 68, 68, 0.04);
+}
+
+.input-error input:focus,
+.input-error textarea:focus {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+}
+
+.input-valid input,
+.input-valid textarea {
+    border-color: #10b981 !important;
+    background-color: rgba(16, 185, 129, 0.04);
+}
+
+.input-valid input:focus,
+.input-valid textarea:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12) !important;
+}
+
+.validation-error {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #ef4444;
+    font-weight: 500;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================= */
+/* RESPONSIVE */
+/* ============================================================= */
+
 @media (max-width: 640px) {
     .page-header {
         padding: 14px 16px;
@@ -578,7 +936,6 @@ form button[type="submit"]:hover {
 }
 
 @media (min-width: 720px) {
-    /* Keep form single-column even on medium screens */
     .auth-card {
         width: min(520px, 100%);
     }
@@ -589,33 +946,13 @@ form button[type="submit"]:hover {
     }
 }
 
-@media (max-width: 640px) {
-    .header-inner {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-
-    .auth-card {
-        padding: 28px 22px;
-    }
-
-    .policy-links {
-        flex-direction: column;
-    }
-
-    .policy-links .button {
-        min-width: 100%;
-    }
-}
-
 @media (max-width: 540px) {
     .main-nav {
-        width:100%;
-        display:flex;
-        justify-content:flex-start;
-        gap:8px;
-        flex-wrap:wrap;
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
     .auth-card {
@@ -636,7 +973,11 @@ form button[type="submit"]:hover {
         width: 100%;
     }
 
-    .oauth-divider::before, .oauth-divider::after { display:none; }
+    .oauth-divider::before,
+    .oauth-divider::after {
+        display: none;
+    }
+
     input,
     select {
         padding: 12px 12px;
@@ -647,7 +988,7 @@ form button[type="submit"]:hover {
         grid-template-columns: 1fr;
     }
 
-    .radio-list > div {
+    .radio-list>div {
         grid-template-columns: 1fr;
     }
 
@@ -665,354 +1006,45 @@ form button[type="submit"]:hover {
     .auth-footer {
         font-size: 0.9rem;
     }
-}
 
-/* Terms */
-.terms-group .checkbox-label {
-    display: inline-flex;
-    align-items: flex-start;
-    gap: 10px;
-    line-height: 1.4;
-    font-size: 0.95rem;
-    color: var(--muted);
-    cursor: pointer;
-}
-.terms-group input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    margin: 3px 0 0 0;
-    align-self: flex-start;
-}
-.terms-text { display: inline-block; }
-.policy-link { color: var(--primary); text-decoration: underline; margin: 0 4px; }
-.policy-link:hover { color: var(--primary-dark); }
-
-/* Password toggle */
-.password-input-wrapper {
-    position: relative;
-    width: 100%;
-    margin-bottom: 0;
-}
-
-.password-input-wrapper input {
-    width: 100%;
-    padding-right: 56px;
-    position: relative;
-    z-index: 1;
-}
-
-
-.toggle-password {
-    position: absolute;
-    top: 50%;
-    right: 14px;
-    transform: translateY(-50%);
-    background: rgba(14,154,167,0.08);
-    border: none;
-    padding: 0.65rem;
-    border-radius: 999px;
-    cursor: pointer;
-    color: #0f172a;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.16s ease, color 0.16s ease; /* no transform transition */
-    width: 38px;
-    height: 38px;
-    z-index: 2;
-}
-
-/* Ensure hover/active keep the same vertical transform so the button doesn't shift */
-.toggle-password:hover,
-.toggle-password:active,
-.toggle-password:focus-visible {
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(14,154,167,0.16);
-    color: #075985;
-}
-
-.toggle-password:focus-visible {
-    outline: 2px solid rgba(79, 70, 229, 0.5);
-    outline-offset: 2px;
-}
-
-.password-strength-wrapper {
-    display: grid;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.password-strength-bar {
-    width: 100%;
-    height: 10px;
-    border-radius: 999px;
-    background: rgba(148, 163, 184, 0.18);
-    overflow: hidden;
-}
-
-.strength-meter {
-    display: block;
-    width: 0%;
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #ef4444, #f87171);
-    transition: width 0.25s ease, background 0.25s ease;
-}
-
-.strength-meter.very-weak {
-    width: 20%;
-    background: linear-gradient(90deg, #dc2626, #f87171);
-}
-
-.strength-meter.weak {
-    width: 40%;
-    background: linear-gradient(90deg, #f97316, #fb923c);
-}
-
-.strength-meter.medium {
-    width: 70%;
-    background: linear-gradient(90deg, #eab308, #facc15);
-}
-
-.strength-meter.strong {
-    width: 100%;
-    background: linear-gradient(90deg, #22c55e, #10b981);
-}
-
-.password-strength-info {
-    display: grid;
-    gap: 4px;
-    color: #475569;
-    font-size: 0.92rem;
-}
-
-.password-strength-info .strength-label strong {
-    color: #0f172a;
-}
-
-.toggle-password svg {
-    width: 20px;
-    height: 20px;
-}
-
-/* Stack icons and fade between them to avoid layout shifts */
-.toggle-password {
-    position: absolute; /* already absolute; ensure stacking context */
-}
-.toggle-password .eye-icon,
-.toggle-password .eye-off-icon {
-    position: absolute;
-    inset: 0; /* fill the button */
-    width: 20px;
-    height: 20px;
-    margin: auto;
-    transition: opacity 160ms ease;
-    opacity: 1;
-    pointer-events: none;
-    display: block;
-}
-.toggle-password .eye-off-icon { opacity: 0; }
-.password-input-wrapper.password-visible .toggle-password .eye-icon { opacity: 0; }
-.password-input-wrapper.password-visible .toggle-password .eye-off-icon { opacity: 1; }
-
-.errorlist,
-.messages {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.errorlist {
-    border: 1px solid rgba(239, 68, 68, 0.18);
-    background: rgba(254, 226, 226, 0.5);
-    color: #991b1b;
-    padding: 12px 14px;
-    border-radius: 16px;
-    font-size: 0.95rem;
-}
-
-.errorlist li {
-    margin-bottom: 6px;
-}
-
-.messages li {
-    margin-bottom: 10px;
-}
-
-.messages li:last-child,
-.errorlist li:last-child {
-    margin-bottom: 0;
-}
-
-.message {
-    font-weight: 600;
-}
-
-/* Input Validation */
-.input-error input,
-.input-error textarea {
-    border-color: #ef4444 !important;
-    background-color: rgba(239, 68, 68, 0.04);
-}
-
-.input-error input:focus,
-.input-error textarea:focus {
-    border-color: #ef4444 !important;
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
-}
-
-.input-valid input,
-.input-valid textarea {
-    border-color: #10b981 !important;
-    background-color: rgba(16, 185, 129, 0.04);
-}
-
-.input-valid input:focus,
-.input-valid textarea:focus {
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12) !important;
-}
-
-.validation-error {
-    display: block;
-    margin-top: 6px;
-    font-size: 0.85rem;
-    color: #ef4444;
-    font-weight: 500;
-    animation: slideDown 0.2s ease;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
+    /*
+     * Smaller inputs require the floating label to stay
+     * vertically centered against the smaller input.
+     */
+    /* Login */
+    .login-page .floating-label-group>label,
+    .login-page .floating-label-group>.password-input-wrapper+label {
+        top: 24px;
+        left: 12px;
+        font-size: 1rem;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+    /* Register */
+    .register-page .floating-label-group>label,
+    .register-page .floating-label-group>.password-input-wrapper+label {
+        top: 24px;
+        left: 12px;
+    }
+
+    /* Mobile inputs */
+    .floating-label-group>input,
+    .floating-label-group .password-input-wrapper input {
+        padding: 12px;
+        border-radius: 14px;
+    }
+
+    /* Password input */
+    .floating-label-group .password-input-wrapper input {
+        padding-right: 52px;
+    }
+
+    /* Floating state */
+    .floating-label-group:focus-within>label,
+    .floating-label-group.focused>label,
+    .floating-label-group.has-value>label {
+        top: 0;
+        left: 12px;
+        font-size: 0.78rem;
+        transform: translateY(-50%);
     }
 }
-
-/* ============================================= */
-/* DARK MODE STYLES - login.css */
-/* ============================================= */
-
-html.dark body,
-html[data-theme="dark"] body {
-    background: linear-gradient(135deg, rgba(11, 18, 32, 0.98), rgba(8, 13, 24, 0.98)) !important;
-    color: var(--text) !important;
-}
-
-html.dark .page-header,
-html[data-theme="dark"] .page-header {
-    background: rgba(10, 15, 28, 0.92) !important;
-    border-bottom-color: rgba(148, 163, 184, 0.14) !important;
-}
-
-html.dark .logo,
-html[data-theme="dark"] .logo {
-    color: var(--primary) !important;
-}
-
-html.dark .main-nav a,
-html[data-theme="dark"] .main-nav a {
-    color: var(--text) !important;
-}
-
-html.dark .main-nav a:hover,
-html[data-theme="dark"] .main-nav a:hover {
-    color: var(--primary) !important;
-}
-
-html.dark .form-card,
-html.dark .auth-card,
-html.dark .card,
-html[data-theme="dark"] .form-card,
-html[data-theme="dark"] .auth-card,
-html[data-theme="dark"] .card {
-    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 28, 0.98)) !important;
-    border-color: rgba(148, 163, 184, 0.14) !important;
-    box-shadow: 0 16px 40px rgba(2, 6, 23, 0.3) !important;
-}
-
-html.dark input,
-html.dark textarea,
-html.dark select,
-html[data-theme="dark"] input,
-html[data-theme="dark"] textarea,
-html[data-theme="dark"] select {
-    background: rgba(15, 23, 42, 0.95) !important;
-    border-color: rgba(148, 163, 184, 0.22) !important;
-    color: var(--text) !important;
-}
-
-html.dark input::placeholder,
-html.dark textarea::placeholder,
-html[data-theme="dark"] input::placeholder,
-html[data-theme="dark"] textarea::placeholder {
-    color: rgba(148, 163, 184, 0.6) !important;
-}
-
-html.dark input:focus,
-html.dark textarea:focus,
-html.dark select:focus,
-html[data-theme="dark"] input:focus,
-html[data-theme="dark"] textarea:focus,
-html[data-theme="dark"] select:focus {
-    background: rgba(15, 23, 42, 0.98) !important;
-    border-color: rgba(14, 154, 167, 0.24) !important;
-    box-shadow: 0 0 0 3px rgba(14, 154, 167, 0.1) !important;
-}
-
-html.dark button,
-html.dark .button,
-html.dark .btn,
-html[data-theme="dark"] button,
-html[data-theme="dark"] .button,
-html[data-theme="dark"] .btn {
-    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(11, 18, 30, 0.98)) !important;
-    border-color: rgba(148, 163, 184, 0.18) !important;
-    color: var(--text) !important;
-}
-
-html.dark button:hover,
-html.dark .button:hover,
-html.dark .btn:hover,
-html[data-theme="dark"] button:hover,
-html[data-theme="dark"] .button:hover,
-html[data-theme="dark"] .btn:hover {
-    background: linear-gradient(180deg, rgba(20, 29, 48, 0.98), rgba(14, 22, 40, 0.98)) !important;
-    border-color: rgba(14, 154, 167, 0.24) !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(14, 154, 167, 0.12) !important;
-}
-
-html.dark .errorlist,
-html[data-theme="dark"] .errorlist {
-    background: rgba(239, 68, 68, 0.08) !important;
-    border-color: rgba(239, 68, 68, 0.2) !important;
-    color: #fca5a5 !important;
-}
-
-html.dark .input-error input,
-html.dark .input-error textarea,
-html[data-theme="dark"] .input-error input,
-html[data-theme="dark"] .input-error textarea {
-    border-color: #ef4444 !important;
-    background-color: rgba(239, 68, 68, 0.08) !important;
-}
-
-html.dark .input-valid input,
-html.dark .input-valid textarea,
-html[data-theme="dark"] .input-valid input,
-html[data-theme="dark"] .input-valid textarea {
-    border-color: #10b981 !important;
-    background-color: rgba(16, 185, 129, 0.08) !important;
-}
-
-html.dark .validation-error,
-html[data-theme="dark"] .validation-error {
-    color: #fca5a5 !important;
-}
-
