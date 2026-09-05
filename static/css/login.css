@@ -1048,3 +1048,11 @@ form button[type="submit"]:hover {
         transform: translateY(-50%);
     }
 }
+
+.login-page .password-input-wrapper:focus-within + label {
+    top: 0;
+    left: 18px;
+    transform: translateY(-50%);
+    font-size: 0.78rem;
+    color: var(--primary);
+}
