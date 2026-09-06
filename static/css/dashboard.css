@@ -1847,19 +1847,33 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
 }
 
 .profile-summary {
-    border-top: 1px solid rgba(148, 163, 184, 0.12);
-    padding: 16px 0;
+    display: grid;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.58);
     transition: all 0.25s ease;
 }
 
+.profile-summary:last-of-type {
+    margin-bottom: 0;
+}
+
 .profile-summary p {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 1rem;
     margin: 0;
     line-height: 1.7;
+    min-width: 0;
 }
 
 .profile-summary p strong {
+    flex: 0 0 auto;
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 0;
     color: var(--muted);
     font-size: 0.85rem;
     font-weight: 600;
@@ -1867,10 +1881,13 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     text-transform: capitalize;
 }
 
-.profile-summary p:last-of-type {
+.profile-summary p span {
+    min-width: 0;
     color: var(--text);
     font-weight: 500;
     font-size: 0.95rem;
+    text-align: left;
+    overflow-wrap: anywhere;
 }
 
 .profile-settings-link {

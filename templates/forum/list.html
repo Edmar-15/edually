@@ -14,7 +14,6 @@
     <script src="{% static 'js/modal.js' %}" defer></script>
     <script src="{% static 'js/forum/forum-upvote.js' %}"></script>
     <script src="{% static 'js/forum/forum_ajax.js' %}"></script>
-    <script src="{% static 'js/forum/forum-push.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -32,9 +31,9 @@
                 </button>
                 <p>Community Forum</p>
             </div>
-            <button type="button" class="button secondary-circle small-button forum-push-button" data-forum-push aria-label="Enable push notifications" title="Enable push notifications">
+            <a href="{% url 'forum:notifications' %}" class="button secondary-circle small-button forum-push-button js-modal-trigger" aria-label="View forum notifications" title="Forum notifications">
                 <i class="fa-solid fa-bell" aria-hidden="true"></i>
-            </button>
+            </a>
         </header>
 
         <div class="forum-container">
@@ -53,7 +52,7 @@
 
                     <div class="filter-area">
                         <div class="category-filter">
-                            <select name="category" onchange="window.location='{% url 'forum:list' %}?category=' + this.value" class="filter-select" aria-label="Filter by category">
+                            <select name="category" onchange="const params = new URLSearchParams(window.location.search); this.value ? params.set('category', this.value) : params.delete('category'); params.delete('page'); window.location = '{% url 'forum:list' %}?' + params.toString();" class="filter-select" aria-label="Filter by category">
                                 <option value="">All Categories</option>
                                 {% for cat in categories %}
                                     <option value="{{ cat.slug }}" {% if cat.slug == selected_category %}selected{% endif %}>{{ cat.name }}</option>
@@ -62,7 +61,7 @@
                         </div>
 
                         <div class="sort-filter">
-                            <select name="sort" onchange="window.location='{% url 'forum:list' %}{% if search_query %}?q={{ search_query }}&{% else %}?{% endif %}sort=' + this.value" class="filter-select" aria-label="Sort discussions">
+                            <select name="sort" onchange="const params = new URLSearchParams(window.location.search); params.set('sort', this.value); params.delete('page'); window.location = '{% url 'forum:list' %}?' + params.toString();" class="filter-select" aria-label="Sort discussions">
                                 <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Latest</option>
                                 <option value="-upvotes" {% if sort_by == '-upvotes' %}selected{% endif %}>Most Popular</option>
                                 <option value="-reply_count" {% if sort_by == '-reply_count' %}selected{% endif %}>Most Replied</option>

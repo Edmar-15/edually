@@ -2209,19 +2209,25 @@ html[data-theme="dark"] .empty-state {
 }
 
 .reply-input-row {
-    display: flex;
-    align-items: flex-end;
-    gap: .6rem;
+    position: relative;
+    width: 100%;
 }
 
 .reply-input-row .reply-textarea {
-    flex: 1;
-    min-width: 0;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 3.5rem;
+    padding-bottom: 3.2rem;
 }
 
 .reply-input-row .reply-send-button {
-    flex: 0 0 42px;
+    position: absolute;
+    right: .7rem;
+    bottom: .7rem;
+    z-index: 1;
     width: 42px;
+    height: 42px;
     min-height: 42px;
     padding: 0;
     border-radius: 10px;
@@ -2229,12 +2235,14 @@ html[data-theme="dark"] .empty-state {
 
 @media (max-width: 600px) {
     .reply-input-row {
-        align-items: stretch;
+        width: 100%;
     }
 
     .reply-input-row .reply-send-button {
-        flex-basis: 40px;
+        right: .6rem;
+        bottom: .6rem;
         width: 40px;
+        height: 40px;
         min-height: 40px;
     }
 }
@@ -3002,4 +3010,108 @@ textarea:focus-visible {
 .button-group .btn-secondary {
     flex: 1;
     min-width: 120px;
+}
+
+.forum-notifications-page {
+    display: block;
+}
+
+.forum-notifications-modal {
+    width: min(100% - 2rem, 620px);
+}
+
+.forum-notifications-modal .modal__body {
+    max-height: min(70vh, 620px);
+    overflow-y: auto;
+}
+
+.forum-section-heading {
+    margin-bottom: 1.25rem;
+}
+
+.forum-section-heading h1 {
+    margin: 0;
+    color: var(--forum-text);
+    font-size: clamp(1.45rem, 3vw, 2rem);
+}
+
+.forum-section-heading .text-muted {
+    margin: .45rem 0 0;
+    color: var(--forum-muted);
+}
+
+.forum-notification-list {
+    display: grid;
+    gap: .7rem;
+}
+
+.forum-notification-item {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .86);
+    color: var(--forum-text);
+    text-decoration: none;
+    transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.forum-notification-item:hover {
+    border-color: rgba(14, 154, 167, .3);
+    background: rgba(14, 154, 167, .06);
+    transform: translateY(-1px);
+}
+
+.forum-notification-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(14, 154, 167, .12);
+    color: var(--forum-primary);
+}
+
+.forum-notification-copy {
+    min-width: 0;
+    flex: 1;
+    line-height: 1.45;
+}
+
+.forum-notification-copy strong {
+    color: var(--forum-text);
+}
+
+.forum-notification-copy small {
+    display: block;
+    margin-top: .25rem;
+    color: var(--forum-muted);
+    font-size: .78rem;
+}
+
+.forum-notification-arrow {
+    color: var(--forum-muted);
+    font-size: .8rem;
+}
+
+html.dark .forum-notification-item,
+html[data-theme="dark"] .forum-notification-item {
+    background: rgba(17, 24, 39, .9);
+    border-color: rgba(148, 163, 184, .16);
+}
+
+@media (max-width: 480px) {
+    .forum-notification-item {
+        align-items: flex-start;
+        padding: .85rem;
+    }
+
+    .forum-notification-icon {
+        flex-basis: 34px;
+        width: 34px;
+        height: 34px;
+    }
 }

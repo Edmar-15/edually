@@ -18,9 +18,54 @@ def feed_redirect(request):
     return redirect('forum:list')
 
 
+@login_required(login_url='account:login')
 def notifications(request):
-    """Temporary compatibility endpoint for legacy notifications links."""
-    return redirect('forum:list')
+    """Show recent activity from the user's forum discussions."""
+    activity = []
+
+    replies = Reply.objects.filter(
+        post__author=request.user,
+        is_deleted=False,
+    ).exclude(author=request.user).select_related('author', 'post')[:30]
+    for reply in replies:
+        activity.append({
+            'actor': reply.author,
+            'message': f'replied to your discussion: {reply.post.title}',
+            'url': reverse('forum:post_detail', args=[reply.post_id]),
+            'created_at': reply.created_at,
+        })
+
+    post_upvotes = PostUpvote.objects.filter(
+        post__author=request.user,
+    ).exclude(user=request.user).select_related('user', 'post')[:30]
+    for upvote in post_upvotes:
+        activity.append({
+            'actor': upvote.user,
+            'message': f'upvoted your discussion: {upvote.post.title}',
+            'url': reverse('forum:post_detail', args=[upvote.post_id]),
+            'created_at': upvote.created_at,
+        })
+
+    reply_upvotes = ReplyUpvote.objects.filter(
+        reply__author=request.user,
+        reply__is_deleted=False,
+    ).exclude(user=request.user).select_related('user', 'reply__post')[:30]
+    for upvote in reply_upvotes:
+        activity.append({
+            'actor': upvote.user,
+            'message': f'upvoted your reply in: {upvote.reply.post.title}',
+            'url': reverse('forum:post_detail', args=[upvote.reply.post_id]),
+            'created_at': upvote.created_at,
+        })
+
+    activity.sort(key=lambda item: item['created_at'], reverse=True)
+    context = {'activity': activity[:50]}
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'html': render_to_string('forum/partials/notifications_modal.html', context, request=request),
+        })
+
+    return render(request, 'forum/notifications.html', context)
 
 
 def _is_moderator(user):
