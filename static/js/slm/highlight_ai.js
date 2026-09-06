@@ -396,6 +396,14 @@ export function initHighlightAI(
 
         li.tabIndex = 0;
 
+        // ---------------------------------------------------------
+        // History content
+        // ---------------------------------------------------------
+
+        const content = document.createElement("div");
+
+        content.className = "module-content-history__content";
+
         const termSpan = document.createElement("span");
 
         termSpan.className = "module-content-history__text";
@@ -416,8 +424,39 @@ export function initHighlightAI(
           levelsDiv.appendChild(lvlDiv);
         });
 
-        li.append(termSpan, levelsDiv);
+        content.append(termSpan, levelsDiv);
 
+        // ---------------------------------------------------------
+        // Remove highlight button
+        // ---------------------------------------------------------
+
+        const removeBtn = document.createElement("button");
+
+        removeBtn.type = "button";
+
+        removeBtn.className = "module-content-history__remove";
+
+        removeBtn.setAttribute("aria-label", `Remove highlight: ${entry.text}`);
+
+        removeBtn.title = "Remove highlight";
+
+        removeBtn.textContent = "×";
+
+        removeBtn.addEventListener("click", async (e) => {
+          // Prevent the history item click from focusing the highlight.
+          e.preventDefault();
+          e.stopPropagation();
+
+          await removeHighlight(entry.text, entry.start, entry.end);
+        });
+
+        // ---------------------------------------------------------
+        // Assemble history item
+        // ---------------------------------------------------------
+
+        li.append(content, removeBtn);
+
+        // Clicking the history item still focuses the highlight.
         li.addEventListener("click", () =>
           focusHighlight(entry.start, entry.end),
         );
@@ -463,6 +502,76 @@ export function initHighlightAI(
     }
 
     updateHistoryUI();
+  };
+
+  const removeHighlight = async (text, start, end) => {
+    const clean = (text || "").trim();
+
+    if (!clean) return;
+
+    try {
+      const resp = await fetch(`${apiBase}${moduleId}/highlight/`, {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken,
+        },
+        body: JSON.stringify({
+          query: clean,
+          start_offset: start,
+          end_offset: end,
+        }),
+      });
+
+      let data = {};
+
+      try {
+        data = await resp.json();
+      } catch {
+        // Empty response is acceptable.
+      }
+
+      if (!resp.ok) {
+        throw new Error(
+          data?.error || `Failed to remove highlight (${resp.status})`,
+        );
+      }
+
+      // Remove the exact occurrence from client-side state.
+      const key = occurrenceKey(normalise(clean), start, end);
+
+      occurrences.delete(key);
+
+      // Remove it from history.
+      const index = historyEntries.findIndex(
+        (entry) =>
+          entry.start === start && entry.end === end && entry.text === clean,
+      );
+
+      if (index !== -1) {
+        historyEntries.splice(index, 1);
+      }
+
+      // Remove the visible highlight.
+      _refreshAllHighlights();
+
+      // Update history immediately.
+      updateHistoryUI();
+
+      // Close any tooltip belonging to the deleted highlight.
+      if (
+        activeTooltip &&
+        Number(activeTooltip.dataset.start) === start &&
+        Number(activeTooltip.dataset.end) === end
+      ) {
+        removeTooltip();
+      }
+    } catch (error) {
+      console.error("Failed to remove highlight:", error);
+
+      alert(error.message || "Could not remove highlight.");
+    }
   };
 
   const clearHistoryFocus = () => {
@@ -922,6 +1031,7 @@ export function initHighlightAI(
     }
 
     setOccurrenceAnswer(query, start, end, level, data.answer);
+    addHistoryEntry(query, level, start, end);
 
     return data;
   };
@@ -1071,6 +1181,7 @@ export function initHighlightAI(
         }
 
         setOccurrenceAnnotation(query, start, end, data.note ?? note);
+        addHistoryEntry(query, "annotation", start, end);
 
         textarea.classList.add("annotation-saved");
 
