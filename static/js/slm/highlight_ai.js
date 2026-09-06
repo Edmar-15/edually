@@ -509,6 +509,17 @@ export function initHighlightAI(
 
     if (!clean) return;
 
+    const confirmed = await window.confirmModal?.({
+      title: "Remove Highlight?",
+      message: `Are you sure you want to remove the highlight "${clean}"? This action cannot be undone.`,
+      confirmText: "Remove",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
       const resp = await fetch(`${apiBase}${moduleId}/highlight/`, {
         method: "DELETE",

@@ -526,6 +526,20 @@ a:hover {
     flex-direction: column;
     gap: .45rem;
 }
+
+.module-content-history__list {
+    max-height: 24rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: .2rem;
+}
+
+@media (max-width: 768px) {
+    .module-content-history__list {
+        max-height: 12rem;
+    }
+}
+
 .module-content-history__item {
     display: flex;
     justify-content: space-between;
