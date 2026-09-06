@@ -11,6 +11,15 @@ EduAlly is an AI-powered learning platform that helps students study, understand
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/landing.css' %}">
     <link rel="stylesheet" href="{% static 'css/policy_modal.css' %}">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "EduAlly",
+        "url": "{{ request.scheme }}://{{ request.get_host }}/",
+        "description": "EduAlly is an AI-powered learning platform that helps students study, understand learning materials, and receive personalized academic assistance."
+    }
+    </script>
 {% endblock %}
 {% block content %}
     <header class="page-header">
