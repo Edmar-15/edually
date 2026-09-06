@@ -2235,12 +2235,22 @@ html[data-theme="dark"] .empty-state {
 
 @media (max-width: 600px) {
     .reply-input-row {
+        position: relative;
         width: 100%;
     }
 
+    .reply-input-row .reply-textarea {
+        width: 100%;
+        min-height: 112px;
+        padding-right: 3.25rem;
+        padding-bottom: 3rem;
+    }
+
     .reply-input-row .reply-send-button {
+        position: absolute;
         right: .6rem;
         bottom: .6rem;
+        z-index: 2;
         width: 40px;
         height: 40px;
         min-height: 40px;
@@ -2288,6 +2298,17 @@ html[data-theme="dark"] .reply-form-section {
 
     .reply-form .btn-primary {
         width: 100%;
+    }
+
+    .reply-input-row .reply-send-button {
+        align-self: auto;
+        display: inline-flex;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+        margin: 0;
+        padding: 0;
     }
 }
 

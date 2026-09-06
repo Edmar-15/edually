@@ -223,6 +223,17 @@ html[data-theme="dark"] .nav-item.active {
 
 .nav-label {
     flex: 1;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.sidebar-nav > .nav-item {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: .95rem;
+    line-height: 1.2;
 }
 
 body.sidebar-collapsed .sidebar .nav-icon,
@@ -2332,6 +2343,12 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     .nav-item {
         padding: 12px 14px;
         font-size: 0.95rem;
+    }
+
+    .sidebar-nav > .nav-item {
+        min-height: 48px;
+        padding: 12px 14px;
+        font-size: .95rem;
     }
 
     .nav-label {

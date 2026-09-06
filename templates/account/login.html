@@ -9,15 +9,34 @@ noindex, nofollow
 <link rel="stylesheet" href="{% static 'css/login.css' %}">
 {% endblock %}
 {% block content %}
-<header class="page-header">
+<header class="page-header auth-header">
     <div class="header-inner">
-        <a href="{% url 'landing' %}" class="logo">
-            <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
+
+        <a href="{% url 'landing' %}" class="auth-back" aria-label="Back to home">
+            <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+            </svg>
         </a>
-        <nav class="main-nav">
-            <a class="button button-outline" href="{% url 'landing' %}">Home</a>
-            <a class="button" href="{% url 'account:register' %}">Register</a>
-        </nav>
+
+        <a href="{% url 'landing' %}" class="logo">
+            <img
+                src="{% static 'img/edually_logo.png' %}"
+                alt="EduAlly"
+                class="nav-logo"
+            >
+        </a>
+
     </div>
 </header>
 

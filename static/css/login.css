@@ -1075,3 +1075,97 @@ form button[type="submit"]:hover {
     font-size: 0.78rem;
     color: var(--primary);
 }
+
+/* ============================================================= */
+/* AUTH HEADER */
+/* ============================================================= */
+
+.auth-header .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.auth-back {
+    width: 40px;
+    height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 40px;
+
+    color: var(--text);
+    text-decoration: none;
+
+    border-radius: 10px;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.auth-back:hover {
+    background: rgba(14, 154, 167, 0.08);
+    color: var(--primary);
+}
+
+.auth-back:focus-visible {
+    outline: 3px solid rgba(14, 154, 167, 0.2);
+    outline-offset: 2px;
+}
+
+.auth-back:active {
+    transform: scale(0.95);
+}
+
+.auth-header .logo {
+    display: inline-flex;
+    align-items: center;
+}
+
+.auth-header .nav-logo {
+    display: block;
+    max-height: 34px;
+    width: auto;
+}
+
+
+/* ============================================================= */
+/* MOBILE AUTH HEADER */
+/* ============================================================= */
+
+@media (max-width: 640px) {
+
+    .auth-header {
+        padding: 10px 16px;
+    }
+
+    .auth-header .header-inner {
+        min-height: 40px;
+
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+    }
+
+    /* Hide Login/Home navigation on mobile */
+    .auth-header .main-nav {
+        display: none;
+    }
+
+    .auth-back {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+    }
+
+    .auth-header .nav-logo {
+        max-height: 32px;
+        width: auto;
+    }
+}

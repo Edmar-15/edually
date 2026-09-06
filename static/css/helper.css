@@ -310,6 +310,10 @@
     margin: 0;
 }
 
+.conversation-close-button {
+    display: none;
+}
+
 .chat-window {
     flex: 1 1 auto;
     min-height: 0;
@@ -982,6 +986,10 @@ html[data-theme="dark"] .send-button:focus-visible {
         display: inline-flex !important;
         order: -1;
     }
+
+    .conversation-close-button {
+        display: inline-flex;
+    }
 }
 
 /* Minimap popup control placed below the conversation map */
@@ -1085,5 +1093,190 @@ html[data-theme="dark"] .send-button:focus-visible {
         order: initial;
         width: 36px;
         height: 36px;
+    }
+}
+
+/* Keep the AI helper send control circular despite shared button styles. */
+.input-row > .send-button {
+    flex: 0 0 auto;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
+    border-radius: 50% !important;
+    aspect-ratio: 1;
+}
+
+@media (max-width: 640px) {
+    .input-row > .send-button {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+    }
+}
+
+/* ============================================================= */
+/* AI HELPER — ALL BUTTONS CIRCULAR */
+/* ============================================================= */
+
+/*
+ * Every AI Helper action button uses the same circular shape.
+ * Text buttons are kept compact so their labels still fit.
+ */
+
+/* ------------------------------------------------------------- */
+/* HEADER / CONVERSATION BUTTONS */
+/* ------------------------------------------------------------- */
+
+.new-chat-button,
+.minimap-button,
+.conversation-toggle,
+.conversation-close-button {
+    width: 2.3rem !important;
+    min-width: 2.3rem !important;
+
+    height: 2.3rem !important;
+    min-height: 2.3rem !important;
+
+    padding: 0 !important;
+    margin: 0;
+
+    border-radius: 50% !important;
+
+    aspect-ratio: 1 / 1;
+
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 2.3rem;
+
+    box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------- */
+/* EXPLANATION LEVEL — "SIMPLE" */
+/* ------------------------------------------------------------- */
+
+.explanation-button {
+    width: 38px !important;
+    min-width: 38px !important;
+
+    height: 38px !important;
+    min-height: 38px !important;
+
+    padding: 0 !important;
+    margin: 0;
+
+    border-radius: 50% !important;
+
+    aspect-ratio: 1 / 1;
+
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 38px;
+
+    box-sizing: border-box;
+
+    /*
+     * Smaller text allows "Simple" to fit inside
+     * the circular control.
+     */
+    font-size: 0.55rem !important;
+    font-weight: 700;
+
+    line-height: 1;
+
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- */
+/* SEND */
+/* ------------------------------------------------------------- */
+
+.send-button {
+    width: 38px !important;
+    min-width: 38px !important;
+
+    height: 38px !important;
+    min-height: 38px !important;
+
+    padding: 0 !important;
+    margin: 0;
+
+    border-radius: 50% !important;
+
+    aspect-ratio: 1 / 1;
+
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 38px;
+
+    box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------- */
+/* MOBILE */
+/* ------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+
+    .new-chat-button,
+    .minimap-button,
+    .conversation-toggle,
+    .conversation-close-button {
+        width: 2.2rem !important;
+        min-width: 2.2rem !important;
+
+        height: 2.2rem !important;
+        min-height: 2.2rem !important;
+
+        padding: 0 !important;
+
+        border-radius: 50% !important;
+
+        aspect-ratio: 1 / 1;
+
+        flex: 0 0 2.2rem;
+    }
+
+    .explanation-button {
+        width: 36px !important;
+        min-width: 36px !important;
+
+        height: 36px !important;
+        min-height: 36px !important;
+
+        padding: 0 !important;
+
+        border-radius: 50% !important;
+
+        aspect-ratio: 1 / 1;
+
+        flex: 0 0 36px;
+
+        font-size: 0.52rem !important;
+    }
+
+    .send-button {
+        width: 36px !important;
+        min-width: 36px !important;
+
+        height: 36px !important;
+        min-height: 36px !important;
+
+        padding: 0 !important;
+
+        border-radius: 50% !important;
+
+        aspect-ratio: 1 / 1;
+
+        flex: 0 0 36px;
     }
 }
