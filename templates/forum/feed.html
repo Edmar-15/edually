@@ -47,7 +47,7 @@
 
                     <div class="filter-area">
                         <div class="category-filter">
-                            <select name="category" onchange="window.location='{% url 'forum:list' %}?category=' + this.value" class="filter-select">
+                            <select name="category" onchange="const params = new URLSearchParams(window.location.search); this.value ? params.set('category', this.value) : params.delete('category'); params.delete('page'); window.location = '{% url 'forum:list' %}?' + params.toString();" class="filter-select">
                                 <option value="">All Categories</option>
                                 {% for cat in categories %}
                                     <option value="{{ cat.slug }}" {% if cat.slug == selected_category %}selected{% endif %}>{{ cat.name }}</option>
@@ -56,7 +56,7 @@
                         </div>
 
                         <div class="sort-filter">
-                            <select name="sort" onchange="window.location='{% url 'forum:list' %}{% if search_query %}?q={{ search_query }}&{% else %}?{% endif %}sort=' + this.value" class="filter-select">
+                            <select name="sort" onchange="const params = new URLSearchParams(window.location.search); params.set('sort', this.value); params.delete('page'); window.location = '{% url 'forum:list' %}?' + params.toString();" class="filter-select">
                                 <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Latest</option>
                                 <option value="-upvotes" {% if sort_by == '-upvotes' %}selected{% endif %}>Most Popular</option>
                                 <option value="-reply_count" {% if sort_by == '-reply_count' %}selected{% endif %}>Most Replied</option>

@@ -966,6 +966,205 @@ html.dark .post-form select {
     gap: 1rem;
 }
 
+/* Keep the forum readable when the desktop sidebar no longer fits. */
+@media (max-width: 1024px) {
+    .forum-shell {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.25rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .forum-sidebar {
+        position: static;
+        width: auto;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-header {
+        margin-bottom: 0;
+        padding: .8rem 1rem;
+    }
+
+    .forum-shell,
+    .forum-toolbar,
+    .forum-toolbar .search-area,
+    .forum-toolbar .filter-area {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .forum-shell {
+        padding: .85rem;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        min-height: auto;
+    }
+
+    .forum-toolbar {
+        gap: .85rem;
+        margin-bottom: 1rem;
+        padding: .9rem;
+        border-radius: 14px;
+    }
+
+    .filter-area {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .65rem;
+    }
+
+    .category-filter,
+    .sort-filter {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .filter-area .btn-primary {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    .forum-toolbar .filter-area {
+        gap: .55rem;
+    }
+
+    .forum-toolbar .category-filter,
+    .forum-toolbar .sort-filter {
+        min-width: 0;
+    }
+
+    .forum-toolbar .filter-select,
+    .forum-toolbar .filter-area .btn-primary {
+        min-height: 40px;
+        padding: .55rem .65rem;
+        font-size: .84rem;
+        border-radius: 9px;
+    }
+
+    .forum-toolbar .filter-select {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .forum-toolbar .filter-area .btn-primary {
+        min-width: 0;
+        white-space: nowrap;
+    }
+
+    .search-input,
+    .filter-select,
+    .filter-area .btn-primary {
+        min-height: 46px;
+        box-sizing: border-box;
+    }
+
+    .posts-list {
+        gap: .8rem;
+    }
+
+    .posts-list .post-card {
+        padding: 1rem;
+        border-radius: 14px;
+    }
+
+    .posts-list .post-card .post-meta {
+        gap: .45rem .65rem;
+        margin-bottom: .8rem;
+        padding-bottom: .8rem;
+    }
+
+    .posts-list .post-card .post-title {
+        font-size: 1.1rem;
+        line-height: 1.35;
+    }
+
+    .posts-list .post-card .post-excerpt {
+        margin: .75rem 0;
+        font-size: .9rem;
+        line-height: 1.55;
+    }
+
+    .posts-list .post-card .post-footer {
+        margin-top: 1rem;
+        padding-top: .8rem;
+    }
+
+    .posts-list .post-card .post-stats {
+        gap: .45rem;
+    }
+
+    .posts-list .post-card .stat,
+    .posts-list .post-card .upvote-btn,
+    .posts-list .post-card .reply-btn {
+        min-height: 40px;
+        padding: .5rem .7rem;
+    }
+
+    .forum-sidebar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .8rem;
+    }
+
+    .forum-sidebar .sidebar-card {
+        min-width: 0;
+        padding: 1rem;
+        border-radius: 14px;
+    }
+
+    .forum-sidebar .sidebar-card:last-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 480px) {
+    .forum-shell {
+        padding: .65rem;
+    }
+
+    .content-header {
+        padding-inline: .75rem;
+    }
+
+    .filter-area,
+    .forum-sidebar {
+        grid-template-columns: 1fr;
+    }
+
+    .forum-sidebar .sidebar-card:last-child {
+        grid-column: auto;
+    }
+
+    .posts-list .post-card .post-meta {
+        align-items: flex-start;
+    }
+
+    .posts-list .post-card .post-footer {
+        gap: .5rem;
+    }
+
+    .posts-list .post-card .post-stats {
+        min-width: 0;
+    }
+
+    .posts-list .post-card .stat,
+    .posts-list .post-card .upvote-btn,
+    .posts-list .post-card .reply-btn {
+        padding-inline: .55rem;
+    }
+}
+
 /* Sidebar cards */
 .widget,
 .category-nav {
