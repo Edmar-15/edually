@@ -94,11 +94,14 @@
         let target = data.redirect;
 
         if (data.message) {
-          sessionStorage.setItem('eduallyToastMessage', JSON.stringify({
-            message: data.message,
-            type: data.toastType || 'success',
-            duration: data.toastDuration || 4000,
-          }));
+          sessionStorage.setItem(
+            "eduallyToastMessage",
+            JSON.stringify({
+              message: data.message,
+              type: data.toastType || "success",
+              duration: data.toastDuration || 4000,
+            }),
+          );
         }
 
         if (currentHash && !target.includes("#")) {
@@ -109,11 +112,14 @@
       }
 
       if (data.message) {
-        sessionStorage.setItem('eduallyToastMessage', JSON.stringify({
-          message: data.message,
-          type: data.toastType || 'success',
-          duration: data.toastDuration || 4000,
-        }));
+        sessionStorage.setItem(
+          "eduallyToastMessage",
+          JSON.stringify({
+            message: data.message,
+            type: data.toastType || "success",
+            duration: data.toastDuration || 4000,
+          }),
+        );
       }
       window.location.reload();
     });
@@ -184,4 +190,103 @@
       }
     });
   });
+
+  /* -----------------------------------------------------------------
+   Confirmation modal
+   ----------------------------------------------------------------- */
+
+  const confirmModal = ({
+    title = "Confirm Action",
+    message = "Are you sure?",
+    confirmText = "Confirm",
+    cancelText = "Cancel",
+  } = {}) => {
+    return new Promise((resolve) => {
+      if (!modal) {
+        resolve(false);
+        return;
+      }
+
+      modal.innerHTML = `
+      <div class="modal__backdrop" data-close-modal></div>
+
+      <div class="modal__dialog" role="alertdialog"
+           aria-modal="true"
+           aria-labelledby="global-confirm-title"
+           aria-describedby="global-confirm-message">
+
+        <div class="modal__header">
+          <h2 id="global-confirm-title">${title}</h2>
+
+          <button type="button"
+                  class="modal__close"
+                  data-close-modal
+                  aria-label="Close">
+            &times;
+          </button>
+        </div>
+
+        <div class="modal__body">
+          <p id="global-confirm-message">${message}</p>
+        </div>
+
+        <div class="modal__footer">
+          <button type="button"
+                  class="button button--secondary"
+                  data-confirm-cancel>
+            ${cancelText}
+          </button>
+
+          <button type="button"
+                  class="button button--danger"
+                  data-confirm-ok>
+            ${confirmText}
+          </button>
+        </div>
+
+      </div>
+    `;
+
+      modal.removeAttribute("hidden");
+      modal.classList.add("open");
+
+      const cleanup = (result) => {
+        modal.classList.remove("open");
+        modal.setAttribute("hidden", "");
+        modal.innerHTML = "";
+        document.removeEventListener("keydown", onKeyDown);
+        resolve(result);
+      };
+
+      const onKeyDown = (e) => {
+        if (e.key === "Escape") {
+          cleanup(false);
+        }
+      };
+
+      modal
+        .querySelector("[data-confirm-ok]")
+        ?.addEventListener("click", () => {
+          cleanup(true);
+        });
+
+      modal
+        .querySelector("[data-confirm-cancel]")
+        ?.addEventListener("click", () => {
+          cleanup(false);
+        });
+
+      modal.querySelectorAll("[data-close-modal]").forEach((element) => {
+        element.addEventListener("click", () => {
+          cleanup(false);
+        });
+      });
+
+      document.addEventListener("keydown", onKeyDown);
+
+      modal.querySelector("[data-confirm-cancel]")?.focus();
+    });
+  };
+
+  window.confirmModal = confirmModal;
 })();

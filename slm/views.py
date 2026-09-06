@@ -986,7 +986,7 @@ def personal_material_detail(request, pk):
 
 
 @login_required(login_url='account:login')
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET", "POST", "DELETE"])
 def api_highlight(request, pk, target_type):
     """
     `target_type` is either "module" or "personal".
@@ -1007,6 +1007,52 @@ def api_highlight(request, pk, target_type):
         ):
             return JsonResponse({"error": "Permission denied"}, status=403)
         fk_name = "personal_material"
+
+        # -----------------------------------------------------------------
+    # DELETE – remove one exact highlight occurrence
+    # -----------------------------------------------------------------
+    if request.method == "DELETE":
+        try:
+            payload = json.loads(request.body)
+
+            raw_query = payload.get("query", "").strip()
+            start_offset = int(payload.get("start_offset"))
+            end_offset = int(payload.get("end_offset"))
+
+            if not raw_query:
+                raise ValueError("Empty query")
+
+            if start_offset < 0 or end_offset <= start_offset:
+                raise ValueError("Invalid offsets")
+
+        except (json.JSONDecodeError, ValueError, TypeError) as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+
+        query = raw_query.lower()
+
+        filter_kwargs = {
+            fk_name: target,
+            "owner": request.user,
+            "query": query,
+            "start_offset": start_offset,
+            "end_offset": end_offset,
+        }
+
+        deleted_answers, _ = HighlightAnswer.objects.filter(
+            **filter_kwargs
+        ).delete()
+
+        deleted_annotations, _ = HighlightAnnotation.objects.filter(
+            **filter_kwargs
+        ).delete()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "deleted_answers": deleted_answers,
+                "deleted_annotations": deleted_annotations,
+            }
+        )
 
     # -----------------------------------------------------------------
     # GET – list cached answers + offsets for the *current* user only

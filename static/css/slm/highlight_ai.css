@@ -526,6 +526,20 @@ a:hover {
     flex-direction: column;
     gap: .45rem;
 }
+
+.module-content-history__list {
+    max-height: 24rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: .2rem;
+}
+
+@media (max-width: 768px) {
+    .module-content-history__list {
+        max-height: 12rem;
+    }
+}
+
 .module-content-history__item {
     display: flex;
     justify-content: space-between;
@@ -556,6 +570,34 @@ a:hover {
 }
 .module-content-history__level-item {
     text-transform: capitalize;
+}
+
+.module-content-history__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.module-content-history__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.module-content-history__remove {
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: #777;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 4px 7px;
+    border-radius: 6px;
+}
+
+.module-content-history__remove:hover {
+    color: #d32f2f;
+    background: rgba(211, 47, 47, 0.08);
 }
 
 /* -------------------------------------------------------------
