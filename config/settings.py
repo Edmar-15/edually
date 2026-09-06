@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^pnd!-+l5abcn+($yh+u*52ovk%safdcb$mc5w+b)%+jyu-*y%'
+SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -173,7 +173,7 @@ OLLAMA_MODEL = ""
 OPENAI_API_KEY = "OPENAI_API_KEY"          
 OPENAI_MODEL   = "gpt-4o-mini"
 
-PWA_SW_VERSION = "20260827"
+PWA_SW_VERSION = "20260906"
 
 VAPID_PUBLIC_KEY  = ""
 VAPID_PRIVATE_KEY = ""
