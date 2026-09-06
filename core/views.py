@@ -5,6 +5,8 @@ from pathlib import Path
 from django.conf import settings as django_settings   # <- note the alias
 from django.http import FileResponse, HttpResponse, Http404
 from django.shortcuts import render
+from django.contrib.sitemaps import Sitemap
+from django.urls import reverse
 
 
 # --------------------------------------------------------------
@@ -58,3 +60,31 @@ def offline(request):
     Must be reachable without any authentication or DB queries.
     """
     return render(request, "offline.html", status=200)
+
+
+def robots_txt(request):
+    content = """User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /account/
+Disallow: /aihelper/
+Disallow: /slm/api/
+
+Sitemap: https://edually.ddns.net/sitemap.xml
+"""
+
+    return HttpResponse(content, content_type="text/plain")
+
+
+class StaticViewSitemap(Sitemap):
+    priority = 0.8
+    changefreq = "weekly"
+
+    def items(self):
+        return [
+            "landing",
+        ]
+
+    def location(self, item):
+        return reverse(item)

@@ -3,9 +3,48 @@
 <head>
     {% load static %}
     <meta charset="utf-8">
-    <title>{% block title %}EDUALLY{% endblock %}</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>{% block title %}EduAlly – AI-Powered Learning Platform{% endblock %}</title>
+
+    <meta name="description"
+        content="{% block meta_description %}EduAlly is an AI-powered learning platform that helps students study, understand learning materials, and receive personalized academic assistance.{% endblock %}">
+
+    <meta name="robots"
+        content="{% block robots %}index, follow{% endblock %}">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <meta name="theme-color" content="#0E9AA7">
+
+    <link rel="canonical"
+        href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="EduAlly">
+
+    <meta property="og:title"
+        content="{% block og_title %}EduAlly – AI-Powered Learning Platform{% endblock %}">
+
+    <meta property="og:description"
+        content="{% block og_description %}EduAlly is an AI-powered learning platform designed to help students study and understand their learning materials.{% endblock %}">
+
+    <meta property="og:url"
+        content="{{ request.build_absolute_uri }}">
+
+    <meta property="og:image"
+        content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.png' %}{% endblock %}">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+
+    <meta name="twitter:title"
+        content="{% block twitter_title %}EduAlly – AI-Powered Learning Platform{% endblock %}">
+
+    <meta name="twitter:description"
+        content="{% block twitter_description %}EduAlly helps students study, understand learning materials, and receive AI-powered academic assistance.{% endblock %}">
+
+    <meta name="twitter:image"
+        content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.png' %}{% endblock %}">
 
     <!-- 1️⃣ Manifest -->
     <link rel="manifest" href="{% url 'manifest' %}">

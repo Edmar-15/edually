@@ -20,6 +20,12 @@ from account.views import landing
 from django.conf import settings
 from django.conf.urls.static import static
 from core import views as pwa_views
+from django.contrib.sitemaps.views import sitemap
+from core.views import StaticViewSitemap
+
+sitemaps = {
+    "static": StaticViewSitemap,
+}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,6 +45,15 @@ urlpatterns = [
     # 3️⃣ Service‑worker (served by the view at the site root)
     # ------------------------------------------------------------------
     path('service-worker.js', pwa_views.service_worker, name='service-worker'),
+    
+    path("robots.txt", pwa_views.robots_txt, name="robots"),
+    
+    path(
+    "sitemap.xml",
+    sitemap,
+    {"sitemaps": sitemaps},
+    name="django.contrib.sitemaps.views.sitemap",
+),
 ]
 
 if settings.DEBUG:

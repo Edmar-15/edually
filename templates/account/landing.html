@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
 {% block html_attrs %}data-force-theme="light"{% endblock %}
-{% block title %}EduAlly - Landing{% endblock %}
+{% block title %}
+EduAlly – AI-Powered Learning Platform for Students
+{% endblock %}
+
+{% block meta_description %}
+EduAlly is an AI-powered learning platform that helps students study, understand learning materials, and receive personalized academic assistance.
+{% endblock %}
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/landing.css' %}">
     <link rel="stylesheet" href="{% static 'css/policy_modal.css' %}">

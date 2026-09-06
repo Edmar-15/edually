@@ -2,6 +2,9 @@
 {% load static %}
 {% block html_attrs %}data-force-theme="light"{% endblock %}
 {% block title %}EduAlly - Landing{% endblock %}
+{% block robots %}
+noindex, nofollow
+{% endblock %}
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/login.css' %}">
 {% endblock %}

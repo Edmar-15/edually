@@ -4,6 +4,9 @@
 {% load visibility_tags %}
 
     {% block title %}EduAlly - Dashboard{% endblock %}
+    {% block robots %}
+noindex, nofollow
+{% endblock %}
 {% block extra_head %}
     <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
 {% endblock %}
