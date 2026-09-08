@@ -1076,6 +1076,16 @@ form button[type="submit"]:hover {
     color: var(--primary);
 }
 
+.login-page .floating-label-group:has(
+    .password-input-wrapper input:not(:placeholder-shown)
+) > label {
+    top: 0;
+    left: 18px;
+    transform: translateY(-50%);
+    font-size: 0.78rem;
+    color: var(--primary);
+}
+
 /* ============================================================= */
 /* AUTH HEADER */
 /* ============================================================= */
