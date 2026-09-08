@@ -307,32 +307,67 @@ def conversation_map_json(request, post_id):
 
 @login_required(login_url='account:login')
 def forum_list(request):
-    """List all forum posts with optional filtering"""
+    """List all forum posts with optional filtering."""
+
+    # -------------------------------------------------------------
+    # Mark the forum onboarding step as completed.
+    # Visiting the forum is enough.
+    # -------------------------------------------------------------
+    if not request.user.onboarding_forum_visited:
+        request.user.onboarding_forum_visited = True
+        request.user.save(update_fields=["onboarding_forum_visited"])
+
     posts = Post.objects.filter(
         is_deleted=False,
         is_archived=False,
     ).prefetch_related('author', 'category')
 
-    # Search functionality
+    # -------------------------------------------------------------
+    # Search
+    # -------------------------------------------------------------
     search_query = request.GET.get('q', '')
+
     if search_query:
-        posts = posts.filter(Q(title__icontains=search_query) | Q(content__icontains=search_query))
+        posts = posts.filter(
+            Q(title__icontains=search_query)
+            | Q(content__icontains=search_query)
+        )
 
+    # -------------------------------------------------------------
     # Category filtering
+    # -------------------------------------------------------------
     category_slug = request.GET.get('category')
-    if category_slug:
-        posts = posts.filter(category__slug=category_slug)
 
+    if category_slug:
+        posts = posts.filter(
+            category__slug=category_slug
+        )
+
+    # -------------------------------------------------------------
     # Sorting
+    # -------------------------------------------------------------
     sort_by = request.GET.get('sort', '-created_at')
-    if sort_by in ['-created_at', '-upvotes', '-reply_count', 'created_at']:
+
+    if sort_by in [
+        '-created_at',
+        '-upvotes',
+        '-reply_count',
+        'created_at'
+    ]:
         posts = posts.order_by(sort_by)
 
     categories = Category.objects.all()
+
     user_post_upvotes = set()
+
     if request.user.is_authenticated:
         user_post_upvotes = set(
-            PostUpvote.objects.filter(user=request.user).values_list('post_id', flat=True)
+            PostUpvote.objects.filter(
+                user=request.user
+            ).values_list(
+                'post_id',
+                flat=True
+            )
         )
 
     context = {
@@ -343,7 +378,12 @@ def forum_list(request):
         'sort_by': sort_by,
         'user_post_upvotes': user_post_upvotes,
     }
-    return render(request, 'forum/list.html', context)
+
+    return render(
+        request,
+        'forum/list.html',
+        context
+    )
 
 
 @login_required(login_url='account:login')

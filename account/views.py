@@ -419,11 +419,6 @@ def dashboard(request):
 
     # -------------------------------------------------------------
     # User activity
-    #
-    # Counts actual things the user has done:
-    # - personal materials
-    # - forum posts
-    # - AI conversations
     # -------------------------------------------------------------
     forum_activity_count = Post.objects.filter(
         author=request.user,
@@ -487,16 +482,80 @@ def dashboard(request):
 
     # -------------------------------------------------------------
     # Continue where you left off
-    #
-    # Prefer the most recently visited module.
-    # If there is no module, use the most recent personal material.
     # -------------------------------------------------------------
     continue_module = recent_modules[0] if recent_modules else None
+
     continue_material = (
         recent_personal_materials[0]
         if recent_personal_materials
         else None
     )
+
+    # -------------------------------------------------------------
+    # ONBOARDING
+    # -------------------------------------------------------------
+
+    # 1. Complete your profile
+    profile_complete = bool(
+        request.user.first_name.strip()
+        and request.user.last_name.strip()
+        and request.user.program
+        and request.user.year_level
+    )
+
+    # 2. Explore your first SLM
+    first_slm_explored = bool(recent_modules)
+
+    # 3. Ask the AI Helper
+    ai_helper_used = (
+        Conversation.objects.filter(
+            user=request.user
+        ).exists()
+        or Message.objects.filter(
+            user=request.user,
+            role="user"
+        ).exists()
+    )
+
+    # 4. Visit the Discussion Forum
+    forum_visited = request.user.onboarding_forum_visited
+
+    onboarding_steps = [
+        {
+            "key": "profile",
+            "title": "Complete your profile",
+            "detail": "Add your basic information so your EduAlly space is ready.",
+            "done": profile_complete,
+            "url": "account:profile_edit",
+        },
+        {
+            "key": "slm",
+            "title": "Explore your first SLM",
+            "detail": "Open a Self Learning Module and start exploring your study materials.",
+            "done": first_slm_explored,
+            "url": "slm:slmlists",
+        },
+        {
+            "key": "ai",
+            "title": "Ask the AI Helper",
+            "detail": "Ask your first question and get help with a topic you are studying.",
+            "done": ai_helper_used,
+            "url": "aihelper:helper",
+        },
+        {
+            "key": "forum",
+            "title": "Visit the Discussion Forum",
+            "detail": "See what other students are discussing and join the conversation.",
+            "done": forum_visited,
+            "url": "forum:list",
+        },
+    ]
+
+    onboarding_completed = sum(
+        1 for step in onboarding_steps if step["done"]
+    )
+
+    onboarding_complete = onboarding_completed == len(onboarding_steps)
 
     context = {
         "subjects": subjects,
@@ -514,6 +573,12 @@ def dashboard(request):
         "continue_material": continue_material,
 
         "is_teacher": is_teacher,
+
+        # Onboarding
+        "onboarding_steps": onboarding_steps,
+        "onboarding_completed": onboarding_completed,
+        "onboarding_total": len(onboarding_steps),
+        "onboarding_complete": onboarding_complete,
     }
 
     return render(request, "dashboard.html", context)

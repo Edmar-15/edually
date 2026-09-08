@@ -170,7 +170,113 @@ noindex, nofollow
 
                     </div>
 
+                                </section>
+
+
+                <!-- =================================================
+                     GETTING STARTED
+                ================================================== -->
+                {% if not onboarding_complete %}
+                <section class="dashboard-section onboarding-section">
+
+                    <div class="onboarding-card">
+
+                        <div class="onboarding-header">
+
+                            <div>
+                                <h2>Getting started</h2>
+
+                                <p>
+                                    Complete these steps to get familiar with EduAlly.
+                                </p>
+                            </div>
+
+                            <span class="onboarding-progress-text">
+                                {{ onboarding_completed }}
+                                of
+                                {{ onboarding_total }}
+                                completed
+                            </span>
+
+                        </div>
+
+
+                        <div class="onboarding-progress">
+
+                            <div
+                                class="onboarding-progress-bar"
+                                style="width: {% widthratio onboarding_completed onboarding_total 100 %}%;">
+                            </div>
+
+                        </div>
+
+
+                        <div class="onboarding-steps">
+
+                            {% for step in onboarding_steps %}
+
+                                {% if step.done %}
+
+                                    <div class="onboarding-step onboarding-step--done">
+
+                                        <span class="onboarding-step-icon">
+                                            ✓
+                                        </span>
+
+                                        <div class="onboarding-step-content">
+
+                                            <strong>
+                                                {{ step.title }}
+                                            </strong>
+
+                                            <span>
+                                                Completed
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <a
+                                        href="{% url step.url %}"
+                                        class="onboarding-step onboarding-step--todo"
+                                    >
+
+                                        <span class="onboarding-step-icon">
+                                            ○
+                                        </span>
+
+                                        <div class="onboarding-step-content">
+
+                                            <strong>
+                                                {{ step.title }}
+                                            </strong>
+
+                                            <span>
+                                                {{ step.detail }}
+                                            </span>
+
+                                        </div>
+
+                                        <span class="onboarding-step-arrow">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </span>
+
+                                    </a>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
                 </section>
+                {% endif %}
+
 
                 <!-- =================================================
                      CONTINUE
