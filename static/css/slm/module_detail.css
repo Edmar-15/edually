@@ -1,11 +1,13 @@
 @import "../base.css";
+
 /* ==============================================================
-   Module Detail Page – Full Design System (drop‑in CSS)
+   MODULE DETAIL PAGE
    ============================================================== */
 
 /* -----------------------------------------------------------------
-   1️⃣ Card layout – a subtle gradient + stronger shadow
+   1. Main module card
    ----------------------------------------------------------------- */
+
 .module-content-card {
     max-width: 900px;
     width: min(100%, 900px);
@@ -21,47 +23,72 @@
 
 html.dark .module-content-card,
 html[data-theme="dark"] .module-content-card {
-    background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 28, 0.98));
+    background: linear-gradient(180deg,
+            rgba(17, 24, 39, 0.98),
+            rgba(10, 15, 28, 0.98));
     border-color: rgba(148, 163, 184, 0.16);
     box-shadow: 0 20px 56px rgba(2, 6, 23, 0.32);
 }
 
-/* Badge that shows the number of highlight‑history items */
-.badge {
-    display: inline-block;
-    min-width: 1.2rem;
-    padding: .08rem .35rem;
-    margin-left: .25rem;
-    font-size: .7rem;
-    font-weight: 600;
-    line-height: 1;
-    color: #fff;
-    background: #ef4444;           /* bright, visible red */
-    border-radius: 9999px;         /* pill shape */
-    text-align: center;
-}
 
 /* -----------------------------------------------------------------
-   3️⃣ Header inside the card (unchanged – keep as‑is)
+   2. Highlight history badge
    ----------------------------------------------------------------- */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 1.2rem;
+    min-height: 1.2rem;
+
+    padding: 0.08rem 0.35rem;
+    margin-left: 0.25rem;
+
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+
+    color: #fff;
+    background: #ef4444;
+
+    border-radius: 9999px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+
+/* -----------------------------------------------------------------
+   3. Module card header
+   ----------------------------------------------------------------- */
+
 .module-content-card__header {
     margin-bottom: 1rem;
-    padding-bottom: .75rem;
+    padding-bottom: 0.75rem;
+
     border-bottom: 1px solid #eef2f7;
 }
+
 .module-content-card__header h2 {
-    margin: 0 0 .35rem;
+    margin: 0 0 0.35rem;
+
     font-size: clamp(1.15rem, 2vw, 1.35rem);
     font-weight: 600;
+
     color: #111827;
+
     overflow-wrap: anywhere;
     word-break: break-word;
 }
+
 .module-content-card__header p {
     margin: 0;
+
     color: #6b7280;
-    font-size: .95rem;
+    font-size: 0.95rem;
     line-height: 1.5;
+
     overflow-wrap: anywhere;
     word-break: break-word;
 }
@@ -81,12 +108,20 @@ html[data-theme="dark"] .module-content-card__header p {
     color: var(--muted);
 }
 
+
 /* -----------------------------------------------------------------
-   4️⃣ Main content – base typography (used for PDF/Docx/PPT pages)
+   4. Main extracted content
    ----------------------------------------------------------------- */
+
 .module-content {
     line-height: 1.75;
     color: #374151;
+
+    min-width: 0;
+    max-width: 100%;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 html.dark .module-content,
@@ -94,60 +129,153 @@ html[data-theme="dark"] .module-content {
     color: var(--text);
 }
 
-/* Paragraphs – comfortable width */
+
+/* Paragraphs */
+
 .module-content p {
     max-width: 70ch;
-    margin: .6rem 0;
+    margin: 0.6rem 0;
+
     overflow-wrap: anywhere;
     word-break: break-word;
 }
 
-/* Headings – clear hierarchy */
+
+/* Headings */
+
 .module-content h1,
 .module-content h2,
 .module-content h3,
 .module-content h4 {
     margin-top: 1.6rem;
-    margin-bottom: .4rem;
+    margin-bottom: 0.4rem;
+
     line-height: 1.3;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
-.module-content h1 { font-size: 2rem;   color: #111827; }
-.module-content h2 { font-size: 1.6rem; color: #1f2937; }
-.module-content h3 { font-size: 1.35rem; color: #374151; }
-.module-content h4 { font-size: 1.2rem;  color: #475569; }
+
+.module-content h1 {
+    font-size: 2rem;
+    color: #111827;
+}
+
+.module-content h2 {
+    font-size: 1.6rem;
+    color: #1f2937;
+}
+
+.module-content h3 {
+    font-size: 1.35rem;
+    color: #374151;
+}
+
+.module-content h4 {
+    font-size: 1.2rem;
+    color: #475569;
+}
+
+
+/* Dark mode headings */
 
 html.dark .module-content h1,
-html[data-theme="dark"] .module-content h1 { color: #f8fafc; }
-html.dark .module-content h2,
-html[data-theme="dark"] .module-content h2 { color: #e2e8f0; }
-html.dark .module-content h3,
-html[data-theme="dark"] .module-content h3 { color: #cbd5e1; }
-html.dark .module-content h4,
-html[data-theme="dark"] .module-content h4 { color: #a5b4c8; }
-
-/* Images – rounded corners + tiny zoom on hover */
-.module-content img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    cursor: zoom-in;
-    transition: transform .2s ease;
+html[data-theme="dark"] .module-content h1 {
+    color: #f8fafc;
 }
-.module-content img:hover { transform: scale(1.02); }
+
+html.dark .module-content h2,
+html[data-theme="dark"] .module-content h2 {
+    color: #e2e8f0;
+}
+
+html.dark .module-content h3,
+html[data-theme="dark"] .module-content h3 {
+    color: #cbd5e1;
+}
+
+html.dark .module-content h4,
+html[data-theme="dark"] .module-content h4 {
+    color: #a5b4c8;
+}
+
 
 /* -----------------------------------------------------------------
-   5️⃣ PDF‑page “slide” blocks (already in your markup)
+   5. Images
    ----------------------------------------------------------------- */
+
+.module-content img {
+    display: block;
+
+    max-width: 100%;
+    width: auto;
+    height: auto;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    border-radius: 8px;
+
+    cursor: zoom-in;
+
+    transition: transform 0.2s ease;
+}
+
+.module-content img:hover {
+    transform: scale(1.02);
+}
+
+
+/* -----------------------------------------------------------------
+   6. PDF pages
+   ----------------------------------------------------------------- */
+
 .pdf-page {
     background: #fafafa;
+
     border-bottom: 1px solid #e5e7eb;
+    border-radius: 6px;
+
     padding: 1rem 1.2rem;
     margin-bottom: 1.2rem;
-    border-radius: 6px;
+
+    box-sizing: border-box;
+
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
-.pdf-page:nth-child(even) { background: #f5f7fa; }
+
+.pdf-page:nth-child(even) {
+    background: #f5f7fa;
+}
+
 .pdf-page:empty,
-.pdf-page p:empty { display: none; }
+.pdf-page p:empty {
+    display: none;
+}
+
+.pdf-page>p {
+    margin: 0.4rem 0;
+    color: #1f2937;
+}
+
+.pdf-page>h1,
+.pdf-page>h2,
+.pdf-page>h3,
+.pdf-page>h4 {
+    margin-top: 0.8rem;
+    margin-bottom: 0.6rem;
+
+    font-weight: 600;
+    color: #111827;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+
+/* PDF dark mode */
 
 html.dark .pdf-page,
 html[data-theme="dark"] .pdf-page {
@@ -155,51 +283,71 @@ html[data-theme="dark"] .pdf-page {
     border-color: rgba(148, 163, 184, 0.18);
     color: var(--text);
 }
-html.dark .pdf-page:nth-child(even),
-html[data-theme="dark"] .pdf-page:nth-child(even) { background: rgba(18, 27, 39, 0.9); }
 
-.pdf-page > p {
-    margin: .4rem 0;
-    color: #1f2937;
+html.dark .pdf-page:nth-child(even),
+html[data-theme="dark"] .pdf-page:nth-child(even) {
+    background: rgba(18, 27, 39, 0.9);
 }
 
-html.dark .pdf-page > p,
-html[data-theme="dark"] .pdf-page > p,
-html.dark .pdf-page > h1,
-html.dark .pdf-page > h2,
-html.dark .pdf-page > h3,
-html.dark .pdf-page > h4,
-html[data-theme="dark"] .pdf-page > h1,
-html[data-theme="dark"] .pdf-page > h2,
-html[data-theme="dark"] .pdf-page > h3,
-html[data-theme="dark"] .pdf-page > h4 {
+html.dark .pdf-page>p,
+html.dark .pdf-page>h1,
+html.dark .pdf-page>h2,
+html.dark .pdf-page>h3,
+html.dark .pdf-page>h4,
+html[data-theme="dark"] .pdf-page>p,
+html[data-theme="dark"] .pdf-page>h1,
+html[data-theme="dark"] .pdf-page>h2,
+html[data-theme="dark"] .pdf-page>h3,
+html[data-theme="dark"] .pdf-page>h4 {
     color: var(--text);
 }
 
-/* Headings inside a PDF page */
-.pdf-page > h1,
-.pdf-page > h2,
-.pdf-page > h3,
-.pdf-page > h4 {
-    margin-top: .8rem;
-    margin-bottom: .6rem;
-    font-weight: 600;
-    color: #111827;
-}
 
 /* -----------------------------------------------------------------
-   6️⃣ DOCX‑page styling (mirrors PDF style)
+   7. DOCX pages
    ----------------------------------------------------------------- */
+
 .docx-page {
     background: #fafafa;
+
     border-bottom: 1px solid #e5e7eb;
+    border-radius: 6px;
+
     padding: 1rem 1.2rem;
     margin-bottom: 1.2rem;
-    border-radius: 6px;
+
+    box-sizing: border-box;
+
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
-.docx-page:nth-child(even) { background: #f5f7fa; }
+
+.docx-page:nth-child(even) {
+    background: #f5f7fa;
+}
+
 .docx-page:empty,
-.docx-page p:empty { display: none; }
+.docx-page p:empty {
+    display: none;
+}
+
+.docx-page>h1,
+.docx-page>h2,
+.docx-page>h3,
+.docx-page>h4 {
+    margin-top: 0.8rem;
+    margin-bottom: 0.6rem;
+
+    font-weight: 600;
+    color: #111827;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+
+/* DOCX dark mode */
 
 html.dark .docx-page,
 html[data-theme="dark"] .docx-page {
@@ -207,44 +355,115 @@ html[data-theme="dark"] .docx-page {
     border-color: rgba(148, 163, 184, 0.18);
     color: var(--text);
 }
-html.dark .docx-page:nth-child(even),
-html[data-theme="dark"] .docx-page:nth-child(even) { background: rgba(18, 27, 39, 0.9); }
 
-/* Headings that appear directly inside a DOCX page */
-.docx-page > h1,
-.docx-page > h2,
-.docx-page > h3,
-.docx-page > h4 {
-    margin-top: .8rem;
-    margin-bottom: .6rem;
-    font-weight: 600;
-    color: #111827;
+html.dark .docx-page:nth-child(even),
+html[data-theme="dark"] .docx-page:nth-child(even) {
+    background: rgba(18, 27, 39, 0.9);
 }
 
-html.dark .docx-page > h1,
-html.dark .docx-page > h2,
-html.dark .docx-page > h3,
-html.dark .docx-page > h4,
-html[data-theme="dark"] .docx-page > h1,
-html[data-theme="dark"] .docx-page > h2,
-html[data-theme="dark"] .docx-page > h3,
-html[data-theme="dark"] .docx-page > h4 {
+html.dark .docx-page>h1,
+html.dark .docx-page>h2,
+html.dark .docx-page>h3,
+html.dark .docx-page>h4,
+html[data-theme="dark"] .docx-page>h1,
+html[data-theme="dark"] .docx-page>h2,
+html[data-theme="dark"] .docx-page>h3,
+html[data-theme="dark"] .docx-page>h4 {
     color: var(--text);
 }
 
+
 /* -----------------------------------------------------------------
-   7️⃣ PPTX‑page styling (new!)
+   8. PPTX pages
    ----------------------------------------------------------------- */
+
 .ppt-page {
-    background: #f8fafc;                 /* very light gray */
+    background: #f8fafc;
+
     border: 1px solid #e5e7eb;
     border-radius: 6px;
+
     margin: 1.5rem 0;
     padding: 1rem 1.2rem;
+
+    box-sizing: border-box;
+
+    max-width: 100%;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
-.ppt-page:nth-child(even) { background: #f1f5f9; }
+
+.ppt-page:nth-child(even) {
+    background: #f1f5f9;
+}
+
 .ppt-page:empty,
-.ppt-page p:empty { display: none; }
+.ppt-page p:empty {
+    display: none;
+}
+
+.ppt-page>h2 {
+    margin-top: 0.4rem;
+    margin-bottom: 0.6rem;
+
+    font-weight: 600;
+    font-size: 1.6rem;
+
+    color: #111827;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.ppt-page>p {
+    margin: 0.4rem 0;
+
+    line-height: 1.6;
+
+    color: #1f2937;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+
+/* PPTX lists */
+
+.ppt-page ul {
+    list-style: disc;
+
+    margin: 0.6rem 0 0.6rem 1.8rem;
+    padding: 0;
+
+    max-width: 100%;
+}
+
+.ppt-page ul ul {
+    list-style: circle;
+
+    margin-left: 1.8rem;
+
+    border-left: 2px solid #e2e8f0;
+
+    padding-left: 0.6rem;
+}
+
+.ppt-page ul ul li {
+    margin: 0.3rem 0;
+    color: #374151;
+}
+
+.ppt-page ul ul li::before {
+    content: "▸";
+
+    color: #9ca3af;
+
+    margin-right: 0.4rem;
+}
+
+
+/* PPTX dark mode */
 
 html.dark .ppt-page,
 html[data-theme="dark"] .ppt-page {
@@ -252,33 +471,20 @@ html[data-theme="dark"] .ppt-page {
     border-color: rgba(148, 163, 184, 0.18);
     color: var(--text);
 }
+
 html.dark .ppt-page:nth-child(even),
-html[data-theme="dark"] .ppt-page:nth-child(even) { background: rgba(18, 27, 39, 0.9); }
-
-/* Title inside a slide */
-.ppt-page > h2 {
-    margin-top: .4rem;
-    margin-bottom: .6rem;
-    font-weight: 600;
-    font-size: 1.6rem;
-    color: #111827;
+html[data-theme="dark"] .ppt-page:nth-child(even) {
+    background: rgba(18, 27, 39, 0.9);
 }
 
-/* Normal paragraph inside a slide */
-.ppt-page > p {
-    margin: .4rem 0;
-    line-height: 1.6;
-    color: #1f2937;
-}
-
-html.dark .ppt-page > p,
-html.dark .ppt-page > h2,
+html.dark .ppt-page>p,
+html.dark .ppt-page>h2,
 html.dark .ppt-page ul,
 html.dark .ppt-page ul ul,
 html.dark .ppt-page ul li,
 html.dark .ppt-page ul ul li,
-html[data-theme="dark"] .ppt-page > p,
-html[data-theme="dark"] .ppt-page > h2,
+html[data-theme="dark"] .ppt-page>p,
+html[data-theme="dark"] .ppt-page>h2,
 html[data-theme="dark"] .ppt-page ul,
 html[data-theme="dark"] .ppt-page ul ul,
 html[data-theme="dark"] .ppt-page ul li,
@@ -286,51 +492,39 @@ html[data-theme="dark"] .ppt-page ul ul li {
     color: var(--text);
 }
 
-/* • First‑level lists – keep the default disc bullet */
-.ppt-page ul {
-    list-style: disc;
-    margin: .6rem 0 .6rem 1.8rem;   /* pleasant left indent */
-    padding: 0;
-}
-
-/* • Nested lists – slightly different bullet & a decorative bar */
-.ppt-page ul ul {
-    list-style: circle;
-    margin-left: 1.8rem;
-    border-left: 2px solid #e2e8f0;
-    padding-left: .6rem;
-}
-.ppt-page ul ul li {
-    margin: .3rem 0;
-    color: #374151;
-}
-
-/* Optional visual cue for a “definition‑style” nested list */
-.ppt-page ul ul li::before {
-    content: "▸";
-    color: #9ca3af;
-    margin-right: .4rem;
-}
 
 /* -----------------------------------------------------------------
-   8️⃣ Button (download) – keep existing style, add hover
+   9. Download button
    ----------------------------------------------------------------- */
-.button {
+
+.module-content-card~.button,
+.button.download-btn {
     display: inline-flex;
     align-items: center;
-    gap: .4rem;
+    justify-content: center;
+
+    gap: 0.4rem;
+
     background: #0e9aa7;
     color: #fff;
+
     border: none;
     border-radius: 6px;
-    padding: .45rem .9rem;
+
+    padding: 0.45rem 0.9rem;
+
     font-weight: 500;
-    font-size: .95rem;
+    font-size: 0.95rem;
+
     cursor: pointer;
     text-decoration: none;
-    transition: background .2s ease;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
 }
-.button:hover {
+
+.button.download-btn:hover {
     background: #0b7b80;
     transform: translateY(-1px);
 }
@@ -339,90 +533,691 @@ html[data-theme="dark"] .ppt-page ul ul li {
     background: #e5e7eb;
     color: #111827;
 }
-.button.secondary:hover { background: #d1d5db; }
+
+.button.secondary:hover {
+    background: #d1d5db;
+}
+
 
 /* -----------------------------------------------------------------
-   9️⃣ Floating selection‑toolbar – pill‑shaped + animation
+   10. Highlight history toggle
    ----------------------------------------------------------------- */
+
+.module-content-history__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
+    width: 44px;
+    height: 44px;
+
+    padding: 0;
+
+    border: 1px solid #0e9aa7;
+    border-radius: 50%;
+
+    background: #fff;
+    color: #0e9aa7;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.module-content-history__toggle:hover {
+    background: #0e9aa7;
+    color: #fff;
+
+    transform: translateY(-1px);
+}
+
+.module-content-history__toggle i {
+    margin: 0;
+    font-size: 1rem;
+}
+
+
+/* Badge inside history button */
+
+.module-content-history__toggle .badge {
+    position: absolute;
+
+    top: -5px;
+    right: -5px;
+
+    margin: 0;
+
+    min-width: 19px;
+    height: 19px;
+
+    padding: 0 4px;
+
+    font-size: 0.62rem;
+}
+
+
+/* -----------------------------------------------------------------
+   11. Selection toolbar
+   ----------------------------------------------------------------- */
+
 .selection-toolbar {
     position: fixed;
+
     top: 0;
     left: 0;
-    display: none;                       /* hidden until needed */
+
+    display: none;
+
     background: linear-gradient(180deg, #fafafa, #fff);
+
     border: 1px solid #d1d5db;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.12);
-    padding: .5rem .8rem;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    padding: 0.5rem 0.8rem;
+
     z-index: 3000;
-    font-size: .9rem;
+
+    font-size: 0.9rem;
+
     white-space: nowrap;
+
     opacity: 0;
+
     transform: translateY(-4px);
-    transition: opacity .15s ease, transform .15s ease;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
 }
+
 .selection-toolbar.show {
     display: flex;
+
     opacity: 1;
+
     transform: translateY(0);
 }
+
 .selection-toolbar button {
     background: transparent;
-    border: none;
-    cursor: pointer;
-    margin: 0 2px;
-    padding: .4rem .6rem;
-    color: #374151;
-    font-size: .9rem;
-}
-.selection-toolbar button:hover { color: #0e9aa7; }
-.selection-toolbar button i { margin-right: 2px; font-size: 1.1rem; }
 
-/* Larger tap‑targets on tiny screens */
+    border: none;
+
+    cursor: pointer;
+
+    margin: 0 2px;
+
+    padding: 0.4rem 0.6rem;
+
+    color: #374151;
+
+    font-size: 0.9rem;
+}
+
+.selection-toolbar button:hover {
+    color: #0e9aa7;
+}
+
+.selection-toolbar button i {
+    margin-right: 2px;
+    font-size: 1.1rem;
+}
+
+
+/* ==============================================================
+   MOBILE
+   ============================================================== */
+
 @media (max-width: 768px) {
-    .module-content-card {
-        margin: 1rem 0.75rem;
-        padding: 1rem;
+
+    /* ----------------------------------------------------------
+       Module detail header
+
+       Important:
+       dashboard.css changes .content-header to a column on
+       mobile. Override that here because this page needs the
+       breadcrumb and action buttons to remain together.
+       ---------------------------------------------------------- */
+
+    .content-header {
+        display: flex;
+
+        flex-direction: row;
+        align-items: flex-start;
+
+        gap: 0.6rem;
+
+        padding: 0.65rem 0.75rem;
+
+        width: 100%;
+        box-sizing: border-box;
     }
+
+
+    /* Breadcrumb area */
+
+    .content-header .header-left {
+        display: flex;
+        align-items: flex-start;
+
+        flex: 1 1 auto;
+        min-width: 0;
+
+        gap: 0.4rem;
+    }
+
+
+    /* Mobile sidebar trigger */
+
+    .content-header .mobile-sidebar-trigger {
+        flex: 0 0 auto;
+
+        margin-top: 0.05rem;
+    }
+
+
+    /* Breadcrumb */
+
+    .content-header .breadcrumb {
+        flex: 1 1 auto;
+
+        min-width: 0;
+        max-width: 100%;
+
+        margin: 0;
+
+        font-size: 0.85rem;
+        line-height: 1.35;
+
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+
+    /* ----------------------------------------------------------
+       Action buttons
+
+       dashboard.css has width: 100% for mobile buttons.
+       Override that ONLY on this page.
+       ---------------------------------------------------------- */
+
+    .content-header .header-actions {
+        display: flex;
+
+        flex: 0 0 auto;
+
+        width: auto;
+
+        margin-top: 0 !important;
+        margin-left: auto !important;
+
+        padding: 0;
+
+        gap: 0.45rem;
+
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+
+    /* Download */
+
+    .content-header .header-actions .download-btn {
+        display: inline-flex;
+
+        flex: 0 0 44px;
+
+        width: 44px;
+        min-width: 44px;
+        max-width: 44px;
+
+        height: 44px;
+        min-height: 44px;
+
+        padding: 0;
+        margin: 0;
+
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        box-sizing: border-box;
+    }
+
+    .content-header .header-actions .download-btn i {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+
+    /* History */
+
+    .content-header .header-actions .module-content-history__toggle {
+        flex: 0 0 44px;
+
+        width: 44px;
+        min-width: 44px;
+        max-width: 44px;
+
+        height: 44px;
+        min-height: 44px;
+
+        padding: 0;
+        margin: 0;
+
+        border-radius: 12px;
+
+        box-sizing: border-box;
+    }
+
+
+    /* ----------------------------------------------------------
+       Main card
+       ---------------------------------------------------------- */
+
+    .module-content-card {
+        width: calc(100% - 1.5rem);
+        max-width: none;
+
+        margin: 0.9rem auto;
+
+        padding: 1rem;
+
+        border-radius: 14px;
+
+        box-sizing: border-box;
+    }
+
+
+    /* ----------------------------------------------------------
+       Card header
+       ---------------------------------------------------------- */
+
+    .module-content-card__header {
+        margin-bottom: 0.85rem;
+        padding-bottom: 0.7rem;
+    }
+
+    .module-content-card__header h2 {
+        font-size: 1.15rem;
+        line-height: 1.3;
+    }
+
+    .module-content-card__header p {
+        font-size: 0.85rem;
+        line-height: 1.45;
+    }
+
+
+    /* ----------------------------------------------------------
+       Extracted module content
+       ---------------------------------------------------------- */
+
+    .module-content {
+        min-width: 0;
+
+        font-size: 0.94rem;
+        line-height: 1.65;
+
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .module-content p {
+        max-width: 100%;
+
+        margin: 0.55rem 0;
+    }
+
+
+    /* Headings */
+
+    .module-content h1,
+    .module-content h2,
+    .module-content h3,
+    .module-content h4 {
+        max-width: 100%;
+
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .module-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .module-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .module-content h3 {
+        font-size: 1.12rem;
+    }
+
+    .module-content h4 {
+        font-size: 1rem;
+    }
+
+
+    /* ----------------------------------------------------------
+       PDF / DOCX / PPT pages
+       ---------------------------------------------------------- */
+
+    .pdf-page,
+    .docx-page,
+    .ppt-page {
+        width: 100%;
+        max-width: 100%;
+
+        margin: 0 0 0.9rem;
+
+        padding: 0.85rem 0.9rem;
+
+        border-radius: 6px;
+
+        box-sizing: border-box;
+
+        overflow: hidden;
+    }
+
+
+    .pdf-page>p,
+    .docx-page>p,
+    .ppt-page>p {
+        margin: 0.4rem 0;
+    }
+
+
+    /* ----------------------------------------------------------
+       PPT lists
+       ---------------------------------------------------------- */
+
+    .ppt-page ul {
+        margin-left: 1.2rem;
+        padding-left: 0.2rem;
+    }
+
+    .ppt-page ul ul {
+        margin-left: 1rem;
+        padding-left: 0.55rem;
+    }
+
+    .ppt-page>h2 {
+        font-size: 1.25rem;
+        line-height: 1.35;
+    }
+
+
+    /* ----------------------------------------------------------
+       Images
+
+       Do NOT force width:100%.
+       Smaller document images should remain at their natural
+       size while never exceeding the viewport.
+       ---------------------------------------------------------- */
 
     .module-content img {
         display: block;
-        width: 100%;
+
+        width: auto;
+        max-width: 100%;
+
         height: auto;
+
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+
+    /* ----------------------------------------------------------
+       Tables
+       ---------------------------------------------------------- */
+
+    .module-content table {
+        display: block;
+
+        width: 100%;
+        max-width: 100%;
+
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling: touch;
+
+        border-collapse: collapse;
+    }
+
+
+    /* ----------------------------------------------------------
+       Code / preformatted content
+       ---------------------------------------------------------- */
+
+    .module-content pre {
+        max-width: 100%;
+
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .module-content code {
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 }
 
+
+/* ==============================================================
+   VERY SMALL PHONES
+   ============================================================== */
+
 @media (max-width: 480px) {
-    .selection-toolbar button { padding: .6rem .8rem; }
-    .module-content-card { margin: 0.75rem; padding: 0.95rem; }
-    .module-content p { max-width: 100%; }
-    .module-content h1 { font-size: 1.5rem; }
-    .module-content h2 { font-size: 1.3rem; }
-    .module-content h3 { font-size: 1.15rem; }
+
+    /* ----------------------------------------------------------
+       Header
+       ---------------------------------------------------------- */
+
+    .content-header {
+        padding: 0.6rem 0.65rem;
+
+        gap: 0.45rem;
+    }
+
+
+    .content-header .header-left {
+        gap: 0.3rem;
+    }
+
+
+    .content-header .breadcrumb {
+        font-size: 0.79rem;
+        line-height: 1.3;
+    }
+
+
+    /* Smaller but still touch-friendly action buttons */
+
+    .content-header .header-actions {
+        gap: 0.35rem;
+    }
+
+    .content-header .header-actions .download-btn,
+    .content-header .header-actions .module-content-history__toggle {
+        flex-basis: 42px;
+
+        width: 42px;
+        min-width: 42px;
+        max-width: 42px;
+
+        height: 42px;
+        min-height: 42px;
+
+        border-radius: 11px;
+    }
+
+    .content-header .header-actions .download-btn i,
+    .content-header .header-actions .module-content-history__toggle i {
+        font-size: 0.95rem;
+    }
+
+
+    /* ----------------------------------------------------------
+       Module card
+       ---------------------------------------------------------- */
+
+    .module-content-card {
+        width: calc(100% - 1rem);
+
+        margin: 0.65rem auto;
+
+        padding: 0.85rem;
+
+        border-radius: 12px;
+    }
+
+
+    /* ----------------------------------------------------------
+       Card header
+       ---------------------------------------------------------- */
+
+    .module-content-card__header {
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.65rem;
+    }
+
+    .module-content-card__header h2 {
+        font-size: 1.1rem;
+    }
+
+    .module-content-card__header p {
+        font-size: 0.82rem;
+    }
+
+
+    /* ----------------------------------------------------------
+       Content
+       ---------------------------------------------------------- */
+
+    .module-content {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .module-content p {
+        max-width: 100%;
+    }
+
+    .module-content h1 {
+        font-size: 1.35rem;
+    }
+
+    .module-content h2 {
+        font-size: 1.2rem;
+    }
+
+    .module-content h3 {
+        font-size: 1.05rem;
+    }
+
+    .module-content h4 {
+        font-size: 0.98rem;
+    }
+
+
+    /* ----------------------------------------------------------
+       Document pages
+       ---------------------------------------------------------- */
+
+    .pdf-page,
+    .docx-page,
+    .ppt-page {
+        padding: 0.75rem 0.8rem;
+
+        margin-bottom: 0.75rem;
+    }
+
+    .ppt-page>h2 {
+        font-size: 1.15rem;
+    }
+
+
+    /* ----------------------------------------------------------
+       Selection toolbar
+       ---------------------------------------------------------- */
+
     .selection-toolbar {
         left: 1rem !important;
         right: 1rem !important;
+
         width: auto;
+
+        max-width: calc(100% - 2rem);
+
+        box-sizing: border-box;
+
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .selection-toolbar button {
+        padding: 0.6rem 0.8rem;
+
+        min-height: 44px;
     }
 }
 
-/* -----------------------------------------------------------------
-   🔟 Responsive tweaks for very small viewports (header)
-   ----------------------------------------------------------------- */
-@media (max-width: 640px) {
+
+/* ==============================================================
+   EXTRA SMALL PHONES
+   Prevent header actions from fighting the breadcrumb.
+   ============================================================== */
+
+@media (max-width: 360px) {
+
     .content-header {
-        flex-direction: column;
-        align-items: stretch;
-        padding: .6rem .8rem;
+        gap: 0.35rem;
     }
-    .header-actions {
-        margin-top: .4rem;
-        justify-content: flex-end;
+
+    .content-header .breadcrumb {
+        font-size: 0.74rem;
+    }
+
+    .content-header .header-actions {
+        gap: 0.25rem;
+    }
+
+    .content-header .header-actions .download-btn,
+    .content-header .header-actions .module-content-history__toggle {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+
+        height: 40px;
+        min-height: 40px;
+
+        flex-basis: 40px;
+    }
+
+    .module-content-card {
+        width: calc(100% - 0.75rem);
+
+        padding: 0.75rem;
     }
 }
 
+
 /* -----------------------------------------------------------------
-   1️⃣1️⃣ Misc helpers – keep the rest of your original rules
+   Misc helpers
    ----------------------------------------------------------------- */
-.module-actions { text-align: right; }
-/* End of module_detail.css ------------------------------------------------ */
+
+.module-actions {
+    text-align: right;
+}

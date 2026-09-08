@@ -57,7 +57,7 @@ export function initHighlightAI(
   if (historyList) historyList.innerHTML = "";
 
   if (historyCount) {
-    historyCount.textContent = "0 items";
+    historyCount.textContent = "0";
   }
 
   // ---------------------------------------------------------------
@@ -380,7 +380,7 @@ export function initHighlightAI(
       historyList.appendChild(empty);
 
       if (historyCount) {
-        historyCount.textContent = "0 items";
+        historyCount.textContent = "0";
       }
 
       return;
@@ -475,7 +475,7 @@ export function initHighlightAI(
     if (historyCount) {
       const n = historyEntries.length;
 
-      historyCount.textContent = `${n} ${n === 1 ? "item" : "items"}`;
+      historyCount.textContent = `${n}`;
     }
   };
 
