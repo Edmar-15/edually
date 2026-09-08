@@ -3,203 +3,604 @@
 {% load account_extras %}
 {% load visibility_tags %}
 
-    {% block title %}EduAlly - Dashboard{% endblock %}
-    {% block robots %}
+{% block title %}EduAlly - Dashboard{% endblock %}
+
+{% block robots %}
 noindex, nofollow
 {% endblock %}
+
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static "css/dashboard.css" %}">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 {% endblock %}
+
 {% block content %}
+
 <div class="dashboard-container">
-        <!-- Left Sidebar Navigation -->
-        {% include "components/navigations.html" %}
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="content-header">
-                <div class="header-left">
-                    <button type="button"
-                            class="mobile-sidebar-trigger"
-                            aria-controls="sidebar"
-                            aria-expanded="false"
-                            aria-label="Open navigation sidebar">
-                        <span class="sr-only">Toggle sidebar</span>
-                        <svg class="sidebar-trigger-icon"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                            focusable="false">
-                            <path d="M4 7h16M4 12h16M4 17h16"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"/>
-                        </svg>
-                    </button>
+    {% include "components/navigations.html" %}
 
-                    <!-- Existing welcome text -->
-                    <p>Welcome back, {{ user.get_full_name|default:user.username|default:user.email }}! <i class="fas fa-wave"></i></p>
-                </div>
-            </header>
+    <main class="main-content">
 
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
-                <div class="container">
+        <!-- =====================================================
+             HEADER
+        ====================================================== -->
+        <header class="content-header dashboard-header">
 
-                <section class="journey-section">
-                    <div class="journey-card card animate-fade-up">
-                        <div class="journey-copy">
-                            <span class="section-chip">Your learning snapshot</span>
-                            <h3>Continue where you left off</h3>
-                            <p>Here’s a simple view of your study space so you can jump back in with confidence and keep your momentum going.</p>
-                        </div>
-                        <div class="journey-steps">
-                            {% if request.user|has_group:'Teacher' %}
-                            <a href="{% url 'slm:management' %}" class="journey-step">
-                                <span class="step-badge">1</span>
-                                <div>
-                                    <strong>Manage your modules</strong>
-                                    <p>{{ module_count }} module{{ module_count|pluralize }} ready to review or continue.</p>
-                                </div>
-                            </a>
-                            {% else %}
-                            <a href="{% url 'slm:slmlists' %}" class="journey-step">
-                                <span class="step-badge">1</span>
-                                <div>
-                                    <strong>Open your modules</strong>
-                                    <p>{{ module_count }} module{{ module_count|pluralize }} ready to review or continue.</p>
-                                </div>
-                            </a>
+            <div class="header-left">
+
+                <button type="button"
+                        class="mobile-sidebar-trigger"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        aria-label="Open navigation sidebar">
+
+                    <span class="sr-only">Toggle sidebar</span>
+
+                    <svg class="sidebar-trigger-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true"
+                         focusable="false">
+
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"/>
+                    </svg>
+
+                </button>
+
+                <div class="dashboard-welcome">
+
+                    <h1>
+                        Welcome back,
+                        {{ user.get_full_name|default:user.username|default:user.email }}!
+                    </h1>
+
+                    {% if request.user|has_group:'Teacher' %}
+
+                        <p>
+                            Teacher
+                            {% if user.teacher_profile.department %}
+                                • {{ user.teacher_profile.department }}
                             {% endif %}
-                            <a href="{% url 'forum:list' %}" class="journey-step">
-                                <span class="step-badge">2</span>
-                                <div>
-                                    <strong>Join the forum</strong>
-                                    <p>Ask questions and see what classmates are discussing.</p>
-                                </div>
-                            </a>
-                            {% if request.user|has_group:'Teacher' %}
-                                <a href="{% url 'forum:list' %}" class="journey-step">
-                                    <span class="step-badge">3</span>
-                                    <div>
-                                        <strong>Manage Forum</strong>
-                                        <p>Review and manage the community discussion board.</p>
-                                    </div>
-                                </a>
-                            {% else %}
-                                <a href="{% url 'aihelper:helper' %}" class="journey-step">
-                                    <span class="step-badge">3</span>
-                                    <div>
-                                        <strong>Ask the AI Helper</strong>
-                                        <p>Get quick explanations when a concept feels unclear.</p>
-                                    </div>
-                                </a>
+                        </p>
+
+                    {% else %}
+
+                        <p>
+                            {% if user.year_level %}
+                                {{ user.year_level }}
                             {% endif %}
-                        </div>
-                    </div>
-                </section>
 
-                <div class="progress-and-recent">
-                    <section class="learning-stats">
-                        <h3>Your progress</h3>
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <span class="stat-number">{{ module_count }}</span>
-                                <span class="stat-label">Modules available</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-number">{{ subject_count }}</span>
-                                <span class="stat-label">Subjects in your space</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-number">{{ modules|length }}</span>
-                                <span class="stat-label">Recently added modules</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-number">{{ subjects|length }}</span>
-                                <span class="stat-label">Active study tracks</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="recent-activity recent-activity--side">
-                        <h3>Recently visited</h3>
-                        <div class="activity-list">
-                            {% if recent_modules or recent_personal_materials %}
-                                {% for module in recent_modules %}
-                                    <a href="{% url 'slm:module-detail' module.subject_id module.id %}"
-                                    class="activity-item activity-item--link">
-                                        <div class="activity-icon {{ module.file_icon_classes }}">
-                                            <i class="{{ module.file_icon }}"></i>
-                                        </div>
-                                        <div class="activity-details">
-                                            <h4>{{ module.module_name }}</h4>
-                                            <p class="activity-meta">
-                                                {{ module.subject.subject_name }} • Module {{ module.module_number }}
-                                            </p>
-                                        </div>
-                                    </a>
-                                {% endfor %}
-
-                                {% for material in recent_personal_materials %}
-                                    <a href="{% url 'slm:personalmaterial-detail' material.id %}"
-                                    class="activity-item activity-item--link">
-                                        <div class="activity-icon {{ material.file_icon_classes }}">
-                                            <i class="{{ material.file_icon }}"></i>
-                                        </div>
-                                        <div class="activity-details">
-                                            <h4>{{ material.title }}</h4>
-                                            <p class="activity-meta">
-                                                {{ material.get_visibility_display|short_vis }} • Personal Material
-                                            </p>
-                                        </div>
-                                    </a>
-                                {% endfor %}
-                            {% else %}
-                                <div class="activity-item">
-                                    <div class="activity-icon"><i class="fas fa-compass"></i></div>
-                                    <div class="activity-details">
-                                        <h4>Start exploring</h4>
-                                        <p class="activity-meta">
-                                            Open a module or a personal material to see recent visits here.
-                                        </p>
-                                    </div>
-                                </div>
+                            {% if user.year_level and user.program %}
+                                •
                             {% endif %}
-                        </div>
-                    </section>
+
+                            {% if user.program %}
+                                BS {{ user.program }}
+                            {% endif %}
+                        </p>
+
+                    {% endif %}
+
                 </div>
 
-                <section class="onboarding-section">
-                    <div class="onboarding-card card animate-fade-up">
-                        <div class="onboarding-card__header">
-                            <span class="section-chip">First-time setup</span>
-                            <h3>Set up your learning space</h3>
-                        </div>
-                        <p class="onboarding-card__intro">A quick checklist to help you get comfortable and make the most of your study tools.</p>
-                        <div class="onboarding-steps">
-                            {% for step in onboarding_steps %}
-                            <div class="onboarding-step{% if step.done %} onboarding-step--done{% endif %}">
-                                <span class="onboarding-step__icon">{% if step.done %}✓{% else %}•{% endif %}</span>
-                                <div>
-                                    <strong>{{ step.title }}</strong>
-                                    <p>{{ step.detail }}</p>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </section>
-                </div> <!-- /.container -->
             </div>
-        </main>
-    </div>
-    {# 1️⃣ Global modal placeholder – only once per page #}
-    {% include "components/global_modal.html" %}
+
+        </header>
+
+
+        <!-- =====================================================
+             DASHBOARD CONTENT
+        ====================================================== -->
+        <div class="dashboard-content">
+
+            <div class="container dashboard-home">
+
+
+                <!-- =================================================
+                     SUMMARY
+                ================================================== -->
+                <section class="dashboard-stats">
+
+                    <div class="dashboard-stat-card">
+
+                        <div>
+                            <span class="dashboard-stat-label">
+                                Subjects
+                            </span>
+
+                            <strong class="dashboard-stat-number">
+                                {{ subject_count }}
+                            </strong>
+                        </div>
+
+                        <i class="fas fa-book"></i>
+
+                    </div>
+
+
+                    <div class="dashboard-stat-card">
+
+                        <div>
+                            <span class="dashboard-stat-label">
+                                SLM Modules
+                            </span>
+
+                            <strong class="dashboard-stat-number">
+                                {{ module_count }}
+                            </strong>
+                        </div>
+
+                        <i class="fas fa-book-open"></i>
+
+                    </div>
+
+
+                    <div class="dashboard-stat-card">
+
+                        <div>
+                            <span class="dashboard-stat-label">
+                                My Materials
+                            </span>
+
+                            <strong class="dashboard-stat-number">
+                                {{ personal_material_count }}
+                            </strong>
+                        </div>
+
+                        <i class="fas fa-folder"></i>
+
+                    </div>
+
+
+                    <div class="dashboard-stat-card">
+
+                        <div>
+                            <span class="dashboard-stat-label">
+                                Activity
+                            </span>
+
+                            <strong class="dashboard-stat-number">
+                                {{ activity_count }}
+                            </strong>
+                        </div>
+
+                        <i class="fas fa-chart-line"></i>
+
+                    </div>
+
+                </section>
+
+                <!-- =================================================
+                     CONTINUE
+                ================================================== -->
+                <section class="dashboard-section">
+
+                    <div class="dashboard-section-heading">
+                        <h2>Continue where you left off</h2>
+                    </div>
+
+
+                    {% if continue_module %}
+
+                        <a href="{% url 'slm:module-detail' continue_module.subject_id continue_module.id %}"
+                           class="continue-card">
+
+                            <div class="continue-card-content">
+
+                                <span class="continue-code">
+                                    {{ continue_module.subject.subject_code }}
+                                </span>
+
+                                <h3>
+                                    {{ continue_module.subject.subject_name }}
+                                </h3>
+
+                                <p>
+                                    Module {{ continue_module.module_number }}
+                                    •
+                                    {{ continue_module.module_name }}
+                                </p>
+
+                            </div>
+
+                            <span class="continue-button">
+                                Continue
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+
+                        </a>
+
+
+                    {% elif continue_material %}
+
+                        <a href="{% url 'slm:personalmaterial-detail' continue_material.id %}"
+                           class="continue-card">
+
+                            <div class="continue-card-content">
+
+                                <span class="continue-code">
+                                    My Material
+                                </span>
+
+                                <h3>
+                                    {{ continue_material.title }}
+                                </h3>
+
+                                <p>
+                                    Personal Material
+                                </p>
+
+                            </div>
+
+                            <span class="continue-button">
+                                Continue
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+
+                        </a>
+
+
+                    {% else %}
+
+                        <div class="continue-card continue-card-empty">
+
+                            <div class="continue-card-content">
+
+                                <span class="continue-code">
+                                    Get started
+                                </span>
+
+                                {% if request.user|has_group:'Teacher' %}
+
+                                    <h3>
+                                        Start managing your modules
+                                    </h3>
+
+                                    <p>
+                                        Create or manage your learning modules.
+                                    </p>
+
+                                {% else %}
+
+                                    <h3>
+                                        Start exploring your modules
+                                    </h3>
+
+                                    <p>
+                                        Open an SLM module to start learning.
+                                    </p>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            {% if request.user|has_group:'Teacher' %}
+
+                                <a href="{% url 'slm:management' %}"
+                                   class="continue-button">
+                                    Manage
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+
+                            {% else %}
+
+                                <a href="{% url 'slm:slmlists' %}"
+                                   class="continue-button">
+                                    View Modules
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+                </section>
+
+
+                <!-- =================================================
+                     QUICK ACCESS
+                ================================================== -->
+                <section class="dashboard-section">
+
+                    <div class="dashboard-section-heading">
+                        <h2>Quick Access</h2>
+                    </div>
+
+
+                    <div class="quick-access-grid">
+
+
+                        <!-- SLM -->
+                        <a
+                            {% if request.user|has_group:'Teacher' %}
+                                href="{% url 'slm:management' %}"
+                            {% else %}
+                                href="{% url 'slm:slmlists' %}"
+                            {% endif %}
+                            class="quick-access-card">
+
+                            <div class="quick-access-icon">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+
+                            <div class="quick-access-content">
+
+                                {% if request.user|has_group:'Teacher' %}
+
+                                    <h3>Manage Self-Learning Modules</h3>
+
+                                    <p>
+                                        Manage your subjects and modules.
+                                    </p>
+
+                                    <span>
+                                        Manage Modules
+                                        <i class="fas fa-arrow-right"></i>
+                                    </span>
+
+                                {% else %}
+
+                                    <h3>Self-Learning Modules</h3>
+
+                                    <p>
+                                        Browse your available modules.
+                                    </p>
+
+                                    <span>
+                                        View Modules
+                                        <i class="fas fa-arrow-right"></i>
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </a>
+
+
+                        <!-- AI HELPER / MODERATION CARD -->
+                        <a 
+                            {% if request.user|has_group:'Teacher' %}
+                                href="{% url 'forum:moderation_dashboard' %}"
+                            {% else %}
+                                href="{% url 'aihelper:helper' %}"
+                            {% endif %}
+                            class="quick-access-card">
+
+                            <div class="quick-access-icon">
+                                {% if request.user|has_group:'Teacher' %}
+                                    <i class="fas fa-user-shield"></i>
+                                {% else %}
+                                    <i class="fas fa-robot"></i>
+                                {% endif %}
+                            </div>
+
+                            <div class="quick-access-content">
+                                <h3>
+                                    {% if request.user|has_group:'Teacher' %}
+                                        Moderation Dashboard
+                                    {% else %}
+                                        AI Helper
+                                    {% endif %}
+                                </h3>
+
+                                <p>
+                                    {% if request.user|has_group:'Teacher' %}
+                                        Review flagged posts and manage forum content.
+                                    {% else %}
+                                        Ask questions about a topic.
+                                    {% endif %}
+                                </p>
+
+                                <span>
+                                    {% if request.user|has_group:'Teacher' %}
+                                        Open Dashboard
+                                    {% else %}
+                                        Ask AI
+                                    {% endif %}
+                                    <i class="fas fa-arrow-right"></i>
+                                </span>
+                            </div>
+                        </a>
+
+
+                        <!-- FORUM -->
+                        <a href="{% url 'forum:list' %}"
+                           class="quick-access-card">
+
+                            <div class="quick-access-icon">
+                                <i class="fas fa-comments"></i>
+                            </div>
+
+                            <div class="quick-access-content">
+
+                                {% if request.user|has_group:'Teacher' %}
+
+                                    <h3>Discussion Forum</h3>
+
+                                    <p>
+                                        Review and participate in discussions.
+                                    </p>
+
+                                {% else %}
+
+                                    <h3>Discussion Forum</h3>
+
+                                    <p>
+                                        Join discussions with other users.
+                                    </p>
+
+                                {% endif %}
+
+                                <span>
+                                    Open Forum
+                                    <i class="fas fa-arrow-right"></i>
+                                </span>
+
+                            </div>
+
+                        </a>
+
+                        {% if request.user|has_group:'Student' %}
+                        <!-- PERSONAL MATERIALS -->
+                        <a href="{% url 'slm:slmlists' %}#tab-1"
+                           class="quick-access-card">
+
+                            <div class="quick-access-icon">
+                                <i class="fas fa-folder"></i>
+                            </div>
+
+                            <div class="quick-access-content">
+
+                                <h3>My Materials</h3>
+
+                                <p>
+                                    View your uploaded files.
+                                </p>
+
+                                <span>
+                                    View Materials
+                                    <i class="fas fa-arrow-right"></i>
+                                </span>
+
+                            </div>
+
+                        </a>
+                        {% endif %}
+                    </div>
+                </section>
+
+
+                <!-- =================================================
+                     RECENTLY VISITED
+                ================================================== -->
+                <section class="dashboard-section">
+
+                    <div class="dashboard-section-heading">
+                        <h2>Recently Visited</h2>
+                    </div>
+
+
+                    <div class="recent-list">
+
+                        {% for module in recent_modules %}
+
+                            <a href="{% url 'slm:module-detail' module.subject_id module.id %}"
+                               class="recent-item">
+
+                                <div class="recent-item-main">
+
+                                    <div class="recent-icon">
+                                        <i class="{{ module.file_icon }}"></i>
+                                    </div>
+
+                                    <div>
+
+                                        <h3>
+                                            {{ module.subject.subject_name }}
+                                        </h3>
+
+                                        <p>
+                                            {{ module.subject.subject_code }}
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="recent-item-meta">
+                                    Module {{ module.module_number }}
+                                </div>
+
+                                <i class="fas fa-arrow-right recent-arrow"></i>
+
+                            </a>
+
+                        {% endfor %}
+
+
+                        {% for material in recent_personal_materials %}
+
+                            <a href="{% url 'slm:personalmaterial-detail' material.id %}"
+                               class="recent-item">
+
+                                <div class="recent-item-main">
+
+                                    <div class="recent-icon">
+                                        <i class="{{ material.file_icon }}"></i>
+                                    </div>
+
+                                    <div>
+
+                                        <h3>
+                                            {{ material.title }}
+                                        </h3>
+
+                                        <p>
+                                            Personal Material
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="recent-item-meta">
+                                    My Material
+                                </div>
+
+                                <i class="fas fa-arrow-right recent-arrow"></i>
+
+                            </a>
+
+                        {% endfor %}
+
+
+                        {% if not recent_modules and not recent_personal_materials %}
+
+                            <div class="recent-empty">
+
+                                <i class="fas fa-clock"></i>
+
+                                <div>
+
+                                    <h3>
+                                        Nothing here yet
+                                    </h3>
+
+                                    <p>
+                                        Open a module or personal material and it will appear here.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </section>
+
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+{% include "components/global_modal.html" %}
+
 {% endblock %}
-<body>
-    
+
+
 {% block extra_js %}
 <script src="{% static 'js/modal.js' %}" defer></script>
 {% endblock %}
-    

@@ -383,93 +383,139 @@ def _get_recent_personal_material_ids(request):
 
 @login_required(login_url='account:login')
 def dashboard(request):
-    if user_is_in_group(request.user, GROUP_TEACHER):
-        subjects = request.user.subjects.filter(is_archived=False)[:3]
-        modules = Module.objects.filter(subject__author=request.user, is_archived=False).select_related("subject")[:3]
-        subject_count = request.user.subjects.filter(is_archived=False).count()
-        module_count = Module.objects.filter(subject__author=request.user, is_archived=False).count()
-    else:
-        subjects = Subject.objects.filter(is_archived=False)[:3]
-        modules = Module.objects.filter(is_archived=False, subject__is_archived=False).select_related("subject")[:3]
-        subject_count = Subject.objects.filter(is_archived=False).count()
-        module_count = Module.objects.filter(is_archived=False, subject__is_archived=False).count()
+    is_teacher = user_is_in_group(request.user, GROUP_TEACHER)
 
+    # -------------------------------------------------------------
+    # Subjects and SLM modules
+    # -------------------------------------------------------------
+    if is_teacher:
+        subjects_qs = request.user.subjects.filter(is_archived=False)
+        modules_qs = Module.objects.filter(
+            subject__author=request.user,
+            is_archived=False
+        ).select_related("subject")
+    else:
+        subjects_qs = Subject.objects.filter(is_archived=False)
+        modules_qs = Module.objects.filter(
+            is_archived=False,
+            subject__is_archived=False
+        ).select_related("subject")
+
+    subjects = subjects_qs[:3]
+    modules = modules_qs[:3]
+
+    subject_count = subjects_qs.count()
+    module_count = modules_qs.count()
+
+    # -------------------------------------------------------------
+    # User's personal materials
+    # -------------------------------------------------------------
+    personal_materials_qs = PersonalMaterial.objects.filter(
+        author=request.user,
+        is_archived=False
+    )
+
+    personal_material_count = personal_materials_qs.count()
+
+    # -------------------------------------------------------------
+    # User activity
+    #
+    # Counts actual things the user has done:
+    # - personal materials
+    # - forum posts
+    # - AI conversations
+    # -------------------------------------------------------------
+    forum_activity_count = Post.objects.filter(
+        author=request.user,
+        is_deleted=False,
+        is_archived=False
+    ).count()
+
+    ai_activity_count = Conversation.objects.filter(
+        user=request.user
+    ).count()
+
+    activity_count = (
+        personal_material_count
+        + forum_activity_count
+        + ai_activity_count
+    )
+
+    # -------------------------------------------------------------
+    # Recently visited modules
+    # -------------------------------------------------------------
     recent_module_ids = _get_recent_module_ids(request)
+
     recent_modules = list(
-        Module.objects.filter(pk__in=recent_module_ids)
+        Module.objects.filter(
+            pk__in=recent_module_ids,
+            is_archived=False
+        )
         .select_related("subject")
         .order_by(
             models.Case(
-                *[models.When(pk=pk, then=pos) for pos, pk in enumerate(recent_module_ids)],
+                *[
+                    models.When(pk=pk, then=pos)
+                    for pos, pk in enumerate(recent_module_ids)
+                ],
                 output_field=models.IntegerField(),
             )
         )
     ) if recent_module_ids else []
 
-    # -----------------------------------------------------------------
-    #  Personal materials – recent visits (new)
-    # -----------------------------------------------------------------
+    # -------------------------------------------------------------
+    # Recently visited personal materials
+    # -------------------------------------------------------------
     recent_material_ids = _get_recent_personal_material_ids(request)
+
     recent_personal_materials = list(
-        PersonalMaterial.objects.filter(pk__in=recent_material_ids)
+        PersonalMaterial.objects.filter(
+            pk__in=recent_material_ids,
+            is_archived=False
+        )
         .select_related("author")
         .order_by(
             models.Case(
-                *[models.When(pk=pk, then=pos) for pos, pk in enumerate(recent_material_ids)],
+                *[
+                    models.When(pk=pk, then=pos)
+                    for pos, pk in enumerate(recent_material_ids)
+                ],
                 output_field=models.IntegerField(),
             )
         )
     ) if recent_material_ids else []
 
-    recent_activity = [
-        {
-            "title": "Continue where you left off",
-            "detail": "Open your latest module and pick up your progress in a few seconds.",
-            "icon": "fas fa-play-circle",
-        },
-        {
-            "title": "Ask the AI Helper",
-            "detail": "Get guidance on confusing topics before they become blockers.",
-            "icon": "fas fa-robot",
-        },
-        {
-            "title": "Join the forum",
-            "detail": "See what classmates are asking and share a useful insight.",
-            "icon": "fas fa-comment",
-        },
-    ]
-
-    onboarding_steps = [
-        {
-            "title": "Complete your profile",
-            "detail": "Add your course details and a profile photo so your learning space feels personal.",
-            "done": bool(request.user.first_name or request.user.last_name or request.user.program),
-        },
-        {
-            "title": "Open a module",
-            "detail": "Review the latest materials and start building momentum with one small step.",
-            "done": bool(recent_modules),
-        },
-        {
-            "title": "Ask one question",
-            "detail": "Share what you are stuck on and let the community or AI helper support you.",
-            "done": (
-                Conversation.objects.filter(user=request.user).exists()
-                or Message.objects.filter(user=request.user, role="user").exists()
-            ),
-        },
-    ]
+    # -------------------------------------------------------------
+    # Continue where you left off
+    #
+    # Prefer the most recently visited module.
+    # If there is no module, use the most recent personal material.
+    # -------------------------------------------------------------
+    continue_module = recent_modules[0] if recent_modules else None
+    continue_material = (
+        recent_personal_materials[0]
+        if recent_personal_materials
+        else None
+    )
 
     context = {
         "subjects": subjects,
         "modules": modules,
+
+        "subject_count": subject_count,
+        "module_count": module_count,
+        "personal_material_count": personal_material_count,
+        "activity_count": activity_count,
+
         "recent_modules": recent_modules,
         "recent_personal_materials": recent_personal_materials,
-        "recent_activity": recent_activity,
-        "module_count": module_count,
-        "subject_count": subject_count,
-        "onboarding_steps": onboarding_steps,
+
+        "continue_module": continue_module,
+        "continue_material": continue_material,
+
+        "is_teacher": is_teacher,
     }
+
     return render(request, "dashboard.html", context)
 
 
