@@ -983,24 +983,6 @@ html[data-theme="dark"] .ppt-page ul ul li {
 
 
     /* ----------------------------------------------------------
-       Tables
-       ---------------------------------------------------------- */
-
-    .module-content table {
-        display: block;
-
-        width: 100%;
-        max-width: 100%;
-
-        overflow-x: auto;
-
-        -webkit-overflow-scrolling: touch;
-
-        border-collapse: collapse;
-    }
-
-
-    /* ----------------------------------------------------------
        Code / preformatted content
        ---------------------------------------------------------- */
 
@@ -1225,4 +1207,38 @@ html[data-theme="dark"] .ppt-page ul ul li {
 
 .module-actions {
     text-align: right;
+}
+
+/* ==============================================================
+   TABLE HORIZONTAL SCROLLING
+   Only wide tables scroll horizontally.
+   ============================================================== */
+
+.module-content .table-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+
+    margin: 1rem 0;
+}
+
+.module-content .table-scroll table {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+
+    border-collapse: collapse;
+}
+
+.module-content .table-scroll th,
+.module-content .table-scroll td {
+    min-width: 70px;
+
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
 }

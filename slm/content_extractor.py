@@ -321,6 +321,11 @@ def _extract_docx(raw: bytes) -> str:
     if EXTRACTOR_SETTINGS["docx"]["embed_images"] and _BS4_AVAILABLE:
         soup = BeautifulSoup(raw_html, "html.parser")
 
+        for table in soup.find_all("table"):
+            wrapper = soup.new_tag("div")
+            wrapper["class"] = "table-scroll"
+            table.wrap(wrapper)
+
         # ----- embed images -------------------------------------------------
         for img in soup.find_all("img"):
             src = img.get("src", "")
