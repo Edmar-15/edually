@@ -534,8 +534,10 @@ body.sidebar-collapsed .sidebar {
 }
 
 .sidebar-footer {
+    margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid var(--border);
+    flex-shrink: 0;
 }
 
 .nav-item.logout {
@@ -992,6 +994,36 @@ html[data-theme="dark"] .journey-step {
     color: var(--text) !important;
 }
 
+html.dark .onboarding-card,
+html[data-theme="dark"] .onboarding-card {
+    background: linear-gradient(135deg, rgba(14, 154, 167, 0.18), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.16);
+    box-shadow: 0 20px 44px rgba(2, 6, 23, 0.4);
+}
+
+html.dark .onboarding-header h2,
+html[data-theme="dark"] .onboarding-header h2,
+html.dark .onboarding-step-content strong,
+html[data-theme="dark"] .onboarding-step-content strong {
+    color: var(--text) !important;
+}
+
+html.dark .onboarding-header p,
+html[data-theme="dark"] .onboarding-header p,
+html.dark .onboarding-progress-text,
+html[data-theme="dark"] .onboarding-progress-text,
+html.dark .onboarding-step-content span,
+html[data-theme="dark"] .onboarding-step-content span,
+html.dark .onboarding-step--done .onboarding-step-content span,
+html[data-theme="dark"] .onboarding-step--done .onboarding-step-content span {
+    color: var(--muted) !important;
+}
+
+html.dark .onboarding-progress,
+html[data-theme="dark"] .onboarding-progress {
+    background: rgba(148, 163, 184, 0.18);
+}
+
 html.dark .onboarding-step,
 html[data-theme="dark"] .onboarding-step {
     background: rgba(20, 29, 48, 0.88) !important;
@@ -999,10 +1031,45 @@ html[data-theme="dark"] .onboarding-step {
     color: var(--text) !important;
 }
 
+html.dark .onboarding-step--todo,
+html[data-theme="dark"] .onboarding-step--todo {
+    background: rgba(20, 29, 48, 0.88) !important;
+    border-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+html.dark .onboarding-step--todo:hover,
+html[data-theme="dark"] .onboarding-step--todo:hover {
+    background: rgba(30, 41, 59, 0.94) !important;
+    border-color: rgba(14, 154, 167, 0.24) !important;
+    box-shadow: 0 8px 16px rgba(14, 154, 167, 0.12) !important;
+}
+
 html.dark .onboarding-step--done,
 html[data-theme="dark"] .onboarding-step--done {
     background: rgba(16, 185, 129, 0.12) !important;
     border-color: rgba(16, 185, 129, 0.34) !important;
+}
+
+html.dark .onboarding-step--todo .onboarding-step-icon,
+html[data-theme="dark"] .onboarding-step--todo .onboarding-step-icon {
+    color: var(--text) !important;
+    background: rgba(148, 163, 184, 0.12) !important;
+}
+
+html.dark .onboarding-step--done .onboarding-step-icon,
+html[data-theme="dark"] .onboarding-step--done .onboarding-step-icon {
+    background: rgba(14, 154, 167, 0.24) !important;
+    color: #ffffff !important;
+}
+
+html.dark .onboarding-step-arrow,
+html[data-theme="dark"] .onboarding-step-arrow {
+    color: var(--muted) !important;
+}
+
+html.dark .onboarding-step--todo:hover .onboarding-step-arrow,
+html[data-theme="dark"] .onboarding-step--todo:hover .onboarding-step-arrow {
+    color: var(--primary) !important;
 }
 
 html.dark .journey-step:hover,
