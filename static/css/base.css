@@ -158,6 +158,21 @@ html.dark body::before {
     radial-gradient(circle at 50% 100%, rgba(255, 107, 107, 0.08), transparent 24%);
 }
 
+html.dark .page-header {
+  background: rgba(10, 15, 28, 0.92);
+  border-bottom-color: rgba(148, 163, 184, 0.14);
+}
+
+html.dark label {
+  color: var(--text);
+}
+
+html.dark .floating-label-group > label,
+html.dark .floating-label-group > .password-input-wrapper + label {
+  background: rgba(17, 24, 39, 0.98);
+  color: var(--muted);
+}
+
 html.dark input,
 html.dark select,
 html.dark textarea {

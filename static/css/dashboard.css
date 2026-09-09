@@ -1092,6 +1092,27 @@ html[data-theme="dark"] .step-badge {
         gap: 0.6rem;
     }
 
+    .content-header .header-left:has(> .breadcrumb) {
+        min-width: 0;
+        gap: 0.4rem;
+    }
+
+    .content-header .header-left:has(> .breadcrumb) .mobile-sidebar-trigger {
+        flex: 0 0 40px;
+        width: 40px;
+        min-width: 40px;
+        margin: 0;
+    }
+
+    .content-header .breadcrumb {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
     .header-left span {
         font-size: 1rem;
         font-weight: 600;

@@ -705,10 +705,12 @@ html[data-theme="dark"] .ppt-page ul ul li {
 
     .content-header .header-left {
         display: flex;
+        flex-direction: row;
         align-items: flex-start;
 
         flex: 1 1 auto;
         min-width: 0;
+        width: auto;
 
         gap: 0.4rem;
     }
@@ -719,6 +721,9 @@ html[data-theme="dark"] .ppt-page ul ul li {
     .content-header .mobile-sidebar-trigger {
         flex: 0 0 auto;
 
+        width: 40px;
+        min-width: 40px;
+        margin-right: 0;
         margin-top: 0.05rem;
     }
 
