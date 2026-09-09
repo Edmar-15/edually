@@ -1,168 +1,250 @@
 @import "../base.css";
 
 /*====================================================================
-   highlight_ai.css – colour‑fixed version with self‑contained SLM palette
+   highlight_ai.css
    --------------------------------------------------------------------
-   The colour palette that used to be pulled from `slm.css` is now
-   declared in this file, removing the need for a separate import.
+   Highlight AI / annotation / tooltip UI for SLM pages.
+
+   This file keeps its own SLM palette so the highlight widgets do not
+   depend on unrelated component styles.
+
+   Dark mode:
+   - AI Mini uses a proper dark surface.
+   - AI Mini controls use dark backgrounds and readable text.
+   - Annotation textareas use a slightly brighter dark surface.
+   - Tooltip tabs/buttons receive stronger dark-mode contrast.
+   - Existing highlight colors and interaction behavior are preserved.
 ====================================================================*/
 
+
 /* -------------------------------------------------------------
-   1️⃣  Design tokens – SLM colour palette (copied from slm.css)
+   1️⃣  Design tokens – SLM colour palette
    ------------------------------------------------------------- */
+
 :root {
-    /* ────── SLM colour palette (originally in slm.css) ────── */
+    /* ────── SLM colour palette ────── */
+
     /* Accent / brand */
-    --module-accent:        #0e9aa7;                     /* primary accent               */
-    --module-accent-dark:   #0b7d86;                     /* darker accent (hover/focus)   */
+    --module-accent: #0e9aa7;
+    --module-accent-dark: #0b7d86;
 
-    /* Surfaces – we keep the indirection to the core tokens from base.css */
-    --module-surface:       var(--surface);              /* main page surface */
-    --module-surface-soft:  var(--surface-soft);         /* soft surface (tool‑tip header) */
+    /* Surfaces */
+    --module-surface: var(--surface);
+    --module-surface-soft: var(--surface-soft);
 
-    /* Borders & shadows that the module uses */
-    --module-border:        rgba(14, 154, 167, 0.18);
-    --module-shadow:         0 18px 40px rgba(14, 154, 167, 0.12);
+    /* Borders & shadows */
+    --module-border: rgba(14, 154, 167, 0.18);
+    --module-shadow: 0 18px 40px rgba(14, 154, 167, 0.12);
 
-    /* Fallback for the generic border used by the AI widget */
-    --border-slm:           rgba(15, 23, 42, 0.12);
+    /* Generic border fallback */
+    --border-slm: rgba(15, 23, 42, 0.12);
 
 
-    /* ────── Highlight‑AI design tokens (now backed by the above) ────── */
+    /* ────── Highlight-AI design tokens ────── */
 
     /* Brand palette */
-    --c-primary:          var(--module-accent);                /* primary brand – matches .button   */
-    --c-primary-dark:     var(--module-accent-dark);           /* hover/focus for primary          */
-    --c-primary-light:    var(--module-accent-light, #93c5fd);/* optional lighter accent           */
-    --c-accent:           var(--module-accent);                /* secondary accent                 */
-    --c-accent-dark:      var(--module-accent-dark);           /* accent hover                     */
+    --c-primary: var(--module-accent);
+    --c-primary-dark: var(--module-accent-dark);
+    --c-primary-light: var(--module-accent-light, #93c5fd);
+
+    --c-accent: var(--module-accent);
+    --c-accent-dark: var(--module-accent-dark);
+
 
     /* Core surfaces */
-    --c-bg:               var(--surface);                      /* page background                  */
-    --c-bg-dark:          var(--surface-dark);
-    --c-bg-muted:         var(--module-surface-soft);          /* tooltip header / soft surface    */
-    --c-bg-tooltip:       var(--c-bg);                         /* solid tooltip body (overridden)  */
-    --c-bg-history:       var(--module-surface);               /* history pop‑over                 */
+    --c-bg: var(--surface);
+    --c-bg-dark: var(--surface-dark);
+    --c-bg-muted: var(--module-surface-soft);
+    --c-bg-tooltip: var(--c-bg);
+    --c-bg-history: var(--module-surface);
 
-    /* Highlight colours – light variants (now semi‑transparent) */
-    --c-hl-default-light:    rgba(250, 238, 107, 0.45);   /* buttery‑yellow */
-    --c-hl-simplified-light: rgba(  0,212,170,0.45);   /* vivid turquoise (simplified) */
-    --c-hl-technical-light:  rgba(255,111, 97,0.45);   /* coral‑orange (technical) */
-    --c-hl-both-light:       rgba(212,169,255,0.45);   /* fallback for non‑gradient browsers (lavender) */
-    --c-hl-annotated-light: rgba(255,182,193,0.45);   /* light pink – annotation */
 
-    /* Dark variants – also semi‑transparent (still ≥4.5:1 contrast) */
-    --c-hl-default-dark:    rgba(140,123, 15,0.45);   /* deep‑goldenrod */
-    --c-hl-simplified-dark: rgba(  0,163,121,0.45);   /* darker teal */
-    --c-hl-technical-dark:  rgba(211, 84, 0,0.45);   /* burnt orange */
-    --c-hl-both-dark:       rgba(139, 92,246,0.45);   /* deep violet */
-    --c-hl-annotated-dark:  rgba(194, 24, 91,0.45);   /* rich magenta */
+    /* Highlight colours – light variants */
+    --c-hl-default-light: rgba(250, 238, 107, 0.45);
+    --c-hl-simplified-light: rgba(0, 212, 170, 0.45);
+    --c-hl-technical-light: rgba(255, 111, 97, 0.45);
+    --c-hl-both-light: rgba(212, 169, 255, 0.45);
+    --c-hl-annotated-light: rgba(255, 182, 193, 0.45);
 
-    /* Public aliases (used throughout the file) */
-    --c-hl-default:      var(--c-hl-default-light);
-    --c-hl-simplified:   var(--c-hl-simplified-light);
-    --c-hl-technical:    var(--c-hl-technical-light);
-    --c-hl-both:         var(--c-hl-both-light);
-    --c-hl-annotated:    var(--c-hl-annotated-light);
 
-    /* Text & UI affordances */
-    --c-text:            var(--text);          /* body copy                        */
-    --c-text-muted:      var(--muted);         /* secondary copy                  */
-    --c-text-light:      #f9fafb;              /* used inside dark tooltip         */
-    --c-link:            var(--module-accent);
-    --c-link-hover:      var(--module-accent-dark);
-    --c-success:         #28a745;              /* “save” button (green)           */
+    /* Highlight colours – dark variants */
+    --c-hl-default-dark: rgba(140, 123, 15, 0.45);
+    --c-hl-simplified-dark: rgba(0, 163, 121, 0.45);
+    --c-hl-technical-dark: rgba(211, 84, 0, 0.45);
+    --c-hl-both-dark: rgba(139, 92, 246, 0.45);
+    --c-hl-annotated-dark: rgba(194, 24, 91, 0.45);
 
-    /* Buttons used by AI / choice widget */
-    --c-ai-btn-bg:       var(--c-primary);          /* high‑contrast button background */
-    --c-ai-btn-bg-hover: var(--c-primary-dark);     /* hover colour                     */
-    --c-ai-btn-fg:       #ffffff;                   /* white text                       */
 
-    /* Radii & shadows */
-    --b-radius:          0.625rem;
-    --b-radius-sm:       0.4rem;
-    --b-shadow:          var(--module-shadow);
-    --b-shadow-heavy:    0 12px 24px rgba(14,154,167,.10);
+    /* Public aliases */
+    --c-hl-default: var(--c-hl-default-light);
+    --c-hl-simplified: var(--c-hl-simplified-light);
+    --c-hl-technical: var(--c-hl-technical-light);
+    --c-hl-both: var(--c-hl-both-light);
+    --c-hl-annotated: var(--c-hl-annotated-light);
 
-    /* Tooltip / card background */
-    --c-tooltip-bg:      var(--c-bg);                /* solid tooltip body               */
-    --c-heading:         var(--text);                /* headings inside cards            */
 
-    /* Tooltip‑tab colours */
-    --c-tooltip-tab-bg:          var(--c-bg);         /* solid, non‑transparent          */
-    --c-tooltip-tab-fg:          var(--c-text);       /* same as body text               */
-    --c-tooltip-tab-bg-hover:    var(--c-bg-muted);   /* slight hover variation           */
+    /* Text */
+    --c-text: var(--text);
+    --c-text-muted: var(--muted);
+    --c-text-light: #f9fafb;
 
-    /* History UI tokens */
-    --c-history-toggle-bg:       linear-gradient(135deg,
-                                   var(--surface-soft) 0%,
-                                   var(--surface) 100%);   /* toggle gradient                 */
-    --c-history-toggle-border:   var(--module-accent);      /* border of toggle button         */
-    --c-history-item-bg:         var(--surface);            /* history entry background        */
-    --c-history-item-border:     var(--module-border);      /* history entry border            */
+    --c-link: var(--module-accent);
+    --c-link-hover: var(--module-accent-dark);
 
-    /* Generic UI tokens */
-    --c-tooltip-border:   var(--module-border);        /* header bottom line               */
-    --c-border:           var(--module-border);
-    --c-border-input:    var(--border-slm);
-    --c-code-bg:          rgba(15,23,42,.06);
-    --c-pre-bg:           rgba(15,23,42,.05);
+
+    /* Status */
+    --c-success: #28a745;
+
+
+    /* AI / choice buttons */
+    --c-ai-btn-bg: var(--c-primary);
+    --c-ai-btn-bg-hover: var(--c-primary-dark);
+    --c-ai-btn-fg: #ffffff;
+
+
+    /* Radii / shadows */
+    --b-radius: 0.625rem;
+    --b-radius-sm: 0.4rem;
+
+    --b-shadow: var(--module-shadow);
+    --b-shadow-heavy: 0 12px 24px rgba(14, 154, 167, .10);
+
+
+    /* Tooltip / card */
+    --c-tooltip-bg: var(--c-bg);
+    --c-heading: var(--text);
+
+    /* Tooltip tabs */
+    --c-tooltip-tab-bg: var(--c-bg);
+    --c-tooltip-tab-fg: var(--c-text);
+    --c-tooltip-tab-bg-hover: var(--c-bg-muted);
+
+
+    /* History UI */
+    --c-history-toggle-bg:
+        linear-gradient(135deg,
+            var(--surface-soft) 0%,
+            var(--surface) 100%);
+
+    --c-history-toggle-border:
+        var(--module-accent);
+
+    --c-history-item-bg:
+        var(--surface);
+
+    --c-history-item-border:
+        var(--module-border);
+
+
+    /* Generic UI */
+    --c-tooltip-border: var(--module-border);
+    --c-border: var(--module-border);
+    --c-border-input: var(--border-slm);
+
+    --c-code-bg: rgba(15, 23, 42, .06);
+    --c-pre-bg: rgba(15, 23, 42, .05);
+
+
+    /* ────── Dark UI surfaces ────── */
+
+    --c-dark-surface: #182126;
+    --c-dark-surface-soft: #202b30;
+    --c-dark-surface-deep: #151d21;
+    --c-dark-border: #3b4b52;
+    --c-dark-border-soft: #35464d;
+
+    --c-dark-text: #e5edf0;
+    --c-dark-text-muted: #9fb0b6;
+
+    --c-dark-primary: #1aa6b3;
+    --c-dark-primary-hover: #18aeba;
 }
 
+
 /* -------------------------------------------------------------
-   2️⃣  Dark‑mode overrides (keep the same opacity)
+   2️⃣  Dark-mode overrides
    ------------------------------------------------------------- */
+
 html[data-theme="dark"] {
-    --c-hl-default:    var(--c-hl-default-dark);
+    --c-hl-default: var(--c-hl-default-dark);
     --c-hl-simplified: var(--c-hl-simplified-dark);
-    --c-hl-technical:  var(--c-hl-technical-dark);
-    --c-hl-both:       var(--c-hl-both-dark);
+    --c-hl-technical: var(--c-hl-technical-dark);
+    --c-hl-both: var(--c-hl-both-dark);
     --c-hl-annotated: var(--c-hl-annotated-dark);
+
+    /*
+     * Keep tooltip surfaces visually consistent with the rest of
+     * the dark SLM interface.
+     */
+    --c-code-bg: rgba(255, 255, 255, .055);
+    --c-pre-bg: rgba(0, 0, 0, .22);
+
+    --c-border-input: #3b4b52;
 }
 
+
 /* -------------------------------------------------------------
-   3️⃣  Global utilities (unchanged)
+   3️⃣  Global utilities
    ------------------------------------------------------------- */
+
 *,
 *::before,
 *::after {
     box-sizing: border-box;
 }
+
 html {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont,
-                 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
 }
+
 a {
     color: var(--c-link);
     text-decoration: underline;
 }
+
 a:hover {
     color: var(--c-link-hover);
 }
 
+
 /* -------------------------------------------------------------
-   4️⃣  Highlighted fragments – now support all 4 visual layers
+   4️⃣  Highlighted fragments
    ------------------------------------------------------------- */
+
 .highlight-marked {
     padding: 0;
     margin: 0;
+
     border-radius: 0;
+
     background: var(--c-hl-default);
     color: var(--c-text);
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
-    transition: filter 120ms ease, transform 120ms ease;
+
+    box-shadow:
+        inset 0 -1px 0 rgba(0, 0, 0, .08);
+
+    transition:
+        filter 120ms ease,
+        transform 120ms ease;
 }
+
 
 /*
  * A logical highlight can consist of several spans when it crosses
  * formatted HTML elements.
- *
- * Only the outer fragments receive rounded corners and horizontal
- * breathing room. Middle fragments stay flush so the highlight
- * appears continuous.
  */
+
 .highlight-marked.highlight-fragment-first {
     padding-left: .16em;
     border-radius: .3em 0 0 .3em;
@@ -188,81 +270,125 @@ a:hover {
     outline: none;
 }
 
-/* single‑layer colours ------------------------------------------------ */
-.highlight-marked--simplified { background: var(--c-hl-simplified); }
-.highlight-marked--technical  { background: var(--c-hl-technical); }
 
-/* BOTH (simplified + technical) --------------------------------------- */
-.highlight-marked--both {
-    /* split‑gradient – left = simplified, right = technical.
-       The colours are semi‑transparent so any overlap shows the other layer. */
-    background: var(--c-hl-both);
-    background: linear-gradient(
-        to right,
-        var(--c-hl-simplified) 0%,
-        var(--c-hl-simplified) 50%,
-        var(--c-hl-technical) 50%,
-        var(--c-hl-technical) 100%
-    );
+/* Single-layer colours */
+
+.highlight-marked--simplified {
+    background: var(--c-hl-simplified);
 }
 
-/* Annotation only ------------------------------------------------------ */
+.highlight-marked--technical {
+    background: var(--c-hl-technical);
+}
+
+
+/* BOTH – simplified + technical */
+
+.highlight-marked--both {
+    background: var(--c-hl-both);
+
+    background:
+        linear-gradient(to right,
+            var(--c-hl-simplified) 0%,
+            var(--c-hl-simplified) 50%,
+            var(--c-hl-technical) 50%,
+            var(--c-hl-technical) 100%);
+}
+
+
+/* Annotation only */
+
 .highlight-marked--annotated {
     position: relative;
     background: var(--c-hl-annotated);
 }
+
 .highlight-marked--annotated::after {
     content: "\01F5D2";
+
     font-size: .7rem;
+
     position: absolute;
     right: -.4rem;
     top: -.4rem;
+
     color: var(--c-primary-dark);
 }
 
-/* Combined – both answers **and** an annotation ---------------------- */
+
+/* Combined – answers + annotation */
+
 .highlight-marked--both.highlight-marked--annotated {
-    /* Keep the split‑gradient, then add the orange dashed outline that marks an annotation. */
     background: var(--c-hl-both);
-    background: linear-gradient(
-        to right,
-        var(--c-hl-simplified) 0%,
-        var(--c-hl-simplified) 50%,
-        var(--c-hl-technical) 50%,
-        var(--c-hl-technical) 100%
-    );
+
+    background:
+        linear-gradient(to right,
+            var(--c-hl-simplified) 0%,
+            var(--c-hl-simplified) 50%,
+            var(--c-hl-technical) 50%,
+            var(--c-hl-technical) 100%);
+
     border: 2px dashed orange;
-    box-sizing: border-box;   /* keep the dash inside the span */
+    box-sizing: border-box;
 }
 
-/* -----------------------------------------------------------------
-   5️⃣  Focus‑state for the History UI (pulse)
-   ----------------------------------------------------------------- */
-.highlight-marked.highlight-history-focused {
-    box-shadow:
-        0 0 0 3px rgba(255,255,255,.95),
-        0 0 0 5px rgba(249,115,22,.55),
-        0 0 16px rgba(249,115,22,.45);
-    outline: 2px solid rgba(249,115,22,.9);
-    animation: hl-history-pulse 1.2s ease-in-out 2;
-}
-@keyframes hl-history-pulse {
-    0%,100% { transform: scale(1); }
-    50%      { transform: scale(1.01); }
-}
-
-/* -----------------------------------------------------------------
-   6️⃣  Stacking order – higher‑information spans sit on top
-   ----------------------------------------------------------------- */
-.highlight-marked               { position: relative; z-index: 1; }
-.highlight-marked--simplified,
-.highlight-marked--technical    { z-index: 2; }
-.highlight-marked--both       { z-index: 3; }
-.highlight-marked--annotated   { z-index: 4; }
 
 /* -------------------------------------------------------------
-   7️⃣  Tooltip (solid background) – fixed tab colours
+   5️⃣  History focus state
    ------------------------------------------------------------- */
+
+.highlight-marked.highlight-history-focused {
+    box-shadow:
+        0 0 0 3px rgba(255, 255, 255, .95),
+        0 0 0 5px rgba(249, 115, 22, .55),
+        0 0 16px rgba(249, 115, 22, .45);
+
+    outline: 2px solid rgba(249, 115, 22, .9);
+
+    animation:
+        hl-history-pulse 1.2s ease-in-out 2;
+}
+
+@keyframes hl-history-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.01);
+    }
+}
+
+
+/* -------------------------------------------------------------
+   6️⃣  Highlight stacking order
+   ------------------------------------------------------------- */
+
+.highlight-marked {
+    position: relative;
+    z-index: 1;
+}
+
+.highlight-marked--simplified,
+.highlight-marked--technical {
+    z-index: 2;
+}
+
+.highlight-marked--both {
+    z-index: 3;
+}
+
+.highlight-marked--annotated {
+    z-index: 4;
+}
+
+
+/* -------------------------------------------------------------
+   7️⃣  Main highlight tooltip
+   ------------------------------------------------------------- */
+
 .highlight-answer-tooltip {
     position: absolute;
     z-index: 3200;
@@ -271,23 +397,21 @@ a:hover {
 
     pointer-events: auto;
 
-    animation: highlight-tooltip-enter .18s ease-out both;
+    animation:
+        highlight-tooltip-enter .18s ease-out both;
 }
 
 .highlight-answer-tooltip__inner {
     background: var(--c-tooltip-bg);
 
     border: 2px solid var(--c-primary);
-
     border-radius: var(--b-radius);
 
     box-shadow:
         0 14px 34px rgba(15, 23, 42, .18),
-        0 0 0 4px color-mix(
-            in srgb,
+        0 0 0 4px color-mix(in srgb,
             var(--c-primary) 10%,
-            transparent
-        );
+            transparent);
 
     overflow: hidden;
 
@@ -309,56 +433,91 @@ a:hover {
 
 .highlight-answer-tooltip::after {
     content: "";
+
     position: absolute;
+
     top: -6px;
     left: 1.5rem;
+
     border-width: 6px;
     border-style: solid;
-    border-color: transparent transparent var(--c-tooltip-bg) transparent;
+
+    border-color:
+        transparent transparent var(--c-tooltip-bg) transparent;
 }
-.highlight-answer-tooltip__inner {
-    background: var(--c-tooltip-bg);
-    border-radius: var(--b-radius);
-    box-shadow: var(--b-shadow);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
+
+
+/* -------------------------------------------------------------
+   Tooltip header
+   ------------------------------------------------------------- */
+
 .highlight-tooltip-header {
     display: flex;
+
     border-bottom: 1px solid var(--c-tooltip-border);
+
     background: var(--c-bg-muted);
+
     border: 1px solid var(--c-primary);
 }
+
 .tooltip-tab {
     flex: 1;
+
     padding: .45rem .6rem;
+
     background: var(--c-tooltip-tab-bg);
+
     border: none;
+
     font-size: .9rem;
+
     cursor: pointer;
+
     color: var(--c-tooltip-tab-fg);
-    transition: background .12s ease;
+
+    transition:
+        background .12s ease,
+        color .12s ease,
+        box-shadow .12s ease;
 }
+
 .tooltip-tab:hover {
     background: var(--c-tooltip-tab-bg-hover);
 }
+
 .tooltip-tab--active {
     font-weight: 600;
+
     background: var(--c-bg);
+
     border-bottom: 2px solid var(--c-accent);
+
     color: var(--c-accent);
 }
+
+
+/* -------------------------------------------------------------
+   Tooltip body
+   ------------------------------------------------------------- */
+
 .highlight-tooltip-body {
     max-height: 260px;
+
     overflow-y: auto;
+
     padding: .75rem .85rem;
+
     font-size: .9rem;
     line-height: 1.45;
+
     color: var(--c-text);
+
     background: var(--c-tooltip-bg);
+
     border: 1px solid var(--c-primary);
 }
+
 .highlight-tooltip-body p,
 .highlight-tooltip-body ul,
 .highlight-tooltip-body ol,
@@ -366,148 +525,288 @@ a:hover {
 .highlight-tooltip-body pre {
     margin: 0;
 }
-.highlight-tooltip-body a { color: var(--c-link); }
+
+.highlight-tooltip-body a {
+    color: var(--c-link);
+}
+
 .highlight-tooltip-body ul,
-.highlight-tooltip-body ol { padding-left: 1.1rem; }
+.highlight-tooltip-body ol {
+    padding-left: 1.1rem;
+}
+
 .highlight-tooltip-body code {
     display: inline-block;
+
     padding: .15rem .35rem;
+
     border-radius: 6px;
+
     background: var(--c-code-bg);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
-                 Consolas, "Liberation Mono", "Courier New", monospace;
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        "Liberation Mono",
+        "Courier New",
+        monospace;
 }
+
 .highlight-tooltip-body pre {
     padding: .6rem;
+
     border-radius: 8px;
+
     background: var(--c-pre-bg);
+
     overflow-x: auto;
 }
+
 .highlight-tooltip-body table {
     width: 100%;
+
     border-collapse: collapse;
+
     font-size: .9rem;
+
     margin-top: .6rem;
 }
+
 .highlight-tooltip-body th,
 .highlight-tooltip-body td {
-    border: 1px solid rgba(148,163,184,.25);
+    border: 1px solid rgba(148, 163, 184, .25);
+
     padding: .35rem .45rem;
+
     text-align: left;
 }
+
 .highlight-tooltip-body th {
-    background: rgba(37,99,235,.08);
+    background: rgba(37, 99, 235, .08);
 }
+
+
+/* Cached label */
+
 .ai-cached {
     display: inline-block;
+
     margin-right: .4rem;
+
     font-size: .85rem;
+
     color: var(--c-text-muted);
 }
 
+
 /* -------------------------------------------------------------
-   8️⃣  AI Answers tab – colour‑fixed buttons
+   8️⃣  AI Answers tab
    ------------------------------------------------------------- */
+
 .ai-answer-level {
     margin-bottom: 1rem;
 }
+
 .ai-answer-level h4 {
     margin: 0 0 .4rem;
+
     font-size: .95rem;
+
     color: var(--c-heading);
 }
+
 .ai-get-level {
     display: inline-block;
+
     padding: .45rem .7rem;
+
     background: var(--c-ai-btn-bg);
+
     color: var(--c-ai-btn-fg);
+
     border: none;
+
     border-radius: .55rem;
+
     cursor: pointer;
+
     font-weight: 600;
-    transition: background .12s ease, transform .12s ease;
+
+    transition:
+        background .12s ease,
+        transform .12s ease,
+        box-shadow .12s ease;
 }
+
 .ai-get-level:hover {
     background: var(--c-ai-btn-bg-hover);
+
     transform: translateY(-1px);
 }
 
-/* -------------------------------------------------------------
-   9️⃣  Annotation editor (inside tooltip) – unchanged
-   ------------------------------------------------------------- */
-.annotation-edit textarea.annotation-textarea {
-    width: 100%;
-    min-height: 4rem;
-    padding: .45rem;
-    font-size: .85rem;
-    border: 1px solid var(--c-border-input);
-    border-radius: .4rem;
-    resize: vertical;
+.ai-get-level:focus-visible {
+    outline: 2px solid var(--c-primary);
+    outline-offset: 2px;
 }
-.annotation-save {
-    margin-top: .4rem;
-    padding: .45rem .9rem;
-    background: var(--c-success);
-    color: #fff;
-    border: none;
-    border-radius: .4rem;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background .12s ease;
+
+.ai-get-level:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
 }
-.annotation-save:hover { background: #1e7e34; }
+
 
 /* -------------------------------------------------------------
-   🔟  “Ask AI / Add annotation” choice widget – colour‑fixed
+   9️⃣  Annotation editor inside tooltip
    ------------------------------------------------------------- */
+
+.annotation-edit textarea.annotation-textarea {
+    width: 100%;
+
+    min-height: 4rem;
+
+    padding: .45rem;
+
+    font-size: .85rem;
+
+    border: 1px solid var(--c-border-input);
+
+    border-radius: .4rem;
+
+    resize: vertical;
+
+    background:
+        color-mix(in srgb,
+            var(--c-bg) 94%,
+            var(--c-primary) 6%);
+
+    color: var(--c-text);
+
+    caret-color: var(--c-primary);
+
+    outline: none;
+
+    transition:
+        background .12s ease,
+        border-color .12s ease,
+        box-shadow .12s ease;
+}
+
+.annotation-edit textarea.annotation-textarea::placeholder {
+    color: var(--c-text-muted);
+    opacity: .8;
+}
+
+.annotation-edit textarea.annotation-textarea:focus {
+    background: var(--c-bg);
+
+    border-color: var(--c-primary);
+
+    box-shadow:
+        0 0 0 3px color-mix(in srgb,
+            var(--c-primary) 13%,
+            transparent);
+}
+
+
+/* Annotation save */
+
+.annotation-save {
+    margin-top: .4rem;
+
+    padding: .45rem .9rem;
+
+    background: var(--c-success);
+
+    color: #fff;
+
+    border: none;
+
+    border-radius: .4rem;
+
+    cursor: pointer;
+
+    font-weight: 600;
+
+    transition:
+        background .12s ease,
+        transform .12s ease,
+        box-shadow .12s ease;
+}
+
+.annotation-save:hover {
+    background: #1e7e34;
+
+    transform: translateY(-1px);
+}
+
+.annotation-save:focus-visible {
+    outline: 2px solid var(--c-success);
+    outline-offset: 2px;
+}
+
+
 /* -------------------------------------------------------------
-   Highlight AI choice widget
+   🔟  “Ask AI / Add annotation” choice widget
    ------------------------------------------------------------- */
 
 .highlight-choice {
     position: absolute;
+
     padding: .7rem .85rem;
+
     background: var(--c-bg);
 
-    /* Make the active AI interaction immediately visible */
     border: 2px solid var(--c-primary);
 
     border-radius: .65rem;
 
     box-shadow:
         0 10px 28px rgba(15, 23, 42, .16),
-        0 0 0 4px color-mix(
-            in srgb,
+        0 0 0 4px color-mix(in srgb,
             var(--c-primary) 12%,
-            transparent
-        );
+            transparent);
 
     font-size: .9rem;
     line-height: 1.4;
 
     z-index: 3100;
+
     max-width: 280px;
 
     transform-origin: top left;
 
-    animation: highlight-choice-enter .18s ease-out both;
+    animation:
+        highlight-choice-enter .18s ease-out both;
 }
 
 .highlight-choice__text {
     margin: 0 0 .55rem;
+
     font-weight: 700;
+
     color: var(--c-heading);
 }
 
+
+/* Choice buttons */
+
 .highlight-choice button {
     margin-right: .4rem;
+
     padding: .4rem .8rem;
+
     font-size: .85rem;
 
     background: var(--c-ai-btn-bg);
+
     color: var(--c-ai-btn-fg);
 
     border: 1px solid transparent;
+
     border-radius: .4rem;
 
     cursor: pointer;
@@ -520,6 +819,7 @@ a:hover {
 
 .highlight-choice button:hover {
     background: var(--c-ai-btn-bg-hover);
+
     transform: translateY(-1px);
 }
 
@@ -529,11 +829,10 @@ a:hover {
 }
 
 .highlight-choice .choice-ask-ai {
-    box-shadow: 0 3px 10px color-mix(
-        in srgb,
-        var(--c-primary) 20%,
-        transparent
-    );
+    box-shadow:
+        0 3px 10px color-mix(in srgb,
+            var(--c-primary) 20%,
+            transparent);
 }
 
 @keyframes highlight-choice-enter {
@@ -550,139 +849,250 @@ a:hover {
 
 .highlight-choice p {
     margin: 0 0 .4rem;
+
     font-weight: 600;
+
     color: var(--c-text);
 }
+
+
+/*
+ * Keep the second legacy declaration compatible with the existing
+ * markup/scripts.
+ */
+
 .highlight-choice button {
     margin-right: .4rem;
+
     padding: .35rem .8rem;
+
     font-size: .85rem;
+
     background: var(--c-ai-btn-bg);
+
     color: var(--c-ai-btn-fg);
+
     border: none;
+
     border-radius: .35rem;
+
     cursor: pointer;
-    transition: background .12s ease;
-}
-.highlight-choice button:hover {
-    background: var(--c-ai-btn-bg-hover);
+
+    transition:
+        background .12s ease,
+        transform .12s ease,
+        box-shadow .12s ease;
 }
 
+.highlight-choice button:hover {
+    background: var(--c-ai-btn-bg-hover);
+
+    transform: translateY(-1px);
+}
+
+
 /* -------------------------------------------------------------
-   Active selection while the AI choice widget is open
+   Active selection while choice widget is open
    ------------------------------------------------------------- */
 
 .highlight-ai-selection-active {
-    background: color-mix(
-        in srgb,
-        var(--c-primary) 14%,
-        transparent
-    );
+    background:
+        color-mix(in srgb,
+            var(--c-primary) 14%,
+            transparent);
 
     box-shadow:
         0 0 0 2px var(--c-primary),
-        0 0 0 5px color-mix(
-            in srgb,
+        0 0 0 5px color-mix(in srgb,
             var(--c-primary) 10%,
-            transparent
-        );
+            transparent);
 
     border-radius: .2rem;
 }
 
 .highlight-marked.highlight-ai-active {
     position: relative;
+
     z-index: 5;
 
     box-shadow:
         0 0 0 2px var(--c-primary),
-        0 0 0 5px color-mix(
-            in srgb,
+        0 0 0 5px color-mix(in srgb,
             var(--c-primary) 12%,
-            transparent
-        );
+            transparent);
 
     border-radius: .2rem;
 }
 
-/* -------------------------------------------------------------
-   1️⃣1️⃣  Annotation widget that appears after “Add annotation”
-   ------------------------------------------------------------- */
-.annotation-widget {
-    position: absolute;
-    width: 260px;
-    padding: .8rem .9rem;
-    background: var(--c-bg);
-    border: 2px solid var(--c-primary);
-    border-radius: .5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,.2);
-    font-size: .9rem;
-    line-height: 1.4;
-    z-index: 3100;
-}
-.annotation-widget textarea {
-    width: 100%;
-    min-height: 4rem;
-    margin-bottom: .6rem;
-    padding: .45rem;
-    font-size: .85rem;
-    border: 1px solid var(--c-border-input);
-    border-radius: .4rem;
-    resize: vertical;
-}
 
 /* -------------------------------------------------------------
-   1️⃣2️⃣  Highlight‑history button & pop‑over (unchanged)
+   1️⃣1️⃣  Annotation widget
    ------------------------------------------------------------- */
+
+.annotation-widget {
+    position: absolute;
+
+    width: 260px;
+
+    padding: .8rem .9rem;
+
+    background: var(--c-bg);
+
+    border: 2px solid var(--c-primary);
+
+    border-radius: .5rem;
+
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, .2);
+
+    font-size: .9rem;
+    line-height: 1.4;
+
+    z-index: 3100;
+}
+
+.annotation-widget textarea {
+    width: 100%;
+
+    min-height: 4rem;
+
+    margin-bottom: .6rem;
+
+    padding: .45rem;
+
+    font-size: .85rem;
+
+    border: 1px solid var(--c-border-input);
+
+    border-radius: .4rem;
+
+    resize: vertical;
+
+    background:
+        color-mix(in srgb,
+            var(--c-bg) 94%,
+            var(--c-primary) 6%);
+
+    color: var(--c-text);
+
+    caret-color: var(--c-primary);
+
+    outline: none;
+
+    transition:
+        background .12s ease,
+        border-color .12s ease,
+        box-shadow .12s ease;
+}
+
+.annotation-widget textarea::placeholder {
+    color: var(--c-text-muted);
+    opacity: .8;
+}
+
+.annotation-widget textarea:focus {
+    background: var(--c-bg);
+
+    border-color: var(--c-primary);
+
+    box-shadow:
+        0 0 0 3px color-mix(in srgb,
+            var(--c-primary) 13%,
+            transparent);
+}
+
+
+/* -------------------------------------------------------------
+   1️⃣2️⃣  Highlight history button & pop-over
+   ------------------------------------------------------------- */
+
 .module-content-history {
     position: fixed;
+
     right: 1.1rem;
     bottom: 1.1rem;
+
     z-index: 2600;
 }
+
 .module-content-history__toggle {
     display: inline-flex;
+
     align-items: center;
+
     gap: .5rem;
+
     padding: .6rem .85rem;
+
     background: var(--c-history-toggle-bg);
+
     border: 1px solid var(--c-history-toggle-border);
+
     border-radius: 999px;
+
     color: var(--c-primary);
+
     font-weight: 700;
+
     cursor: pointer;
-    box-shadow: 0 10px 20px rgba(14,154,167,.12);
+
+    box-shadow:
+        0 10px 20px rgba(14, 154, 167, .12);
 }
+
 .module-content-history__toggle:hover {
     background: var(--c-history-toggle-bg);
 }
+
+.module-content-history__toggle:focus-visible {
+    outline: 2px solid var(--c-primary);
+    outline-offset: 2px;
+}
+
 .module-content-history__popover {
     position: absolute;
+
     bottom: calc(100% + .45rem);
+
     right: 0;
+
     min-width: 290px;
+
     max-width: min(380px, 90vw);
+
     padding: .6rem;
+
     background: var(--c-bg-history);
+
     border: 1px solid var(--c-primary);
+
     border-radius: .9rem;
-    box-shadow: 0 16px 34px rgba(15,23,42,.16);
+
+    box-shadow:
+        0 16px 34px rgba(15, 23, 42, .16);
+
     backdrop-filter: blur(8px);
+
     z-index: 2500;
-}
-.module-content-history__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: .45rem;
 }
 
 .module-content-history__list {
+    list-style: none;
+
+    padding: 0;
+    margin: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: .45rem;
+
     max-height: 24rem;
+
     overflow-y: auto;
     overflow-x: hidden;
+
     padding-right: .2rem;
 }
 
@@ -694,131 +1104,314 @@ a:hover {
 
 .module-content-history__item {
     display: flex;
+
+    align-items: center;
+
     justify-content: space-between;
+
+    gap: 10px;
+
     padding: .6rem .7rem;
+
     background: var(--c-history-item-bg);
+
     border: 1px solid var(--c-history-item-border);
+
     border-radius: .6rem;
+
     cursor: pointer;
-    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+
+    transition:
+        transform .12s ease,
+        box-shadow .12s ease,
+        border-color .12s ease;
 }
+
 .module-content-history__item:hover {
     transform: translateY(-1px);
-    border-color: rgba(14,154,167,.24);
-    box-shadow: 0 8px 16px rgba(14,154,167,.12);
+
+    border-color:
+        rgba(14, 154, 167, .24);
+
+    box-shadow:
+        0 8px 16px rgba(14, 154, 167, .12);
+
     outline: none;
 }
+
 .module-content-history__text {
     font-size: .9rem;
+
     color: var(--c-text);
 }
+
 .module-content-history__levels {
     display: flex;
+
     flex-direction: column;
+
     align-items: flex-end;
+
     gap: .12rem;
+
     font-size: .78rem;
+
     color: var(--c-text-muted);
 }
+
 .module-content-history__level-item {
     text-transform: capitalize;
 }
 
-.module-content-history__item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
 .module-content-history__content {
     flex: 1;
+
     min-width: 0;
 }
 
 .module-content-history__remove {
     flex: 0 0 auto;
+
     border: 0;
+
     background: transparent;
+
     color: #777;
+
     cursor: pointer;
+
     font-size: 20px;
+
     line-height: 1;
+
     padding: 4px 7px;
+
     border-radius: 6px;
+
+    transition:
+        color .12s ease,
+        background .12s ease;
 }
 
 .module-content-history__remove:hover {
     color: #d32f2f;
-    background: rgba(211, 47, 47, 0.08);
+
+    background:
+        rgba(211, 47, 47, .08);
 }
 
+.module-content-history__remove:focus-visible {
+    outline: 2px solid #d32f2f;
+    outline-offset: 2px;
+}
+
+
 /* -------------------------------------------------------------
-   1️⃣3️⃣  Small utilities & animations (unchanged)
+   1️⃣3️⃣  Small utilities & animations
    ------------------------------------------------------------- */
+
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
-.highlight-answer-tooltip.hidden { display: none; }
+
+.highlight-answer-tooltip.hidden {
+    display: none;
+}
+
 
 /* -------------------------------------------------------------
-   1️⃣4️⃣  Legacy class names – kept for compatibility (unchanged)
+   1️⃣4️⃣  AI Mini
+   ----------------------------------------------------------------
+   This is the important correction.
+
+   The previous version used hard-coded light-mode values:
+       #fff
+       #f8fbff
+       #cbd5e1
+       #eee
+       #1f2937
+       #555
+
+   Those values caused AI Mini to remain visually light when the SLM
+   page switched to dark mode.
+
+   The base styles now use the same SLM tokens as the rest of this
+   file, with explicit dark-mode values below.
    ------------------------------------------------------------- */
+
 .ai-mini {
     position: absolute;
+
     z-index: 2000;
+
     width: 250px;
+
     max-width: calc(100vw - 24px);
-    background: linear-gradient(135deg, #fff 0%, #f8fbff 100%);
+
+    background:
+        linear-gradient(135deg,
+            var(--c-bg) 0%,
+            var(--c-bg-muted) 100%);
+
+    color: var(--c-text);
+
     border: 2px solid var(--c-primary);
+
     border-radius: .85rem;
-    box-shadow: 0 16px 42px rgba(15,23,42,.16);
+
+    box-shadow:
+        0 16px 42px rgba(15, 23, 42, .16),
+        0 0 0 4px color-mix(in srgb,
+            var(--c-primary) 8%,
+            transparent);
+
     padding: .7rem .8rem;
+
     font-size: .9rem;
+
     line-height: 1.4;
+
     display: flex;
+
     flex-direction: column;
+
     gap: .45rem;
 }
+
+
+/* AI Mini level selector */
+
 .ai-mini .ai-level {
     width: 100%;
+
     padding: .45rem .55rem;
-    border: 1px solid #cbd5e1;
+
+    border: 1px solid var(--c-border-input);
+
     border-radius: .5rem;
-    background: #fff;
+
+    background: var(--c-bg);
+
+    color: var(--c-text);
+
+    font: inherit;
+
+    outline: none;
+
+    transition:
+        border-color .12s ease,
+        background .12s ease,
+        box-shadow .12s ease;
 }
+
+.ai-mini .ai-level:hover {
+    border-color:
+        color-mix(in srgb,
+            var(--c-primary) 55%,
+            var(--c-border-input));
+}
+
+.ai-mini .ai-level:focus {
+    border-color: var(--c-primary);
+
+    box-shadow:
+        0 0 0 3px color-mix(in srgb,
+            var(--c-primary) 14%,
+            transparent);
+}
+
+
+/* AI Mini button */
+
 .ai-mini .ai-get {
-    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 100%);
+    background:
+        linear-gradient(135deg,
+            var(--c-primary) 0%,
+            var(--c-primary-dark) 100%);
+
     color: #fff;
+
     border: none;
+
     border-radius: .55rem;
+
     padding: .45rem .7rem;
+
     cursor: pointer;
+
     font-weight: 600;
-    transition: transform .12s ease, box-shadow .12s ease;
+
+    transition:
+        transform .12s ease,
+        box-shadow .12s ease,
+        filter .12s ease;
 }
+
 .ai-mini .ai-get:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(14,154,167,.2);
+
+    box-shadow:
+        0 8px 18px rgba(14, 154, 167, .22);
+
+    filter: brightness(1.05);
 }
+
+.ai-mini .ai-get:focus-visible {
+    outline: 2px solid var(--c-primary);
+
+    outline-offset: 2px;
+}
+
 .ai-mini .ai-get:disabled {
     opacity: .6;
+
     cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
 }
+
+
+/* AI Mini answer */
+
 .ai-mini .ai-answer {
     margin-top: .4rem;
-    border-top: 1px solid #eee;
+
+    border-top:
+        1px solid var(--c-tooltip-border);
+
     padding-top: .4rem;
+
+    color: var(--c-text);
 }
-.ai-mini .ai-answer.hidden { display: none; }
+
+.ai-mini .ai-answer.hidden {
+    display: none;
+}
+
 .ai-mini .ai-answer-content {
     display: flex;
+
     flex-direction: column;
+
     gap: .4rem;
+
     font-size: .95rem;
+
     line-height: 1.5;
-    color: #1f2937;
+
+    color: var(--c-text);
 }
+
 .ai-mini .ai-answer-content p,
 .ai-mini .ai-answer-content ul,
 .ai-mini .ai-answer-content ol,
@@ -826,45 +1419,539 @@ a:hover {
 .ai-mini .ai-answer-content pre {
     margin: 0;
 }
-.ai-mini .ai-answer-content a { color: var(--c-primary); text-decoration: underline; }
+
+.ai-mini .ai-answer-content a {
+    color: var(--c-link);
+
+    text-decoration: underline;
+}
+
+.ai-mini .ai-answer-content a:hover {
+    color: var(--c-link-hover);
+}
+
 .ai-mini .ai-answer-content ul,
-.ai-mini .ai-answer-content ol { padding-left: 1.1rem; }
+.ai-mini .ai-answer-content ol {
+    padding-left: 1.1rem;
+}
+
 .ai-mini .ai-answer-content code {
     display: inline-block;
+
     padding: .15rem .35rem;
+
     border-radius: 6px;
+
     background: var(--c-code-bg);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
-                 Consolas, "Liberation Mono", "Courier New", monospace;
+
+    color: var(--c-text);
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        "Liberation Mono",
+        "Courier New",
+        monospace;
 }
+
 .ai-mini .ai-answer-content pre {
     padding: .6rem;
+
     border-radius: 8px;
+
     background: var(--c-pre-bg);
+
+    color: var(--c-text);
+
     overflow-x: auto;
 }
+
 .ai-mini .ai-answer-content table {
     width: 100%;
+
     border-collapse: collapse;
+
     font-size: .9rem;
 }
+
 .ai-mini .ai-answer-content th,
 .ai-mini .ai-answer-content td {
-    border: 1px solid rgba(148,163,184,.25);
+    border:
+        1px solid rgba(148, 163, 184, .25);
+
     padding: .35rem .45rem;
+
     text-align: left;
 }
-.ai-mini .ai-answer-content th { background: rgba(37,99,235,.08); }
+
+.ai-mini .ai-answer-content th {
+    background:
+        rgba(37, 99, 235, .08);
+}
+
 .ai-mini .ai-cached {
     display: inline-block;
+
     margin-right: .4rem;
-    color: #555;
+
+    color: var(--c-text-muted);
+
     font-size: .85rem;
 }
 
-/* Highlight the textarea briefly when an annotation is saved */
+
+/* -------------------------------------------------------------
+   AI Mini — explicit dark-mode correction
+   ------------------------------------------------------------- */
+
+html[data-theme="dark"] .ai-mini {
+    background:
+        linear-gradient(135deg,
+            var(--c-dark-surface) 0%,
+            var(--c-dark-surface-soft) 100%);
+
+    color: var(--c-dark-text);
+
+    border-color:
+        var(--c-dark-primary);
+
+    box-shadow:
+        0 18px 44px rgba(0, 0, 0, .42),
+        0 0 0 4px rgba(26, 166, 179, .10);
+}
+
+
+/* AI Mini selector */
+
+html[data-theme="dark"] .ai-mini .ai-level {
+    background: var(--c-dark-surface-deep);
+
+    color: var(--c-dark-text);
+
+    border-color:
+        var(--c-dark-border);
+
+    color-scheme: dark;
+}
+
+html[data-theme="dark"] .ai-mini .ai-level:hover {
+    border-color:
+        var(--c-dark-primary);
+}
+
+html[data-theme="dark"] .ai-mini .ai-level:focus {
+    background:
+        #172126;
+
+    border-color:
+        var(--c-dark-primary);
+
+    box-shadow:
+        0 0 0 3px rgba(26, 166, 179, .16);
+}
+
+
+/* AI Mini button */
+
+html[data-theme="dark"] .ai-mini .ai-get {
+    background:
+        linear-gradient(135deg,
+            #0e9aa7 0%,
+            #0b7d86 100%);
+
+    color: #ffffff;
+}
+
+html[data-theme="dark"] .ai-mini .ai-get:hover {
+    background:
+        linear-gradient(135deg,
+            #18aeba 0%,
+            #0e8e99 100%);
+
+    box-shadow:
+        0 8px 20px rgba(14, 154, 167, .28);
+}
+
+
+/* AI Mini answer */
+
+html[data-theme="dark"] .ai-mini .ai-answer {
+    border-top-color:
+        var(--c-dark-border-soft);
+
+    color:
+        var(--c-dark-text);
+}
+
+html[data-theme="dark"] .ai-mini .ai-answer-content {
+    color:
+        var(--c-dark-text);
+}
+
+html[data-theme="dark"] .ai-mini .ai-answer-content code {
+    background:
+        #11191d;
+
+    color:
+        #dce8eb;
+}
+
+html[data-theme="dark"] .ai-mini .ai-answer-content pre {
+    background:
+        #11191d;
+
+    color:
+        #dce8eb;
+}
+
+html[data-theme="dark"] .ai-mini .ai-answer-content th {
+    background:
+        rgba(14, 154, 167, .10);
+}
+
+html[data-theme="dark"] .ai-mini .ai-answer-content th,
+html[data-theme="dark"] .ai-mini .ai-answer-content td {
+    border-color:
+        rgba(148, 163, 184, .22);
+}
+
+html[data-theme="dark"] .ai-mini .ai-cached {
+    color:
+        var(--c-dark-text-muted);
+}
+
+
+/* -------------------------------------------------------------
+   1️⃣5️⃣  Dark-mode tooltip corrections
+   ------------------------------------------------------------- */
+
+html[data-theme="dark"] .highlight-answer-tooltip__inner {
+    box-shadow:
+        0 18px 42px rgba(0, 0, 0, .42),
+        0 0 0 4px rgba(26, 166, 179, .08);
+}
+
+html[data-theme="dark"] .highlight-tooltip-header {
+    background:
+        #202b30;
+
+    border-color:
+        var(--c-dark-primary);
+}
+
+html[data-theme="dark"] .tooltip-tab {
+    background:
+        #182126;
+
+    color:
+        #dce8eb;
+}
+
+html[data-theme="dark"] .tooltip-tab:hover {
+    background:
+        #223036;
+
+    color:
+        #f0f6f8;
+}
+
+html[data-theme="dark"] .tooltip-tab--active {
+    background:
+        #202b30;
+
+    color:
+        #26b6c2;
+
+    border-bottom-color:
+        #1aa6b3;
+}
+
+html[data-theme="dark"] .highlight-tooltip-body {
+    background:
+        #182126;
+
+    color:
+        #e5edf0;
+
+    border-color:
+        var(--c-dark-primary);
+}
+
+html[data-theme="dark"] .highlight-tooltip-body code {
+    background:
+        #11191d;
+
+    color:
+        #dce8eb;
+}
+
+html[data-theme="dark"] .highlight-tooltip-body pre {
+    background:
+        #11191d;
+
+    color:
+        #dce8eb;
+}
+
+html[data-theme="dark"] .highlight-tooltip-body th {
+    background:
+        rgba(14, 154, 167, .10);
+}
+
+html[data-theme="dark"] .highlight-tooltip-body th,
+html[data-theme="dark"] .highlight-tooltip-body td {
+    border-color:
+        rgba(148, 163, 184, .22);
+}
+
+
+/* -------------------------------------------------------------
+   1️⃣6️⃣  Dark-mode choice widget
+   ------------------------------------------------------------- */
+
+html[data-theme="dark"] .highlight-choice {
+    background:
+        linear-gradient(135deg,
+            #182126 0%,
+            #202b30 100%);
+
+    color:
+        #e5edf0;
+
+    border-color:
+        #1aa6b3;
+
+    box-shadow:
+        0 18px 42px rgba(0, 0, 0, .42),
+        0 0 0 4px rgba(26, 166, 179, .08);
+}
+
+html[data-theme="dark"] .highlight-choice__text,
+html[data-theme="dark"] .highlight-choice p {
+    color:
+        #e5edf0;
+}
+
+html[data-theme="dark"] .highlight-choice button {
+    background:
+        linear-gradient(135deg,
+            #0e9aa7 0%,
+            #0b7d86 100%);
+
+    color:
+        #ffffff;
+
+    border-color:
+        transparent;
+}
+
+html[data-theme="dark"] .highlight-choice button:hover {
+    background:
+        linear-gradient(135deg,
+            #18aeba 0%,
+            #0e8e99 100%);
+
+    box-shadow:
+        0 6px 16px rgba(14, 154, 167, .24);
+}
+
+
+/* -------------------------------------------------------------
+   1️⃣7️⃣  Dark-mode annotation editor
+   ------------------------------------------------------------- */
+
+html[data-theme="dark"] .annotation-widget {
+    background:
+        linear-gradient(135deg,
+            #182126 0%,
+            #202b30 100%);
+
+    color:
+        #e5edf0;
+
+    border-color:
+        #1aa6b3;
+
+    box-shadow:
+        0 18px 42px rgba(0, 0, 0, .42),
+        0 0 0 4px rgba(26, 166, 179, .08);
+}
+
+html[data-theme="dark"] .annotation-edit textarea.annotation-textarea,
+html[data-theme="dark"] .annotation-widget textarea {
+    background:
+        #182126;
+
+    color:
+        #e5edf0;
+
+    border-color:
+        #3b4b52;
+
+    caret-color:
+        #26b6c2;
+}
+
+html[data-theme="dark"] .annotation-edit textarea.annotation-textarea::placeholder,
+html[data-theme="dark"] .annotation-widget textarea::placeholder {
+    color:
+        #9fb0b6;
+
+    opacity: .9;
+}
+
+html[data-theme="dark"] .annotation-edit textarea.annotation-textarea:focus,
+html[data-theme="dark"] .annotation-widget textarea:focus {
+    background:
+        #151d21;
+
+    border-color:
+        #1aa6b3;
+
+    box-shadow:
+        0 0 0 3px rgba(26, 166, 179, .14);
+}
+
+
+/* -------------------------------------------------------------
+   1️⃣8️⃣  Tooltip / annotation button focus states
+   ------------------------------------------------------------- */
+
+.highlight-answer-tooltip button:focus-visible,
+.highlight-choice button:focus-visible,
+.annotation-widget button:focus-visible,
+.annotation-edit button:focus-visible {
+    outline:
+        2px solid var(--c-primary);
+
+    outline-offset:
+        2px;
+}
+
+html[data-theme="dark"] .highlight-answer-tooltip button:focus-visible,
+html[data-theme="dark"] .highlight-choice button:focus-visible,
+html[data-theme="dark"] .annotation-widget button:focus-visible,
+html[data-theme="dark"] .annotation-edit button:focus-visible {
+    outline-color:
+        #26b6c2;
+}
+
+
+/* -------------------------------------------------------------
+   1️⃣9️⃣  Dark-mode history UI
+   ------------------------------------------------------------- */
+
+html[data-theme="dark"] .module-content-history__popover {
+    background:
+        #182126;
+
+    border-color:
+        #1aa6b3;
+
+    box-shadow:
+        0 18px 42px rgba(0, 0, 0, .42);
+}
+
+html[data-theme="dark"] .module-content-history__item {
+    background:
+        #202b30;
+
+    border-color:
+        #35464d;
+}
+
+html[data-theme="dark"] .module-content-history__item:hover {
+    border-color:
+        rgba(26, 166, 179, .45);
+
+    box-shadow:
+        0 8px 18px rgba(0, 0, 0, .24);
+}
+
+html[data-theme="dark"] .module-content-history__text {
+    color:
+        #e5edf0;
+}
+
+html[data-theme="dark"] .module-content-history__levels {
+    color:
+        #9fb0b6;
+}
+
+html[data-theme="dark"] .module-content-history__remove {
+    color:
+        #9fb0b6;
+}
+
+html[data-theme="dark"] .module-content-history__remove:hover {
+    color:
+        #ff6b6b;
+
+    background:
+        rgba(255, 107, 107, .10);
+}
+
+
+/* -------------------------------------------------------------
+   2️⃣0️⃣  Annotation save feedback
+   ------------------------------------------------------------- */
+
 .annotation-saved {
-    border: 2px solid #28a745 !important;  /* green */
-    box-shadow: 0 0 4px rgba(40, 167, 69, .5);
-    transition: border-color .3s ease, box-shadow .3s ease;
+    border:
+        2px solid #28a745 !important;
+
+    box-shadow:
+        0 0 4px rgba(40, 167, 69, .5);
+
+    transition:
+        border-color .3s ease,
+        box-shadow .3s ease;
+}
+
+
+/* -------------------------------------------------------------
+   2️⃣1️⃣  Reduced motion
+   ------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .highlight-marked,
+    .highlight-answer-tooltip,
+    .highlight-choice,
+    .ai-mini,
+    .ai-mini .ai-get,
+    .highlight-choice button,
+    .module-content-history__item {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+
+/* -------------------------------------------------------------
+   2️⃣2️⃣  Mobile adjustments
+   ------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+    .ai-mini {
+        width: min(250px, calc(100vw - 24px));
+    }
+
+    .highlight-answer-tooltip {
+        max-width:
+            min(340px, calc(100vw - 20px));
+    }
+
+    .highlight-choice {
+        max-width:
+            min(280px, calc(100vw - 20px));
+    }
+
+    .annotation-widget {
+        width:
+            min(260px, calc(100vw - 20px));
+    }
 }
