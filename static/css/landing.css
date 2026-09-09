@@ -638,3 +638,156 @@ body {
     .hero-card,
     .info-section { padding:26px; }
 }
+
+/* ============================================================
+   SUPPORT / CONTACT FORM
+   Floating Labels
+   ============================================================ */
+
+.contact-form {
+    width: 100%;
+}
+
+.contact-form .floating-label-group {
+    position: relative;
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.contact-form .floating-label-group > input,
+.contact-form .floating-label-group > textarea {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 16px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+/* Keep the textarea large enough for the message */
+.contact-form .floating-label-group > textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+/* Placeholder is only used to trigger :placeholder-shown.
+   It stays visually hidden. */
+.contact-form .floating-label-group > input::placeholder,
+.contact-form .floating-label-group > textarea::placeholder {
+    color: transparent;
+    opacity: 0;
+}
+
+/* Floating label */
+.contact-form .floating-label-group > label {
+    position: absolute;
+    top: 16px;
+    left: 14px;
+    z-index: 1;
+
+    padding: 0 5px;
+
+    color: #64748b;
+    background: transparent;
+
+    font-size: 0.95rem;
+    line-height: 1.5;
+
+    pointer-events: none;
+
+    transform-origin: left center;
+    transition:
+        top 0.18s ease,
+        left 0.18s ease,
+        font-size 0.18s ease,
+        color 0.18s ease,
+        background-color 0.18s ease;
+}
+
+/* Focused field OR field containing text */
+.contact-form .floating-label-group > input:focus + label,
+.contact-form .floating-label-group > textarea:focus + label,
+.contact-form .floating-label-group > input:not(:placeholder-shown) + label,
+.contact-form .floating-label-group > textarea:not(:placeholder-shown) + label {
+    top: -9px;
+    left: 10px;
+
+    color: var(--primary);
+
+    background: #fff;
+
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+/* Focused field */
+.contact-form .floating-label-group > input:focus,
+.contact-form .floating-label-group > textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(14, 154, 167, 0.10);
+}
+
+/* Filled field without focus */
+.contact-form .floating-label-group > input:not(:placeholder-shown),
+.contact-form .floating-label-group > textarea:not(:placeholder-shown) {
+    border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* Validation errors */
+.contact-form .floating-label-group:has(.validation-error) > input,
+.contact-form .floating-label-group:has(.validation-error) > textarea {
+    border-color: #dc2626;
+}
+
+.contact-form .floating-label-group:has(.validation-error) > label {
+    color: #dc2626;
+}
+
+.contact-form .validation-error {
+    margin-top: 6px;
+    color: #dc2626;
+    font-size: 0.82rem;
+}
+
+/* Submit button spacing */
+.contact-form .primary-button {
+    margin-top: 2px;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .contact-form .floating-label-group {
+        margin-bottom: 16px;
+    }
+
+    .contact-form .floating-label-group > input,
+    .contact-form .floating-label-group > textarea {
+        padding: 15px 13px;
+        font-size: 1rem;
+    }
+
+    .contact-form .floating-label-group > label {
+        top: 15px;
+        left: 13px;
+        font-size: 1rem;
+    }
+
+    .contact-form .floating-label-group > input:focus + label,
+    .contact-form .floating-label-group > textarea:focus + label,
+    .contact-form .floating-label-group > input:not(:placeholder-shown) + label,
+    .contact-form .floating-label-group > textarea:not(:placeholder-shown) + label {
+        top: -8px;
+        left: 9px;
+        font-size: 0.74rem;
+    }
+}
