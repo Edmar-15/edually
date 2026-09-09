@@ -692,6 +692,8 @@ export function initHighlightAI(
 
     if (!query) return;
 
+    span.classList.add("highlight-ai-active");
+
     if (
       activeTooltip &&
       activeTooltip.dataset.for === query &&
@@ -711,6 +713,8 @@ export function initHighlightAI(
     const tip = document.createElement("div");
 
     tip.className = "highlight-answer-tooltip";
+    tip.setAttribute("role", "dialog");
+    tip.setAttribute("aria-label", "AI highlight information");
 
     tip.dataset.for = query;
     tip.dataset.start = `${start}`;
@@ -998,6 +1002,17 @@ export function initHighlightAI(
 
   const removeTooltip = () => {
     if (activeTooltip) {
+      const start = activeTooltip.dataset.start;
+      const end = activeTooltip.dataset.end;
+
+      contentRoot
+        .querySelectorAll(
+          `.highlight-marked[data-start="${start}"][data-end="${end}"]`,
+        )
+        .forEach((span) => {
+          span.classList.remove("highlight-ai-active");
+        });
+
       activeTooltip.remove();
       activeTooltip = null;
     }
@@ -1226,6 +1241,8 @@ export function initHighlightAI(
     const choice = document.createElement("div");
 
     choice.className = "highlight-choice";
+    choice.setAttribute("role", "dialog");
+    choice.setAttribute("aria-label", "Highlight actions");
 
     choice.innerHTML = `
       <p class="highlight-choice__text">
@@ -1242,6 +1259,11 @@ export function initHighlightAI(
     `;
 
     document.body.appendChild(choice);
+
+    // Give the newly-created widget a clear active state.
+    requestAnimationFrame(() => {
+      choice.classList.add("highlight-choice--active");
+    });
 
     choiceWidget = choice;
 

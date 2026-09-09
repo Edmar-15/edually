@@ -265,11 +265,48 @@ a:hover {
    ------------------------------------------------------------- */
 .highlight-answer-tooltip {
     position: absolute;
-    z-index: 3000;
+    z-index: 3200;
+
     max-width: min(340px, 80vw);
+
     pointer-events: auto;
-    animation: fadeIn .12s ease-out;
+
+    animation: highlight-tooltip-enter .18s ease-out both;
 }
+
+.highlight-answer-tooltip__inner {
+    background: var(--c-tooltip-bg);
+
+    border: 2px solid var(--c-primary);
+
+    border-radius: var(--b-radius);
+
+    box-shadow:
+        0 14px 34px rgba(15, 23, 42, .18),
+        0 0 0 4px color-mix(
+            in srgb,
+            var(--c-primary) 10%,
+            transparent
+        );
+
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes highlight-tooltip-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .highlight-answer-tooltip::after {
     content: "";
     position: absolute;
@@ -291,6 +328,7 @@ a:hover {
     display: flex;
     border-bottom: 1px solid var(--c-tooltip-border);
     background: var(--c-bg-muted);
+    border: 1px solid var(--c-primary);
 }
 .tooltip-tab {
     flex: 1;
@@ -319,6 +357,7 @@ a:hover {
     line-height: 1.45;
     color: var(--c-text);
     background: var(--c-tooltip-bg);
+    border: 1px solid var(--c-primary);
 }
 .highlight-tooltip-body p,
 .highlight-tooltip-body ul,
@@ -421,18 +460,94 @@ a:hover {
 /* -------------------------------------------------------------
    🔟  “Ask AI / Add annotation” choice widget – colour‑fixed
    ------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   Highlight AI choice widget
+   ------------------------------------------------------------- */
+
 .highlight-choice {
     position: absolute;
-    padding: .6rem .9rem;
+    padding: .7rem .85rem;
     background: var(--c-bg);
-    border: 1px solid var(--c-border);
-    border-radius: .5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+
+    /* Make the active AI interaction immediately visible */
+    border: 2px solid var(--c-primary);
+
+    border-radius: .65rem;
+
+    box-shadow:
+        0 10px 28px rgba(15, 23, 42, .16),
+        0 0 0 4px color-mix(
+            in srgb,
+            var(--c-primary) 12%,
+            transparent
+        );
+
     font-size: .9rem;
     line-height: 1.4;
+
     z-index: 3100;
-    max-width: 260px;
+    max-width: 280px;
+
+    transform-origin: top left;
+
+    animation: highlight-choice-enter .18s ease-out both;
 }
+
+.highlight-choice__text {
+    margin: 0 0 .55rem;
+    font-weight: 700;
+    color: var(--c-heading);
+}
+
+.highlight-choice button {
+    margin-right: .4rem;
+    padding: .4rem .8rem;
+    font-size: .85rem;
+
+    background: var(--c-ai-btn-bg);
+    color: var(--c-ai-btn-fg);
+
+    border: 1px solid transparent;
+    border-radius: .4rem;
+
+    cursor: pointer;
+
+    transition:
+        background .12s ease,
+        transform .12s ease,
+        box-shadow .12s ease;
+}
+
+.highlight-choice button:hover {
+    background: var(--c-ai-btn-bg-hover);
+    transform: translateY(-1px);
+}
+
+.highlight-choice button:focus-visible {
+    outline: 2px solid var(--c-primary);
+    outline-offset: 2px;
+}
+
+.highlight-choice .choice-ask-ai {
+    box-shadow: 0 3px 10px color-mix(
+        in srgb,
+        var(--c-primary) 20%,
+        transparent
+    );
+}
+
+@keyframes highlight-choice-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .highlight-choice p {
     margin: 0 0 .4rem;
     font-weight: 600;
@@ -454,6 +569,43 @@ a:hover {
 }
 
 /* -------------------------------------------------------------
+   Active selection while the AI choice widget is open
+   ------------------------------------------------------------- */
+
+.highlight-ai-selection-active {
+    background: color-mix(
+        in srgb,
+        var(--c-primary) 14%,
+        transparent
+    );
+
+    box-shadow:
+        0 0 0 2px var(--c-primary),
+        0 0 0 5px color-mix(
+            in srgb,
+            var(--c-primary) 10%,
+            transparent
+        );
+
+    border-radius: .2rem;
+}
+
+.highlight-marked.highlight-ai-active {
+    position: relative;
+    z-index: 5;
+
+    box-shadow:
+        0 0 0 2px var(--c-primary),
+        0 0 0 5px color-mix(
+            in srgb,
+            var(--c-primary) 12%,
+            transparent
+        );
+
+    border-radius: .2rem;
+}
+
+/* -------------------------------------------------------------
    1️⃣1️⃣  Annotation widget that appears after “Add annotation”
    ------------------------------------------------------------- */
 .annotation-widget {
@@ -461,7 +613,7 @@ a:hover {
     width: 260px;
     padding: .8rem .9rem;
     background: var(--c-bg);
-    border: 1px solid var(--c-border);
+    border: 2px solid var(--c-primary);
     border-radius: .5rem;
     box-shadow: 0 4px 12px rgba(0,0,0,.2);
     font-size: .9rem;
@@ -512,7 +664,7 @@ a:hover {
     max-width: min(380px, 90vw);
     padding: .6rem;
     background: var(--c-bg-history);
-    border: 1px solid var(--c-border);
+    border: 1px solid var(--c-primary);
     border-radius: .9rem;
     box-shadow: 0 16px 34px rgba(15,23,42,.16);
     backdrop-filter: blur(8px);
@@ -618,7 +770,7 @@ a:hover {
     width: 250px;
     max-width: calc(100vw - 24px);
     background: linear-gradient(135deg, #fff 0%, #f8fbff 100%);
-    border: 1px solid rgba(14,154,167,.16);
+    border: 2px solid var(--c-primary);
     border-radius: .85rem;
     box-shadow: 0 16px 42px rgba(15,23,42,.16);
     padding: .7rem .8rem;
