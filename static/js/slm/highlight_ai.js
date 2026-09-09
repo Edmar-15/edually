@@ -107,6 +107,48 @@ export function initHighlightAI(
    */
   let selectionInteractionActive = false;
 
+  /*
+   * IMPORTANT MOBILE FIX:
+   *
+   * Native <select> controls can temporarily collapse
+   * window.getSelection() while the mobile browser opens
+   * its native picker.
+   *
+   * During that short period, selectionchange/touchend must
+   * NOT interpret the collapsed selection as a reason to
+   * destroy the AI Mini.
+   */
+  let miniControlInteraction = false;
+
+  let miniControlInteractionTimer = null;
+
+  const protectMiniControlInteraction = () => {
+    miniControlInteraction = true;
+
+    if (miniControlInteractionTimer) {
+      clearTimeout(miniControlInteractionTimer);
+    }
+
+    /*
+     * Keep this protection long enough for Android/iOS to
+     * open and settle the native select picker.
+     */
+    miniControlInteractionTimer = setTimeout(() => {
+      miniControlInteraction = false;
+      miniControlInteractionTimer = null;
+    }, 600);
+  };
+
+  const clearMiniControlInteraction = () => {
+    if (miniControlInteractionTimer) {
+      clearTimeout(miniControlInteractionTimer);
+
+      miniControlInteractionTimer = null;
+    }
+
+    miniControlInteraction = false;
+  };
+
   // ---------------------------------------------------------------
   // 6. Text-node helpers
   // ---------------------------------------------------------------
@@ -1451,10 +1493,103 @@ export function initHighlightAI(
     /*
      * Stop widget interactions from reaching
      * the selection handlers.
+     *
+     * Capture phase is used here because some mobile browsers
+     * handle native form controls differently from ordinary
+     * elements.
      */
-    mini.addEventListener("mousedown", (e) => e.stopPropagation());
+    mini.addEventListener(
+      "mousedown",
+      (e) => {
+        e.stopPropagation();
+      },
+      true,
+    );
 
-    mini.addEventListener("touchstart", (e) => e.stopPropagation());
+    mini.addEventListener(
+      "touchstart",
+      (e) => {
+        e.stopPropagation();
+      },
+      true,
+    );
+
+    mini.addEventListener(
+      "pointerdown",
+      (e) => {
+        e.stopPropagation();
+      },
+      true,
+    );
+
+    /*
+     * -------------------------------------------------------------
+     * IMPORTANT MOBILE FIX:
+     *
+     * The native select is special.
+     *
+     * When the user taps it, Android/iOS may temporarily change
+     * or collapse window.getSelection() while opening the native
+     * picker.
+     *
+     * That selectionchange must NOT close this widget.
+     * -------------------------------------------------------------
+     */
+    const levelSelect = mini.querySelector(".ai-level");
+
+    const protectSelectInteraction = (e) => {
+      e.stopPropagation();
+
+      protectMiniControlInteraction();
+
+      /*
+       * Preserve the last valid selection snapshot before the
+       * browser opens the native picker.
+       */
+      if (latestSelectionRange) {
+        latestSelectionRange = latestSelectionRange.cloneRange();
+      }
+    };
+
+    levelSelect.addEventListener("touchstart", protectSelectInteraction, true);
+
+    levelSelect.addEventListener("pointerdown", protectSelectInteraction, true);
+
+    levelSelect.addEventListener("mousedown", protectSelectInteraction, true);
+
+    /*
+     * click is also protected because some mobile browsers
+     * dispatch click after the native picker interaction.
+     */
+    levelSelect.addEventListener(
+      "click",
+      (e) => {
+        e.stopPropagation();
+
+        protectMiniControlInteraction();
+      },
+      true,
+    );
+
+    /*
+     * Keep the Mini protected while the native picker is open.
+     *
+     * The change event indicates that the user selected an option.
+     * Do not clear the Mini here.
+     */
+    levelSelect.addEventListener("change", (e) => {
+      e.stopPropagation();
+
+      protectMiniControlInteraction();
+
+      /*
+       * Give the browser a moment to restore the normal DOM
+       * interaction state after closing the picker.
+       */
+      setTimeout(() => {
+        clearMiniControlInteraction();
+      }, 250);
+    });
 
     /*
      * Position using the selection that opened the widget.
@@ -1471,6 +1606,14 @@ export function initHighlightAI(
     const clickOutside = (e) => {
       if (!mini) return;
 
+      /*
+       * Native select interaction is allowed to leave the
+       * normal DOM event flow while its mobile picker is open.
+       */
+      if (miniControlInteraction) {
+        return;
+      }
+
       if (mini.contains(e.target)) {
         return;
       }
@@ -1480,6 +1623,10 @@ export function initHighlightAI(
       document.removeEventListener("mousedown", clickOutside);
 
       document.removeEventListener("touchstart", clickOutside);
+
+      if (mini === null) {
+        // Nothing else to do.
+      }
 
       mini = null;
 
@@ -1498,9 +1645,13 @@ export function initHighlightAI(
 
     const btn = mini.querySelector(".ai-get");
 
-    const levelSelect = mini.querySelector(".ai-level");
-
     btn.addEventListener("click", async () => {
+      /*
+       * This is a genuine AI action, so the select interaction
+       * protection can be cleared before resolving the selection.
+       */
+      clearMiniControlInteraction();
+
       const level = levelSelect.value;
 
       /*
@@ -1986,6 +2137,7 @@ export function initHighlightAI(
         return;
       }
     }
+
     /*
      * Ignore UI interactions.
      */
@@ -2208,6 +2360,50 @@ export function initHighlightAI(
     requestAnimationFrame(() => {
       /*
        * -----------------------------------------------------------
+       * AI Mini owns the interaction.
+       *
+       * This is especially important for the native <select>.
+       * On mobile, opening/selecting an option can produce a
+       * touchend after the browser temporarily collapses the
+       * document selection.
+       *
+       * Never feed that touchend back into onSelectionDone().
+       * -----------------------------------------------------------
+       */
+      if (mini && mini.isConnected) {
+        /*
+         * If the native select is being interacted with, keep
+         * the Mini alive and preserve the last valid selection.
+         */
+        if (miniControlInteraction) {
+          if (latestSelectionRange) {
+            latestSelectionRange = latestSelectionRange.cloneRange();
+          }
+
+          return;
+        }
+
+        /*
+         * Any touchend originating inside the AI Mini is a UI
+         * interaction, not a new text selection.
+         */
+        if (mini.contains(e.target)) {
+          return;
+        }
+
+        /*
+         * Mobile browsers can produce a synthetic touchend
+         * after closing the native select. Give the select
+         * protection time to settle instead of interpreting
+         * it as a new selection.
+         */
+        if (e.target.closest?.(".ai-mini")) {
+          return;
+        }
+      }
+
+      /*
+       * -----------------------------------------------------------
        * Annotation editor owns the interaction.
        *
        * DO NOT run selection logic when the user is typing,
@@ -2250,7 +2446,7 @@ export function initHighlightAI(
       }
 
       /*
-       * No active annotation or choice widget.
+       * No active annotation, choice widget, or AI Mini.
        * This is a genuinely new selection.
        */
       onSelectionDone(e);
@@ -2263,7 +2459,24 @@ export function initHighlightAI(
 
   document.addEventListener(
     "touchstart",
-    () => {
+    (e) => {
+      /*
+       * AI Mini interaction has priority over selection handling.
+       *
+       * This includes the native <select> picker.
+       */
+      if (mini && mini.isConnected && mini.contains(e.target)) {
+        if (e.target.closest?.(".ai-level")) {
+          protectMiniControlInteraction();
+
+          if (latestSelectionRange) {
+            latestSelectionRange = latestSelectionRange.cloneRange();
+          }
+        }
+
+        return;
+      }
+
       const sel = window.getSelection();
 
       if (
@@ -2284,7 +2497,15 @@ export function initHighlightAI(
 
   document.addEventListener(
     "touchend",
-    () => {
+    (e) => {
+      /*
+       * A touch ending inside the AI Mini is never a text-selection
+       * interaction.
+       */
+      if (mini && mini.isConnected && mini.contains(e.target)) {
+        return;
+      }
+
       /*
        * Do not immediately clear this before
        * onSelectionDone has processed the final range.
@@ -2302,6 +2523,18 @@ export function initHighlightAI(
 
   document.addEventListener("selectionchange", () => {
     const sel = window.getSelection();
+
+    /*
+     * IMPORTANT MOBILE FIX:
+     *
+     * When a native <select> opens on mobile, the browser may
+     * temporarily collapse or replace the text selection.
+     *
+     * The AI Mini must survive that temporary selectionchange.
+     */
+    if (miniControlInteraction) {
+      return;
+    }
 
     const validSelection =
       sel &&
@@ -2332,6 +2565,17 @@ export function initHighlightAI(
      * the selection.
      */
     if (selectionInteractionActive) {
+      return;
+    }
+
+    /*
+     * If our AI Mini is visible, preserve the last valid
+     * selection.
+     *
+     * This is important when a mobile browser changes selection
+     * state because the user interacted with the Mini controls.
+     */
+    if (mini && mini.isConnected) {
       return;
     }
 
@@ -2374,6 +2618,13 @@ export function initHighlightAI(
       return;
     }
 
+    /*
+     * Never treat native AI Mini controls as an outside click.
+     */
+    if (mini && mini.contains(e.target)) {
+      return;
+    }
+
     if (activeTooltip && !activeTooltip.contains(e.target)) {
       removeTooltip();
     }
@@ -2396,7 +2647,7 @@ export function initHighlightAI(
    * The previous handler was one of the causes of the
    * mobile selection-handle problem because it could call
    * mini.remove(), followed by removeAllRanges(), while
-   * Android was still adjusting the selection.
+   * Android/iOS was still adjusting the selection.
    */
 
   // ---------------------------------------------------------------
@@ -2406,6 +2657,14 @@ export function initHighlightAI(
   return {
     destroy() {
       document.removeEventListener("mouseup", onSelectionDone);
+
+      if (miniControlInteractionTimer) {
+        clearTimeout(miniControlInteractionTimer);
+
+        miniControlInteractionTimer = null;
+      }
+
+      miniControlInteraction = false;
 
       if (mini) {
         mini.remove();
