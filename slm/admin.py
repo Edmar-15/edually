@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from .models import (
     Subject,
@@ -234,22 +235,22 @@ class ModuleAdmin(admin.ModelAdmin):
     @admin.display(description="Extracted HTML")
     def has_extracted_html(self, obj):
         if obj.extracted_html:
-            return format_html(
+            return mark_safe(
                 '<span style="color:#198754;font-weight:600;">✓ Yes</span>'
             )
 
-        return format_html(
+        return mark_safe(
             '<span style="color:#dc3545;font-weight:600;">✕ No</span>'
         )
 
     @admin.display(description="Extraction status")
     def extracted_html_status(self, obj):
         if not obj.extracted_html:
-            return format_html(
+            return mark_safe(
                 '<strong style="color:#dc3545;">No extracted content</strong>'
             )
 
-        return format_html(
+        return mark_safe(
             '<strong style="color:#198754;">Extracted content available</strong>'
         )
 
