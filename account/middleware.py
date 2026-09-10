@@ -106,6 +106,16 @@ def _email_verification_exempt(request) -> bool:
     # 2️⃣  Staff / super‑users are trusted to bypass verification.
     if request.user.is_staff or request.user.is_superuser:
         return True
+    
+        # 3. Technical/static endpoints must always remain accessible.
+    if request.path in {
+        "/service-worker.js",
+        "/manifest.json",
+        "/offline/",
+        "/robots.txt",
+        "/sitemap.xml",
+    }:
+        return True
 
     # 3️⃣  Explicitly allow a handful of URLs (login, logout, registration,
     #     the verification page itself, consent, policy pages, password‑reset
@@ -127,8 +137,6 @@ def _email_verification_exempt(request) -> bool:
             # password‑reset
             "password_reset_request",
             "password_reset_confirm",
-            # logout‑confirm modal (used by the UI)
-            "logout_confirm",
         }
 
         # The view lives in the ``account`` namespace (all your auth URLs)
