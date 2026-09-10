@@ -175,12 +175,16 @@ def api_subject_list(request):
     # 2️⃣  If the requester is a *student* we limit to *their* year level
     # -----------------------------------------------------------------
     if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
-        # ``year_level`` returns a string like “2nd Year” or “3rd Year”.
-        # We only need the leading digit (2 or 3) to match Subject.YEAR_CHOICES.
-        year_label = request.user.year_level            # e.g. "2nd Year"
-        match = re.search(r"\d+", year_label or "")
-        if match:
-            numeric_year = match.group()                # "2" or "3"
+
+        # Students must have a year level before SLM subjects become visible.
+        year_label = getattr(request.user, "year_level", None) or ""
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            # No year level = no subjects visible.
+            qs = qs.none()
+        else:
+            numeric_year = match.group()
             qs = qs.filter(year=numeric_year)
 
     # -----------------------------------------------------------------
@@ -321,11 +325,17 @@ def subject_modules(request, subject_id):
     # 1️⃣  Students may only view subjects that match their own year.
     # --------------------------------------------------------------
     if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
-        # ``year_level`` is like “2nd Year”.  Pull the digit.
-        year_label = request.user.year_level
-        match = re.search(r"\d+", year_label or "")
-        if match and subject.year != match.group():
-            # Not allowed – hide the subject (or you could 404 instead).
+
+        # Students must have a year level before they can open subjects.
+        year_label = getattr(request.user, "year_level", None) or ""
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            return HttpResponseForbidden(
+                "You must set your year level before viewing subjects."
+            )
+
+        if subject.year != match.group():
             return HttpResponseForbidden(
                 "You cannot view subjects for a different year level."
             )
@@ -409,7 +419,28 @@ def api_module_list(request, subject_id):
     Returns the same pagination meta‑structure that the subject list does.
     """
     subject = get_object_or_404(Subject, pk=subject_id)
-    qs = Module.objects.filter(subject=subject, is_archived=False).order_by("module_number")
+
+    if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
+
+        year_label = getattr(request.user, "year_level", None) or ""
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            return JsonResponse(
+                {"error": "You must set your year level before viewing modules."},
+                status=403,
+            )
+
+        if subject.year != match.group():
+            return JsonResponse(
+                {"error": "You cannot view modules for a different year level."},
+                status=403,
+            )
+
+    qs = Module.objects.filter(
+        subject=subject,
+        is_archived=False
+    ).order_by("module_number")
 
     paginator = Paginator(qs, PAGE_SIZE)          # reuse PAGE_SIZE from above
     page_number = request.GET.get("page", 1)
@@ -674,6 +705,22 @@ def module_detail(request, subject_id, module_id):
     The original file can still be downloaded.
     """
     subject = get_object_or_404(Subject, pk=subject_id)
+
+    if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
+
+        year_label = getattr(request.user, "year_level", None) or ""
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            return HttpResponseForbidden(
+                "You must set your year level before viewing learning materials."
+            )
+
+        if subject.year != match.group():
+            return HttpResponseForbidden(
+                "You cannot view learning materials for a different year level."
+            )
+
     module = get_object_or_404(Module, pk=module_id, subject=subject)
 
     recent_modules = request.session.get("recent_modules", [])

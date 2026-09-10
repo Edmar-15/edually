@@ -1105,10 +1105,26 @@ class ConsentRequiredView(TemplateView):
         # Record the user’s acceptance of the latest policy
         UserConsent.objects.update_or_create(
             user=request.user,
-            defaults={"version": django_settings.POLICY_VERSION, "accepted_at": timezone.now()},
+            defaults={
+                "version": django_settings.POLICY_VERSION,
+                "accepted_at": timezone.now(),
+            },
         )
+
         # Send them back to where they originally wanted to go
-        next_url = request.session.pop("post_consent_redirect", reverse("account:dashboard"))
+        next_url = request.session.pop(
+            "post_consent_redirect",
+            reverse("account:dashboard"),
+        )
+
+        # Never redirect to static or media files.
+        if (
+            not next_url
+            or next_url.startswith("/static/")
+            or next_url.startswith("/media/")
+        ):
+            next_url = reverse("account:dashboard")
+
         return redirect(next_url)
 
     def get_context_data(self, **kwargs):

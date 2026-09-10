@@ -57,9 +57,16 @@ class RequireLatestConsentMiddleware(MiddlewareMixin):
             consent = None
 
         if consent is None or consent.version != settings.POLICY_VERSION:
-            request.session["post_consent_redirect"] = request.get_full_path()
+            # Only remember actual application pages.
+            # Never redirect back to static/media resources.
+            if (
+                request.method == "GET"
+                and not request.path.startswith("/static/")
+                and not request.path.startswith("/media/")
+            ):
+                request.session["post_consent_redirect"] = request.get_full_path()
+
             return redirect(reverse("account:consent_required"))
-        return None
 
 
 def _email_verification_exempt(request) -> bool:
