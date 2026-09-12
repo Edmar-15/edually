@@ -676,102 +676,6 @@ html[data-theme="dark"] .ppt-page ul ul li {
    ============================================================== */
 
 @media (max-width: 768px) {
-
-    /* ----------------------------------------------------------
-       Module detail header
-
-       Important:
-       dashboard.css changes .content-header to a column on
-       mobile. Override that here because this page needs the
-       breadcrumb and action buttons to remain together.
-       ---------------------------------------------------------- */
-
-    .content-header {
-        display: flex;
-
-        flex-direction: row;
-        align-items: flex-start;
-
-        gap: 0.6rem;
-
-        padding: 0.65rem 0.75rem;
-
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-
-    /* Breadcrumb area */
-
-    .content-header .header-left {
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;
-
-        flex: 1 1 auto;
-        min-width: 0;
-        width: auto;
-
-        gap: 0.4rem;
-    }
-
-
-    /* Mobile sidebar trigger */
-
-    .content-header .mobile-sidebar-trigger {
-        flex: 0 0 auto;
-
-        width: 40px;
-        min-width: 40px;
-        margin-right: 0;
-        margin-top: 0.05rem;
-    }
-
-
-    /* Breadcrumb */
-
-    .content-header .breadcrumb {
-        flex: 1 1 auto;
-
-        min-width: 0;
-        max-width: 100%;
-
-        margin: 0;
-
-        font-size: 0.85rem;
-        line-height: 1.35;
-
-        overflow-wrap: anywhere;
-        word-break: break-word;
-    }
-
-
-    /* ----------------------------------------------------------
-       Action buttons
-
-       dashboard.css has width: 100% for mobile buttons.
-       Override that ONLY on this page.
-       ---------------------------------------------------------- */
-
-    .content-header .header-actions {
-        display: flex;
-
-        flex: 0 0 auto;
-
-        width: auto;
-
-        margin-top: 0 !important;
-        margin-left: auto !important;
-
-        padding: 0;
-
-        gap: 0.45rem;
-
-        align-items: center;
-        justify-content: flex-end;
-    }
-
-
     /* Download */
 
     .content-header .header-actions .download-btn {
@@ -1006,47 +910,18 @@ html[data-theme="dark"] .ppt-page ul ul li {
    ============================================================== */
 
 @media (max-width: 480px) {
-
-    /* ----------------------------------------------------------
-       Header
-       ---------------------------------------------------------- */
-
-    .content-header {
-        padding: 0.6rem 0.65rem;
-
-        gap: 0.45rem;
-    }
-
-
-    .content-header .header-left {
-        gap: 0.3rem;
-    }
-
-
-    .content-header .breadcrumb {
-        font-size: 0.79rem;
-        line-height: 1.3;
-    }
-
-
-    /* Smaller but still touch-friendly action buttons */
-
-    .content-header .header-actions {
-        gap: 0.35rem;
-    }
-
     .content-header .header-actions .download-btn,
     .content-header .header-actions .module-content-history__toggle {
-        flex-basis: 42px;
+        flex-basis: 38px;
 
-        width: 42px;
-        min-width: 42px;
-        max-width: 42px;
+        width: 38px;
+        min-width: 38px;
+        max-width: 38px;
 
-        height: 42px;
-        min-height: 42px;
+        height: 38px;
+        min-height: 38px;
 
-        border-radius: 11px;
+        border-radius: 10px;
     }
 
     .content-header .header-actions .download-btn i,
@@ -1168,29 +1043,16 @@ html[data-theme="dark"] .ppt-page ul ul li {
    ============================================================== */
 
 @media (max-width: 360px) {
-
-    .content-header {
-        gap: 0.35rem;
-    }
-
-    .content-header .breadcrumb {
-        font-size: 0.74rem;
-    }
-
-    .content-header .header-actions {
-        gap: 0.25rem;
-    }
-
     .content-header .header-actions .download-btn,
     .content-header .header-actions .module-content-history__toggle {
-        width: 40px;
-        min-width: 40px;
-        max-width: 40px;
+        width: 36px;
+        min-width: 36px;
+        max-width: 36px;
 
-        height: 40px;
-        min-height: 40px;
+        height: 36px;
+        min-height: 36px;
 
-        flex-basis: 40px;
+        flex-basis: 36px;
     }
 
     .module-content-card {

@@ -34,7 +34,6 @@ html.dark .sort-group,
 html.dark .reply-form,
 html.dark .post-form,
 html.dark .create-post-container,
-html.dark .content-header,
 html[data-theme="dark"] .forum-header,
 html[data-theme="dark"] .forum-search,
 html[data-theme="dark"] .widget,
@@ -51,8 +50,7 @@ html[data-theme="dark"] .search-box,
 html[data-theme="dark"] .sort-group,
 html[data-theme="dark"] .reply-form,
 html[data-theme="dark"] .post-form,
-html[data-theme="dark"] .create-post-container,
-html[data-theme="dark"] .content-header {
+html[data-theme="dark"] .create-post-container {
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(10, 15, 28, 0.94) 100%);
     border-color: rgba(148, 163, 184, 0.12);
     color: var(--text);
@@ -439,35 +437,6 @@ html.dark .post-form select {
     background: rgba(14, 154, 167, 0.04);
     border: 1px solid rgba(14, 154, 167, 0.08);
     color: var(--muted, #64748b);
-}
-
-/* Forum Header Styles */
-.content-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-    background: #fafafa;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    width: 100%;
-}
-
-.content-header .header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.content-header .header-left p {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text);
 }
 
 /* Header */
@@ -983,11 +952,6 @@ html.dark .post-form select {
 }
 
 @media (max-width: 768px) {
-    .content-header {
-        margin-bottom: 0;
-        padding: .8rem 1rem;
-    }
-
     .forum-shell,
     .forum-toolbar,
     .forum-toolbar .search-area,
@@ -1131,10 +1095,6 @@ html.dark .post-form select {
 @media (max-width: 480px) {
     .forum-shell {
         padding: .65rem;
-    }
-
-    .content-header {
-        padding-inline: .75rem;
     }
 
     .filter-area,
@@ -3093,24 +3053,6 @@ html[data-theme="dark"] .avatar {
 @media (max-width: 768px) {
     .forum-page {
         padding: 18px 12px 24px;
-    }
-
-    .content-header {
-        padding: 0.9rem 1rem;
-        margin-bottom: 1rem;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        width: 100%;
-    }
-
-    .content-header .header-left {
-        gap: 0.6rem;
-    }
-
-    .content-header .header-left p {
-        font-size: 1rem;
-        font-weight: 600;
     }
 
     .forum-page {

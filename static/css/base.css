@@ -858,3 +858,406 @@ body {
 @keyframes fadeUp {
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ============================================================
+   GLOBAL CONTENT HEADER
+   Shared by Dashboard, Forum, SLM and other app pages.
+   Page-specific files should not redefine these dimensions.
+   ============================================================ */
+
+.content-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  width: 100%;
+  min-height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.045);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-sizing: border-box;
+}
+
+html.dark .content-header,
+html[data-theme="dark"] .content-header {
+  background: rgba(10, 15, 28, 0.94);
+  border-bottom-color: rgba(148, 163, 184, 0.14);
+  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.28);
+}
+
+
+/* ------------------------------------------------------------
+   LEFT SIDE
+   ------------------------------------------------------------ */
+
+.content-header .header-left {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 0.75rem;
+
+  flex: 1 1 auto;
+}
+
+.content-header-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+/* ------------------------------------------------------------
+   PAGE TITLE
+   ------------------------------------------------------------ */
+
+.content-header-title {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 700;
+
+  letter-spacing: -0.02em;
+
+  overflow-wrap: anywhere;
+}
+
+.content-header-subtitle {
+  margin: 0.2rem 0 0;
+
+  color: var(--muted);
+
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-weight: 500;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ------------------------------------------------------------
+   BREADCRUMB
+   ------------------------------------------------------------ */
+
+.content-header .breadcrumb {
+  min-width: 0;
+  max-width: 100%;
+
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 0.9rem;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.content-header .breadcrumb i {
+  font-style: normal;
+}
+
+.content-header .breadcrumb a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.content-header .breadcrumb a:hover,
+.content-header .breadcrumb a:focus-visible {
+  text-decoration: underline;
+}
+
+.content-header .breadcrumb > a:not(:last-child)::after {
+  content: " › ";
+
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+
+/* ------------------------------------------------------------
+   SIDEBAR TRIGGER
+   ------------------------------------------------------------ */
+
+.content-header .mobile-sidebar-trigger {
+  display: none;
+
+  flex: 0 0 40px;
+
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+
+  align-items: center;
+  justify-content: center;
+
+  margin: 0;
+  padding: 0;
+
+  border: 1px solid rgba(14, 154, 167, 0.18);
+  border-radius: 11px;
+
+  background: rgba(14, 154, 167, 0.07);
+  color: var(--text);
+
+  cursor: pointer;
+
+  box-shadow: none;
+
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
+}
+
+.content-header .mobile-sidebar-trigger:hover {
+  background: rgba(14, 154, 167, 0.12);
+  border-color: rgba(14, 154, 167, 0.28);
+}
+
+.content-header .mobile-sidebar-trigger:active {
+  transform: scale(0.96);
+}
+
+.content-header .mobile-sidebar-trigger:focus-visible {
+  outline: 2px solid rgba(14, 154, 167, 0.28);
+  outline-offset: 2px;
+}
+
+.content-header .sidebar-trigger-icon {
+  width: 19px;
+  height: 19px;
+  display: block;
+}
+
+
+/* ------------------------------------------------------------
+   RIGHT SIDE / ACTIONS
+   ------------------------------------------------------------ */
+
+.content-header .header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 0.5rem;
+
+  flex: 0 0 auto;
+
+  width: auto;
+  margin-left: auto;
+}
+
+.content-header > .button,
+.content-header .header-actions .button,
+.content-header .header-actions > button {
+  flex: 0 0 auto;
+}
+
+
+/* ------------------------------------------------------------
+   HEADER BUTTONS
+   ------------------------------------------------------------ */
+
+.content-header .header-actions .button,
+.content-header .header-actions > button,
+.content-header > .button {
+  min-width: 40px;
+  min-height: 40px;
+
+  padding: 0.55rem 0.75rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE
+   ------------------------------------------------------------ */
+
+@media (max-width: 768px) {
+  .content-header {
+    min-height: 60px;
+
+    gap: 0.6rem;
+
+    padding:
+      0.6rem
+      1rem;
+  }
+
+  .content-header .header-left {
+    gap: 0.5rem;
+  }
+
+  .content-header .mobile-sidebar-trigger {
+    display: inline-flex;
+  }
+
+  .content-header-title {
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+
+  .content-header-subtitle {
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+  }
+
+  .content-header .breadcrumb {
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+
+  .content-header .header-actions {
+    gap: 0.4rem;
+  }
+
+  .content-header .header-actions .button,
+  .content-header .header-actions > button,
+  .content-header > .button {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+
+    height: 40px;
+    min-height: 40px;
+
+    padding: 0;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   SMALL PHONES
+   ------------------------------------------------------------ */
+
+@media (max-width: 480px) {
+  .content-header {
+    min-height: 56px;
+
+    gap: 0.4rem;
+
+    padding:
+      0.5rem
+      0.7rem;
+  }
+
+  .content-header .header-left {
+    gap: 0.35rem;
+  }
+
+  .content-header-title {
+    font-size: 1.1rem;
+  }
+
+  .content-header-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .content-header .breadcrumb {
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+
+  .content-header .mobile-sidebar-trigger {
+    flex-basis: 38px;
+
+    width: 38px;
+    min-width: 38px;
+
+    height: 38px;
+    min-height: 38px;
+
+    border-radius: 10px;
+  }
+
+  .content-header .sidebar-trigger-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .content-header .header-actions {
+    gap: 0.3rem;
+  }
+
+  .content-header .header-actions .button,
+  .content-header .header-actions > button,
+  .content-header > .button {
+    width: 38px;
+    min-width: 38px;
+    max-width: 38px;
+
+    height: 38px;
+    min-height: 38px;
+
+    border-radius: 10px;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   EXTRA SMALL PHONES
+   ------------------------------------------------------------ */
+
+@media (max-width: 360px) {
+  .content-header {
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+
+  .content-header-title {
+    font-size: 1rem;
+  }
+
+  .content-header-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .content-header .breadcrumb {
+    font-size: 0.73rem;
+  }
+
+  .content-header .mobile-sidebar-trigger {
+    width: 36px;
+    min-width: 36px;
+
+    height: 36px;
+    min-height: 36px;
+  }
+
+  .content-header .header-actions .button,
+  .content-header .header-actions > button,
+  .content-header > .button {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+
+    height: 36px;
+    min-height: 36px;
+  }
+}

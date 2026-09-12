@@ -49,41 +49,43 @@ noindex, nofollow
 
                 </button>
 
-                <div class="dashboard-welcome">
+                <div class="content-header-copy">
 
-                    <h1>
-                        Welcome back,
-                        {{ user.get_full_name|default:user.username|default:user.email }}!
-                    </h1>
+                <h1 class="content-header-title">
+                    Welcome back,
+                    {{ user.get_full_name|default:user.username|default:user.email }}!
+                </h1>
 
-                    {% if request.user|has_group:'Teacher' %}
+                {% if request.user|has_group:'Teacher' %}
 
-                        <p>
-                            Teacher
-                            {% if user.teacher_profile.department %}
-                                • {{ user.teacher_profile.department }}
-                            {% endif %}
-                        </p>
+                    <p class="content-header-subtitle">
+                        Teacher
+                        {% if user.teacher_profile.department %}
+                            • {{ user.teacher_profile.department }}
+                        {% endif %}
+                    </p>
 
-                    {% else %}
+                {% else %}
 
-                        <p>
-                            {% if user.year_level %}
-                                {{ user.year_level }}
-                            {% endif %}
+                    <p class="content-header-subtitle">
 
-                            {% if user.year_level and user.program %}
-                                •
-                            {% endif %}
+                        {% if user.year_level %}
+                            {{ user.year_level }}
+                        {% endif %}
 
-                            {% if user.program %}
-                                BS {{ user.program }}
-                            {% endif %}
-                        </p>
+                        {% if user.year_level and user.program %}
+                            •
+                        {% endif %}
 
-                    {% endif %}
+                        {% if user.program %}
+                            BS {{ user.program }}
+                        {% endif %}
 
-                </div>
+                    </p>
+
+                {% endif %}
+
+            </div>
 
             </div>
 

@@ -423,26 +423,6 @@ html[data-theme="dark"] .nav-item.logout:hover {
     color: #ef5350 !important;
 }
 
-.content-header {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 1rem 1.5rem;
-    background: rgba(250, 250, 252, 0.82);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-}
-
 .forum-shell {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 290px;
@@ -1469,20 +1449,6 @@ html[data-theme="dark"] .category-list a:hover {
 }
 
 @media (max-width: 768px) {
-    .content-header {
-        padding: 0.85rem 1rem;
-    }
-
-    .header-left {
-        gap: 0.75rem;
-    }
-
-    .header-left p {
-        font-size: 1rem;
-        line-height: 1.2;
-        white-space: nowrap;
-    }
-
     .sidebar-header .sidebar-trigger {
         display: none;
     }
@@ -1612,14 +1578,6 @@ html[data-theme="dark"] .category-list a:hover {
     .forum-shell,
     .forum-container {
         padding: 0.75rem;
-    }
-
-    .content-header {
-        padding: 0.8rem 0.75rem;
-    }
-
-    .header-left p {
-        font-size: 0.95rem;
     }
 
     .filter-area {
