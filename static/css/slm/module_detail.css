@@ -681,14 +681,14 @@ html[data-theme="dark"] .ppt-page ul ul li {
     .content-header .header-actions .download-btn {
         display: inline-flex;
 
-        flex: 0 0 44px;
+        flex: 0 0 40px;
 
-        width: 44px;
-        min-width: 44px;
-        max-width: 44px;
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
 
-        height: 44px;
-        min-height: 44px;
+        height: 40px;
+        min-height: 40px;
 
         padding: 0;
         margin: 0;
@@ -710,14 +710,14 @@ html[data-theme="dark"] .ppt-page ul ul li {
     /* History */
 
     .content-header .header-actions .module-content-history__toggle {
-        flex: 0 0 44px;
+        flex: 0 0 40px;
 
-        width: 44px;
-        min-width: 44px;
-        max-width: 44px;
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
 
-        height: 44px;
-        min-height: 44px;
+        height: 40px;
+        min-height: 40px;
 
         padding: 0;
         margin: 0;

@@ -264,12 +264,6 @@ html.dark .main-content {
     linear-gradient(180deg, #09111d 0%, #0b1324 45%, #0f172a 100%);
 }
 
-html.dark .content-header {
-  background: rgba(10, 15, 28, 0.92);
-  border-bottom-color: rgba(148, 163, 184, 0.14);
-  box-shadow: 0 2px 6px rgba(2, 6, 23, 0.28);
-}
-
 html.dark .header-left h1,
 html.dark .breadcrumb,
 html.dark .breadcrumb a,
@@ -866,38 +860,29 @@ body {
    ============================================================ */
 
 .content-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
+    position: sticky;
+    top: 0;
+    z-index: 50;
 
-  width: 100%;
-  min-height: 68px;
+    width: 100%;
+    min-height: 68px;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
 
-  background: rgba(255, 255, 255, 0.94);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    box-sizing: border-box;
 
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.045);
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.045);
 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
-  box-sizing: border-box;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
-
-html.dark .content-header,
-html[data-theme="dark"] .content-header {
-  background: rgba(10, 15, 28, 0.94);
-  border-bottom-color: rgba(148, 163, 184, 0.14);
-  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.28);
-}
-
 
 /* ------------------------------------------------------------
    LEFT SIDE

@@ -93,36 +93,6 @@ body.sidebar-mobile-open .sidebar-backdrop {
     visibility: visible;
 }
 
-.mobile-sidebar-trigger {
-    position: static;
-    top: auto;
-    left: auto;
-    margin: 0;
-    margin-right: 0.5rem;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    min-height: 40px;
-    outline: none;
-    border: none;
-    background: transparent;
-    color: var(--forum-text);
-    cursor: pointer;
-}
-
-html.dark .mobile-sidebar-trigger,
-html[data-theme="dark"] .mobile-sidebar-trigger {
-    background: transparent;
-    color: var(--forum-text) !important;
-}
-
-.mobile-sidebar-trigger svg.sidebar-trigger-icon {
-    width: 18px;
-    height: 18px;
-    display: block;
-}
-
 /* ================================================================
    SIDEBAR COLLAPSED STATE
    ================================================================ */
@@ -1451,22 +1421,6 @@ html[data-theme="dark"] .category-list a:hover {
 @media (max-width: 768px) {
     .sidebar-header .sidebar-trigger {
         display: none;
-    }
-
-    .mobile-sidebar-trigger {
-        display: flex;
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: rgba(14, 154, 167, 0.08);
-        border: 1px solid rgba(14, 154, 167, 0.18);
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-    }
-
-    .mobile-sidebar-trigger:active,
-    .mobile-sidebar-trigger.is-active {
-        background: rgba(14, 154, 167, 0.16);
-        border-color: rgba(14, 154, 167, 0.3);
     }
 
     .sidebar {

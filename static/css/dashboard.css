@@ -3535,12 +3535,6 @@ html[data-theme="dark"] .forum-action-modal select:focus {
 /* ----------------------------------------------------------------
    HEADER
    ---------------------------------------------------------------- */
-
-.dashboard-header {
-    padding: 20px 32px;
-    background: var(--surface, #ffffff);
-}
-
 .dashboard-welcome {
     display: flex;
     flex-direction: column;
