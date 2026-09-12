@@ -9,6 +9,18 @@ noindex, nofollow
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 <link rel="stylesheet" href="{% static 'css/slm/slm.css' %}">
+
+<script>
+    /*
+     * SLM page navigation should always begin at the top.
+     *
+     * Mobile browsers can restore the previous scroll position
+     * when navigating between pages.
+     */
+    if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+    }
+</script>
 {% endblock %}
 
 {% block content %}
@@ -74,5 +86,41 @@ noindex, nofollow
 
 <script src="{% static 'js/modal.js' %}" defer></script>
 <script src="{% static 'js/slm/tab_switching.js' %}"></script>
+
+<script>
+    /*
+     * Force the Modules page to begin at the global content header.
+     *
+     * The repeated requestAnimationFrame calls are intentional.
+     * They allow the browser to finish restoring/layouting the page
+     * before the final scroll position is applied.
+     */
+    (() => {
+        const resetSLMScroll = () => {
+            window.scrollTo(0, 0);
+
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+
+            const mainContent = document.querySelector(".main-content");
+
+            if (mainContent) {
+                mainContent.scrollTop = 0;
+            }
+        };
+
+        resetSLMScroll();
+
+        requestAnimationFrame(() => {
+            resetSLMScroll();
+
+            requestAnimationFrame(() => {
+                resetSLMScroll();
+            });
+        });
+
+        window.addEventListener("pageshow", resetSLMScroll);
+    })();
+</script>
 
 {% endblock %}
