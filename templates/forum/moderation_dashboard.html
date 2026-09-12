@@ -89,6 +89,15 @@
                             <span class="status-pill status-pill--pending">Pending</span>
                         </div>
 
+                        {% if item.has_bad_words %}
+                            <div class="reported-warning-banner">
+                                <div>
+                                    <strong>Forum moderation warning</strong>
+                                    {{ item.bad_word_warning }}
+                                </div>
+                            </div>
+                        {% endif %}
+
                         <div class="report-card-body">
                             {% if item.content_type == 'post' and item.post %}
                                 <p class="report-card-author">Post by <strong>{{ item.post.author.get_full_name|default:item.post.author.username }}</strong></p>

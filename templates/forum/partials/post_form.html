@@ -5,7 +5,7 @@
         <form method="post"
                 action="{% url 'forum:post_create' %}{% if active_category %}?cat={{ active_category }}{% endif %}"
                 class="post-create-form ajax-form"
-                data-target="#post-list"
+                data-target=".posts-list"
                 data-insert="prepend"
                 data-modal-form
                 data-toast-success="Your post was published."

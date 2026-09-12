@@ -13,7 +13,7 @@
         .archive-shell {
             width: 100%;
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 18px auto 0;
             padding: 0 16px 40px;
         }
 
@@ -222,19 +222,44 @@
     {% include "components/navigations.html" %}
 
     <main class="main-content">
+        <header class="content-header dashboard-header archive-page-header">
+            <div class="header-left">
+                <button type="button"
+                        class="mobile-sidebar-trigger"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        aria-label="Open navigation sidebar">
+
+                    <span class="sr-only">Toggle sidebar</span>
+
+                    <svg class="sidebar-trigger-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true"
+                         focusable="false">
+
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"/>
+                    </svg>
+
+                </button>
+
+                <div class="dashboard-welcome">
+                    <h1>Archived Learning Modules</h1>
+                    <p class="breadcrumb" style="margin: 6px 0 0;"><i>
+                        <a href="{% url "account:settings" %}">Settings</a> &gt;
+                        <span>Archived Self Learning Modules</span>
+                    </i></p>
+                </div>
+            </div>
+        </header>
+
         <div class="archive-shell">
             <section class="archive-panel">
-                <header class="content-header archive-header">
-                    <p class="breadcrumb"><i>
-                        <a href="{% url "account:settings" %}">Settings</a> &gt;
-                        Archived Self Learning Modules
-                    </i></p>
-                </header>
-
-                <div class="archive-title-wrap">
-                    <span class="archive-title-icon"><i class="fa-solid fa-book-open-reader"></i></span>
-                    <h1 class="archive-title">Archived Learning Modules</h1>
-                </div>
+                <p style="padding: 1rem 1rem 0; margin: 0; color: var(--muted); font-size: 0.85rem; font-weight: 600;">
+                    {{ modules|length }} archived item{{ modules|length|pluralize }}
+                </p>
 
                 <div class="archive-body">
                     {% if modules %}

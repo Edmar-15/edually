@@ -1132,8 +1132,7 @@ html[data-theme="dark"] .send-button:focus-visible {
 
 .new-chat-button,
 .minimap-button,
-.conversation-toggle,
-.conversation-close-button {
+.conversation-toggle {
     width: 2.3rem !important;
     min-width: 2.3rem !important;
 
@@ -1154,6 +1153,10 @@ html[data-theme="dark"] .send-button:focus-visible {
     flex: 0 0 2.3rem;
 
     box-sizing: border-box;
+}
+
+.conversation-close-button {
+    display: none !important;
 }
 
 /* ------------------------------------------------------------- */
@@ -1244,6 +1247,10 @@ html[data-theme="dark"] .send-button:focus-visible {
         aspect-ratio: 1 / 1;
 
         flex: 0 0 2.2rem;
+    }
+
+    .conversation-close-button {
+        display: inline-flex !important;
     }
 
     .explanation-button {

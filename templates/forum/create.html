@@ -43,8 +43,9 @@
                     {% if error %}
                         <div class="alert alert-error">{{ error }}</div>
                     {% endif %}
+                    <div id="create-post-warning" class="form-error-message" role="alert" style="display:none;"></div>
 
-                    <form method="post" class="create-form">
+                    <form method="post" class="create-form" id="create-post-form">
                         {% csrf_token %}
                         
                         <div class="form-group">
@@ -91,4 +92,48 @@
         </div>
     </main>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('create-post-form');
+        const warningBox = document.getElementById('create-post-warning');
+        const badWords = [
+            'gago', 'gaga', 'tanga', 'bobo', 'boang', 'ulol', 'bwisit', 'buwisit',
+            'hayop', 'pakyu', 'pisti', 'putang ina', 'putangina', 'pota', 'pota ka',
+            'siraulo', 'sira ulo', 'takusa', 'bastos', 'anak ng', 'tang ina',
+            'tae', 'taena', 'urupak', 'uyab', 'kupal', 'hinampak', 'bastos',
+            'stupid', 'idiot', 'dumb', 'moron', 'loser', 'trash', 'hate',
+            'fool', 'asshole', 'jerk', 'shut up', 'damn', 'crap', 'hell',
+            'bitch', 'whore', 'slut', 'freak', 'retard', 'idiotic', 'stupid ka'
+        ];
+
+        const normalize = (text = '') => text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+        const containsBadWords = (text = '') => {
+            const normalizedText = normalize(text);
+            if (!normalizedText) return false;
+
+            return badWords.some((badWord) => {
+                const normalizedBadWord = normalize(badWord);
+                return normalizedBadWord && normalizedBadWord.length > 1 && normalizedText.includes(normalizedBadWord);
+            });
+        };
+
+        form.addEventListener('submit', (event) => {
+            const title = form.querySelector('#title')?.value || '';
+            const content = form.querySelector('#content')?.value || '';
+
+            if (containsBadWords(`${title} ${content}`)) {
+                event.preventDefault();
+                warningBox.textContent = 'Warning: Your message contains inappropriate language. Please revise it before posting.';
+                warningBox.style.display = 'block';
+                warningBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return;
+            }
+
+            warningBox.textContent = '';
+            warningBox.style.display = 'none';
+        });
+    });
+</script>
 {% endblock %}
