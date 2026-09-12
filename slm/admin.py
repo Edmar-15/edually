@@ -1,5 +1,5 @@
+from django import forms
 from django.contrib import admin
-from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from .models import (
@@ -9,6 +9,99 @@ from .models import (
     HighlightAnswer,
     HighlightAnnotation,
 )
+
+
+# ============================================================
+# EXTRACTED CONTENT EDITOR
+# ============================================================
+
+class ExtractedHTMLTextarea(forms.Textarea):
+    """
+    Large HTML source editor used for extracted document content.
+
+    The extracted content is stored as HTML and rendered by the
+    student-facing SLM pages. This widget intentionally keeps the
+    content as HTML instead of converting it into a rich-text format.
+    """
+
+    def __init__(self, attrs=None):
+        default_attrs = {
+            "rows": 40,
+            "spellcheck": "false",
+            "autocomplete": "off",
+            "wrap": "off",
+            "style": (
+                "width: 100%; "
+                "min-height: 650px; "
+                "box-sizing: border-box; "
+                "padding: 16px; "
+                "border: 1px solid #ced4da; "
+                "border-radius: 8px; "
+                "background: #f8f9fa; "
+                "color: #212529; "
+                "font-family: "
+                "'SFMono-Regular', Consolas, "
+                "'Liberation Mono', Menlo, monospace; "
+                "font-size: 13px; "
+                "line-height: 1.6; "
+                "tab-size: 4; "
+                "resize: vertical; "
+            ),
+        }
+
+        if attrs:
+            default_attrs.update(attrs)
+
+        super().__init__(attrs=default_attrs)
+
+
+class ExtractedContentFormMixin:
+    """
+    Shared form configuration for models containing extracted_html.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if "extracted_html" in self.fields:
+            self.fields["extracted_html"].widget = ExtractedHTMLTextarea(
+                attrs={
+                    "aria-label": "Extracted HTML content",
+                }
+            )
+
+            self.fields["extracted_html"].help_text = (
+                "Edit the extracted HTML shown to students. "
+                "You can correct text, headings, paragraphs, lists, "
+                "tables, and other extracted content here. "
+                "Changes affect the extracted content only and do not "
+                "modify the original uploaded file."
+            )
+
+
+# ============================================================
+# MODULE FORM
+# ============================================================
+
+class ModuleAdminForm(ExtractedContentFormMixin, forms.ModelForm):
+
+    class Meta:
+        model = Module
+        fields = "__all__"
+
+
+# ============================================================
+# PERSONAL MATERIAL FORM
+# ============================================================
+
+class PersonalMaterialAdminForm(
+    ExtractedContentFormMixin,
+    forms.ModelForm,
+):
+
+    class Meta:
+        model = PersonalMaterial
+        fields = "__all__"
 
 
 # ============================================================
@@ -131,6 +224,8 @@ class SubjectAdmin(admin.ModelAdmin):
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
 
+    form = ModuleAdminForm
+
     list_display = (
         "module_number",
         "module_name",
@@ -190,8 +285,13 @@ class ModuleAdmin(admin.ModelAdmin):
                     "extracted_html",
                     "extracted_html_status",
                 ),
-                "classes": (
-                    "collapse",
+                "description": (
+                    "<strong>Editable student content</strong><br>"
+                    "The HTML below is the extracted version of the "
+                    "uploaded document. This is the content displayed "
+                    "on the student-facing module page.<br><br>"
+                    "<strong>Important:</strong> Editing this field does "
+                    "not modify the original PDF, DOCX, or PPTX file."
                 ),
             },
         ),
@@ -236,22 +336,30 @@ class ModuleAdmin(admin.ModelAdmin):
     def has_extracted_html(self, obj):
         if obj.extracted_html:
             return mark_safe(
-                '<span style="color:#198754;font-weight:600;">✓ Yes</span>'
+                '<span style="color:#198754;font-weight:600;">'
+                '✓ Yes'
+                '</span>'
             )
 
         return mark_safe(
-            '<span style="color:#dc3545;font-weight:600;">✕ No</span>'
+            '<span style="color:#dc3545;font-weight:600;">'
+            '✕ No'
+            '</span>'
         )
 
     @admin.display(description="Extraction status")
     def extracted_html_status(self, obj):
         if not obj.extracted_html:
             return mark_safe(
-                '<strong style="color:#dc3545;">No extracted content</strong>'
+                '<strong style="color:#dc3545;">'
+                'No extracted content'
+                '</strong>'
             )
 
         return mark_safe(
-            '<strong style="color:#198754;">Extracted content available</strong>'
+            '<strong style="color:#198754;">'
+            'Extracted content available'
+            '</strong>'
         )
 
 
@@ -261,6 +369,8 @@ class ModuleAdmin(admin.ModelAdmin):
 
 @admin.register(PersonalMaterial)
 class PersonalMaterialAdmin(admin.ModelAdmin):
+
+    form = PersonalMaterialAdminForm
 
     list_display = (
         "title",
@@ -317,8 +427,13 @@ class PersonalMaterialAdmin(admin.ModelAdmin):
                 "fields": (
                     "extracted_html",
                 ),
-                "classes": (
-                    "collapse",
+                "description": (
+                    "<strong>Editable student content</strong><br>"
+                    "The HTML below is the extracted version of the "
+                    "uploaded material. You can manually correct or "
+                    "modify it here.<br><br>"
+                    "<strong>Important:</strong> Editing this field does "
+                    "not modify the original uploaded file."
                 ),
             },
         ),
