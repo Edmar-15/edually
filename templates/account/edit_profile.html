@@ -161,6 +161,26 @@
                       {% endif %} {{ profile_form.non_field_errors }}
 
                       <!-- =================================================
+                        USERNAME
+                        ================================================== -->
+
+                        {% if profile_form.username %}
+                        <div class="floating-label-group input-group">
+                            {{ profile_form.username }}
+
+                            <label for="{{ profile_form.username.id_for_label }}">
+                                Username
+                            </label>
+
+                            {% if profile_form.username.errors %}
+                            <div class="validation-error">
+                                {{ profile_form.username.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                      <!-- =================================================
                                          NAME
                                     ================================================== -->
 
@@ -286,16 +306,19 @@
                                          PROFILE PICTURE
                                     ================================================== -->
 
-                      <div class="floating-label-group input-group">
-                        {{ profile_form.avatar }} {% if
-                        profile_form.avatar.errors %}
+                      <!-- =================================================
+                        PROFILE PICTURE
+                        ================================================== -->
 
-                        <div class="validation-error">
-                          {{ profile_form.avatar.errors|join:", " }}
-                        </div>
+                        <div class="floating-label-group input-group">
+                        {{ profile_form.avatar }}
 
+                        {% if profile_form.avatar.errors %}
+                            <div class="validation-error">
+                            {{ profile_form.avatar.errors|join:", " }}
+                            </div>
                         {% endif %}
-                      </div>
+                        </div>
 
                       <!-- =================================================
                                          ACTIONS

@@ -235,22 +235,40 @@ class ProfileForm(forms.ModelForm):
     Role-aware profile form.
 
     Students:
-        - first_name
-        - last_name
-        - avatar
-        - student_id
-        - year_level
+    - username, only when not yet set
+    - first_name
+    - last_name
+    - avatar
+    - student_id
+    - year_level
 
     Teachers:
-        - first_name
-        - last_name
-        - avatar
-        - employee_id (read-only)
-        - department (read-only)
+    - username, only when not yet set
+    - first_name
+    - last_name
+    - avatar
+    - employee_id (read-only)
+    - department (read-only)
 
-    Employee ID and Department are intentionally read-only for teachers.
-    They should be managed by an administrator.
+    Username is intentionally available only when the account does not
+    already have one. Once assigned, it cannot be changed from the profile.
     """
+
+    # ============================================================
+    # USERNAME
+    # ============================================================
+
+    username = forms.CharField(
+        required=False,
+        max_length=150,
+        label="Username",
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Username",
+                "autocomplete": "username",
+            }
+        ),
+    )
 
     # ============================================================
     # STUDENT-ONLY FIELDS
@@ -308,7 +326,9 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
+
         fields = (
+            "username",
             "first_name",
             "last_name",
             "avatar",
@@ -343,10 +363,31 @@ class ProfileForm(forms.ModelForm):
                 self.is_teacher = False
 
         # ========================================================
+        # USERNAME
+        # ========================================================
+
+        current_username = (
+            (self.instance.username or "").strip()
+            if self.instance.pk
+            else ""
+        )
+
+        if current_username:
+            # Username is already assigned.
+            # Do not allow it to be changed.
+            self.fields.pop("username", None)
+
+        else:
+            # Username has not been assigned yet.
+            # Allow the user to choose one.
+            self.fields["username"].required = True
+
+        # ========================================================
         # TEACHER PROFILE
         # ========================================================
 
         if self.is_teacher:
+
             # Remove student-specific fields completely.
             self.fields.pop("student_id", None)
             self.fields.pop("year_level", None)
@@ -383,20 +424,24 @@ class ProfileForm(forms.ModelForm):
         # ========================================================
 
         else:
+
             # Remove teacher-specific fields completely.
             self.fields.pop("employee_id", None)
             self.fields.pop("department", None)
 
             if self.instance.pk:
+
                 try:
                     profile = self.instance.student_profile
                 except StudentProfile.DoesNotExist:
                     profile = None
 
                 if profile:
+
                     # ------------------------------
                     # Student ID
                     # ------------------------------
+
                     if profile.student_id:
                         self.fields["student_id"].initial = (
                             profile.student_id
@@ -411,7 +456,9 @@ class ProfileForm(forms.ModelForm):
                     # ------------------------------
                     # Year Level
                     # ------------------------------
+
                     if profile.year_level:
+
                         self.fields["year_level"].initial = (
                             profile.year_level
                         )
@@ -428,7 +475,9 @@ class ProfileForm(forms.ModelForm):
                             "background:#f5f5f5;"
                             "cursor:not-allowed;"
                         )
+
                     else:
+
                         self.fields["year_level"].choices = [
                             ("", "Select year level…")
                         ] + self.YEAR_CHOICES
@@ -440,6 +489,7 @@ class ProfileForm(forms.ModelForm):
         # ========================================================
 
         if self.instance.pk:
+
             if self.instance.first_name:
                 self.fields["first_name"].initial = (
                     self.instance.first_name
@@ -463,13 +513,51 @@ class ProfileForm(forms.ModelForm):
                 )
 
     # ============================================================
+    # USERNAME VALIDATION
+    # ============================================================
+
+    def clean_username(self):
+        """
+        Username can only be assigned if the account does not
+        already have one.
+        """
+
+        # Existing username means this field should not normally
+        # exist, but keep the backend protected as well.
+        if self.instance.pk and self.instance.username:
+            return self.instance.username
+
+        username = (self.cleaned_data.get("username") or "").strip()
+
+        if not username:
+            raise forms.ValidationError(
+                "Please enter a username."
+            )
+
+        # Username uniqueness is case-insensitive.
+        username_exists = User.objects.filter(
+            username__iexact=username
+        )
+
+        if self.instance.pk:
+            username_exists = username_exists.exclude(
+                pk=self.instance.pk
+            )
+
+        if username_exists.exists():
+            raise forms.ValidationError(
+                "That username is already taken. Please choose another."
+            )
+
+        return username
+
+    # ============================================================
     # STUDENT YEAR LEVEL VALIDATION
     # ============================================================
 
     def clean_year_level(self):
         """
         Student year level can only be assigned once.
-
         Teachers do not have this field.
         """
 
@@ -479,6 +567,7 @@ class ProfileForm(forms.ModelForm):
         new_value = self.cleaned_data.get("year_level") or ""
 
         if self.instance.pk:
+
             try:
                 profile = self.instance.student_profile
             except StudentProfile.DoesNotExist:
@@ -498,13 +587,27 @@ class ProfileForm(forms.ModelForm):
         Save the User and the appropriate role-specific profile.
 
         Teachers:
-            Saves only User information.
-            Creates TeacherProfile if missing.
+        - Saves User information.
+        - Creates TeacherProfile if missing.
 
         Students:
-            Saves User information and StudentProfile.
+        - Saves User information.
+        - Saves StudentProfile information.
+
+        Username:
+        - Can only be assigned when currently blank.
+        - Cannot be changed after it has been assigned.
         """
 
+        # ========================================================
+        # USERNAME PROTECTION
+        # ========================================================
+
+        if self.instance.pk and self.instance.username:
+            # Do not allow POST data to change an existing username.
+            self.cleaned_data["username"] = self.instance.username
+
+        # Save the User model.
         user = super().save(commit=commit)
 
         # ========================================================
@@ -512,6 +615,7 @@ class ProfileForm(forms.ModelForm):
         # ========================================================
 
         if self.is_teacher:
+
             TeacherProfile.objects.get_or_create(
                 user=user,
                 defaults={
