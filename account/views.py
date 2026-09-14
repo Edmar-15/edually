@@ -51,7 +51,7 @@ from .forms import (
     AddPasswordForm,
     ContactForm,
 )
-from .models import UserConsent, User, StudentProfile, PushSubscription
+from .models import UserConsent, User, StudentProfile, PushSubscription, TeacherProfile
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
@@ -496,12 +496,31 @@ def dashboard(request):
     # -------------------------------------------------------------
 
     # 1. Complete your profile
-    profile_complete = bool(
-        request.user.first_name.strip()
-        and request.user.last_name.strip()
-        and request.user.program
-        and request.user.year_level
-    )
+    # -------------------------------------------------------------
+    # Profile completion
+    # -------------------------------------------------------------
+    is_teacher = user_is_in_group(request.user, GROUP_TEACHER)
+
+    if is_teacher:
+        try:
+            teacher_profile = request.user.teacher_profile
+        except TeacherProfile.DoesNotExist:
+            teacher_profile = None
+
+        profile_complete = bool(
+            request.user.first_name.strip()
+            and request.user.last_name.strip()
+            and teacher_profile
+            and teacher_profile.employee_id.strip()
+            and teacher_profile.department.strip()
+        )
+    else:
+        profile_complete = bool(
+            request.user.first_name.strip()
+            and request.user.last_name.strip()
+            and request.user.program
+            and request.user.year_level
+        )
 
     # 2. Explore your first SLM
     first_slm_explored = bool(recent_modules)

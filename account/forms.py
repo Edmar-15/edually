@@ -19,7 +19,7 @@ from django.forms import DateTimeInput
 # -----------------------------------------------------------------
 # Local imports
 # -----------------------------------------------------------------
-from .models import UserConsent, StudentProfile
+from .models import UserConsent, StudentProfile, TeacherProfile
 from .utils import add_user_to_group
 from .constants import GROUP_STUDENT
 
@@ -230,96 +230,321 @@ class DeleteAccountForm(forms.Form):
 # -----------------------------------------------------------------
 #  PROFILE FORM – unchanged (still edits the Student profile fields)
 # -----------------------------------------------------------------
-# account/forms.py
 class ProfileForm(forms.ModelForm):
-    """Form displayed on the profile page for editing allowed fields."""
-    
-    # ── extra profile fields ──
+    """
+    Role-aware profile form.
+
+    Students:
+        - first_name
+        - last_name
+        - avatar
+        - student_id
+        - year_level
+
+    Teachers:
+        - first_name
+        - last_name
+        - avatar
+        - employee_id (read-only)
+        - department (read-only)
+
+    Employee ID and Department are intentionally read-only for teachers.
+    They should be managed by an administrator.
+    """
+
+    # ============================================================
+    # STUDENT-ONLY FIELDS
+    # ============================================================
+
     student_id = forms.CharField(
         required=False,
         max_length=30,
         label="Student ID",
-        widget=forms.TextInput(attrs={"placeholder": ""}),
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "",
+            }
+        ),
     )
+
     YEAR_CHOICES = [
         ("2nd Year", "2nd Year"),
         ("3rd Year", "3rd Year"),
     ]
+
     year_level = forms.ChoiceField(
         required=False,
         choices=YEAR_CHOICES,
         label="Year Level",
     )
 
+    # ============================================================
+    # TEACHER-ONLY FIELDS
+    # ============================================================
+
+    employee_id = forms.CharField(
+        required=False,
+        max_length=30,
+        label="Employee ID",
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Not assigned",
+            }
+        ),
+    )
+
+    department = forms.CharField(
+        required=False,
+        max_length=100,
+        label="Department",
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Department",
+            }
+        ),
+    )
+
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "avatar")
+        fields = (
+            "first_name",
+            "last_name",
+            "avatar",
+        )
+
         widgets = {
-            "first_name": forms.TextInput(attrs={"placeholder": ""}),
-            "last_name":  forms.TextInput(attrs={"placeholder": ""}),
+            "first_name": forms.TextInput(
+                attrs={
+                    "placeholder": "",
+                }
+            ),
+            "last_name": forms.TextInput(
+                attrs={
+                    "placeholder": "",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # ----- core user fields -------------------------------------------------
+        self.is_teacher = False
+
+        # ========================================================
+        # DETERMINE USER ROLE
+        # ========================================================
+
+        if self.instance.pk:
+            try:
+                self.is_teacher = self.instance.is_teacher_member
+            except Exception:
+                self.is_teacher = False
+
+        # ========================================================
+        # TEACHER PROFILE
+        # ========================================================
+
+        if self.is_teacher:
+            # Remove student-specific fields completely.
+            self.fields.pop("student_id", None)
+            self.fields.pop("year_level", None)
+
+            teacher_profile, _ = TeacherProfile.objects.get_or_create(
+                user=self.instance
+            )
+
+            self.fields["employee_id"].initial = (
+                teacher_profile.employee_id or ""
+            )
+
+            self.fields["department"].initial = (
+                teacher_profile.department or "CCS"
+            )
+
+            # Keep these values visible but not editable.
+            self.fields["employee_id"].widget.attrs.update(
+                {
+                    "readonly": "readonly",
+                    "aria-readonly": "true",
+                }
+            )
+
+            self.fields["department"].widget.attrs.update(
+                {
+                    "readonly": "readonly",
+                    "aria-readonly": "true",
+                }
+            )
+
+        # ========================================================
+        # STUDENT PROFILE
+        # ========================================================
+
+        else:
+            # Remove teacher-specific fields completely.
+            self.fields.pop("employee_id", None)
+            self.fields.pop("department", None)
+
+            if self.instance.pk:
+                try:
+                    profile = self.instance.student_profile
+                except StudentProfile.DoesNotExist:
+                    profile = None
+
+                if profile:
+                    # ------------------------------
+                    # Student ID
+                    # ------------------------------
+                    if profile.student_id:
+                        self.fields["student_id"].initial = (
+                            profile.student_id
+                        )
+
+                        self.fields[
+                            "student_id"
+                        ].widget.attrs["placeholder"] = (
+                            profile.student_id
+                        )
+
+                    # ------------------------------
+                    # Year Level
+                    # ------------------------------
+                    if profile.year_level:
+                        self.fields["year_level"].initial = (
+                            profile.year_level
+                        )
+
+                        # Once assigned, year level cannot
+                        # be changed by the student.
+                        self.fields[
+                            "year_level"
+                        ].widget.attrs["disabled"] = "disabled"
+
+                        self.fields[
+                            "year_level"
+                        ].widget.attrs["style"] = (
+                            "background:#f5f5f5;"
+                            "cursor:not-allowed;"
+                        )
+                    else:
+                        self.fields["year_level"].choices = [
+                            ("", "Select year level…")
+                        ] + self.YEAR_CHOICES
+
+                        self.fields["year_level"].required = True
+
+        # ========================================================
+        # CORE USER FIELDS
+        # ========================================================
+
         if self.instance.pk:
             if self.instance.first_name:
-                self.fields["first_name"].initial = self.instance.first_name
-                self.fields["first_name"].widget.attrs["placeholder"] = self.instance.first_name
+                self.fields["first_name"].initial = (
+                    self.instance.first_name
+                )
+
+                self.fields[
+                    "first_name"
+                ].widget.attrs["placeholder"] = (
+                    self.instance.first_name
+                )
+
             if self.instance.last_name:
-                self.fields["last_name"].initial = self.instance.last_name
-                self.fields["last_name"].widget.attrs["placeholder"] = self.instance.last_name
+                self.fields["last_name"].initial = (
+                    self.instance.last_name
+                )
 
-        # ----- student‑profile fields -------------------------------------------
-        if self.instance.pk and hasattr(self.instance, "student_profile"):
-            profile = self.instance.student_profile
+                self.fields[
+                    "last_name"
+                ].widget.attrs["placeholder"] = (
+                    self.instance.last_name
+                )
 
-            # Student ID – allow edit at any time (optional)
-            if profile.student_id:
-                self.fields["student_id"].initial = profile.student_id
-                self.fields["student_id"].widget.attrs["placeholder"] = profile.student_id
+    # ============================================================
+    # STUDENT YEAR LEVEL VALIDATION
+    # ============================================================
 
-            # Year level – **once set** it becomes read‑only
-            if profile.year_level:
-                # Keep the existing value, make the widget read‑only so the user sees it but
-                # cannot change it.  `readonly` works for <select> in most browsers and still
-                # sends the value on POST.
-                self.fields["year_level"].initial = profile.year_level
-                self.fields["year_level"].widget.attrs["readonly"] = True
-                self.fields["year_level"].widget.attrs["style"] = "background:#f5f5f5;cursor:not-allowed;"
-            else:
-                # -----------------------------------------------------------------
-                #  No year set yet → make the field required and show a placeholder
-                # -----------------------------------------------------------------
-                placeholder = ("", "Select year level…")
-                self.fields["year_level"].choices = [placeholder] + self.YEAR_CHOICES
-                self.fields["year_level"].required = True
-
-    # -------------------------- validation ------------------------------------
     def clean_year_level(self):
-        """Enforce “set‑once‑only” semantics."""
+        """
+        Student year level can only be assigned once.
+
+        Teachers do not have this field.
+        """
+
+        if self.is_teacher:
+            return ""
+
         new_value = self.cleaned_data.get("year_level") or ""
-        if self.instance.pk and hasattr(self.instance, "student_profile"):
-            profile = self.instance.student_profile
-            if profile.year_level:                         # already stored
-                # ignore whatever came from POST – keep the original
+
+        if self.instance.pk:
+            try:
+                profile = self.instance.student_profile
+            except StudentProfile.DoesNotExist:
+                profile = None
+
+            if profile and profile.year_level:
                 return profile.year_level
+
         return new_value
 
+    # ============================================================
+    # SAVE
+    # ============================================================
+
     def save(self, commit=True):
-        """Persist both the core User fields and the linked StudentProfile."""
+        """
+        Save the User and the appropriate role-specific profile.
+
+        Teachers:
+            Saves only User information.
+            Creates TeacherProfile if missing.
+
+        Students:
+            Saves User information and StudentProfile.
+        """
+
         user = super().save(commit=commit)
 
-        profile, _ = StudentProfile.objects.get_or_create(user=user)
-        profile.student_id = self.cleaned_data.get("student_id", "")
-        profile.year_level = self.cleaned_data.get("year_level", "")
+        # ========================================================
+        # TEACHER
+        # ========================================================
+
+        if self.is_teacher:
+            TeacherProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    "department": "CCS",
+                },
+            )
+
+            return user
+
+        # ========================================================
+        # STUDENT
+        # ========================================================
+
+        profile, _ = StudentProfile.objects.get_or_create(
+            user=user
+        )
+
+        profile.student_id = self.cleaned_data.get(
+            "student_id",
+            profile.student_id,
+        )
+
+        profile.year_level = self.cleaned_data.get(
+            "year_level",
+            profile.year_level,
+        )
+
         if commit:
-            # The model's `clean()` will raise if we try to change year_level.
             profile.full_clean()
             profile.save()
+
         return user
-    
+        
     
 class PasswordResetRequestForm(forms.Form):
     """
