@@ -18,8 +18,13 @@
 
     <link
         rel="shortcut icon"
-        href="{% static 'favicon.ico' %}"
+        href="{% static "favicon.ico" %}"
         type="image/x-icon"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     >
 
     <link
@@ -32,10 +37,388 @@
         href="{% static 'css/dashboard.css' %}"
     >
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    >
+    <style>
+
+        .archive-shell {
+            width: 100%;
+            max-width: 1200px;
+
+            margin: 0 auto;
+
+            padding: 0 16px 40px;
+        }
+
+        .archive-detail-panel {
+            background: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.98),
+                rgba(248, 250, 252, 0.96)
+            );
+
+            border: 1px solid
+                rgba(148, 163, 184, 0.18);
+
+            border-radius: 28px;
+
+            box-shadow:
+                0 20px 56px
+                rgba(15, 23, 42, 0.08);
+
+            overflow: hidden;
+        }
+
+        .archive-detail-header {
+            display: flex;
+            flex-wrap: wrap;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 1rem;
+
+            padding: 0.75rem 1rem;
+
+            margin-bottom: 1rem;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            background: #fafafa;
+
+            position: sticky;
+            top: 0;
+            z-index: 5;
+
+            box-shadow:
+                0 2px 6px
+                rgba(0, 0, 0, 0.04);
+        }
+
+        .archive-detail-title-wrap {
+            display: flex;
+
+            align-items: center;
+
+            gap: 1rem;
+
+            padding: 0 1rem;
+
+            margin-bottom: 1rem;
+        }
+
+        .archive-detail-icon {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            width: 52px;
+            height: 52px;
+
+            flex: 0 0 52px;
+
+            border-radius: 16px;
+
+            background: linear-gradient(
+                135deg,
+                rgba(168, 85, 247, 0.14),
+                rgba(14, 154, 167, 0.08)
+            );
+
+            color: var(--primary, #0e9aa7);
+
+            box-shadow:
+                inset 0 0 0 1px
+                rgba(14, 154, 167, 0.08);
+        }
+
+        .archive-detail-title {
+            margin: 0;
+
+            font-size: clamp(
+                1.8rem,
+                2vw,
+                2.4rem
+            );
+
+            letter-spacing: -0.03em;
+
+            color: var(--text, #0f172a);
+
+            line-height: 1.2;
+        }
+
+        .archive-detail-body {
+            padding: 0 1rem 1.5rem;
+        }
+
+        .archive-detail-card {
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.94),
+                rgba(239, 246, 246, 0.92)
+            );
+
+            border: 1px solid
+                rgba(148, 163, 184, 0.14);
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 10px 24px
+                rgba(15, 23, 42, 0.04);
+
+            padding: 1.5rem;
+        }
+
+        .archive-detail-meta-row {
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 0.65rem;
+
+            margin-bottom: 1rem;
+        }
+
+        .archive-detail-meta {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 0.5rem;
+
+            margin: 0;
+
+            padding: 0.5rem 0.8rem;
+
+            border-radius: 999px;
+
+            background: rgba(
+                168,
+                85,
+                247,
+                0.08
+            );
+
+            color: #7c3aed;
+
+            font-size: 0.8rem;
+            font-weight: 700;
+
+            letter-spacing: 0.04em;
+
+            text-transform: uppercase;
+        }
+
+        .archive-detail-content {
+            color: var(--text, #0f172a);
+
+            line-height: 1.8;
+
+            font-size: 1rem;
+        }
+
+        .archive-module-list {
+            list-style: none;
+
+            margin: 1rem 0 0;
+            padding: 0;
+
+            display: grid;
+
+            gap: 0.75rem;
+        }
+
+        .archive-module-item {
+            display: flex;
+
+            align-items: center;
+
+            gap: 0.85rem;
+
+            padding: 0.9rem 1rem;
+
+            border-radius: 14px;
+
+            background: rgba(
+                255,
+                255,
+                255,
+                0.72
+            );
+
+            border: 1px solid
+                rgba(148, 163, 184, 0.14);
+        }
+
+        .archive-module-icon {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            width: 40px;
+            height: 40px;
+
+            flex: 0 0 40px;
+
+            border-radius: 12px;
+
+            background: rgba(
+                168,
+                85,
+                247,
+                0.08
+            );
+
+            color: #7c3aed;
+        }
+
+        .archive-module-copy {
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 0.2rem;
+        }
+
+        .archive-module-number {
+            font-size: 0.72rem;
+
+            font-weight: 700;
+
+            color: #7c3aed;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.04em;
+        }
+
+        .archive-module-name {
+            font-size: 0.95rem;
+
+            font-weight: 700;
+
+            color: var(--text, #0f172a);
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .archive-no-modules {
+            margin: 0;
+
+            color: var(--muted, #64748b);
+        }
+
+        /* ---------------------------------------------------------
+           DARK MODE
+        --------------------------------------------------------- */
+
+        html.dark .archive-detail-panel,
+        html[data-theme="dark"] .archive-detail-panel {
+            background: linear-gradient(
+                180deg,
+                rgba(17, 24, 39, 0.98),
+                rgba(10, 15, 28, 0.98)
+            );
+
+            border-color:
+                rgba(148, 163, 184, 0.18);
+
+            box-shadow:
+                0 20px 56px
+                rgba(2, 6, 23, 0.32);
+        }
+
+        html.dark .archive-detail-header,
+        html[data-theme="dark"] .archive-detail-header {
+            background:
+                rgba(15, 23, 42, 0.96);
+
+            border-bottom-color:
+                rgba(148, 163, 184, 0.14);
+        }
+
+        html.dark .archive-detail-card,
+        html[data-theme="dark"] .archive-detail-card {
+            background: linear-gradient(
+                135deg,
+                rgba(17, 24, 39, 0.98),
+                rgba(10, 15, 28, 0.98)
+            );
+
+            border-color:
+                rgba(148, 163, 184, 0.14);
+        }
+
+        html.dark .archive-detail-title,
+        html.dark .archive-detail-content,
+        html.dark .archive-detail-meta,
+
+        html[data-theme="dark"] .archive-detail-title,
+        html[data-theme="dark"] .archive-detail-content,
+        html[data-theme="dark"] .archive-detail-meta {
+            color: var(--text);
+        }
+
+        html.dark .archive-detail-meta,
+        html[data-theme="dark"] .archive-detail-meta {
+            background:
+                rgba(14, 154, 167, 0.12);
+        }
+
+        html.dark .archive-module-item,
+        html[data-theme="dark"] .archive-module-item {
+            background:
+                rgba(17, 24, 39, 0.72);
+
+            border-color:
+                rgba(148, 163, 184, 0.14);
+        }
+
+        /* ---------------------------------------------------------
+           MOBILE
+        --------------------------------------------------------- */
+
+        @media (max-width: 720px) {
+
+            .archive-shell {
+                padding: 0 12px 28px;
+            }
+
+            .archive-detail-header {
+                padding: 0.9rem 0.85rem;
+            }
+
+            .archive-detail-title-wrap {
+                padding: 0 0.85rem;
+            }
+
+            .archive-detail-title {
+                font-size: 1.55rem;
+            }
+
+            .archive-detail-card {
+                padding: 1rem;
+            }
+
+            .archive-detail-meta-row {
+                gap: 0.5rem;
+            }
+
+            .archive-detail-meta {
+                font-size: 0.72rem;
+            }
+
+            .archive-module-name {
+                white-space: normal;
+            }
+        }
+
+    </style>
 
 </head>
 
@@ -49,21 +432,26 @@
 
         <div class="archive-shell">
 
-            <section class="archive-detail-panel">
+            <section
+                class="archive-detail-panel"
+                aria-labelledby="archived-subject-title"
+            >
 
-                <header class="content-header archive-detail-header">
+                <header
+                    class="content-header archive-detail-header"
+                >
 
                     <p class="breadcrumb">
 
                         <i>
 
-                            <a href="{% url 'account:settings' %}">
+                            <a href="{% url "account:settings" %}">
                                 Settings
                             </a>
 
                             &gt;
 
-                            <a href="{% url 'account:archive-subjects' %}">
+                            <a href="{% url "account:archive-subjects" %}">
                                 Archived Subjects
                             </a>
 
@@ -75,9 +463,12 @@
 
                     </p>
 
-                    <div class="header-actions">
+                    <div class="header-actions archive-detail-actions">
 
-                        <form method="post">
+                        <form
+                            method="post"
+                            class="archive-action-form"
+                        >
 
                             {% csrf_token %}
 
@@ -93,7 +484,7 @@
                                     border-radius: .3rem;
                                 "
                             >
-                                Restore Subject
+                                Unarchive
                             </button>
 
                         </form>
@@ -102,8 +493,9 @@
                             href="#"
                             class="button button--danger js-modal-trigger"
                             data-url="{% url 'account:archive-subject-delete-modal' subject.id %}"
+                            title="Delete this subject permanently"
                         >
-                            Delete Permanently
+                            Delete permanently
                         </a>
 
                     </div>
@@ -118,12 +510,13 @@
 
                     </span>
 
-                    <h1 class="archive-detail-title">
-
+                    <h1
+                        id="archived-subject-title"
+                        class="archive-detail-title"
+                    >
                         {{ subject.subject_code }}
                         –
                         {{ subject.subject_name }}
-
                     </h1>
 
                 </div>
@@ -139,42 +532,75 @@
                             </p>
 
                             <p class="archive-detail-meta">
-                                {{ modules|length }} Module{{ modules|pluralize }}
+                                {{ modules|length }}
+                                Module{{ modules|length|pluralize }}
                             </p>
 
                             <p class="archive-detail-meta">
-                                Created {{ subject.created_at|date:"M d, Y" }}
+                                Archived {{ subject.updated_at|date:"M d, Y" }}
                             </p>
 
                         </div>
 
-                        <h2>
-                            Modules
-                        </h2>
+                        <div class="archive-detail-content">
 
-                        {% if modules %}
+                            <h2>
+                                Modules
+                            </h2>
 
-                            <ul>
+                            {% if modules %}
 
-                                {% for module in modules %}
+                                <ul class="archive-module-list">
 
-                                    <li>
-                                        Module {{ module.module_number }}
-                                        –
-                                        {{ module.module_name }}
-                                    </li>
+                                    {% for module in modules %}
 
-                                {% endfor %}
+                                        <li
+                                            class="archive-module-item"
+                                        >
 
-                            </ul>
+                                            <span
+                                                class="archive-module-icon"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-book-open"
+                                                ></i>
+                                            </span>
 
-                        {% else %}
+                                            <span
+                                                class="archive-module-copy"
+                                            >
 
-                            <p>
-                                This subject has no active modules.
-                            </p>
+                                                <span
+                                                    class="archive-module-number"
+                                                >
+                                                    Module
+                                                    {{ module.module_number }}
+                                                </span>
 
-                        {% endif %}
+                                                <span
+                                                    class="archive-module-name"
+                                                    title="{{ module.module_name }}"
+                                                >
+                                                    {{ module.module_name }}
+                                                </span>
+
+                                            </span>
+
+                                        </li>
+
+                                    {% endfor %}
+
+                                </ul>
+
+                            {% else %}
+
+                                <p class="archive-no-modules">
+                                    This subject has no active modules.
+                                </p>
+
+                            {% endif %}
+
+                        </div>
 
                     </article>
 

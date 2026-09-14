@@ -1,27 +1,22 @@
 <div class="modal__backdrop" data-close-modal></div>
 
-<div
-    class="modal__content"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="delete-subject-title"
->
+<div class="modal__content">
 
-    <h2 id="delete-subject-title">
-        Delete subject permanently?
+    <h2>
+        Delete subject permanently
     </h2>
 
     <p>
-        This will permanently delete
+        Are you sure you want to delete the archived subject
         <strong>
             {{ subject.subject_code }}
             –
             {{ subject.subject_name }}
-        </strong>
-        and all modules belonging to it.
-    </p>
+        </strong>?
 
-    <p>
+        This will also permanently delete all modules
+        belonging to this subject.
+
         This action cannot be undone.
     </p>
 
@@ -37,9 +32,9 @@
 
             <button
                 type="submit"
-                class="button-danger"
+                class="button-primary button--danger"
             >
-                Delete Permanently
+                Delete permanently
             </button>
 
             <button
