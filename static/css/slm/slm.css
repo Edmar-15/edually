@@ -419,7 +419,6 @@ html[data-theme="dark"] .pm-card__header h3 {
 .tabs .tablist {
   display: flex;
   flex-wrap: nowrap;
-  gap: .65rem;
   /* On very narrow screens allow horizontal scrolling */
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -437,7 +436,7 @@ html[data-theme="dark"] .pm-card__header h3 {
   line-height: 1.4;
   transition: all .24s ease;
   box-shadow: 0 4px 12px rgba(15,23,42,.06);
-  border-radius: 14px;
+  /* border-radius: 14px; */
 }
 .tab-card:hover {
   border-color: rgba(14,154,167,.3);

@@ -884,6 +884,13 @@ body {
     -webkit-backdrop-filter: blur(12px);
 }
 
+html.dark .content-header {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(10, 15, 28, 0.94) 100%);
+    border-bottom-color: rgba(148, 163, 184, 0.12);
+    color: var(--text);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
 /* ------------------------------------------------------------
    LEFT SIDE
    ------------------------------------------------------------ */
