@@ -333,15 +333,35 @@
                         </a>
 
                         {% if request.user|has_group:'Teacher' %}
-                        <a href="{% url 'account:archive-modules' %}" class="archive-card archive-card--modules">
+
+                        <a href="{% url 'account:archive-modules' %}"
+                        class="archive-card archive-card--modules">
+
                             <span class="archive-card-icon">
                                 <i class="fa-solid fa-book-open"></i>
                             </span>
+
                             <span class="archive-card-copy">
                                 <span class="archive-card-label">Archive</span>
                                 <strong>Learning Modules</strong>
                             </span>
+
                         </a>
+
+                        <a href="{% url 'account:archive-subjects' %}"
+                        class="archive-card archive-card--subjects">
+
+                            <span class="archive-card-icon">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </span>
+
+                            <span class="archive-card-copy">
+                                <span class="archive-card-label">Archive</span>
+                                <strong>Subjects</strong>
+                            </span>
+
+                        </a>
+
                         {% else %}
                         <a href="{% url 'account:archive-personal-materials' %}" class="archive-card archive-card--materials">
                             <span class="archive-card-icon">

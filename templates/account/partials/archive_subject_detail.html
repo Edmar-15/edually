@@ -1,0 +1,200 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Archived Subject – {{ subject.subject_code }}
+    </title>
+
+    <link
+        rel="shortcut icon"
+        href="{% static 'favicon.ico' %}"
+        type="image/x-icon"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/base.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+
+        <div class="archive-shell">
+
+            <section class="archive-detail-panel">
+
+                <header class="content-header archive-detail-header">
+
+                    <p class="breadcrumb">
+
+                        <i>
+
+                            <a href="{% url 'account:settings' %}">
+                                Settings
+                            </a>
+
+                            &gt;
+
+                            <a href="{% url 'account:archive-subjects' %}">
+                                Archived Subjects
+                            </a>
+
+                            &gt;
+
+                            {{ subject.subject_code }}
+
+                        </i>
+
+                    </p>
+
+                    <div class="header-actions">
+
+                        <form method="post">
+
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                name="action"
+                                value="unarchive"
+                                class="button"
+                                style="
+                                    background: var(--primary);
+                                    border-color: var(--primary);
+                                    color: white;
+                                    border-radius: .3rem;
+                                "
+                            >
+                                Restore Subject
+                            </button>
+
+                        </form>
+
+                        <a
+                            href="#"
+                            class="button button--danger js-modal-trigger"
+                            data-url="{% url 'account:archive-subject-delete-modal' subject.id %}"
+                        >
+                            Delete Permanently
+                        </a>
+
+                    </div>
+
+                </header>
+
+                <div class="archive-detail-title-wrap">
+
+                    <span class="archive-detail-icon">
+
+                        <i class="fa-solid fa-layer-group"></i>
+
+                    </span>
+
+                    <h1 class="archive-detail-title">
+
+                        {{ subject.subject_code }}
+                        –
+                        {{ subject.subject_name }}
+
+                    </h1>
+
+                </div>
+
+                <div class="archive-detail-body">
+
+                    <article class="archive-detail-card">
+
+                        <div class="archive-detail-meta-row">
+
+                            <p class="archive-detail-meta">
+                                {{ subject.get_year_display }} Year
+                            </p>
+
+                            <p class="archive-detail-meta">
+                                {{ modules|length }} Module{{ modules|pluralize }}
+                            </p>
+
+                            <p class="archive-detail-meta">
+                                Created {{ subject.created_at|date:"M d, Y" }}
+                            </p>
+
+                        </div>
+
+                        <h2>
+                            Modules
+                        </h2>
+
+                        {% if modules %}
+
+                            <ul>
+
+                                {% for module in modules %}
+
+                                    <li>
+                                        Module {{ module.module_number }}
+                                        –
+                                        {{ module.module_name }}
+                                    </li>
+
+                                {% endfor %}
+
+                            </ul>
+
+                        {% else %}
+
+                            <p>
+                                This subject has no active modules.
+                            </p>
+
+                        {% endif %}
+
+                    </article>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+{% include "components/global_modal.html" %}
+
+<script
+    src="{% static 'js/modal.js' %}"
+    defer
+></script>
+
+</body>
+
+</html>

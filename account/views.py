@@ -893,6 +893,15 @@ def settings(request):
         )
         .order_by('-created_at')[:10]
     )
+    
+    # ---- ARCHIVED SUBJECTS ------------------------------------------------
+    archived_subjects = (
+        Subject.objects.filter(
+            author=request.user,
+            is_archived=True,
+        )
+        .order_by('-updated_at')[:10]
+    )
 
     # ---- ARCHIVED PERSONAL LEARNING MATERIAL ---------------------------------
     archived_materials = (
@@ -914,6 +923,7 @@ def settings(request):
         request,
         posts=archived_posts,
         modules=archived_modules,
+        subjects=archived_subjects,
         personal_materials=archived_materials,
     )
     context["otp_secret"] = otp_secret
@@ -922,10 +932,11 @@ def settings(request):
     return render(request, "account/settings.html", context)
 
 
-def _settings_context(request, delete_form=None, posts=None, modules=None, personal_materials=None):
+def _settings_context(request, delete_form=None, posts=None, modules=None, subjects=None, personal_materials=None,):
     return {
         "posts": posts,
         "modules": modules,
+        "subjects": subjects,
         "personal_materials": personal_materials,
         "delete_form": delete_form or DeleteAccountForm(user=request.user),
     }
@@ -1502,6 +1513,60 @@ def archive_module_delete(request, pk):
     )
 
 
+@login_required(login_url='account:login')
+def archive_subject_delete_modal(request, pk):
+    """
+    Return the confirmation modal for permanently deleting
+    an archived subject.
+    """
+    subject = get_object_or_404(
+        Subject,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+
+    html = render_to_string(
+        'account/partials/archive_subject_delete_modal.html',
+        {
+            'subject': subject,
+        },
+        request=request,
+    )
+
+    return JsonResponse({'html': html})
+
+
+@require_POST
+@login_required(login_url='account:login')
+def archive_subject_delete(request, pk):
+    """
+    Permanently delete an archived subject.
+
+    Because Module.subject uses CASCADE, the subject's modules
+    will also be deleted.
+    """
+    subject = get_object_or_404(
+        Subject,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+
+    subject.delete()
+
+    messages.success(
+        request,
+        'Subject permanently deleted.',
+    )
+
+    return JsonResponse(
+        {
+            'success': True,
+            'redirect': reverse('account:archive-subjects'),
+        }
+    )
+
 # -----------------------------------------------------------------
 #  DELETE MODAL – Personal material
 # -----------------------------------------------------------------
@@ -1541,6 +1606,72 @@ def archive_personal_material_delete(request, pk):
             "success": True,
             "redirect": reverse("account:archive-personal-materials"),
         }
+    )
+    
+
+# -----------------------------------------------------------------
+#   Subjects (teacher / subject owner only)
+# -----------------------------------------------------------------
+
+@login_required(login_url='account:login')
+def archive_subject_list(request):
+    """
+    Show subjects archived by the currently logged-in teacher.
+    """
+    subjects = (
+        Subject.objects.filter(
+            author=request.user,
+            is_archived=True,
+        )
+        .order_by('-updated_at')
+    )
+
+    return render(
+        request,
+        'account/partials/archive_subjects.html',
+        {'subjects': subjects},
+    )
+
+
+@login_required(login_url='account:login')
+def archive_subject_detail(request, pk):
+    """
+    Show one archived subject and allow the owner to restore it.
+    """
+    subject = get_object_or_404(
+        Subject,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+
+    modules = (
+        subject.modules
+        .filter(is_archived=False)
+        .order_by('module_number')
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'unarchive':
+            subject.is_archived = False
+            subject.save(update_fields=['is_archived'])
+
+            messages.success(
+                request,
+                'Subject has been restored.',
+            )
+
+            return redirect('account:archive-subjects')
+
+    return render(
+        request,
+        'account/partials/archive_subject_detail.html',
+        {
+            'subject': subject,
+            'modules': modules,
+        },
     )
     
 

@@ -1,0 +1,57 @@
+<div class="modal__backdrop" data-close-modal></div>
+
+<div
+    class="modal__content"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="delete-subject-title"
+>
+
+    <h2 id="delete-subject-title">
+        Delete subject permanently?
+    </h2>
+
+    <p>
+        This will permanently delete
+        <strong>
+            {{ subject.subject_code }}
+            –
+            {{ subject.subject_name }}
+        </strong>
+        and all modules belonging to it.
+    </p>
+
+    <p>
+        This action cannot be undone.
+    </p>
+
+    <form
+        method="post"
+        action="{% url 'account:archive-subject-delete' subject.id %}"
+        data-modal-form
+    >
+
+        {% csrf_token %}
+
+        <div class="modal__actions">
+
+            <button
+                type="submit"
+                class="button-danger"
+            >
+                Delete Permanently
+            </button>
+
+            <button
+                type="button"
+                class="button-plain"
+                data-close-modal
+            >
+                Cancel
+            </button>
+
+        </div>
+
+    </form>
+
+</div>

@@ -1,0 +1,200 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Archived Subjects – EduAlly</title>
+
+    <link
+        rel="shortcut icon"
+        href="{% static 'favicon.ico' %}"
+        type="image/x-icon"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/base.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/dashboard.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    >
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    {% include "components/navigations.html" %}
+
+    <main class="main-content">
+
+        <header class="content-header dashboard-header archive-page-header">
+
+            <div class="header-left">
+
+                <button
+                    type="button"
+                    class="mobile-sidebar-trigger"
+                    aria-controls="sidebar"
+                    aria-expanded="false"
+                    aria-label="Open navigation sidebar"
+                >
+                    <span class="sr-only">
+                        Toggle sidebar
+                    </span>
+
+                    <svg
+                        class="sidebar-trigger-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path
+                            d="M4 7h16M4 12h16M4 17h16"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                </button>
+
+                <div class="dashboard-welcome">
+
+                    <p
+                        class="breadcrumb"
+                        style="margin: 6px 0 0;"
+                    >
+                        <i>
+                            <a href="{% url 'account:settings' %}">
+                                Settings
+                            </a>
+
+                            &gt;
+
+                            <span>
+                                Archived Subjects
+                            </span>
+                        </i>
+                    </p>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <div class="archive-shell">
+
+            <section class="archive-panel">
+
+                <div class="archive-title-wrap">
+
+                    <span class="archive-title-icon">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </span>
+
+                    <div>
+                        <h1 class="archive-title">
+                            Archived Subjects
+                        </h1>
+
+                        <p class="muted-text">
+                            Subjects you have archived.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="archive-body">
+
+                    {% if subjects %}
+
+                        <ul class="archive-list">
+
+                            {% for subject in subjects %}
+
+                                <li>
+
+                                    <a
+                                        href="{% url 'account:archive-subject-detail' subject.id %}"
+                                        class="archive-item-link"
+                                    >
+
+                                        <span class="archive-item-main">
+
+                                            <span class="archive-item-meta">
+                                                Subject
+                                            </span>
+
+                                            <span
+                                                class="archive-item-title"
+                                                title="{{ subject.subject_code }} – {{ subject.subject_name }}"
+                                            >
+                                                {{ subject.subject_code }}
+                                                –
+                                                {{ subject.subject_name }}
+                                            </span>
+
+                                            <span class="detail-value">
+                                                {{ subject.get_year_display }} Year
+                                            </span>
+
+                                        </span>
+
+                                        <span class="detail-value">
+                                            {{ subject.updated_at|date:"M d, Y" }}
+                                        </span>
+
+                                    </a>
+
+                                </li>
+
+                            {% endfor %}
+
+                        </ul>
+
+                    {% else %}
+
+                        <div class="archive-empty">
+
+                            <span class="archive-empty-icon">
+                                <i class="fa-solid fa-box-archive"></i>
+                            </span>
+
+                            <span>
+                                No subjects have been archived yet.
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script
+    src="{% static 'js/modal.js' %}"
+    defer
+></script>
+
+</body>
+
+</html>
