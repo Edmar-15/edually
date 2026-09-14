@@ -58,12 +58,37 @@
 
     <main class="main-content">
 
-        <header class="content-header">
-            <p class="breadcrumb"><i>
-                <a href="{% url "account:settings" %}">Settings</a> &gt;
-                <a href="{% url "account:archive-personal-materials" %}">Archived Learning Materials</a> &gt;
-                {{ pm.title }}
-            </i></p>
+        <header class="content-header dashboard-header archive-page-header">
+            <div class="header-left">
+                <button type="button"
+                        class="mobile-sidebar-trigger"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        aria-label="Open navigation sidebar">
+
+                    <span class="sr-only">Toggle sidebar</span>
+
+                    <svg class="sidebar-trigger-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true"
+                         focusable="false">
+
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"/>
+                    </svg>
+
+                </button>
+
+                <div class="dashboard-welcome">
+                    <p class="breadcrumb" style="margin: 6px 0 0;"><i>
+                        <a href="{% url "account:settings" %}">Settings</a> &gt;
+                        <a href="{% url "account:archive-personal-materials" %}">Archived Learning Materials</a> &gt;
+                        {{ pm.title }}
+                    </i></p>
+                </div>
+            </div>
 
             <div class="header-actions archive-detail-actions">
 

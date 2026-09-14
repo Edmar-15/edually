@@ -2862,10 +2862,7 @@ html[data-theme="dark"] .avatar {
 
 .verified-badge,
 .badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+    display: inline-block;
     padding: 0.5rem 1rem;
     background: linear-gradient(135deg, #10b981, #059669);
     color: white;
@@ -2873,7 +2870,6 @@ html[data-theme="dark"] .avatar {
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    line-height: 1;
 }
 
 .status-pill {

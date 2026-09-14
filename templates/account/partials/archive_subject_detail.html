@@ -43,7 +43,7 @@
             width: 100%;
             max-width: 1200px;
 
-            margin: 0 auto;
+            margin: 1.25rem auto 0;
 
             padding: 0 16px 40px;
         }
@@ -103,32 +103,6 @@
             padding: 0 1rem;
 
             margin-bottom: 1rem;
-        }
-
-        .archive-detail-icon {
-            display: inline-flex;
-
-            align-items: center;
-            justify-content: center;
-
-            width: 52px;
-            height: 52px;
-
-            flex: 0 0 52px;
-
-            border-radius: 16px;
-
-            background: linear-gradient(
-                135deg,
-                rgba(168, 85, 247, 0.14),
-                rgba(14, 154, 167, 0.08)
-            );
-
-            color: var(--primary, #0e9aa7);
-
-            box-shadow:
-                inset 0 0 0 1px
-                rgba(14, 154, 167, 0.08);
         }
 
         .archive-detail-title {
@@ -430,18 +404,34 @@
 
     <main class="main-content">
 
-        <div class="archive-shell">
+        <header
+            class="content-header dashboard-header archive-page-header"
+        >
 
-            <section
-                class="archive-detail-panel"
-                aria-labelledby="archived-subject-title"
-            >
+            <div class="header-left">
+                <button type="button"
+                        class="mobile-sidebar-trigger"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        aria-label="Open navigation sidebar">
 
-                <header
-                    class="content-header archive-detail-header"
-                >
+                    <span class="sr-only">Toggle sidebar</span>
 
-                    <p class="breadcrumb">
+                    <svg class="sidebar-trigger-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true"
+                         focusable="false">
+
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"/>
+                    </svg>
+
+                </button>
+
+                <div class="dashboard-welcome">
+                    <p class="breadcrumb" style="margin: 6px 0 0;">
 
                         <i>
 
@@ -462,8 +452,10 @@
                         </i>
 
                     </p>
+                </div>
+            </div>
 
-                    <div class="header-actions archive-detail-actions">
+            <div class="header-actions archive-detail-actions">
 
                         <form
                             method="post"
@@ -500,15 +492,16 @@
 
                     </div>
 
-                </header>
+        </header>
+
+        <div class="archive-shell">
+
+            <section
+                class="archive-detail-panel"
+                aria-labelledby="archived-subject-title"
+            >
 
                 <div class="archive-detail-title-wrap">
-
-                    <span class="archive-detail-icon">
-
-                        <i class="fa-solid fa-layer-group"></i>
-
-                    </span>
 
                     <h1
                         id="archived-subject-title"

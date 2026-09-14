@@ -13,7 +13,7 @@
         .archive-shell {
             width: 100%;
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 1.25rem auto 0;
             padding: 0 16px 40px;
         }
 
@@ -47,18 +47,6 @@
             gap: 1rem;
             padding: 0 1rem;
             margin-bottom: 1rem;
-        }
-
-        .archive-detail-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, rgba(14,154,167,0.14), rgba(34,197,94,0.08));
-            color: var(--primary, #0e9aa7);
-            box-shadow: inset 0 0 0 1px rgba(14,154,167,0.08);
         }
 
         .archive-detail-title {
@@ -198,34 +186,59 @@
 <div class="dashboard-container">
     {% include "components/navigations.html" %}
     <main class="main-content">
-        <div class="archive-shell">
-            <section class="archive-detail-panel">
-                <header class="archive-detail-header content-header">
-                    <p class="breadcrumb"><i>
+        <header class="content-header dashboard-header archive-page-header">
+            <div class="header-left">
+                <button type="button"
+                        class="mobile-sidebar-trigger"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        aria-label="Open navigation sidebar">
+
+                    <span class="sr-only">Toggle sidebar</span>
+
+                    <svg class="sidebar-trigger-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true"
+                         focusable="false">
+
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"/>
+                    </svg>
+
+                </button>
+
+                <div class="dashboard-welcome">
+                    <p class="breadcrumb" style="margin: 6px 0 0;"><i>
                         <a href="{% url "account:settings" %}">Settings</a> &gt;
                         <a href="{% url "account:archive-forum-posts" %}">Archived Forum Posts</a> &gt;
                         <span>{{ post.title }}</span>
                     </i></p>
+                </div>
+            </div>
 
-                    <div class="header-actions archive-detail-actions">
-                        <form method="post" class="archive-action-form">
-                            {% csrf_token %}
-                            <button type="submit" name="action" value="unarchive"
-                                    class="button"
-                                    style="background: var(--primary); border-color: var(--primary); color: white; border-radius: .3rem;">Unarchive</button>
-                        </form>
+            <div class="header-actions archive-detail-actions">
+                <form method="post" class="archive-action-form">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="unarchive"
+                            class="button"
+                            style="background: var(--primary); border-color: var(--primary); color: white; border-radius: .3rem;">Unarchive</button>
+                </form>
 
-                        <a href="#"
-                           class="button button-primary button--danger js-modal-trigger"
-                           data-url="{% url 'account:archive-forum-post-delete-modal' post.id %}"
-                           title="Delete this post permanently">
-                            Delete permanently
-                        </a>
-                    </div>
-                </header>
+                <a href="#"
+                   class="button button-primary button--danger js-modal-trigger"
+                   data-url="{% url 'account:archive-forum-post-delete-modal' post.id %}"
+                   title="Delete this post permanently">
+                    Delete permanently
+                </a>
+            </div>
+        </header>
+
+        <div class="archive-shell">
+            <section class="archive-detail-panel">
 
                 <div class="archive-detail-title-wrap">
-                    <span class="archive-detail-icon"><i class="fa-solid fa-comments"></i></span>
                     <h1 class="archive-detail-title">{{ post.title }}</h1>
                 </div>
 
