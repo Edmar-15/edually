@@ -167,14 +167,20 @@ def api_subject_list(request):
     }
     """
     # -----------------------------------------------------------------
-    # 1️⃣  Base queryset – public, non‑archived subjects
+    # 1️⃣ Base queryset – public, non-archived subjects
     # -----------------------------------------------------------------
     qs = Subject.objects.select_related("author").filter(is_archived=False)
 
     # -----------------------------------------------------------------
-    # 2️⃣  If the requester is a *student* we limit to *their* year level
+    # 2️⃣ Teachers only see subjects they uploaded/created
     # -----------------------------------------------------------------
-    if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
+    if getattr(request.user, "is_teacher_member", False):
+        qs = qs.filter(author=request.user)
+
+    # -----------------------------------------------------------------
+    # 3️⃣ Students only see subjects matching their year level
+    # -----------------------------------------------------------------
+    elif getattr(request.user, "is_student_member", False):
 
         # Students must have a year level before SLM subjects become visible.
         year_label = getattr(request.user, "year_level", None) or ""
