@@ -52,7 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return BAD_WORDS.some(badWord => {
             const normalizedBadWord = normalizeBadWordText(badWord);
-            return normalizedBadWord && normalizedBadWord.length > 1 && normalizedText.includes(normalizedBadWord);
+            if (!normalizedBadWord || normalizedBadWord.length <= 1) return false;
+
+            const escapedBadWord = normalizedBadWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`(^| )${escapedBadWord}( |$)`).test(normalizedText);
         });
     };
 

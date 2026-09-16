@@ -115,7 +115,10 @@
 
             return badWords.some((badWord) => {
                 const normalizedBadWord = normalize(badWord);
-                return normalizedBadWord && normalizedBadWord.length > 1 && normalizedText.includes(normalizedBadWord);
+                if (!normalizedBadWord || normalizedBadWord.length <= 1) return false;
+
+                const escapedBadWord = normalizedBadWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                return new RegExp(`(^| )${escapedBadWord}( |$)`).test(normalizedText);
             });
         };
 

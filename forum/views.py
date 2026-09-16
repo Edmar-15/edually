@@ -40,7 +40,10 @@ def _contains_bad_words(text):
 
     for bad_word in BAD_WORDS:
         normalized_bad_word = _normalize_bad_word_text(bad_word)
-        if normalized_bad_word and normalized_bad_word in normalized_text:
+        if normalized_bad_word and re.search(
+            rf'(?<![a-z0-9]){re.escape(normalized_bad_word)}(?![a-z0-9])',
+            normalized_text,
+        ):
             return True
 
     return False

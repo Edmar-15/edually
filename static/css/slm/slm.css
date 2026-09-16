@@ -137,6 +137,33 @@ body {
   background: var(--module-surface-soft);
 }
 
+html.dark .pm-form input[type="text"],
+html[data-theme="dark"] .pm-form input[type="text"] {
+  color: #e2e8f0 !important;
+  caret-color: #e2e8f0;
+}
+
+html.dark .pm-form input[type="text"]::placeholder,
+html[data-theme="dark"] .pm-form input[type="text"]::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.dark .pm-form input[type="file"],
+html[data-theme="dark"] .pm-form input[type="file"] {
+  color: #e2e8f0 !important;
+  background: #111c32 !important;
+}
+
+html.dark .pm-form input[type="file"]::file-selector-button,
+html[data-theme="dark"] .pm-form input[type="file"]::file-selector-button {
+  color: #e2e8f0;
+  background: #1e293b;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  margin-right: 0.6rem;
+}
+
 /* Focus state */
 .module-form input:focus,
 .subject-form input:focus,
