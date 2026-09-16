@@ -389,16 +389,58 @@ def dashboard(request):
     # Subjects and SLM modules
     # -------------------------------------------------------------
     if is_teacher:
-        subjects_qs = request.user.subjects.filter(is_archived=False)
+        # Teachers see the subjects they own and their non-archived modules.
+        subjects_qs = request.user.subjects.filter(
+            is_archived=False
+        )
+
         modules_qs = Module.objects.filter(
             subject__author=request.user,
-            is_archived=False
-        ).select_related("subject")
-    else:
-        subjects_qs = Subject.objects.filter(is_archived=False)
-        modules_qs = Module.objects.filter(
+            subject__is_archived=False,
             is_archived=False,
-            subject__is_archived=False
+        ).select_related("subject")
+
+    elif getattr(request.user, "is_student_member", False):
+        # Students must see exactly the same subjects that are available
+        # through the SLM subject-list API:
+        #   - archived subjects excluded
+        #   - year level required
+        #   - subject year must match the student's year
+        subjects_qs = Subject.objects.filter(
+            is_archived=False
+        )
+
+        year_label = getattr(request.user, "year_level", None) or ""
+
+        import re
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            # No year level means the student has no accessible SLM subjects.
+            subjects_qs = subjects_qs.none()
+        else:
+            numeric_year = match.group()
+            subjects_qs = subjects_qs.filter(
+                year=numeric_year
+            )
+
+        # Modules are counted only when their parent subject is accessible
+        # to the current student.
+        modules_qs = Module.objects.filter(
+            subject__in=subjects_qs,
+            subject__is_archived=False,
+            is_archived=False,
+        ).select_related("subject")
+
+    else:
+        # Fallback for other authenticated users.
+        subjects_qs = Subject.objects.filter(
+            is_archived=False
+        )
+
+        modules_qs = Module.objects.filter(
+            subject__is_archived=False,
+            is_archived=False,
         ).select_related("subject")
 
     subjects = subjects_qs[:3]
