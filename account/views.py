@@ -57,7 +57,7 @@ from .utils import user_is_in_group, add_user_to_group
 
 # Other apps used in the dashboard
 from slm.models import Module, PersonalMaterial, Subject
-from forum.models import Post
+from forum.models import Post, Report
 from aihelper.models import Conversation, Message
 
 log = logging.getLogger(__name__)
@@ -450,14 +450,25 @@ def dashboard(request):
     module_count = modules_qs.count()
 
     # -------------------------------------------------------------
-    # User's personal materials
+    # Role-specific dashboard metric
     # -------------------------------------------------------------
-    personal_materials_qs = PersonalMaterial.objects.filter(
-        author=request.user,
-        is_archived=False
-    )
+    if is_teacher:
+        # Teachers do not use Personal Materials.
+        # Show unresolved forum reports instead.
+        pending_report_count = Report.objects.filter(
+            is_resolved=False
+        ).count()
 
-    personal_material_count = personal_materials_qs.count()
+        personal_material_count = 0
+    else:
+        # Personal Materials are student-only.
+        personal_materials_qs = PersonalMaterial.objects.filter(
+            author=request.user,
+            is_archived=False
+        )
+
+        personal_material_count = personal_materials_qs.count()
+        pending_report_count = 0
 
     # -------------------------------------------------------------
     # User activity
@@ -505,22 +516,30 @@ def dashboard(request):
     # -------------------------------------------------------------
     recent_material_ids = _get_recent_personal_material_ids(request)
 
-    recent_personal_materials = list(
-        PersonalMaterial.objects.filter(
-            pk__in=recent_material_ids,
-            is_archived=False
-        )
-        .select_related("author")
-        .order_by(
-            models.Case(
-                *[
-                    models.When(pk=pk, then=pos)
-                    for pos, pk in enumerate(recent_material_ids)
-                ],
-                output_field=models.IntegerField(),
+    # -------------------------------------------------------------
+    # Recently visited personal materials
+    # -------------------------------------------------------------
+    if is_teacher:
+        recent_personal_materials = []
+    else:
+        recent_material_ids = _get_recent_personal_material_ids(request)
+
+        recent_personal_materials = list(
+            PersonalMaterial.objects.filter(
+                pk__in=recent_material_ids,
+                is_archived=False
             )
-        )
-    ) if recent_material_ids else []
+            .select_related("author")
+            .order_by(
+                models.Case(
+                    *[
+                        models.When(pk=pk, then=pos)
+                        for pos, pk in enumerate(recent_material_ids)
+                    ],
+                    output_field=models.IntegerField(),
+                )
+            )
+        ) if recent_material_ids else []
 
     # -------------------------------------------------------------
     # Continue where you left off
@@ -679,6 +698,7 @@ def dashboard(request):
         "subject_count": subject_count,
         "module_count": module_count,
         "personal_material_count": personal_material_count,
+        "pending_report_count": pending_report_count,
         "activity_count": activity_count,
 
         "recent_modules": recent_modules,

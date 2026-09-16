@@ -143,15 +143,23 @@ noindex, nofollow
 
                         <div>
                             <span class="dashboard-stat-label">
-                                My Materials
+                                {% if is_teacher %}
+                                    Pending Reports
+                                {% else %}
+                                    My Materials
+                                {% endif %}
                             </span>
 
                             <strong class="dashboard-stat-number">
-                                {{ personal_material_count }}
+                                {% if is_teacher %}
+                                    {{ pending_report_count }}
+                                {% else %}
+                                    {{ personal_material_count }}
+                                {% endif %}
                             </strong>
                         </div>
 
-                        <i class="fas fa-folder"></i>
+                        <i class="fas {% if is_teacher %}fa-flag{% else %}fa-folder{% endif %}"></i>
 
                     </div>
 
