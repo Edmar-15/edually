@@ -188,9 +188,15 @@ noindex, nofollow
                             <div>
                                 <h2>Getting started</h2>
 
-                                <p>
-                                    Complete these steps to get familiar with EduAlly.
-                                </p>
+                                {% if is_teacher %}
+                                    <p>
+                                        Set up your teaching workspace and start managing your learning materials.
+                                    </p>
+                                {% else %}
+                                    <p>
+                                        Complete these steps to get familiar with EduAlly.
+                                    </p>
+                                {% endif %}
                             </div>
 
                             <span class="onboarding-progress-text">

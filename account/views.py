@@ -539,10 +539,6 @@ def dashboard(request):
 
     # 1. Complete your profile
     # -------------------------------------------------------------
-    # Profile completion
-    # -------------------------------------------------------------
-    is_teacher = user_is_in_group(request.user, GROUP_TEACHER)
-
     if is_teacher:
         try:
             teacher_profile = request.user.teacher_profile
@@ -564,54 +560,112 @@ def dashboard(request):
             and request.user.year_level
         )
 
-    # 2. Explore your first SLM
-    first_slm_explored = bool(recent_modules)
 
-    # 3. Ask the AI Helper
-    ai_helper_used = (
-        Conversation.objects.filter(
-            user=request.user
-        ).exists()
-        or Message.objects.filter(
-            user=request.user,
-            role="user"
-        ).exists()
-    )
+    # -------------------------------------------------------------
+    # 2. Teacher: Create a subject
+    #    Student: Explore first SLM
+    # -------------------------------------------------------------
+    if is_teacher:
+        subject_created = subjects_qs.exists()
+    else:
+        first_slm_explored = bool(recent_modules)
 
+
+    # -------------------------------------------------------------
+    # 3. Teacher: Upload an SLM
+    #    Student: Ask the AI Helper
+    # -------------------------------------------------------------
+    if is_teacher:
+        slm_uploaded = modules_qs.exists()
+    else:
+        ai_helper_used = (
+            Conversation.objects.filter(
+                user=request.user
+            ).exists()
+            or Message.objects.filter(
+                user=request.user,
+                role="user"
+            ).exists()
+        )
+
+
+    # -------------------------------------------------------------
     # 4. Visit the Discussion Forum
+    # -------------------------------------------------------------
     forum_visited = request.user.onboarding_forum_visited
 
-    onboarding_steps = [
-        {
-            "key": "profile",
-            "title": "Complete your profile",
-            "detail": "Add your basic information so your EduAlly space is ready.",
-            "done": profile_complete,
-            "url": "account:profile_edit",
-        },
-        {
-            "key": "slm",
-            "title": "Explore your first SLM",
-            "detail": "Open a Self Learning Module and start exploring your study materials.",
-            "done": first_slm_explored,
-            "url": "slm:slmlists",
-        },
-        {
-            "key": "ai",
-            "title": "Ask the AI Helper",
-            "detail": "Ask your first question and get help with a topic you are studying.",
-            "done": ai_helper_used,
-            "url": "aihelper:helper",
-        },
-        {
-            "key": "forum",
-            "title": "Visit the Discussion Forum",
-            "detail": "See what other students are discussing and join the conversation.",
-            "done": forum_visited,
-            "url": "forum:list",
-        },
-    ]
 
+    # -------------------------------------------------------------
+    # Build role-specific onboarding steps
+    # -------------------------------------------------------------
+    if is_teacher:
+        onboarding_steps = [
+            {
+                "key": "profile",
+                "title": "Complete your profile",
+                "detail": "Add your teacher information so your EduAlly profile is ready.",
+                "done": profile_complete,
+                "url": "account:profile_edit",
+            },
+            {
+                "key": "subject",
+                "title": "Create a subject",
+                "detail": "Create a subject to organize your learning materials.",
+                "done": subject_created,
+                "url": "slm:management",
+            },
+            {
+                "key": "slm",
+                "title": "Upload an SLM",
+                "detail": "Add a Self-Learning Module to your subject for students to access.",
+                "done": slm_uploaded,
+                "url": "slm:management",
+            },
+            {
+                "key": "forum",
+                "title": "Visit the Discussion Forum",
+                "detail": "Review discussions and participate in the conversation.",
+                "done": forum_visited,
+                "url": "forum:list",
+            },
+        ]
+
+    else:
+        onboarding_steps = [
+            {
+                "key": "profile",
+                "title": "Complete your profile",
+                "detail": "Add your basic information so your EduAlly space is ready.",
+                "done": profile_complete,
+                "url": "account:profile_edit",
+            },
+            {
+                "key": "slm",
+                "title": "Explore your first SLM",
+                "detail": "Open a Self Learning Module and start exploring your study materials.",
+                "done": first_slm_explored,
+                "url": "slm:slmlists",
+            },
+            {
+                "key": "ai",
+                "title": "Ask the AI Helper",
+                "detail": "Ask your first question and get help with a topic you are studying.",
+                "done": ai_helper_used,
+                "url": "aihelper:helper",
+            },
+            {
+                "key": "forum",
+                "title": "Visit the Discussion Forum",
+                "detail": "See what other students are discussing and join the conversation.",
+                "done": forum_visited,
+                "url": "forum:list",
+            },
+        ]
+
+
+    # -------------------------------------------------------------
+    # Onboarding progress
+    # -------------------------------------------------------------
     onboarding_completed = sum(
         1 for step in onboarding_steps if step["done"]
     )
