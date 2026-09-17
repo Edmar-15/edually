@@ -1286,3 +1286,151 @@ html[data-theme="dark"] .send-button:focus-visible {
         flex: 0 0 36px;
     }
 }
+
+/* ============================================================
+   AI RESPONSE SOURCE INDICATOR
+   ============================================================ */
+
+.ai-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    width: fit-content;
+
+    margin: 2px 0 10px;
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+
+    letter-spacing: 0.01em;
+}
+
+.ai-source-badge i {
+    font-size: 10px;
+}
+
+/* ------------------------------------------------------------
+   SLM SOURCE
+   ------------------------------------------------------------ */
+
+.ai-source-slm {
+    background: rgba(59, 130, 246, 0.10);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.18);
+}
+
+/* ------------------------------------------------------------
+   GENERAL KNOWLEDGE SOURCE
+   ------------------------------------------------------------ */
+
+.ai-source-general {
+    background: rgba(107, 114, 128, 0.10);
+    color: #4b5563;
+    border: 1px solid rgba(107, 114, 128, 0.18);
+}
+
+/* ------------------------------------------------------------
+   SLM SOURCE DETAILS
+   ------------------------------------------------------------ */
+
+.ai-source-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    margin: -3px 0 11px;
+
+    padding-left: 2px;
+}
+
+.ai-source-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    font-size: 10px;
+    line-height: 1.35;
+
+    color: #6b7280;
+}
+
+.ai-source-item i {
+    font-size: 9px;
+    opacity: 0.75;
+}
+
+/* ============================================================
+   AI RESPONSE SOURCE INDICATOR — DARK MODE
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   SOURCE BADGE BASE
+   ------------------------------------------------------------ */
+
+html.dark .ai-source-badge,
+html[data-theme="dark"] .ai-source-badge {
+    color: var(--text) !important;
+    background: rgba(30, 41, 59, 0.85) !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+
+/* ------------------------------------------------------------
+   SLM SOURCE
+   ------------------------------------------------------------ */
+
+html.dark .ai-source-slm,
+html[data-theme="dark"] .ai-source-slm {
+    background: rgba(59, 130, 246, 0.14) !important;
+    color: #93c5fd !important;
+    border-color: rgba(96, 165, 250, 0.24) !important;
+}
+
+
+/* ------------------------------------------------------------
+   GENERAL KNOWLEDGE SOURCE
+   ------------------------------------------------------------ */
+
+html.dark .ai-source-general,
+html[data-theme="dark"] .ai-source-general {
+    background: rgba(107, 114, 128, 0.14) !important;
+    color: #d1d5db !important;
+    border-color: rgba(156, 163, 175, 0.22) !important;
+}
+
+
+/* ------------------------------------------------------------
+   SOURCE ICONS
+   ------------------------------------------------------------ */
+
+html.dark .ai-source-badge i,
+html[data-theme="dark"] .ai-source-badge i {
+    opacity: 0.95;
+}
+
+
+/* ------------------------------------------------------------
+   SLM SOURCE DETAILS
+   ------------------------------------------------------------ */
+
+html.dark .ai-source-details,
+html[data-theme="dark"] .ai-source-details {
+    color: #9ca3af;
+}
+
+html.dark .ai-source-item,
+html[data-theme="dark"] .ai-source-item {
+    color: #9ca3af !important;
+}
+
+html.dark .ai-source-item i,
+html[data-theme="dark"] .ai-source-item i {
+    color: #94a3b8 !important;
+    opacity: 0.8;
+}
