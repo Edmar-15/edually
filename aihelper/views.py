@@ -259,18 +259,13 @@ def list_conversations(request):
 # ----------------------------------------------------------------------
 # 5️⃣ JSON: fetch a single conversation
 # ----------------------------------------------------------------------
-
 @login_required(login_url="account:login")
 @never_cache
 def get_conversation(request, pk):
     """
-    Return all messages belonging to ``pk``.
-
-    IMPORTANT:
-    Source information is returned here so the frontend can restore
-    the SLM/general indicator after a reload.
+    Return all messages belonging to ``pk``. Used when the user clicks a
+    conversation in the mini-map.
     """
-
     conv = get_object_or_404(
         Conversation,
         pk=pk,
@@ -300,143 +295,81 @@ def get_conversation(request, pk):
 # ----------------------------------------------------------------------
 # 6️⃣ JSON API – answer a question
 # ----------------------------------------------------------------------
-
 @login_required(login_url="account:login")
 def helper_api(request):
     """
-    Accept a POST with a question.
-
-    Processing flow:
-
-        1. Resolve explanation level.
-        2. Find/create conversation.
-        3. Search the user's accessible SLM materials.
-        4. If relevant SLM context exists:
-               answer using SLM context.
-           Otherwise:
-               answer using general knowledge.
-        5. Call OpenAI.
-        6. Save user + AI messages.
-        7. Persist source information on the AI message.
-        8. Return answer + source information to frontend.
+    Accept a POST with a question, find relevant SLM content when available,
+    call OpenAI, persist both messages and the answer source, then return
+    the answer + source information to the frontend.
     """
 
     if request.method != "POST":
         return HttpResponseBadRequest("POST only")
 
-    # ---------------------------------------------------------------
-    # Parse request JSON
-    # ---------------------------------------------------------------
-
     try:
         payload = json.loads(request.body)
-
     except json.JSONDecodeError:
         return JsonResponse(
-            {
-                "error": "Invalid JSON",
-            },
+            {"error": "Invalid JSON payload"},
             status=400,
         )
 
-    question = payload.get("question")
-
-    level = payload.get(
-        "explanation_level",
-        "simplified",
-    )
-
-    conv_id = payload.get(
-        "conversation_id"
-    )
+    question = (payload.get("question") or "").strip()
+    level = payload.get("explanation_level", "simplified")
+    conv_id = payload.get("conversation_id")
 
     if not question:
         return JsonResponse(
-            {
-                "error": "No question supplied",
-            },
+            {"error": "No question supplied"},
             status=400,
         )
 
-    question = str(question).strip()
-
-    if not question:
-        return JsonResponse(
-            {
-                "error": "No question supplied",
-            },
-            status=400,
-        )
-
-    # ---------------------------------------------------------------
-    # 1️⃣ Resolve the base system prompt
-    # ---------------------------------------------------------------
-
+    # ------------------------------------------------------------------
+    # 1. Resolve the system prompt.
+    # ------------------------------------------------------------------
     try:
-        base_system_prompt = system_prompt_for(
-            level,
-            question,
-        )
-
+        system_prompt = system_prompt_for(level, question)
     except ValueError:
         log.warning(
-            "Invalid explanation level %r – using simplified",
+            "Invalid explanation level %r - using simplified",
             level,
         )
-
         level = "simplified"
+        system_prompt = system_prompt_for(level, question)
 
-        base_system_prompt = system_prompt_for(
-            "simplified",
-            question,
-        )
-
-    # ---------------------------------------------------------------
-    # 2️⃣ Find or create the conversation
-    # ---------------------------------------------------------------
-
+    # ------------------------------------------------------------------
+    # 2. Find or create the conversation.
+    # ------------------------------------------------------------------
     if conv_id:
-
         conversation = get_object_or_404(
             Conversation,
             pk=conv_id,
             user=request.user,
         )
-
     else:
-
         conversation = Conversation.objects.create(
             user=request.user,
             title=question[:80],
         )
 
-    # ---------------------------------------------------------------
-    # 3️⃣ Search accessible SLM content
-    # ---------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # 3. Search the user's accessible SLM content.
     #
-    # This is intentionally done BEFORE OpenAI is called.
+    # If relevant SLM material exists:
+    #   source = "slm"
     #
-    # find_relevant_slm_context() is responsible for:
+    # Otherwise:
+    #   source = "general"
     #
-    #   - checking the user's accessible subjects
-    #   - checking accessible modules
-    #   - checking accessible personal materials
-    #   - checking relevance
-    #   - returning only relevant context
-    #
-    # If retrieval fails, we safely fall back to general knowledge
-    # rather than breaking the AI Helper.
-    # ---------------------------------------------------------------
-
+    # The source information is later stored in Message so it survives
+    # page reloads and conversation reopening.
+    # ------------------------------------------------------------------
     try:
-
         slm_result = find_relevant_slm_context(
             request.user,
             question,
         )
-
     except Exception:
-
         log.exception(
             "SLM context lookup failed for user=%s",
             request.user.pk,
@@ -448,88 +381,63 @@ def helper_api(request):
             "context": "",
         }
 
-    # ---------------------------------------------------------------
-    # 4️⃣ Decide answer source
-    # ---------------------------------------------------------------
-
     if slm_result.get("found"):
-
         answer_source = "slm"
+        answer_source_label = "From your learning materials"
+        source_metadata = slm_result.get("sources", [])
+        slm_context = slm_result.get("context", "")
 
-        answer_source_label = (
-            "From your learning materials"
-        )
-
+        # --------------------------------------------------------------
+        # Tell the AI to use the user's learning materials as its
+        # primary source.
+        # --------------------------------------------------------------
         system_prompt = (
-            f"{base_system_prompt}\n\n"
-
-            "IMPORTANT SOURCE INSTRUCTION:\n"
-            "Relevant learning material was found in the "
-            "user's accessible EduAlly SLM content.\n\n"
-
-            "Use the supplied SLM material as the PRIMARY "
-            "SOURCE for answering the user's question.\n\n"
-
-            "Do not claim that information came from an SLM "
-            "source unless it is supported by the supplied "
-            "material.\n\n"
-
-            "You may explain, simplify, summarize, or connect "
-            "ideas from the supplied material, but do not "
-            "contradict it.\n\n"
-
-            "If the supplied material does not actually contain "
-            "the answer, do not pretend that it does.\n\n"
-
-            "ACCESSIBLE SLM MATERIAL:\n"
-            "----------------------------------------\n"
-            f"{slm_result.get('context', '')}\n"
-            "----------------------------------------"
+            f"{system_prompt}\n\n"
+            "IMPORTANT LEARNING MATERIAL INSTRUCTION:\n"
+            "Relevant learning materials from the user's accessible "
+            "learning content are provided below.\n\n"
+            "Use these learning materials as the primary source for "
+            "answering the user's question. Base your answer on the "
+            "provided material when it contains the information needed.\n"
+            "Do not claim that the information came from the learning "
+            "materials unless it is actually supported by them.\n"
+            "If the material does not completely answer the question, "
+            "you may supplement it with general knowledge, but do not "
+            "invent information that is not supported.\n\n"
+            "LEARNING MATERIAL:\n"
+            f"{slm_context}"
         )
 
     else:
-
         answer_source = "general"
+        answer_source_label = "General knowledge"
+        source_metadata = []
 
-        answer_source_label = (
-            "General knowledge"
-        )
-
+        # --------------------------------------------------------------
+        # No relevant SLM material was found.
+        # --------------------------------------------------------------
         system_prompt = (
-            f"{base_system_prompt}\n\n"
-
-            "IMPORTANT SOURCE INSTRUCTION:\n"
-            "No sufficiently relevant material was found in "
-            "the user's accessible EduAlly SLM content.\n\n"
-
-            "Answer the question using general knowledge.\n\n"
-
-            "Do not claim that the answer came from an "
-            "EduAlly learning module or personal material.\n\n"
-
-            "The response should be educational, accurate, "
-            "and clear."
+            f"{system_prompt}\n\n"
+            "There is no relevant learning material available to answer "
+            "this specific question. Answer using your general knowledge. "
+            "Do not pretend that the answer came from the user's learning "
+            "materials."
         )
 
-    # ---------------------------------------------------------------
-    # 5️⃣ Gather recent conversation history
-    # ---------------------------------------------------------------
-
+    # ------------------------------------------------------------------
+    # 4. Gather recent conversation history.
+    # ------------------------------------------------------------------
     if conv_id:
-
         history = _last_n_turns(
             conversation,
             n_turns=8,
         )
-
     else:
-
         history = []
 
-    # ---------------------------------------------------------------
-    # 6️⃣ Build final OpenAI message list
-    # ---------------------------------------------------------------
-
+    # ------------------------------------------------------------------
+    # 5. Build OpenAI messages.
+    # ------------------------------------------------------------------
     openai_messages = [
         {
             "role": "system",
@@ -546,24 +454,18 @@ def helper_api(request):
         }
     )
 
-    # ---------------------------------------------------------------
-    # 7️⃣ Ask OpenAI
-    # ---------------------------------------------------------------
-
+    # ------------------------------------------------------------------
+    # 6. Ask OpenAI.
+    # ------------------------------------------------------------------
     try:
-
         ai_reply = _call_openai(
             openai_messages,
             level=level,
         )
 
     except Exception as exc:
-
         log.error(
-            (
-                "OpenAI request failed – falling back "
-                "to canned response: %s"
-            ),
+            "OpenAI request failed - falling back to canned response: %s",
             exc,
         )
 
@@ -573,24 +475,14 @@ def helper_api(request):
             f"“{question}”."
         )
 
-    # ---------------------------------------------------------------
-    # 8️⃣ Persist both sides of the conversation
-    # ---------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # 7. Persist both user + AI messages.
     #
-    # The important change is that the AI Message now permanently
-    # stores:
-    #
-    #   source_type
-    #   source_label
-    #   source_metadata
-    #
-    # This is what makes the source indicator survive reloads.
-    # ---------------------------------------------------------------
-
-    source_metadata = slm_result.get(
-        "sources",
-        [],
-    )
+    # IMPORTANT:
+    # The source fields are stored directly on the AI Message.
+    # This is what makes the source indicator persistent after reload.
+    # ------------------------------------------------------------------
+    from django.db import transaction
 
     with transaction.atomic():
 
@@ -609,7 +501,7 @@ def helper_api(request):
                     role="ai",
                     content=ai_reply,
 
-                    # Persistent source information.
+                    # Persistent source information
                     source_type=answer_source,
                     source_label=answer_source_label,
                     source_metadata=source_metadata,
@@ -617,35 +509,27 @@ def helper_api(request):
             ]
         )
 
-    # ---------------------------------------------------------------
-    # 9️⃣ Keep conversation title in sync
-    # ---------------------------------------------------------------
-
+    # ------------------------------------------------------------------
+    # 8. Keep the conversation title synchronized.
+    # ------------------------------------------------------------------
     if not conversation.title:
-
         conversation.title = question[:80]
-
         conversation.save(
             update_fields=["title"]
         )
 
-    # ---------------------------------------------------------------
-    # 🔟 Return answer + source information
-    # ---------------------------------------------------------------
-
+    # ------------------------------------------------------------------
+    # 9. Return the answer + source information to JavaScript.
+    # ------------------------------------------------------------------
     return JsonResponse(
         {
             "answer": ai_reply,
 
-            # Used immediately by the current frontend response.
             "source": answer_source,
-
             "source_label": answer_source_label,
-
             "sources": source_metadata,
 
             "conversation_id": conversation.id,
-
             "title": conversation.title,
         }
     )
