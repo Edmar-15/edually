@@ -128,6 +128,140 @@ def _call_openai(
 
 
 # ----------------------------------------------------------------------
+# Socratic mode – completely independent from SLM/general source logic
+# ----------------------------------------------------------------------
+
+def _handle_socratic_request(
+    request,
+    question: str,
+    conversation: Conversation,
+) -> JsonResponse:
+    """
+    Handle Socratic mode separately from Simple/Technical mode.
+
+    Socratic mode:
+    - Does NOT search SLM content.
+    - Does NOT use the Simple/Technical source logic.
+    - Uses a Socratic-specific system prompt.
+    - Stores the response source as "socratic".
+    """
+
+    system_prompt = """
+You are EduAlly's Socratic learning assistant.
+
+Your purpose is to help the student THINK and discover the answer,
+not simply provide the answer.
+
+Follow these rules:
+
+1. Do not immediately give the final answer to the student's question.
+2. Ask a meaningful guiding question that helps the student reason.
+3. Ask only ONE main question at a time.
+4. Use the student's previous responses to decide what to ask next.
+5. If the student's reasoning is correct, acknowledge it briefly and
+   guide them toward the next step.
+6. If the student's reasoning is incorrect, do not simply give the answer.
+   Point out the issue and provide a small hint or guiding question.
+7. If the student is confused, simplify the reasoning without directly
+   solving the entire problem.
+8. Encourage the student to explain their reasoning.
+9. Avoid long lectures and unnecessary definitions.
+10. Do not mention SLM, learning-material sources, or general-knowledge
+    source labels.
+11. Stay focused on helping the student understand the concept through
+    guided questioning.
+
+Your response should normally contain:
+- a brief acknowledgement or observation when useful
+- ONE guiding question
+"""
+
+    # Get recent conversation history.
+    history = _last_n_turns(
+        conversation,
+        n_turns=8,
+    )
+
+    openai_messages = [
+        {
+            "role": "system",
+            "content": system_prompt,
+        }
+    ]
+
+    openai_messages.extend(history)
+
+    openai_messages.append(
+        {
+            "role": "user",
+            "content": question,
+        }
+    )
+
+    try:
+        ai_reply = _call_openai(
+            openai_messages,
+            level="socratic",
+        )
+
+    except Exception as exc:
+        log.error(
+            "Socratic OpenAI request failed: %s",
+            exc,
+        )
+
+        return JsonResponse(
+            {
+                "error": "The Socratic AI could not respond right now."
+            },
+            status=500,
+        )
+
+    # Persist the Socratic exchange.
+    with transaction.atomic():
+
+        Message.objects.bulk_create(
+            [
+                Message(
+                    conversation=conversation,
+                    user=request.user,
+                    role="user",
+                    content=question,
+                ),
+
+                Message(
+                    conversation=conversation,
+                    user=request.user,
+                    role="ai",
+                    content=ai_reply,
+                    source_type="socratic",
+                    source_label="Socratic learning",
+                    source_metadata=[],
+                ),
+            ]
+        )
+
+    if not conversation.title:
+        conversation.title = question[:80]
+        conversation.save(
+            update_fields=["title"]
+        )
+
+    return JsonResponse(
+        {
+            "answer": ai_reply,
+
+            "source": "socratic",
+            "source_label": "Socratic learning",
+            "sources": [],
+
+            "conversation_id": conversation.id,
+            "title": conversation.title,
+        }
+    )
+
+
+# ----------------------------------------------------------------------
 # 2️⃣ Conversation summaries
 # ----------------------------------------------------------------------
 
@@ -322,6 +456,35 @@ def helper_api(request):
         return JsonResponse(
             {"error": "No question supplied"},
             status=400,
+        )
+
+    # ------------------------------------------------------------------
+    # SOCRATIC MODE
+    #
+    # This branch MUST happen before:
+    #   - system_prompt_for()
+    #   - find_relevant_slm_context()
+    #
+    # Socratic mode has its own behavior and source handling.
+    # ------------------------------------------------------------------
+    if level == "socratic":
+
+        if conv_id:
+            conversation = get_object_or_404(
+                Conversation,
+                pk=conv_id,
+                user=request.user,
+            )
+        else:
+            conversation = Conversation.objects.create(
+                user=request.user,
+                title=question[:80],
+            )
+
+        return _handle_socratic_request(
+            request=request,
+            question=question,
+            conversation=conversation,
         )
 
     # ------------------------------------------------------------------
