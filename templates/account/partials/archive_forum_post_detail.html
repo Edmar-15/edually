@@ -132,6 +132,46 @@
         margin-left: auto;
     }
 
+    .archive-detail-action-icon {
+        display: none;
+    }
+
+    /* Mobile archive header actions */
+    @media (max-width: 720px) {
+        .archive-detail-actions {
+            width: auto;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+        }
+
+        .archive-detail-action-text {
+            display: none;
+        }
+
+        .archive-detail-action-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .archive-detail-actions .button {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.4rem;
+        }
+
+        .archive-detail-actions .button i {
+            margin: 0;
+            font-size: 15px;
+        }
+    }
+
+
     .archive-detail-content {
         color: var(--text, #0f172a);
         line-height: 1.8;
@@ -229,16 +269,21 @@
                             name="action"
                             value="unarchive"
                             class="button"
+                            title="Unarchive"
+                            aria-label="Unarchive"
                             style="background: var(--primary); border-color: var(--primary); color: white; border-radius: .3rem;">
-                        Unarchive
+                        <i class="fas fa-box-open archive-detail-action-icon" aria-hidden="true"></i>
+                        <span class="archive-detail-action-text">Unarchive</span>
                     </button>
                 </form>
 
                 <a href="#"
-                   class="button button-primary button--danger js-modal-trigger"
-                   data-url="{% url 'account:archive-forum-post-delete-modal' post.id %}"
-                   title="Delete this post permanently">
-                    Delete permanently
+                    class="button button-primary button--danger js-modal-trigger"
+                    data-url="{% url 'account:archive-forum-post-delete-modal' post.id %}"
+                    title="Delete this post permanently"
+                    aria-label="Delete this post permanently">
+                    <i class="fas fa-trash archive-detail-action-icon" aria-hidden="true"></i>
+                    <span class="archive-detail-action-text">Delete permanently</span>
                 </a>
             </div>
         </header>
