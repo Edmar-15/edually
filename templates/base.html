@@ -104,7 +104,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 
-<body>
+<body {% block body_attributes %}{% endblock  %}>
     {% if messages %}
       <ul class="messages" aria-live="polite" style="display:none;">
         {% for message in messages %}
