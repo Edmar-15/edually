@@ -70,6 +70,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=0,
         help_text="Points earned from helpful posts and replies. Starts at 0.",
     )
+    
+    # Onboarding
+    # Becomes True when the user visits the Discussion Forum.
+    onboarding_forum_visited = models.BooleanField(
+        default=False,
+        help_text="Whether the user has visited the Discussion Forum.",
+    )
 
     objects = UserManager()
 

@@ -51,13 +51,13 @@ from .forms import (
     AddPasswordForm,
     ContactForm,
 )
-from .models import UserConsent, User, StudentProfile, PushSubscription
+from .models import UserConsent, User, StudentProfile, PushSubscription, TeacherProfile
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
 # Other apps used in the dashboard
 from slm.models import Module, PersonalMaterial, Subject
-from forum.models import Post
+from forum.models import Post, Report
 from aihelper.models import Conversation, Message
 
 log = logging.getLogger(__name__)
@@ -383,93 +383,339 @@ def _get_recent_personal_material_ids(request):
 
 @login_required(login_url='account:login')
 def dashboard(request):
-    if user_is_in_group(request.user, GROUP_TEACHER):
-        subjects = request.user.subjects.filter(is_archived=False)[:3]
-        modules = Module.objects.filter(subject__author=request.user, is_archived=False).select_related("subject")[:3]
-        subject_count = request.user.subjects.filter(is_archived=False).count()
-        module_count = Module.objects.filter(subject__author=request.user, is_archived=False).count()
-    else:
-        subjects = Subject.objects.filter(is_archived=False)[:3]
-        modules = Module.objects.filter(is_archived=False, subject__is_archived=False).select_related("subject")[:3]
-        subject_count = Subject.objects.filter(is_archived=False).count()
-        module_count = Module.objects.filter(is_archived=False, subject__is_archived=False).count()
+    is_teacher = user_is_in_group(request.user, GROUP_TEACHER)
 
+    # -------------------------------------------------------------
+    # Subjects and SLM modules
+    # -------------------------------------------------------------
+    if is_teacher:
+        # Teachers see the subjects they own and their non-archived modules.
+        subjects_qs = request.user.subjects.filter(
+            is_archived=False
+        )
+
+        modules_qs = Module.objects.filter(
+            subject__author=request.user,
+            subject__is_archived=False,
+            is_archived=False,
+        ).select_related("subject")
+
+    elif getattr(request.user, "is_student_member", False):
+        # Students must see exactly the same subjects that are available
+        # through the SLM subject-list API:
+        #   - archived subjects excluded
+        #   - year level required
+        #   - subject year must match the student's year
+        subjects_qs = Subject.objects.filter(
+            is_archived=False
+        )
+
+        year_label = getattr(request.user, "year_level", None) or ""
+
+        import re
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            # No year level means the student has no accessible SLM subjects.
+            subjects_qs = subjects_qs.none()
+        else:
+            numeric_year = match.group()
+            subjects_qs = subjects_qs.filter(
+                year=numeric_year
+            )
+
+        # Modules are counted only when their parent subject is accessible
+        # to the current student.
+        modules_qs = Module.objects.filter(
+            subject__in=subjects_qs,
+            subject__is_archived=False,
+            is_archived=False,
+        ).select_related("subject")
+
+    else:
+        # Fallback for other authenticated users.
+        subjects_qs = Subject.objects.filter(
+            is_archived=False
+        )
+
+        modules_qs = Module.objects.filter(
+            subject__is_archived=False,
+            is_archived=False,
+        ).select_related("subject")
+
+    subjects = subjects_qs[:3]
+    modules = modules_qs[:3]
+
+    subject_count = subjects_qs.count()
+    module_count = modules_qs.count()
+
+    # -------------------------------------------------------------
+    # Role-specific dashboard metric
+    # -------------------------------------------------------------
+    if is_teacher:
+        # Teachers do not use Personal Materials.
+        # Show unresolved forum reports instead.
+        pending_report_count = Report.objects.filter(
+            is_resolved=False
+        ).count()
+
+        personal_material_count = 0
+    else:
+        # Personal Materials are student-only.
+        personal_materials_qs = PersonalMaterial.objects.filter(
+            author=request.user,
+            is_archived=False
+        )
+
+        personal_material_count = personal_materials_qs.count()
+        pending_report_count = 0
+
+    # -------------------------------------------------------------
+    # User activity
+    # -------------------------------------------------------------
+    forum_activity_count = Post.objects.filter(
+        author=request.user,
+        is_deleted=False,
+        is_archived=False
+    ).count()
+
+    ai_activity_count = Conversation.objects.filter(
+        user=request.user
+    ).count()
+
+    activity_count = (
+        personal_material_count
+        + forum_activity_count
+        + ai_activity_count
+    )
+
+    # -------------------------------------------------------------
+    # Recently visited modules
+    # -------------------------------------------------------------
     recent_module_ids = _get_recent_module_ids(request)
+
     recent_modules = list(
-        Module.objects.filter(pk__in=recent_module_ids)
+        Module.objects.filter(
+            pk__in=recent_module_ids,
+            is_archived=False
+        )
         .select_related("subject")
         .order_by(
             models.Case(
-                *[models.When(pk=pk, then=pos) for pos, pk in enumerate(recent_module_ids)],
+                *[
+                    models.When(pk=pk, then=pos)
+                    for pos, pk in enumerate(recent_module_ids)
+                ],
                 output_field=models.IntegerField(),
             )
         )
     ) if recent_module_ids else []
 
-    # -----------------------------------------------------------------
-    #  Personal materials – recent visits (new)
-    # -----------------------------------------------------------------
+    # -------------------------------------------------------------
+    # Recently visited personal materials
+    # -------------------------------------------------------------
     recent_material_ids = _get_recent_personal_material_ids(request)
-    recent_personal_materials = list(
-        PersonalMaterial.objects.filter(pk__in=recent_material_ids)
-        .select_related("author")
-        .order_by(
-            models.Case(
-                *[models.When(pk=pk, then=pos) for pos, pk in enumerate(recent_material_ids)],
-                output_field=models.IntegerField(),
+
+    # -------------------------------------------------------------
+    # Recently visited personal materials
+    # -------------------------------------------------------------
+    if is_teacher:
+        recent_personal_materials = []
+    else:
+        recent_material_ids = _get_recent_personal_material_ids(request)
+
+        recent_personal_materials = list(
+            PersonalMaterial.objects.filter(
+                pk__in=recent_material_ids,
+                is_archived=False
             )
+            .select_related("author")
+            .order_by(
+                models.Case(
+                    *[
+                        models.When(pk=pk, then=pos)
+                        for pos, pk in enumerate(recent_material_ids)
+                    ],
+                    output_field=models.IntegerField(),
+                )
+            )
+        ) if recent_material_ids else []
+
+    # -------------------------------------------------------------
+    # Continue where you left off
+    # -------------------------------------------------------------
+    continue_module = recent_modules[0] if recent_modules else None
+
+    continue_material = (
+        recent_personal_materials[0]
+        if recent_personal_materials
+        else None
+    )
+
+    # -------------------------------------------------------------
+    # ONBOARDING
+    # -------------------------------------------------------------
+
+    # 1. Complete your profile
+    # -------------------------------------------------------------
+    if is_teacher:
+        try:
+            teacher_profile = request.user.teacher_profile
+        except TeacherProfile.DoesNotExist:
+            teacher_profile = None
+
+        profile_complete = bool(
+            request.user.first_name.strip()
+            and request.user.last_name.strip()
+            and teacher_profile
+            and teacher_profile.employee_id.strip()
+            and teacher_profile.department.strip()
         )
-    ) if recent_material_ids else []
+    else:
+        profile_complete = bool(
+            request.user.first_name.strip()
+            and request.user.last_name.strip()
+            and request.user.program
+            and request.user.year_level
+        )
 
-    recent_activity = [
-        {
-            "title": "Continue where you left off",
-            "detail": "Open your latest module and pick up your progress in a few seconds.",
-            "icon": "fas fa-play-circle",
-        },
-        {
-            "title": "Ask the AI Helper",
-            "detail": "Get guidance on confusing topics before they become blockers.",
-            "icon": "fas fa-robot",
-        },
-        {
-            "title": "Join the forum",
-            "detail": "See what classmates are asking and share a useful insight.",
-            "icon": "fas fa-comment",
-        },
-    ]
 
-    onboarding_steps = [
-        {
-            "title": "Complete your profile",
-            "detail": "Add your course details and a profile photo so your learning space feels personal.",
-            "done": bool(request.user.first_name or request.user.last_name or request.user.program),
-        },
-        {
-            "title": "Open a module",
-            "detail": "Review the latest materials and start building momentum with one small step.",
-            "done": bool(recent_modules),
-        },
-        {
-            "title": "Ask one question",
-            "detail": "Share what you are stuck on and let the community or AI helper support you.",
-            "done": (
-                Conversation.objects.filter(user=request.user).exists()
-                or Message.objects.filter(user=request.user, role="user").exists()
-            ),
-        },
-    ]
+    # -------------------------------------------------------------
+    # 2. Teacher: Create a subject
+    #    Student: Explore first SLM
+    # -------------------------------------------------------------
+    if is_teacher:
+        subject_created = subjects_qs.exists()
+    else:
+        first_slm_explored = bool(recent_modules)
+
+
+    # -------------------------------------------------------------
+    # 3. Teacher: Upload an SLM
+    #    Student: Ask the AI Helper
+    # -------------------------------------------------------------
+    if is_teacher:
+        slm_uploaded = modules_qs.exists()
+    else:
+        ai_helper_used = (
+            Conversation.objects.filter(
+                user=request.user
+            ).exists()
+            or Message.objects.filter(
+                user=request.user,
+                role="user"
+            ).exists()
+        )
+
+
+    # -------------------------------------------------------------
+    # 4. Visit the Discussion Forum
+    # -------------------------------------------------------------
+    forum_visited = request.user.onboarding_forum_visited
+
+
+    # -------------------------------------------------------------
+    # Build role-specific onboarding steps
+    # -------------------------------------------------------------
+    if is_teacher:
+        onboarding_steps = [
+            {
+                "key": "profile",
+                "title": "Complete your profile",
+                "detail": "Add your teacher information so your EduAlly profile is ready.",
+                "done": profile_complete,
+                "url": "account:profile_edit",
+            },
+            {
+                "key": "subject",
+                "title": "Create a subject",
+                "detail": "Create a subject to organize your learning materials.",
+                "done": subject_created,
+                "url": "slm:management",
+            },
+            {
+                "key": "slm",
+                "title": "Upload an SLM",
+                "detail": "Add a Self-Learning Module to your subject for students to access.",
+                "done": slm_uploaded,
+                "url": "slm:management",
+            },
+            {
+                "key": "forum",
+                "title": "Visit the Discussion Forum",
+                "detail": "Review discussions and participate in the conversation.",
+                "done": forum_visited,
+                "url": "forum:list",
+            },
+        ]
+
+    else:
+        onboarding_steps = [
+            {
+                "key": "profile",
+                "title": "Complete your profile",
+                "detail": "Add your basic information so your EduAlly space is ready.",
+                "done": profile_complete,
+                "url": "account:profile_edit",
+            },
+            {
+                "key": "slm",
+                "title": "Explore your first SLM",
+                "detail": "Open a Self Learning Module and start exploring your study materials.",
+                "done": first_slm_explored,
+                "url": "slm:slmlists",
+            },
+            {
+                "key": "ai",
+                "title": "Ask the AI Helper",
+                "detail": "Ask your first question and get help with a topic you are studying.",
+                "done": ai_helper_used,
+                "url": "aihelper:helper",
+            },
+            {
+                "key": "forum",
+                "title": "Visit the Discussion Forum",
+                "detail": "See what other students are discussing and join the conversation.",
+                "done": forum_visited,
+                "url": "forum:list",
+            },
+        ]
+
+
+    # -------------------------------------------------------------
+    # Onboarding progress
+    # -------------------------------------------------------------
+    onboarding_completed = sum(
+        1 for step in onboarding_steps if step["done"]
+    )
+
+    onboarding_complete = onboarding_completed == len(onboarding_steps)
 
     context = {
         "subjects": subjects,
         "modules": modules,
+
+        "subject_count": subject_count,
+        "module_count": module_count,
+        "personal_material_count": personal_material_count,
+        "pending_report_count": pending_report_count,
+        "activity_count": activity_count,
+
         "recent_modules": recent_modules,
         "recent_personal_materials": recent_personal_materials,
-        "recent_activity": recent_activity,
-        "module_count": module_count,
-        "subject_count": subject_count,
+
+        "continue_module": continue_module,
+        "continue_material": continue_material,
+
+        "is_teacher": is_teacher,
+
+        # Onboarding
         "onboarding_steps": onboarding_steps,
+        "onboarding_completed": onboarding_completed,
+        "onboarding_total": len(onboarding_steps),
+        "onboarding_complete": onboarding_complete,
     }
+
     return render(request, "dashboard.html", context)
 
 
@@ -763,6 +1009,15 @@ def settings(request):
         )
         .order_by('-created_at')[:10]
     )
+    
+    # ---- ARCHIVED SUBJECTS ------------------------------------------------
+    archived_subjects = (
+        Subject.objects.filter(
+            author=request.user,
+            is_archived=True,
+        )
+        .order_by('-updated_at')[:10]
+    )
 
     # ---- ARCHIVED PERSONAL LEARNING MATERIAL ---------------------------------
     archived_materials = (
@@ -784,6 +1039,7 @@ def settings(request):
         request,
         posts=archived_posts,
         modules=archived_modules,
+        subjects=archived_subjects,
         personal_materials=archived_materials,
     )
     context["otp_secret"] = otp_secret
@@ -792,10 +1048,11 @@ def settings(request):
     return render(request, "account/settings.html", context)
 
 
-def _settings_context(request, delete_form=None, posts=None, modules=None, personal_materials=None):
+def _settings_context(request, delete_form=None, posts=None, modules=None, subjects=None, personal_materials=None,):
     return {
         "posts": posts,
         "modules": modules,
+        "subjects": subjects,
         "personal_materials": personal_materials,
         "delete_form": delete_form or DeleteAccountForm(user=request.user),
     }
@@ -994,10 +1251,26 @@ class ConsentRequiredView(TemplateView):
         # Record the user’s acceptance of the latest policy
         UserConsent.objects.update_or_create(
             user=request.user,
-            defaults={"version": django_settings.POLICY_VERSION, "accepted_at": timezone.now()},
+            defaults={
+                "version": django_settings.POLICY_VERSION,
+                "accepted_at": timezone.now(),
+            },
         )
+
         # Send them back to where they originally wanted to go
-        next_url = request.session.pop("post_consent_redirect", reverse("account:dashboard"))
+        next_url = request.session.pop(
+            "post_consent_redirect",
+            reverse("account:dashboard"),
+        )
+
+        # Never redirect to static or media files.
+        if (
+            not next_url
+            or next_url.startswith("/static/")
+            or next_url.startswith("/media/")
+        ):
+            next_url = reverse("account:dashboard")
+
         return redirect(next_url)
 
     def get_context_data(self, **kwargs):
@@ -1356,6 +1629,60 @@ def archive_module_delete(request, pk):
     )
 
 
+@login_required(login_url='account:login')
+def archive_subject_delete_modal(request, pk):
+    """
+    Return the confirmation modal for permanently deleting
+    an archived subject.
+    """
+    subject = get_object_or_404(
+        Subject,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+
+    html = render_to_string(
+        'account/partials/archive_subject_delete_modal.html',
+        {
+            'subject': subject,
+        },
+        request=request,
+    )
+
+    return JsonResponse({'html': html})
+
+
+@require_POST
+@login_required(login_url='account:login')
+def archive_subject_delete(request, pk):
+    """
+    Permanently delete an archived subject.
+
+    Because Module.subject uses CASCADE, the subject's modules
+    will also be deleted.
+    """
+    subject = get_object_or_404(
+        Subject,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+
+    subject.delete()
+
+    messages.success(
+        request,
+        'Subject permanently deleted.',
+    )
+
+    return JsonResponse(
+        {
+            'success': True,
+            'redirect': reverse('account:archive-subjects'),
+        }
+    )
+
 # -----------------------------------------------------------------
 #  DELETE MODAL – Personal material
 # -----------------------------------------------------------------
@@ -1395,6 +1722,72 @@ def archive_personal_material_delete(request, pk):
             "success": True,
             "redirect": reverse("account:archive-personal-materials"),
         }
+    )
+    
+
+# -----------------------------------------------------------------
+#   Subjects (teacher / subject owner only)
+# -----------------------------------------------------------------
+
+@login_required(login_url='account:login')
+def archive_subject_list(request):
+    """
+    Show subjects archived by the currently logged-in teacher.
+    """
+    subjects = (
+        Subject.objects.filter(
+            author=request.user,
+            is_archived=True,
+        )
+        .order_by('-updated_at')
+    )
+
+    return render(
+        request,
+        'account/partials/archive_subjects.html',
+        {'subjects': subjects},
+    )
+
+
+@login_required(login_url='account:login')
+def archive_subject_detail(request, pk):
+    """
+    Show one archived subject and allow the owner to restore it.
+    """
+    subject = get_object_or_404(
+        Subject,
+        pk=pk,
+        author=request.user,
+        is_archived=True,
+    )
+
+    modules = (
+        subject.modules
+        .filter(is_archived=False)
+        .order_by('module_number')
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'unarchive':
+            subject.is_archived = False
+            subject.save(update_fields=['is_archived'])
+
+            messages.success(
+                request,
+                'Subject has been restored.',
+            )
+
+            return redirect('account:archive-subjects')
+
+    return render(
+        request,
+        'account/partials/archive_subject_detail.html',
+        {
+            'subject': subject,
+            'modules': modules,
+        },
     )
     
 

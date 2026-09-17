@@ -1,127 +1,438 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduAlly – My Profile</title>
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-</head>
-<body>
+{% load account_extras %}
+
+{% block title %}EduAlly – My Profile{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet"
+      href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+
 <div class="dashboard-container">
+
     {% include "components/navigations.html" %}
 
     <main class="main-content">
+
+        <!-- =====================================================
+             CONTENT HEADER
+        ====================================================== -->
+
         <header class="content-header">
-                <div class="header-left">
-                    <button type="button"
-                            class="mobile-sidebar-trigger"
-                            aria-controls="sidebar"
-                            aria-expanded="false"
-                            aria-label="Open navigation sidebar">
-                        <span class="sr-only">Toggle sidebar</span>
-                        <svg class="sidebar-trigger-icon"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                            focusable="false">
-                            <path d="M4 7h16M4 12h16M4 17h16"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"/>
-                        </svg>
-                    </button>
-                    <p>Profile</p>
-                </div>
-                <div class="header-right">
-                    <a href="{% url 'account:settings' %}" class="button primary-button profile-settings-link">
-                        <i class="fas fa-cog nav-icon"></i>
-                    </a>
-                </div>
-            </header>
+
+            <div class="header-left">
+
+                <button
+                    type="button"
+                    class="mobile-sidebar-trigger"
+                    aria-controls="sidebar"
+                    aria-expanded="false"
+                    aria-label="Open navigation sidebar"
+                >
+                    <span class="sr-only">
+                        Toggle sidebar
+                    </span>
+
+                    <svg
+                        class="sidebar-trigger-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path
+                            d="M4 7h16M4 12h16M4 17h16"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                </button>
+
+                <p class="content-header-title">
+                    Profile
+                </p>
+
+            </div>
+
+            <div class="header-right">
+
+                <a
+                    href="{% url 'account:settings' %}"
+                    class="button primary-button profile-settings-link"
+                    aria-label="Profile settings"
+                >
+                    <i class="fas fa-cog nav-icon"></i>
+                </a>
+
+            </div>
+
+        </header>
+
+
+        <!-- =====================================================
+             CONTENT
+        ====================================================== -->
 
         <div class="dashboard-content">
+
             <div class="container">
+
                 {% if messages %}
-                    <ul class="messages" aria-live="polite">
+                    <ul
+                        class="messages"
+                        aria-live="polite"
+                    >
                         {% for message in messages %}
-                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                            <li
+                                {% if message.tags %}
+                                    class="{{ message.tags }}"
+                                {% endif %}
+                            >
+                                {{ message }}
+                            </li>
                         {% endfor %}
                     </ul>
                 {% endif %}
 
+
                 <section class="profile-page profile-section">
+
                     <div class="profile-grid">
-                <!-- LEFT – read‑only overview -->
-                <div class="profile-overview-card">
-                    <div class="profile-top">
-                        <div class="profile-avatar">
-                            {% load account_extras %}
-                            {% if user_obj.avatar %}
-                                <img src="{{ user_obj.avatar.url }}" alt="Avatar">
+
+                        <!-- =================================================
+                             PROFILE OVERVIEW
+                        ================================================== -->
+
+                        <div class="profile-overview-card">
+
+                            <div class="profile-top">
+
+                                <!-- Avatar -->
+
+                                <div class="profile-avatar">
+
+                                    {% if user_obj.avatar %}
+
+                                        <img
+                                            src="{{ user_obj.avatar.url }}"
+                                            alt="Profile picture"
+                                        >
+
+                                    {% else %}
+
+                                        <span class="avatar-fallback avatar-fallback--large">
+                                            {{ user_obj|initials }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <!-- Name -->
+
+                                <div>
+
+                                    <h2>
+                                        {{ user_obj.get_full_name|default:user_obj.email }}
+                                    </h2>
+
+                                    <p class="muted-text">
+                                        {{ user_obj.username|default:"(no username)" }}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 ROLE BADGE
+                            ================================================== -->
+
+                            {% if user_obj.is_teacher_member %}
+
+                                <div class="profile-badge">
+                                    Teacher
+                                </div>
+
+                            {% elif user_obj.is_student_member %}
+
+                                <div class="profile-badge">
+                                    Active Student
+                                </div>
+
                             {% else %}
-                                <span class="avatar-fallback avatar-fallback--large">{{ user_obj|initials }}</span>
+
+                                <div class="profile-badge">
+                                    User
+                                </div>
+
                             {% endif %}
+
+
+                            <!-- =================================================
+                                 PROFILE STRENGTH
+                            ================================================== -->
+
+                            <div class="profile-highlights">
+
+                                <div class="profile-highlight-card">
+
+                                    <span class="highlight-label">
+                                        Profile
+                                    </span>
+
+                                    <strong>
+                                        {% if user_obj.is_teacher_member %}
+                                            Teacher Profile
+                                        {% elif user_obj.is_student_member %}
+                                            Student Profile
+                                        {% else %}
+                                            Account Profile
+                                        {% endif %}
+                                    </strong>
+
+                                    <p>
+                                        Keep your personal information
+                                        current so your EduAlly account
+                                        stays accurate.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 TEACHER INFORMATION
+                            ================================================== -->
+
+                            {% if user_obj.is_teacher_member %}
+
+                                {% if user_obj.teacher_profile %}
+
+                                    <div class="profile-summary">
+
+                                        <p>
+                                            <strong>
+                                                Employee ID
+                                            </strong>
+
+                                            <span>
+                                                {{ user_obj.teacher_profile.employee_id|default:"–" }}
+                                            </span>
+                                        </p>
+
+                                    </div>
+
+
+                                    <div class="profile-summary">
+
+                                        <p>
+                                            <strong>
+                                                Department
+                                            </strong>
+
+                                            <span>
+                                                {{ user_obj.teacher_profile.department|default:"–" }}
+                                            </span>
+                                        </p>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="profile-summary">
+
+                                        <p>
+                                            <strong>
+                                                Employee ID
+                                            </strong>
+
+                                            <span>
+                                                –
+                                            </span>
+                                        </p>
+
+                                    </div>
+
+
+                                    <div class="profile-summary">
+
+                                        <p>
+                                            <strong>
+                                                Department
+                                            </strong>
+
+                                            <span>
+                                                –
+                                            </span>
+                                        </p>
+
+                                    </div>
+
+                                {% endif %}
+
+
+                                <div class="profile-summary">
+
+                                    <p>
+                                        <strong>
+                                            Role
+                                        </strong>
+
+                                        <span>
+                                            Teacher
+                                        </span>
+                                    </p>
+
+                                </div>
+
+
+                                <div class="profile-summary">
+
+                                    <p>
+                                        <strong>
+                                            Email
+                                        </strong>
+
+                                        <span>
+                                            {{ user_obj.email }}
+                                        </span>
+                                    </p>
+
+                                </div>
+
+
+                            <!-- =================================================
+                                 STUDENT INFORMATION
+                            ================================================== -->
+
+                            {% else %}
+
+                                <div class="profile-summary">
+
+                                    <p>
+                                        <strong>
+                                            Student ID
+                                        </strong>
+
+                                        <span>
+                                            {{ user_obj.student_id|default:"–" }}
+                                        </span>
+                                    </p>
+
+                                </div>
+
+
+                                <div class="profile-summary">
+
+                                    <p>
+                                        <strong>
+                                            Course / Program
+                                        </strong>
+
+                                        <span>
+                                            {{ user_obj.program|default:"–" }}
+                                        </span>
+                                    </p>
+
+                                </div>
+
+
+                                <div class="profile-summary">
+
+                                    <p>
+                                        <strong>
+                                            Year Level
+                                        </strong>
+
+                                        <span>
+                                            {{ user_obj.year_level|default:"–" }}
+                                        </span>
+                                    </p>
+
+                                </div>
+
+
+                                <div class="profile-summary">
+
+                                    <p>
+                                        <strong>
+                                            Email
+                                        </strong>
+
+                                        <span>
+                                            {{ user_obj.email }}
+                                        </span>
+                                    </p>
+
+                                </div>
+
+                            {% endif %}
+
+
+                            <!-- =================================================
+                                 ACTIONS
+                            ================================================== -->
+
+                            <div class="profile-actions">
+
+                                <a
+                                    href="{% url 'account:profile_edit' %}?tab=profile"
+                                    class="button primary-button"
+                                >
+                                    Edit Profile
+                                </a>
+
+
+                                {% if request.user.has_usable_password %}
+
+                                    <a
+                                        href="{% url 'account:profile_edit' %}?tab=password"
+                                        class="button outline-button"
+                                    >
+                                        Change Password
+                                    </a>
+
+                                {% else %}
+
+                                    <a
+                                        href="{% url 'account:add_password' %}?tab=password"
+                                        class="button outline-button"
+                                    >
+                                        Set Password
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
                         </div>
-                        <div>
-                            <h2>{{ user_obj.get_full_name|default:user_obj.email }}</h2>
-                            <p class="muted-text">{{ user_obj.username|default:"(no username)" }}</p>
-                        </div>
+
                     </div>
 
-                    <div class="profile-badge">Active Student</div>
+                </section>
 
-                    <div class="profile-highlights">
-                        <div class="profile-highlight-card">
-                            <span class="highlight-label">Profile strength</span>
-                            <strong>Almost there</strong>
-                            <p>Keep your details current so your learning space feels personal and easier to navigate.</p>
-                        </div>
-                    </div>
-
-                    <div class="profile-summary">
-                        <p><strong>Student ID</strong><span>{{ user_obj.student_id|default:"–" }}</span></p>
-                    </div>
-
-                    <div class="profile-summary">
-                        <p><strong>Course / Program</strong><span>{{ user_obj.program|default:"–" }}</span></p>
-                    </div>
-
-                    <div class="profile-summary">
-                        <p><strong>Year Level</strong><span>{{ user_obj.year_level|default:"–" }}</span></p>
-                    </div>
-
-                    <div class="profile-summary">
-                        <p><strong>Email</strong><span>{{ user_obj.email }}</span></p>
-                    </div>
-
-                    <div class="profile-actions">
-                        <a href="{% url 'account:profile_edit' %}?tab=profile" class="button primary-button">Edit Profile</a>
-
-                        {% if request.user.has_usable_password %}
-                            <a href="{% url 'account:profile_edit' %}?tab=password" class="button outline-button">Change Password</a>
-                        {% else %}
-                            <a href="{% url 'account:add_password' %}?tab=password" class="button outline-button">Set Password</a>
-                        {% endif %}
-                    </div>
-                </div>
             </div>
-        </section>
-            </div>
+
         </div>
+
     </main>
+
 </div>
-<script src="{% static 'js/toast_notifications.js' %}"></script>
-{# 1️⃣ Global modal placeholder – only once per page #}
-    {% include "components/global_modal.html" %}
 
-    {# 2️⃣ Modal JS – load after the DOM #}
-    <script src="{% static 'js/modal.js' %}" defer></script>
+{% include "components/global_modal.html" %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/modal.js' %}" defer></script>
 <script src="{% static 'js/account/floating_labels.js' %}"></script>
 <script src="{% static 'js/account/form_validation.js' %}"></script>
 <script src="{% static 'js/sidebar-toggle.js' %}" defer></script>
-</body>
-</html>
+{% endblock %}

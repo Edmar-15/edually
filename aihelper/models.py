@@ -45,6 +45,29 @@ class Message(models.Model):
     )
     role = models.CharField(max_length=4, choices=ROLE_CHOICES)
     content = models.TextField()
+    SOURCE_TYPE_CHOICES = [
+        ("slm", "SLM"),
+        ("general", "General Knowledge"),
+    ]
+
+    source_type = models.CharField(
+        max_length=20,
+        choices=SOURCE_TYPE_CHOICES,
+        null=True,
+        blank=True,
+        default=None,
+    )
+
+    source_label = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+    )
+
+    source_metadata = models.JSONField(
+        default=list,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -1,220 +1,226 @@
+{% extends "base.html" %}
 {% load static %}
 {% load account_extras %}
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-    <title>EduAlly – Settings</title>
 
-    <link rel="shortcut icon"
-          href="{% static "favicon.ico" %}"
-          type="image/x-icon">
+{% block title %}EduAlly – Settings{% endblock %}
 
-    <!-- Font‑Awesome (used throughout the dashboard UI) -->
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% block body_attributes %}data-user-email="{{ request.user.email }}"{% endblock %}
 
-    <!-- Core styling – same as the dashboard -->
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% block extra_head %}
+<style>
+    .settings-section + .settings-section {
+        margin-top: 3rem;
+    }
 
-    <style>
-        .settings-section + .settings-section { margin-top: 3rem; }
+    .archive-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
 
-        .archive-list { list-style:none; margin:0; padding:0; }
-        .archive-list li {
-            display:flex; justify-content:space-between;
-            padding:.5rem 0; border-bottom:1px solid var(--border);
+    .archive-list li {
+        display: flex;
+        justify-content: space-between;
+        padding: .5rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .danger-button {
+        background: #c0392b;
+        color: #fff;
+    }
+
+    .danger-button:hover {
+        background: #e74c3c;
+    }
+
+    .danger-zone {
+        border: 1px solid #c0392b;
+    }
+
+    .authenticator-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 1.5rem;
+        color: var(--text-muted, #5f6f7f);
+        font-size: 0.85rem;
+    }
+
+    .authenticator-status[hidden] {
+        display: none;
+    }
+
+    .authenticator-code-input {
+        background: #ffffff;
+        color: #1f2937;
+        border-color: rgba(148, 163, 184, 0.36);
+    }
+
+    .authenticator-code-input::placeholder {
+        color: #94a3b8;
+    }
+
+    .authenticator-code-input + label {
+        color: #64748b;
+        background: #ffffff;
+    }
+
+    html.dark .authenticator-code-input,
+    html[data-theme="dark"] .authenticator-code-input {
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+        border-color: rgba(148, 163, 184, 0.3) !important;
+    }
+
+    html.dark .authenticator-code-input::placeholder,
+    html[data-theme="dark"] .authenticator-code-input::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    html.dark .authenticator-code-input + label,
+    html[data-theme="dark"] .authenticator-code-input + label {
+        color: #cbd5e1 !important;
+        background: #0f172a !important;
+    }
+
+    .status-spinner {
+        width: 0.9rem;
+        height: 0.9rem;
+        border: 2px solid rgba(49, 130, 206, 0.2);
+        border-top-color: var(--primary, #3182ce);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+    }
+
+    .gmail-otp-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 0.9rem;
+        margin: 0 0 1rem;
+        border: 1px solid rgba(90, 146, 220, 0.25);
+        background: rgba(49, 130, 206, 0.06);
+        border-radius: 10px;
+        color: var(--text-color, #1f2937);
+        font-size: 0.9rem;
+    }
+
+    .gmail-otp-meta strong {
+        word-break: break-word;
+    }
+
+    .gmail-otp-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.8rem;
+        height: 1.8rem;
+        padding: 0 0.5rem;
+        border-radius: 999px;
+        background: rgba(49, 130, 206, 0.12);
+        color: var(--primary, #3182ce);
+        font-weight: 700;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        overflow-y: auto;
+        background: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .modal.open {
+        display: flex;
+    }
+
+    .modal__backdrop {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        cursor: pointer;
+        z-index: 0;
+    }
+
+    .modal__dialog {
+        width: min(100%, 540px);
+        margin: 10vh auto;
+        position: relative;
+        z-index: 1;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+
+    .modal__header {
+        padding: 1.1rem 1.25rem 0.9rem;
+        border-bottom: 1px solid var(--border, rgba(15, 23, 42, 0.08));
+    }
+
+    .modal__body {
+        padding: 1rem 1.25rem 0.5rem;
+    }
+
+    .modal__footer {
+        padding: 0.75rem 1.25rem 1.1rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .modal__footer .button {
+        min-width: 170px;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
         }
+    }
+</style>
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
 
-        .danger-button {
-            background:#c0392b; color:#fff;
-        }
-        .danger-button:hover { background:#e74c3c; }
 
-        .danger-zone { border: 1px solid #c0392b; }
-
-        .authenticator-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            min-height: 1.5rem;
-            color: var(--text-muted, #5f6f7f);
-            font-size: 0.85rem;
-        }
-
-        .authenticator-status[hidden] {
-            display: none;
-        }
-
-        .authenticator-code-input {
-            background: #ffffff;
-            color: #1f2937;
-            border-color: rgba(148, 163, 184, 0.36);
-        }
-
-        .authenticator-code-input::placeholder {
-            color: #94a3b8;
-        }
-
-        .authenticator-code-input + label {
-            color: #64748b;
-            background: #ffffff;
-        }
-
-        html.dark .authenticator-code-input,
-        html[data-theme="dark"] .authenticator-code-input {
-            background: #0f172a !important;
-            color: #e2e8f0 !important;
-            border-color: rgba(148, 163, 184, 0.3) !important;
-        }
-
-        html.dark .authenticator-code-input::placeholder,
-        html[data-theme="dark"] .authenticator-code-input::placeholder {
-            color: #94a3b8 !important;
-        }
-
-        html.dark .authenticator-code-input + label,
-        html[data-theme="dark"] .authenticator-code-input + label {
-            color: #cbd5e1 !important;
-            background: #0f172a !important;
-        }
-
-        .status-spinner {
-            width: 0.9rem;
-            height: 0.9rem;
-            border: 2px solid rgba(49, 130, 206, 0.2);
-            border-top-color: var(--primary, #3182ce);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-        }
-
-        .gmail-otp-meta {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 0.9rem;
-            margin: 0 0 1rem;
-            border: 1px solid rgba(90, 146, 220, 0.25);
-            background: rgba(49, 130, 206, 0.06);
-            border-radius: 10px;
-            color: var(--text-color, #1f2937);
-            font-size: 0.9rem;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.5);
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-
-        .modal.open {
-            display: flex;
-        }
-
-        .modal__backdrop {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            cursor: pointer;
-            z-index: 0;
-        }
-
-        .modal__dialog {
-            width: min(100%, 540px);
-            margin: 10vh auto;
-            position: relative;
-            z-index: 1;
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
-        }
-
-        .gmail-otp-meta strong {
-            word-break: break-word;
-        }
-
-        .gmail-otp-chip {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 1.8rem;
-            height: 1.8rem;
-            padding: 0 0.5rem;
-            border-radius: 999px;
-            background: rgba(49, 130, 206, 0.12);
-            color: var(--primary, #3182ce);
-            font-weight: 700;
-        }
-
-        .modal__dialog {
-            border-radius: 18px;
-            overflow: hidden;
-        }
-
-        .modal__header {
-            padding: 1.1rem 1.25rem 0.9rem;
-            border-bottom: 1px solid var(--border, rgba(15, 23, 42, 0.08));
-        }
-
-        .modal__body {
-            padding: 1rem 1.25rem 0.5rem;
-        }
-
-        .modal__footer {
-            padding: 0.75rem 1.25rem 1.1rem;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .modal__footer .button {
-            min-width: 170px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-
-<body data-user-email="{{ request.user.email }}">
+{% block content %}
 <div class="dashboard-container">
+
     {% include "components/navigations.html" %}
 
     <main class="main-content">
-        <header class="content-header">
-                <div class="header-left">
-                    <button type="button"
-                            class="mobile-sidebar-trigger"
-                            aria-controls="sidebar"
-                            aria-expanded="false"
-                            aria-label="Open navigation sidebar">
-                        <span class="sr-only">Toggle sidebar</span>
-                        <svg class="sidebar-trigger-icon"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                            focusable="false">
-                            <path d="M4 7h16M4 12h16M4 17h16"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"/>
-                        </svg>
-                    </button>
 
-                    <!-- Existing welcome text -->
-                    <p>Settings</p>
-                </div>
-            </header>
+        <header class="content-header">
+            <div class="header-left">
+                <button type="button"
+                        class="mobile-sidebar-trigger"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        aria-label="Open navigation sidebar">
+                    <span class="sr-only">Toggle sidebar</span>
+
+                    <svg class="sidebar-trigger-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true"
+                         focusable="false">
+                        <path d="M4 7h16M4 12h16M4 17h16"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"/>
+                    </svg>
+                </button>
+
+                <p class="content-header-title">Settings</p>
+            </div>
+        </header>
+
 
         <div class="dashboard-content">
             <div class="container">
@@ -223,18 +229,24 @@
                     <div class="settings-section" style="margin-bottom: 1rem;">
                         <ul class="messages" aria-live="polite">
                             {% for message in messages %}
-                                <li class="message {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+                                <li class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                                    {{ message }}
+                                </li>
                             {% endfor %}
                         </ul>
                     </div>
                 {% endif %}
 
+
+                <!-- Account Preferences -->
                 <section class="settings-section card">
                     <h2>Account Preferences</h2>
 
                     <div class="settings-stack">
+
                         <div class="detail-row" style="align-items:center">
                             <span>Push Notification</span>
+
                             <span>
                                 <label class="switch">
                                     <input id="browser-notifications-toggle"
@@ -245,8 +257,10 @@
                             </span>
                         </div>
 
+
                         <div class="detail-row" style="align-items:center">
                             <span>Dark Mode</span>
+
                             <span>
                                 <label class="switch">
                                     <input id="dark-mode-toggle"
@@ -256,110 +270,228 @@
                                 </label>
                             </span>
                         </div>
+
                     </div>
+
 
                     <div class="settings-tip">
                         <h3>Stay in the loop</h3>
+
                         <p>
                             Push notifications keep your study space updated without
                             needing to check the announcements page manually.
                         </p>
+
                         <p id="push-notification-status" class="muted-text"></p>
                     </div>
                 </section>
 
+
+                <!-- Two-Factor Authentication -->
                 <section class="settings-section card">
                     <h2>Two-Factor Authentication</h2>
 
                     <div class="settings-stack">
+
                         <div class="detail-row" style="align-items:center">
                             <span>Authenticator app</span>
+
                             <span>
                                 {% if two_factor_enabled %}
+
                                     <form method="post" style="display:inline;">
                                         {% csrf_token %}
-                                        <button type="submit" name="disable_2fa" value="1" class="button button-outline danger-button">Disable</button>
+
+                                        <button type="submit"
+                                                name="disable_2fa"
+                                                value="1"
+                                                class="button button-outline danger-button">
+                                            Disable
+                                        </button>
                                     </form>
+
                                 {% else %}
+
                                     <label class="switch">
-                                        <input type="checkbox" aria-label="Enable two-factor authentication" disabled checked="false">
+                                        <input type="checkbox"
+                                               aria-label="Enable two-factor authentication"
+                                               disabled
+                                               checked="false">
                                         <span class="slider round"></span>
                                     </label>
+
                                 {% endif %}
                             </span>
                         </div>
 
-                        {% if not two_factor_enabled %}
-                            <div class="settings-tip">
-                                <h3>Set up 2FA</h3>
-                                <p>Enter the authenticator code below first. Then use the Gmail code to finish enabling 2FA.</p>
-                                <div style="margin:1rem 0;">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ otp_uri|urlencode }}" alt="2FA QR code" style="max-width:180px; border-radius:12px; background:#fff; padding:8px;">
-                                </div>
-                                <p class="muted-text">Secret: <strong>{{ otp_secret }}</strong></p>
 
-                                <div class="floating-label-group" style="max-width:280px; margin:1rem 0 0.5rem;">
-                                    <input type="text" name="otp_code" id="otp_code" class="authenticator-code-input" maxlength="6" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" aria-label="Authentication code">
-                                    <label for="otp_code">Authenticator code</label>
+                        {% if not two_factor_enabled %}
+
+                            <div class="settings-tip">
+
+                                <h3>Set up 2FA</h3>
+
+                                <p>
+                                    Enter the authenticator code below first.
+                                    Then use the Gmail code to finish enabling 2FA.
+                                </p>
+
+
+                                <div style="margin:1rem 0;">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ otp_uri|urlencode }}"
+                                         alt="2FA QR code"
+                                         style="max-width:180px; border-radius:12px; background:#fff; padding:8px;">
                                 </div>
-                                <div class="authenticator-status" id="authenticator-status" hidden aria-live="polite">
-                                    <span class="status-spinner" aria-hidden="true"></span>
-                                    <span>Verifying authenticator code...</span>
+
+
+                                <p class="muted-text">
+                                    Secret:
+                                    <strong>{{ otp_secret }}</strong>
+                                </p>
+
+
+                                <div class="floating-label-group"
+                                     style="max-width:280px; margin:1rem 0 0.5rem;">
+
+                                    <input type="text"
+                                           name="otp_code"
+                                           id="otp_code"
+                                           class="authenticator-code-input"
+                                           maxlength="6"
+                                           placeholder="123456"
+                                           inputmode="numeric"
+                                           autocomplete="one-time-code"
+                                           aria-label="Authentication code">
+
+                                    <label for="otp_code">
+                                        Authenticator code
+                                    </label>
                                 </div>
-                                <p class="muted-text" style="margin-top:0.5rem;">After a valid authenticator code is entered, the Gmail verification code is sent automatically.</p>
+
+
+                                <div class="authenticator-status"
+                                     id="authenticator-status"
+                                     hidden
+                                     aria-live="polite">
+
+                                    <span class="status-spinner"
+                                          aria-hidden="true"></span>
+
+                                    <span>
+                                        Verifying authenticator code...
+                                    </span>
+                                </div>
+
+
+                                <p class="muted-text"
+                                   style="margin-top:0.5rem;">
+                                    After a valid authenticator code is entered,
+                                    the Gmail verification code is sent automatically.
+                                </p>
 
                             </div>
+
                         {% else %}
+
                             <div class="settings-tip">
                                 <h3>Protection active</h3>
-                                <p>Your account requires a one-time code from your authenticator app at sign-in.</p>
+
+                                <p>
+                                    Your account requires a one-time code from
+                                    your authenticator app at sign-in.
+                                </p>
                             </div>
+
                         {% endif %}
+
                     </div>
                 </section>
 
+
+                <!-- Archive -->
                 <section class="settings-section card">
                     <h2>Archive</h2>
 
                     <div class="archive-links-grid">
-                        <a href="{% url 'account:archive-forum-posts' %}" class="archive-card archive-card--posts">
+
+                        <a href="{% url 'account:archive-forum-posts' %}"
+                           class="archive-card archive-card--posts">
+
                             <span class="archive-card-icon">
                                 <i class="fa-solid fa-comments"></i>
                             </span>
+
                             <span class="archive-card-copy">
                                 <span class="archive-card-label">Archive</span>
                                 <strong>Forum Posts</strong>
                             </span>
+
                         </a>
 
+
                         {% if request.user|has_group:'Teacher' %}
-                        <a href="{% url 'account:archive-modules' %}" class="archive-card archive-card--modules">
-                            <span class="archive-card-icon">
-                                <i class="fa-solid fa-book-open"></i>
-                            </span>
-                            <span class="archive-card-copy">
-                                <span class="archive-card-label">Archive</span>
-                                <strong>Learning Modules</strong>
-                            </span>
-                        </a>
+
+                            <a href="{% url 'account:archive-modules' %}"
+                               class="archive-card archive-card--modules">
+
+                                <span class="archive-card-icon">
+                                    <i class="fa-solid fa-book-open"></i>
+                                </span>
+
+                                <span class="archive-card-copy">
+                                    <span class="archive-card-label">Archive</span>
+                                    <strong>Learning Modules</strong>
+                                </span>
+
+                            </a>
+
+
+                            <a href="{% url 'account:archive-subjects' %}"
+                               class="archive-card archive-card--subjects">
+
+                                <span class="archive-card-icon">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </span>
+
+                                <span class="archive-card-copy">
+                                    <span class="archive-card-label">Archive</span>
+                                    <strong>Subjects</strong>
+                                </span>
+
+                            </a>
+
                         {% else %}
-                        <a href="{% url 'account:archive-personal-materials' %}" class="archive-card archive-card--materials">
-                            <span class="archive-card-icon">
-                                <i class="fa-solid fa-folder-open"></i>
-                            </span>
-                            <span class="archive-card-copy">
-                                <span class="archive-card-label">Archive</span>
-                                <strong>Personal Learning Materials</strong>
-                            </span>
-                        </a>
+
+                            <a href="{% url 'account:archive-personal-materials' %}"
+                               class="archive-card archive-card--materials">
+
+                                <span class="archive-card-icon">
+                                    <i class="fa-solid fa-folder-open"></i>
+                                </span>
+
+                                <span class="archive-card-copy">
+                                    <span class="archive-card-label">Archive</span>
+                                    <strong>Personal Learning Materials</strong>
+                                </span>
+
+                            </a>
+
                         {% endif %}
+
                     </div>
                 </section>
 
+
+                <!-- Danger Zone -->
                 <section class="settings-section card danger-zone">
+
                     <h2>Danger Zone</h2>
+
                     <div class="danger-zone-notice">
-                        <p>These actions are irreversible.  Proceed with extreme caution.</p>
+                        <p>
+                            These actions are irreversible.
+                            Proceed with extreme caution.
+                        </p>
                     </div>
 
                     <button type="button"
@@ -367,397 +499,785 @@
                             data-url="{% url 'account:delete_account_modal' %}">
                         Delete Account
                     </button>
+
                 </section>
 
-            </div>  
-        </div> 
+            </div>
+        </div>
+
     </main>
 </div>
 
-{% include "components/global_modal.html" %}
 
-<script src="{% static 'js/toast_notifications.js' %}"></script>
+{% include "components/global_modal.html" %}
+{% endblock %}
+
+
+{% block extra_js %}
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const otpCodeInput = document.getElementById('otp_code');
-        const authenticatorStatus = document.getElementById('authenticator-status');
-        const globalModal = document.getElementById('global-modal');
+document.addEventListener('DOMContentLoaded', () => {
+    const otpCodeInput = document.getElementById('otp_code');
+    const authenticatorStatus = document.getElementById('authenticator-status');
+    const globalModal = document.getElementById('global-modal');
 
-        const getCookie = (name) => {
-            const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-            return match ? decodeURIComponent(match.pop()) : '';
-        };
+    const getCookie = (name) => {
+        const match = document.cookie.match(
+            '(^|;)\\s*' + name + '\\s*=\\s*([^;]+)'
+        );
 
-        if (!otpCodeInput || !globalModal) return;
+        return match ? decodeURIComponent(match.pop()) : '';
+    };
 
-        const setAuthenticatorLoading = (isLoading) => {
-            if (!authenticatorStatus) return;
-            authenticatorStatus.hidden = !isLoading;
-            otpCodeInput.setAttribute('aria-busy', String(isLoading));
-            otpCodeInput.disabled = isLoading;
-        };
+    if (!otpCodeInput || !globalModal) return;
 
-        const buildGmailOtpHtml = () => {
-            return `
-                <div class="modal__dialog" role="document" aria-labelledby="enable-2fa-modal-title">
-                    <header class="modal__header">
-                        <h2 id="enable-2fa-modal-title" class="modal__title">Verify your Gmail code</h2>
-                        <button type="button" class="modal__close" data-close-modal aria-label="Close">×</button>
-                    </header>
-                    <form method="post">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
-                        <input type="hidden" name="otp_code" value="${otpCodeInput.value.trim()}">
-                        <input type="hidden" name="authenticator_code" id="enable-2fa-hidden-otp" value="${otpCodeInput.value.trim()}">
-                        <div class="modal__body">
-                            <div class="gmail-otp-meta">
-                                <span class="gmail-otp-chip">✓</span>
-                                <span>Code sent to <strong>${document.body.dataset.userEmail || 'your email'}</strong></span>
-                            </div>
-                            <p style="margin:0 0 1rem; color: var(--text-muted, #5f6f7f);">Enter the 6-digit verification code from your email to finish enabling 2FA.</p>
-                            <div class="floating-label-group" style="margin:0;">
-                                <input type="text" name="gmail_otp" id="gmail_otp" maxlength="6" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" aria-label="Gmail verification code" required>
-                                <label for="gmail_otp">Gmail OTP</label>
-                            </div>
+
+    const setAuthenticatorLoading = (isLoading) => {
+        if (!authenticatorStatus) return;
+
+        authenticatorStatus.hidden = !isLoading;
+        otpCodeInput.setAttribute('aria-busy', String(isLoading));
+        otpCodeInput.disabled = isLoading;
+    };
+
+
+    const buildGmailOtpHtml = () => {
+        return `
+            <div class="modal__dialog"
+                 role="document"
+                 aria-labelledby="enable-2fa-modal-title">
+
+                <header class="modal__header">
+
+                    <h2 id="enable-2fa-modal-title"
+                        class="modal__title">
+                        Verify your Gmail code
+                    </h2>
+
+                    <button type="button"
+                            class="modal__close"
+                            data-close-modal
+                            aria-label="Close">
+                        ×
+                    </button>
+
+                </header>
+
+
+                <form method="post">
+
+                    <input type="hidden"
+                           name="csrfmiddlewaretoken"
+                           value="${getCookie('csrftoken')}">
+
+                    <input type="hidden"
+                           name="otp_code"
+                           value="${otpCodeInput.value.trim()}">
+
+                    <input type="hidden"
+                           name="authenticator_code"
+                           id="enable-2fa-hidden-otp"
+                           value="${otpCodeInput.value.trim()}">
+
+
+                    <div class="modal__body">
+
+                        <div class="gmail-otp-meta">
+
+                            <span class="gmail-otp-chip">
+                                ✓
+                            </span>
+
+                            <span>
+                                Code sent to
+                                <strong>
+                                    ${document.body.dataset.userEmail || 'your email'}
+                                </strong>
+                            </span>
+
                         </div>
-                        <div class="modal__footer">
-                            <button type="submit" name="enable_2fa" value="1" class="button">Verify &amp; Enable</button>
+
+
+                        <p style="margin:0 0 1rem; color:var(--text-muted, #5f6f7f);">
+                            Enter the 6-digit verification code from your email
+                            to finish enabling 2FA.
+                        </p>
+
+
+                        <div class="floating-label-group" style="margin:0;">
+
+                            <input type="text"
+                                   name="gmail_otp"
+                                   id="gmail_otp"
+                                   maxlength="6"
+                                   placeholder="123456"
+                                   inputmode="numeric"
+                                   autocomplete="one-time-code"
+                                   aria-label="Gmail verification code"
+                                   required>
+
+                            <label for="gmail_otp">
+                                Gmail OTP
+                            </label>
+
                         </div>
-                    </form>
-                </div>
-            `;
-        };
 
-        const syncHiddenOtp = () => {
-            const hiddenField = document.getElementById('enable-2fa-hidden-otp');
-            if (hiddenField) {
-                hiddenField.value = otpCodeInput.value.trim();
-            }
-        };
+                    </div>
 
-        const openGlobalModal = () => {
-            if (otpCodeInput.value.trim().length !== 6) return;
-            syncHiddenOtp();
+
+                    <div class="modal__footer">
+
+                        <button type="submit"
+                                name="enable_2fa"
+                                value="1"
+                                class="button">
+                            Verify &amp; Enable
+                        </button>
+
+                    </div>
+
+                </form>
+            </div>
+        `;
+    };
+
+
+    const syncHiddenOtp = () => {
+        const hiddenField =
+            document.getElementById('enable-2fa-hidden-otp');
+
+        if (hiddenField) {
+            hiddenField.value = otpCodeInput.value.trim();
+        }
+    };
+
+
+    const openGlobalModal = () => {
+        if (otpCodeInput.value.trim().length !== 6) return;
+
+        syncHiddenOtp();
+        setAuthenticatorLoading(false);
+
+        globalModal.innerHTML = buildGmailOtpHtml();
+        globalModal.removeAttribute('hidden');
+        globalModal.classList.add('open');
+
+        const gmailOtpInput =
+            document.getElementById('gmail_otp');
+
+        if (gmailOtpInput) {
+            setTimeout(() => gmailOtpInput.focus(), 50);
+        }
+    };
+
+
+    const closeGlobalModal = () => {
+        globalModal.classList.remove('open');
+        globalModal.setAttribute('hidden', 'hidden');
+        globalModal.innerHTML = '';
+    };
+
+
+    const sendGmailOtp = () => {
+        const csrfToken = getCookie('csrftoken');
+
+        if (!csrfToken) {
+            closeGlobalModal();
             setAuthenticatorLoading(false);
-            globalModal.innerHTML = buildGmailOtpHtml();
-            globalModal.removeAttribute('hidden');
-            globalModal.classList.add('open');
-            const gmailOtpInput = document.getElementById('gmail_otp');
-            if (gmailOtpInput) {
-                setTimeout(() => gmailOtpInput.focus(), 50);
+            return;
+        }
+
+        setAuthenticatorLoading(true);
+
+        fetch(window.location.href, {
+            method: 'POST',
+
+            headers: {
+                'Content-Type':
+                    'application/x-www-form-urlencoded; charset=UTF-8',
+
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+
+            body: new URLSearchParams({
+                send_2fa_email_otp: '1',
+                otp_code: otpCodeInput.value.trim(),
+            }),
+
+            credentials: 'same-origin',
+        })
+        .then(async (response) => {
+            const payload =
+                await response.json().catch(() => ({}));
+
+            if (!response.ok || !payload.valid) {
+                throw new Error(
+                    payload.message ||
+                    'Failed to send Gmail verification code.'
+                );
             }
-        };
 
-        const closeGlobalModal = () => {
-            globalModal.classList.remove('open');
-            globalModal.setAttribute('hidden', 'hidden');
-            globalModal.innerHTML = '';
-        };
+            openGlobalModal();
+        })
+        .catch((error) => {
+            closeGlobalModal();
 
-        const sendGmailOtp = () => {
-            const csrfToken = getCookie('csrftoken');
-            if (!csrfToken) {
-                closeGlobalModal();
-                setAuthenticatorLoading(false);
-                return;
-            }
+            otpCodeInput.disabled = false;
 
-            setAuthenticatorLoading(true);
+            otpCodeInput.setAttribute(
+                'aria-invalid',
+                'true'
+            );
 
-            fetch(window.location.href, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: new URLSearchParams({
-                    send_2fa_email_otp: '1',
-                    otp_code: otpCodeInput.value.trim(),
-                }),
-                credentials: 'same-origin',
-            })
-            .then(async (response) => {
-                const payload = await response.json().catch(() => ({}));
-                if (!response.ok || !payload.valid) {
-                    throw new Error(payload.message || 'Failed to send Gmail verification code.');
-                }
-                openGlobalModal();
-            })
-            .catch((error) => {
-                closeGlobalModal();
-                otpCodeInput.disabled = false;
-                otpCodeInput.setAttribute('aria-invalid', 'true');
-                otpCodeInput.setCustomValidity(error.message || 'Invalid authenticator code.');
-                otpCodeInput.reportValidity();
-                setAuthenticatorLoading(false);
-                otpCodeInput.addEventListener('input', () => {
-                    otpCodeInput.setAttribute('aria-invalid', 'false');
+            otpCodeInput.setCustomValidity(
+                error.message ||
+                'Invalid authenticator code.'
+            );
+
+            otpCodeInput.reportValidity();
+
+            setAuthenticatorLoading(false);
+
+            otpCodeInput.addEventListener(
+                'input',
+                () => {
+                    otpCodeInput.setAttribute(
+                        'aria-invalid',
+                        'false'
+                    );
+
                     otpCodeInput.setCustomValidity('');
-                }, { once: true });
-            });
-        };
-
-        otpCodeInput.addEventListener('input', () => {
-            syncHiddenOtp();
-            otpCodeInput.setCustomValidity('');
-            otpCodeInput.setAttribute('aria-invalid', 'false');
-            if (otpCodeInput.value.trim().length === 6) {
-                sendGmailOtp();
-            } else {
-                setAuthenticatorLoading(false);
-            }
+                },
+                { once: true }
+            );
         });
+    };
 
-        globalModal.addEventListener('click', (event) => {
-            if (event.target.matches('[data-close-modal]') || event.target.classList.contains('modal__backdrop')) {
-                closeGlobalModal();
-            }
-        });
 
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !globalModal.hidden) {
-                closeGlobalModal();
-            }
-        });
+    otpCodeInput.addEventListener('input', () => {
+        syncHiddenOtp();
+
+        otpCodeInput.setCustomValidity('');
+
+        otpCodeInput.setAttribute(
+            'aria-invalid',
+            'false'
+        );
+
+        if (otpCodeInput.value.trim().length === 6) {
+            sendGmailOtp();
+        } else {
+            setAuthenticatorLoading(false);
+        }
     });
 
-    function urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-        return outputArray;
+
+    globalModal.addEventListener('click', (event) => {
+        if (
+            event.target.matches('[data-close-modal]') ||
+            event.target.classList.contains('modal__backdrop')
+        ) {
+            closeGlobalModal();
+        }
+    });
+
+
+    document.addEventListener('keydown', (event) => {
+        if (
+            event.key === 'Escape' &&
+            !globalModal.hidden
+        ) {
+            closeGlobalModal();
+        }
+    });
+});
+
+
+function urlBase64ToUint8Array(base64String) {
+    const padding =
+        '='.repeat((4 - (base64String.length % 4)) % 4);
+
+    const base64 =
+        (base64String + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+
+    const outputArray =
+        new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] =
+            rawData.charCodeAt(i);
     }
 
-    function bytesToBase64(bytes) {
-        return btoa(String.fromCharCode(...new Uint8Array(bytes)));
+    return outputArray;
+}
+
+
+function bytesToBase64(bytes) {
+    return btoa(
+        String.fromCharCode(
+            ...new Uint8Array(bytes)
+        )
+    );
+}
+
+
+const notificationStorageKey =
+    'eduallyBrowserNotifications';
+
+const notificationToggle =
+    document.getElementById(
+        'browser-notifications-toggle'
+    );
+
+const notificationStatus =
+    document.getElementById(
+        'push-notification-status'
+    );
+
+
+function setNotificationStatus(message) {
+    if (notificationStatus) {
+        notificationStatus.textContent = message;
+    }
+}
+
+
+async function ensureServiceWorkerRegistration() {
+    if (!('serviceWorker' in navigator)) {
+        throw new Error(
+            'This browser does not support service workers'
+        );
     }
 
-    const notificationStorageKey = 'eduallyBrowserNotifications';
-    const notificationToggle = document.getElementById('browser-notifications-toggle');
-    const notificationStatus = document.getElementById('push-notification-status');
+    try {
+        const version =
+            '{{ PWA_SW_VERSION|default:"20260819" }}';
 
-    function setNotificationStatus(message) {
-        if (notificationStatus) {
-            notificationStatus.textContent = message;
+        await navigator.serviceWorker.register(
+            '{% url "service-worker" %}?v=' + version
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            'Failed to register service worker for push alerts.',
+            error
+        );
+
+        throw new Error(
+            'The service worker could not be registered. Use localhost or HTTPS.'
+        );
+    }
+}
+
+
+function getStoredNotificationPreference() {
+    try {
+        const storedValue =
+            localStorage.getItem(
+                notificationStorageKey
+            );
+
+        if (
+            storedValue === 'true' ||
+            storedValue === 'false'
+        ) {
+            return storedValue === 'true';
         }
+
+    } catch (error) {
+        // Ignore storage access errors.
     }
 
-    async function ensureServiceWorkerRegistration() {
-        if (!('serviceWorker' in navigator)) {
-            throw new Error('This browser does not support service workers');
-        }
+    return Notification.permission === 'granted';
+}
 
-        try {
-            const version = '{{ PWA_SW_VERSION|default:"20260819" }}';
-            await navigator.serviceWorker.register('{% url "service-worker" %}?v=' + version);
-            return true;
-        } catch (error) {
-            console.error('Failed to register service worker for push alerts.', error);
-                throw new Error('The service worker could not be registered. Use localhost or HTTPS.');
-        }
+
+function applyNotificationToggleState(isEnabled) {
+    if (notificationToggle) {
+        notificationToggle.checked =
+            Boolean(isEnabled);
     }
 
-    function getStoredNotificationPreference() {
-        try {
-            const storedValue = localStorage.getItem(notificationStorageKey);
-            if (storedValue === 'true' || storedValue === 'false') {
-                return storedValue === 'true';
-            }
-        } catch (error) {
-            // ignore storage access errors
-        }
+    try {
+        localStorage.setItem(
+            notificationStorageKey,
+            String(Boolean(isEnabled))
+        );
 
-        return Notification.permission === 'granted';
+    } catch (error) {
+        // Ignore storage access errors.
+    }
+}
+
+
+async function syncNotificationSubscriptionState() {
+    if (
+        !('PushManager' in window) ||
+        !('serviceWorker' in navigator)
+    ) {
+        setNotificationStatus(
+            'This browser does not support web push notifications.'
+        );
+
+        return;
     }
 
-    function applyNotificationToggleState(isEnabled) {
-        if (notificationToggle) {
-            notificationToggle.checked = Boolean(isEnabled);
-        }
+    await ensureServiceWorkerRegistration();
 
-        try {
-            localStorage.setItem(notificationStorageKey, String(Boolean(isEnabled)));
-        } catch (error) {
-            // ignore storage access errors
-        }
-    }
+    const registration =
+        await navigator.serviceWorker.ready;
 
-    async function syncNotificationSubscriptionState() {
-        if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
-            setNotificationStatus('This browser does not support web push notifications.');
-            return;
-        }
+    const subscription =
+        await registration.pushManager.getSubscription();
 
-        await ensureServiceWorkerRegistration();
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
-        const permission = Notification.permission;
-        const storedPreference = getStoredNotificationPreference();
+    const permission =
+        Notification.permission;
 
-        if (storedPreference === true) {
-            applyNotificationToggleState(true);
-            if (permission === 'granted' && !subscription) {
-                try {
-                    await window.enablePushNotifications();
-                } catch (error) {
-                    console.warn('Could not restore browser push subscription on refresh.', error);
-                }
-            }
-            if (permission === 'granted') {
-                setNotificationStatus('Push notifications are enabled for this browser.');
-            } else if (permission === 'denied') {
-                setNotificationStatus('Push notifications are blocked in this browser. Enable them in Brave site settings, then refresh the page.');
-            } else {
-                setNotificationStatus('Push notifications are enabled in EduAlly. Please allow notifications in Brave for this site to finish the browser setup.');
-            }
-            return;
-        }
+    const storedPreference =
+        getStoredNotificationPreference();
 
-        applyNotificationToggleState(Boolean(subscription));
 
-        if (permission === 'granted' && subscription) {
-            setNotificationStatus('Push notifications are enabled for this browser.');
-        } else if (permission === 'denied') {
-            setNotificationStatus('Push notifications are blocked in this browser. Enable them in Brave site settings, then refresh the page.');
-        } else {
-            setNotificationStatus('Push notifications are currently off. Turn the toggle on to enable them.');
-        }
-    }
-
-    window.enablePushNotifications = async function () {
-        if (!('PushManager' in window) || !('Notification' in window) || !('serviceWorker' in navigator)) {
-            console.warn('Web Push is not supported in this browser.');
-            return false;
-        }
-
-        if (!window.isSecureContext) {
-            setNotificationStatus('Push notifications require HTTPS or localhost.');
-            return false;
-        }
-
-        if (Notification.permission === 'default') {
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                setNotificationStatus('Notifications were not enabled for this site.');
-                return false;
-            }
-        }
-
-        if (Notification.permission === 'denied') {
-            setNotificationStatus('Notifications are blocked for this site in Brave. Open the site settings for this website, set Notifications to Allow, then refresh and turn the toggle back on.');
-            return false;
-        }
-
-        if (Notification.permission !== 'granted') {
-            setNotificationStatus('Please allow notifications in Brave site settings for this website before enabling push notifications.');
-            return false;
-        }
-
-        await ensureServiceWorkerRegistration();
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}').buffer
-        });
-
-        const response = await fetch('{% url "account:api_push_subscribe" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                endpoint: subscription.endpoint,
-                keys: {
-                    p256dh: bytesToBase64(subscription.getKey('p256dh')),
-                    auth: bytesToBase64(subscription.getKey('auth'))
-                }
-            })
-        });
-
-        if (!response.ok) {
-            await subscription.unsubscribe();
-            setNotificationStatus('Push notifications could not be enabled. Please try again.');
-            return false;
-        }
+    if (storedPreference === true) {
 
         applyNotificationToggleState(true);
-        setNotificationStatus('Push notifications are enabled. New announcements will now show as browser notifications.');
-        return true;
-    };
 
-    window.disablePushNotifications = async function () {
-        if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
-            console.warn('Browser push cannot be disabled in this browser.');
+        if (
+            permission === 'granted' &&
+            !subscription
+        ) {
+            try {
+                await window.enablePushNotifications();
+
+            } catch (error) {
+                console.warn(
+                    'Could not restore browser push subscription on refresh.',
+                    error
+                );
+            }
+        }
+
+
+        if (permission === 'granted') {
+
+            setNotificationStatus(
+                'Push notifications are enabled for this browser.'
+            );
+
+        } else if (permission === 'denied') {
+
+            setNotificationStatus(
+                'Push notifications are blocked in this browser. Enable them in Brave site settings, then refresh the page.'
+            );
+
+        } else {
+
+            setNotificationStatus(
+                'Push notifications are enabled in EduAlly. Please allow notifications in Brave for this site to finish the browser setup.'
+            );
+        }
+
+        return;
+    }
+
+
+    applyNotificationToggleState(
+        Boolean(subscription)
+    );
+
+
+    if (
+        permission === 'granted' &&
+        subscription
+    ) {
+
+        setNotificationStatus(
+            'Push notifications are enabled for this browser.'
+        );
+
+    } else if (permission === 'denied') {
+
+        setNotificationStatus(
+            'Push notifications are blocked in this browser. Enable them in Brave site settings, then refresh the page.'
+        );
+
+    } else {
+
+        setNotificationStatus(
+            'Push notifications are currently off. Turn the toggle on to enable them.'
+        );
+    }
+}
+
+
+window.enablePushNotifications = async function () {
+
+    if (
+        !('PushManager' in window) ||
+        !('Notification' in window) ||
+        !('serviceWorker' in navigator)
+    ) {
+        console.warn(
+            'Web Push is not supported in this browser.'
+        );
+
+        return false;
+    }
+
+
+    if (!window.isSecureContext) {
+
+        setNotificationStatus(
+            'Push notifications require HTTPS or localhost.'
+        );
+
+        return false;
+    }
+
+
+    if (Notification.permission === 'default') {
+
+        const permission =
+            await Notification.requestPermission();
+
+        if (permission !== 'granted') {
+
+            setNotificationStatus(
+                'Notifications were not enabled for this site.'
+            );
+
             return false;
         }
+    }
 
-        await ensureServiceWorkerRegistration();
-        const registration = await navigator.serviceWorker.ready;
-        const existingSubscription = await registration.pushManager.getSubscription();
 
-        if (!existingSubscription) {
-            return true;
-        }
+    if (Notification.permission === 'denied') {
 
-        const endpoint = existingSubscription.endpoint;
-        await existingSubscription.unsubscribe();
+        setNotificationStatus(
+            'Notifications are blocked for this site in Brave. Open the site settings for this website, set Notifications to Allow, then refresh and turn the toggle back on.'
+        );
 
-        const response = await fetch('{% url "account:api_push_unsubscribe" %}', {
+        return false;
+    }
+
+
+    if (Notification.permission !== 'granted') {
+
+        setNotificationStatus(
+            'Please allow notifications in Brave site settings for this website before enabling push notifications.'
+        );
+
+        return false;
+    }
+
+
+    await ensureServiceWorkerRegistration();
+
+    const registration =
+        await navigator.serviceWorker.ready;
+
+    const subscription =
+        await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+
+            applicationServerKey:
+                urlBase64ToUint8Array(
+                    '{{ VAPID_PUBLIC_KEY }}'
+                ).buffer
+        });
+
+
+    const response = await fetch(
+        '{% url "account:api_push_subscribe" %}',
+        {
             method: 'POST',
+
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
             },
-            body: JSON.stringify({ endpoint })
-        });
 
-        if (!response.ok) {
-            setNotificationStatus('Push notifications could not be disabled. Please try again.');
-            return false;
-        }
+            body: JSON.stringify({
+                endpoint: subscription.endpoint,
 
-        applyNotificationToggleState(false);
-        setNotificationStatus('Push notifications are now turned off for this browser.');
-        return true;
-    };
+                keys: {
+                    p256dh: bytesToBase64(
+                        subscription.getKey('p256dh')
+                    ),
 
-    async function initializeNotificationToggle() {
-        if (!notificationToggle) {
-            return;
-        }
-
-        await syncNotificationSubscriptionState();
-
-        notificationToggle.addEventListener('change', async function (event) {
-            const shouldEnable = event.target.checked;
-
-            try {
-                const success = shouldEnable
-                    ? await window.enablePushNotifications()
-                    : await window.disablePushNotifications();
-
-                if (success) {
-                    applyNotificationToggleState(shouldEnable);
-                } else {
-                    event.target.checked = !shouldEnable;
+                    auth: bytesToBase64(
+                        subscription.getKey('auth')
+                    )
                 }
-            } catch (error) {
-                console.error('Failed to update browser notification preference.', error);
-                setNotificationStatus(error && error.message
-                    ? error.message
-                    : 'Could not update push notifications. Check your browser push settings and try again.');
-                event.target.checked = !shouldEnable;
-            }
-        });
+            })
+        }
+    );
+
+
+    if (!response.ok) {
+
+        await subscription.unsubscribe();
+
+        setNotificationStatus(
+            'Push notifications could not be enabled. Please try again.'
+        );
+
+        return false;
     }
 
-    initializeNotificationToggle();
+
+    applyNotificationToggleState(true);
+
+    setNotificationStatus(
+        'Push notifications are enabled. New announcements will now show as browser notifications.'
+    );
+
+    return true;
+};
+
+
+window.disablePushNotifications = async function () {
+
+    if (
+        !('PushManager' in window) ||
+        !('serviceWorker' in navigator)
+    ) {
+        console.warn(
+            'Browser push cannot be disabled in this browser.'
+        );
+
+        return false;
+    }
+
+
+    await ensureServiceWorkerRegistration();
+
+    const registration =
+        await navigator.serviceWorker.ready;
+
+    const existingSubscription =
+        await registration.pushManager.getSubscription();
+
+
+    if (!existingSubscription) {
+        return true;
+    }
+
+
+    const endpoint =
+        existingSubscription.endpoint;
+
+    await existingSubscription.unsubscribe();
+
+
+    const response = await fetch(
+        '{% url "account:api_push_unsubscribe" %}',
+        {
+            method: 'POST',
+
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+
+            body: JSON.stringify({
+                endpoint
+            })
+        }
+    );
+
+
+    if (!response.ok) {
+
+        setNotificationStatus(
+            'Push notifications could not be disabled. Please try again.'
+        );
+
+        return false;
+    }
+
+
+    applyNotificationToggleState(false);
+
+    setNotificationStatus(
+        'Push notifications are now turned off for this browser.'
+    );
+
+    return true;
+};
+
+
+async function initializeNotificationToggle() {
+
+    if (!notificationToggle) {
+        return;
+    }
+
+
+    await syncNotificationSubscriptionState();
+
+
+    notificationToggle.addEventListener(
+        'change',
+        async function (event) {
+
+            const shouldEnable =
+                event.target.checked;
+
+
+            try {
+
+                const success =
+                    shouldEnable
+                        ? await window.enablePushNotifications()
+                        : await window.disablePushNotifications();
+
+
+                if (success) {
+
+                    applyNotificationToggleState(
+                        shouldEnable
+                    );
+
+                } else {
+
+                    event.target.checked =
+                        !shouldEnable;
+                }
+
+            } catch (error) {
+
+                console.error(
+                    'Failed to update browser notification preference.',
+                    error
+                );
+
+
+                setNotificationStatus(
+                    error && error.message
+                        ? error.message
+                        : 'Could not update push notifications. Check your browser push settings and try again.'
+                );
+
+
+                event.target.checked =
+                    !shouldEnable;
+            }
+        }
+    );
+}
+
+
+initializeNotificationToggle();
 </script>
+
 <script src="{% static 'js/modal.js' %}" defer></script>
-<script src="{% static 'js/theme.js' %}" defer></script>
-</body>
-</html>
+
+{% endblock %}

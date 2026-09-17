@@ -1,4 +1,7 @@
+import re
+
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
@@ -11,6 +14,50 @@ from account.utils import send_push_notification
 
 
 REPORT_REASONS = Report.REASON_CHOICES
+BAD_WORD_WARNING = (
+    'Warning: Your message contains inappropriate language. '
+    'Please revise it before posting.'
+)
+BAD_WORDS = [
+    'gago', 'gaga', 'tanga', 'bobo', 'boang', 'ulol', 'bwisit', 'buwisit',
+    'hayop', 'pakyu', 'pisti', 'putang ina', 'putangina', 'pota', 'pota ka',
+    'siraulo', 'sira ulo', 'takusa', 'bastos', 'anak ng', 'tang ina',
+    'tae', 'taena', 'urupak', 'uyab', 'kupal', 'hinampak', 'bastos',
+    'stupid', 'idiot', 'dumb', 'moron', 'loser', 'trash', 'hate',
+    'fool', 'asshole', 'jerk', 'shut up', 'damn', 'crap', 'hell',
+    'bitch', 'whore', 'slut', 'freak', 'retard', 'idiotic', 'stupid ka',
+]
+
+
+def _normalize_bad_word_text(text):
+    return re.sub(r'[^a-z0-9]+', ' ', (text or '').lower()).strip()
+
+
+def _contains_bad_words(text):
+    normalized_text = _normalize_bad_word_text(text)
+    if not normalized_text:
+        return False
+
+    for bad_word in BAD_WORDS:
+        normalized_bad_word = _normalize_bad_word_text(bad_word)
+        if normalized_bad_word and re.search(
+            rf'(?<![a-z0-9]){re.escape(normalized_bad_word)}(?![a-z0-9])',
+            normalized_text,
+        ):
+            return True
+
+    return False
+
+
+def _is_ajax_request(request):
+    return (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+    )
+
+
+def _expects_json_response(request):
+    return _is_ajax_request(request) or request.META.get('CONTENT_TYPE', '').lower() == 'application/json'
 
 
 def feed_redirect(request):
@@ -93,12 +140,25 @@ def moderation_dashboard(request):
             'reporters': [],
             'reasons': [],
             'latest_report': report,
+            'has_bad_words': False,
+            'bad_word_warning': '',
         })
         item['reports'].append(report)
         item['reporters'].append(report.reporter.get_full_name() or report.reporter.username)
         reason = report.get_reason_display()
         if reason not in item['reasons']:
             item['reasons'].append(reason)
+
+        if report.content_type == Report.POST and item['post']:
+            content_text = f"{item['post'].title} {item['post'].content}"
+        elif report.content_type == Report.REPLY and item['reply']:
+            content_text = item['reply'].content
+        else:
+            content_text = ''
+
+        if content_text and _contains_bad_words(content_text):
+            item['has_bad_words'] = True
+            item['bad_word_warning'] = BAD_WORD_WARNING
 
     reported_items = list(grouped.values())
     context = {
@@ -307,32 +367,67 @@ def conversation_map_json(request, post_id):
 
 @login_required(login_url='account:login')
 def forum_list(request):
-    """List all forum posts with optional filtering"""
+    """List all forum posts with optional filtering."""
+
+    # -------------------------------------------------------------
+    # Mark the forum onboarding step as completed.
+    # Visiting the forum is enough.
+    # -------------------------------------------------------------
+    if not request.user.onboarding_forum_visited:
+        request.user.onboarding_forum_visited = True
+        request.user.save(update_fields=["onboarding_forum_visited"])
+
     posts = Post.objects.filter(
         is_deleted=False,
         is_archived=False,
-    ).prefetch_related('author', 'category')
+    ).prefetch_related('author', 'category').order_by('-created_at')
 
-    # Search functionality
+    # -------------------------------------------------------------
+    # Search
+    # -------------------------------------------------------------
     search_query = request.GET.get('q', '')
+
     if search_query:
-        posts = posts.filter(Q(title__icontains=search_query) | Q(content__icontains=search_query))
+        posts = posts.filter(
+            Q(title__icontains=search_query)
+            | Q(content__icontains=search_query)
+        )
 
+    # -------------------------------------------------------------
     # Category filtering
+    # -------------------------------------------------------------
     category_slug = request.GET.get('category')
-    if category_slug:
-        posts = posts.filter(category__slug=category_slug)
 
+    if category_slug:
+        posts = posts.filter(
+            category__slug=category_slug
+        )
+
+    # -------------------------------------------------------------
     # Sorting
+    # -------------------------------------------------------------
     sort_by = request.GET.get('sort', '-created_at')
-    if sort_by in ['-created_at', '-upvotes', '-reply_count', 'created_at']:
+
+    if sort_by in [
+        '-created_at',
+        '-upvotes',
+        '-reply_count',
+        'created_at'
+    ]:
         posts = posts.order_by(sort_by)
 
     categories = Category.objects.all()
+
     user_post_upvotes = set()
+
     if request.user.is_authenticated:
         user_post_upvotes = set(
-            PostUpvote.objects.filter(user=request.user).values_list('post_id', flat=True)
+            PostUpvote.objects.filter(
+                user=request.user
+            ).values_list(
+                'post_id',
+                flat=True
+            )
         )
 
     context = {
@@ -343,7 +438,12 @@ def forum_list(request):
         'sort_by': sort_by,
         'user_post_upvotes': user_post_upvotes,
     }
-    return render(request, 'forum/list.html', context)
+
+    return render(
+        request,
+        'forum/list.html',
+        context
+    )
 
 
 @login_required(login_url='account:login')
@@ -351,7 +451,7 @@ def post_detail(request, post_id):
     """Show a single post with all replies"""
     post = get_object_or_404(Post, pk=post_id, is_deleted=False, is_archived=False)
 
-    replies = post.replies.filter(is_deleted=False).select_related('author')
+    replies = post.replies.filter(is_deleted=False).select_related('author').order_by('-created_at', '-pk')
     user_post_upvotes = set()
     user_reply_upvotes = set()
     
@@ -376,13 +476,13 @@ def post_detail(request, post_id):
 @login_required(login_url='account:login')
 def create_post(request):
     """Create a new forum post"""
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    is_ajax = _is_ajax_request(request)
 
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         content = request.POST.get('content', '').strip()
         category_id = request.POST.get('category')
-        
+
         if not title or not content:
             context = {
                 'error': 'Title and content are required.',
@@ -400,7 +500,25 @@ def create_post(request):
                 'error': 'Title and content are required.',
                 'categories': Category.objects.all(),
             })
-        
+
+        if _contains_bad_words(f'{title} {content}'):
+            context = {
+                'error': BAD_WORD_WARNING,
+                'categories': Category.objects.all(),
+                'title': title,
+                'content': content,
+                'selected_category': category_id,
+            }
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'html': render_to_string('forum/partials/create_post_modal.html', context, request=request),
+                })
+            return render(request, 'forum/create.html', {
+                'error': BAD_WORD_WARNING,
+                'categories': Category.objects.all(),
+            })
+
         category = None
         if category_id:
             category = get_object_or_404(Category, pk=category_id)
@@ -439,11 +557,21 @@ def create_reply(request, post_id):
     if request.method == 'POST':
         form = ReplyForm(request.POST)
         if not form.is_valid():
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if _is_ajax_request(request):
                 return JsonResponse({
                     'success': False,
                     'html': '<div class="form-error-message">Reply content is required.</div>',
                 })
+            return redirect('forum:post_detail', post_id=post.pk)
+
+        content = form.cleaned_data['content']
+        if _contains_bad_words(content):
+            if _is_ajax_request(request):
+                return JsonResponse({
+                    'success': False,
+                    'html': f'<div class="form-error-message">{BAD_WORD_WARNING}</div>',
+                })
+            messages.error(request, BAD_WORD_WARNING)
             return redirect('forum:post_detail', post_id=post.pk)
 
         reply = form.save(commit=False)

@@ -43,120 +43,411 @@ EduAlly is an AI-powered learning platform that helps students study, understand
     </header>
 
     <main class="landing-container" id="home">
+
+        <!-- ============================================================
+            HERO
+        ============================================================= -->
         <section class="hero">
             <div class="hero-copy animate-fade-up">
                 <span class="eyebrow">Welcome to EduAlly</span>
-                <h1>Learn faster with calm, guided AI support.</h1>
-                <p>EduAlly helps students break down self-learning modules with clear explanations, collaborative support, and a less intimidating path to progress.</p>
+
+                <h1>
+                    Understand your learning materials with the right help.
+                </h1>
+
+                <p>
+                    EduAlly brings your learning modules, personal materials,
+                    AI assistance, and academic discussions together in one
+                    learning space.
+                </p>
+
                 <div class="button-group">
-                    <a class="button" href="{% url 'account:register' %}">Get Started</a>
-                    <a class="button button-outline" href="{% url 'account:login' %}">Sign In</a>
+                    <a class="button" href="{% url 'account:register' %}">
+                        Get Started
+                    </a>
+                    <a class="button button-outline" href="{% url 'account:login' %}">
+                        Sign In
+                    </a>
                 </div>
+
                 <div class="hero-highlights">
-                    <span>24/7 guided help</span>
-                    <span>Less pressure, more clarity</span>
-                    <span>Built for SLM learners</span>
+                    <span>Self Learning Modules</span>
+                    <span>AI-assisted learning</span>
+                    <span>Discussion Forum</span>
                 </div>
             </div>
+
             <div class="hero-visual">
                 <div class="hero-card animate-fade-up">
-                    <h2>Ready to elevate your learning?</h2>
-                    <p>Join EduAlly and access tailored support, progress tracking, and smarter collaboration.</p>
+                    <h2>Everything you need to keep learning.</h2>
+
+                    <p>
+                        Explore your modules, organize your own materials,
+                        ask AI for help, and discuss difficult topics with
+                        other learners.
+                    </p>
+
                     <div class="trust-row">
-                        <span class="trust-pill">For Modular Courses</span>
+                        <span class="trust-pill">Student-focused</span>
                         <span class="trust-pill">Secure • Private</span>
                     </div>
                 </div>
-                <svg class="hero-blob" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+
+                <svg class="hero-blob"
+                    viewBox="0 0 600 600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
                     <defs>
-                        <linearGradient id="g1" x1="0%" x2="100%" y1="0%" y2="100%">
-                            <stop offset="0%" stop-color="#0E9AA7" stop-opacity="0.18"/>
-                            <stop offset="100%" stop-color="#FF6B6B" stop-opacity="0.08"/>
+                        <linearGradient id="g1"
+                                        x1="0%"
+                                        x2="100%"
+                                        y1="0%"
+                                        y2="100%">
+                            <stop offset="0%"
+                                stop-color="#0E9AA7"
+                                stop-opacity="0.18"/>
+                            <stop offset="100%"
+                                stop-color="#FF6B6B"
+                                stop-opacity="0.08"/>
                         </linearGradient>
                     </defs>
-                    <path fill="url(#g1)" d="M421.5,330.3Q396,410,324,427.5Q252,445,192.5,402.5Q133,360,96.5,303Q60,246,95,183.5Q130,121,190.5,90.5Q251,60,318.5,76Q386,92,426,147Q466,202,421.5,330.3Z"/>
+
+                    <path fill="url(#g1)"
+                        d="M421.5,330.3Q396,410,324,427.5Q252,445,192.5,402.5Q133,360,96.5,303Q60,246,95,183.5Q130,121,190.5,90.5Q251,60,318.5,76Q386,92,426,147Q466,202,421.5,330.3Z"/>
                 </svg>
             </div>
         </section>
 
-        <section class="how-it-works">
+
+        <!-- ============================================================
+            CORE FEATURES
+        ============================================================= -->
+        <section id="features" class="how-it-works">
             <div class="section-heading">
-                <span class="eyebrow">How it works</span>
-                <h2>Start in three simple steps</h2>
+                <span class="eyebrow">What you can do</span>
+
+                <h2>
+                    Your learning tools in one place
+                </h2>
             </div>
+
             <div class="steps-grid">
+
                 <article class="step-card animate-fade-up">
                     <div class="step-icon">1</div>
-                    <h3>Open your module</h3>
-                    <p>Upload or select your learning material and begin with a clear next step.</p>
+
+                    <h3>Self Learning Modules</h3>
+
+                    <p>
+                        Explore learning modules organized around your
+                        subjects and academic needs.
+                    </p>
                 </article>
+
                 <article class="step-card animate-fade-up">
                     <div class="step-icon">2</div>
-                    <h3>Ask for guidance</h3>
-                    <p>Use the AI Helper for step-by-step explanations instead of getting stuck.</p>
+
+                    <h3>My Learning Materials</h3>
+
+                    <p>
+                        Keep your own learning materials available in
+                        the same learning space.
+                    </p>
                 </article>
+
                 <article class="step-card animate-fade-up">
                     <div class="step-icon">3</div>
-                    <h3>Learn with others</h3>
-                    <p>Join the forum for support, discussion, and shared progress.</p>
+
+                    <h3>AI Helper</h3>
+
+                    <p>
+                        Ask questions and get explanations when a topic
+                        or part of your material is difficult to understand.
+                    </p>
                 </article>
+
+                <article class="step-card animate-fade-up">
+                    <div class="step-icon">4</div>
+
+                    <h3>Discussion Forum</h3>
+
+                    <p>
+                        Ask questions, share ideas, reply to discussions,
+                        and learn with other members.
+                    </p>
+                </article>
+
             </div>
         </section>
 
+
+        <!-- ============================================================
+            SLM + HIGHLIGHT FEATURE
+        ============================================================= -->
         <section class="project-overview">
-            <h2>Helping students overcome modular learning challenges</h2>
-            <p>Modular and asynchronous learning often leaves students studying independently with limited support. EduAlly bridges that gap with a Socratic AI helper that provides guided explanations and step-by-step scaffolding instead of just answers.</p>
-            <p>The platform also includes a safe, collaborative forum where learners can ask questions, share ideas, and get support without the pressure of public judgment.</p>
+
+            <div class="section-heading">
+                <span class="eyebrow">Learn from your materials</span>
+
+                <h2>
+                    Turn confusing parts of a module into something you can understand.
+                </h2>
+            </div>
+
+            <p>
+                EduAlly lets you work directly with your learning materials.
+                When a section is difficult, you can highlight it and use
+                AI assistance to help explain the content.
+            </p>
+
+            <p>
+                You can also add your own annotations so important ideas,
+                explanations, and notes stay connected to your learning material.
+            </p>
+
             <div class="overview-grid">
+
                 <div class="overview-item">
-                    <strong>Adaptive Assistance</strong>
-                    <p>Personalized hints and guided practice tailored to each module.</p>
+                    <strong>Highlight</strong>
+
+                    <p>
+                        Select a confusing part of your learning material.
+                    </p>
                 </div>
+
                 <div class="overview-item">
-                    <strong>Progress Insights</strong>
-                    <p>Visualize growth and focus on concepts that need reinforcement.</p>
+                    <strong>Ask AI</strong>
+
+                    <p>
+                        Get help understanding the selected content.
+                    </p>
                 </div>
+
                 <div class="overview-item">
-                    <strong>Community Support</strong>
-                    <p>Private discussion spaces to ask questions and collaborate safely.</p>
+                    <strong>Add an annotation</strong>
+
+                    <p>
+                        Keep your own notes beside the material for later review.
+                    </p>
                 </div>
+
             </div>
         </section>
 
-        <section id="features" class="home-grid">
+
+        <!-- ============================================================
+            AI HELPER
+        ============================================================= -->
+        <section class="home-grid">
+
             <article class="home-item">
-                <h3>Smart Dashboard</h3>
-                <p>Track progress, manage classes, and stay on top of deadlines.</p>
+                <h3>Understand it simply</h3>
+
+                <p>
+                    Use a simplified explanation when you need a clearer
+                    and easier way to understand a difficult concept.
+                </p>
             </article>
+
             <article class="home-item">
-                <h3>Collaborative Learning</h3>
-                <p>Connect with peers and mentors to solve problems together.</p>
+                <h3>Go deeper</h3>
+
+                <p>
+                    Use a technical explanation when you need more detail
+                    about the topic.
+                </p>
             </article>
+
             <article class="home-item">
-                <h3>Secure Access</h3>
-                <p>Login safely and keep your data protected across devices.</p>
+                <h3>Think through it</h3>
+
+                <p>
+                    Use Socratic guidance to work through a topic using
+                    questions instead of simply receiving an answer.
+                </p>
             </article>
+
         </section>
 
+
+        <!-- ============================================================
+            HOW IT WORKS
+        ============================================================= -->
+        <section class="how-it-works">
+
+            <div class="section-heading">
+                <span class="eyebrow">How it works</span>
+
+                <h2>
+                    Start learning in a few simple steps
+                </h2>
+            </div>
+
+            <div class="steps-grid">
+
+                <article class="step-card animate-fade-up">
+                    <div class="step-icon">1</div>
+
+                    <h3>Create your account</h3>
+
+                    <p>
+                        Register your EduAlly account and set up your
+                        student information.
+                    </p>
+                </article>
+
+                <article class="step-card animate-fade-up">
+                    <div class="step-icon">2</div>
+
+                    <h3>Explore your materials</h3>
+
+                    <p>
+                        Open your Self Learning Modules or work with
+                        your own learning materials.
+                    </p>
+                </article>
+
+                <article class="step-card animate-fade-up">
+                    <div class="step-icon">3</div>
+
+                    <h3>Ask when you are stuck</h3>
+
+                    <p>
+                        Highlight difficult content or open the AI Helper
+                        and ask your question.
+                    </p>
+                </article>
+
+                <article class="step-card animate-fade-up">
+                    <div class="step-icon">4</div>
+
+                    <h3>Discuss and learn</h3>
+
+                    <p>
+                        Use the Discussion Forum to ask questions,
+                        share ideas, and interact with others.
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+            DASHBOARD
+        ============================================================= -->
+        <section class="project-overview">
+
+            <div class="section-heading">
+                <span class="eyebrow">Your learning space</span>
+
+                <h2>
+                    Keep your learning activities together.
+                </h2>
+            </div>
+
+            <p>
+                Your dashboard gives you a central place to access your
+                subjects, learning modules, personal materials, and recent
+                activity.
+            </p>
+
+            <div class="overview-grid">
+
+                <div class="overview-item">
+                    <strong>Subjects</strong>
+
+                    <p>
+                        Access the subjects connected to your learning experience.
+                    </p>
+                </div>
+
+                <div class="overview-item">
+                    <strong>SLM Modules</strong>
+
+                    <p>
+                        Quickly return to the learning modules available to you.
+                    </p>
+                </div>
+
+                <div class="overview-item">
+                    <strong>My Materials</strong>
+
+                    <p>
+                        Access your own uploaded learning materials.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+            COMMUNITY
+        ============================================================= -->
         <section class="benefits-grid">
+
             <article class="benefit-item">
-                <h3>Students</h3>
-                <p>Access 24/7 low-pressure support for SLMs, reduce question anxiety, and get guided breakdowns of difficult concepts.</p>
+                <h3>For Students</h3>
+
+                <p>
+                    Study your learning materials, ask AI for help,
+                    create annotations, and participate in discussions.
+                </p>
             </article>
+
             <article class="benefit-item">
-                <h3>Teachers</h3>
-                <p>Let EduAlly provide foundational academic help so classroom and consultation time can focus on advanced mentoring.</p>
+                <h3>For Teachers</h3>
+
+                <p>
+                    Manage learning content and provide students with
+                    organized materials for self-directed learning.
+                </p>
             </article>
+
             <article class="benefit-item">
-                <h3>Researchers</h3>
-                <p>Use the platform as a model for AI-supported pedagogy and the study of self-paced learning and student motivation.</p>
+                <h3>Learn Together</h3>
+
+                <p>
+                    Use the discussion forum to ask questions, share
+                    knowledge, and participate in academic discussions.
+                </p>
             </article>
+
         </section>
 
+
+        <!-- ============================================================
+            ABOUT / FINAL CTA
+        ============================================================= -->
         <section id="about" class="info-section">
-            <h2>Why EduAlly?</h2>
-            <p>Designed for students who want structure, clarity, and motivation, EduAlly gives you simple tools to stay engaged and achieve more.</p>
+
+            <span class="eyebrow">About EduAlly</span>
+
+            <h2>
+                A learning companion built around your actual study experience.
+            </h2>
+
+            <p>
+                EduAlly brings Self Learning Modules, personal learning
+                materials, AI-assisted explanations, annotations, and
+                discussion tools into one platform for self-directed and
+                collaborative learning.
+            </p>
+
+            <div class="button-group">
+                <a class="button" href="{% url 'account:register' %}">
+                    Create an Account
+                </a>
+
+                <a class="button button-outline"
+                href="{% url 'account:login' %}">
+                    Sign In
+                </a>
+            </div>
+
         </section>
+
     </main>
 
     <footer class="page-footer" id="footer">

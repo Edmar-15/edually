@@ -293,7 +293,7 @@ function renderCard(subject) {
       $list.innerHTML = "";
       const data = payload.results;
       if (data.length === 0) {
-        $list.innerHTML = "<p>No subjects yet.</p>";
+        $list.innerHTML = "<p>No subjects found. Please make sure your year level is set.</p>";
       } else {
         let row;
         data.forEach((subject, idx) => {

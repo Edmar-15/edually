@@ -167,20 +167,30 @@ def api_subject_list(request):
     }
     """
     # -----------------------------------------------------------------
-    # 1️⃣  Base queryset – public, non‑archived subjects
+    # 1️⃣ Base queryset – public, non-archived subjects
     # -----------------------------------------------------------------
     qs = Subject.objects.select_related("author").filter(is_archived=False)
 
     # -----------------------------------------------------------------
-    # 2️⃣  If the requester is a *student* we limit to *their* year level
+    # 2️⃣ Teachers only see subjects they uploaded/created
     # -----------------------------------------------------------------
-    if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
-        # ``year_level`` returns a string like “2nd Year” or “3rd Year”.
-        # We only need the leading digit (2 or 3) to match Subject.YEAR_CHOICES.
-        year_label = request.user.year_level            # e.g. "2nd Year"
-        match = re.search(r"\d+", year_label or "")
-        if match:
-            numeric_year = match.group()                # "2" or "3"
+    if getattr(request.user, "is_teacher_member", False):
+        qs = qs.filter(author=request.user)
+
+    # -----------------------------------------------------------------
+    # 3️⃣ Students only see subjects matching their year level
+    # -----------------------------------------------------------------
+    elif getattr(request.user, "is_student_member", False):
+
+        # Students must have a year level before SLM subjects become visible.
+        year_label = getattr(request.user, "year_level", None) or ""
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            # No year level = no subjects visible.
+            qs = qs.none()
+        else:
+            numeric_year = match.group()
             qs = qs.filter(year=numeric_year)
 
     # -----------------------------------------------------------------
@@ -312,35 +322,56 @@ def api_subject_delete(request, pk):
 @login_required(login_url='account:login')
 def subject_modules(request, subject_id):
     """
-    Renders a normal HTML page that shows **all modules belonging to
-    the given subject**.
+    Render the modules belonging to a subject.
+
+    Archived subjects remain accessible to their teacher so the teacher
+    can manage/restore them from the archive. Students cannot access
+    archived subjects.
     """
     subject = get_object_or_404(Subject, pk=subject_id)
 
-    # --------------------------------------------------------------
-    # 1️⃣  Students may only view subjects that match their own year.
-    # --------------------------------------------------------------
-    if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
-        # ``year_level`` is like “2nd Year”.  Pull the digit.
-        year_label = request.user.year_level
-        match = re.search(r"\d+", year_label or "")
-        if match and subject.year != match.group():
-            # Not allowed – hide the subject (or you could 404 instead).
+    # Archived subjects are not available to students.
+    if (
+        subject.is_archived
+        and getattr(request.user, "is_student_member", False)
+    ):
+        return HttpResponseForbidden(
+            "This subject has been archived and is no longer available."
+        )
+
+    # Students may only view subjects that match their own year.
+    if getattr(request.user, "is_student_member", False):
+
+        year_label = getattr(request.user, "year_level", None) or ""
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            return HttpResponseForbidden(
+                "You must set your year level before viewing subjects."
+            )
+
+        if subject.year != match.group():
             return HttpResponseForbidden(
                 "You cannot view subjects for a different year level."
             )
 
-    # -----------------------------------------------------------------
-    # 2️⃣  Normal module query – unchanged.
-    # -----------------------------------------------------------------
-    modules = Module.objects.filter(subject=subject).select_related('subject')
+    # Teachers viewing their archived subject can still see its modules.
+    modules = (
+        Module.objects
+        .filter(subject=subject, is_archived=False)
+        .select_related("subject")
+    )
 
     context = {
         "subject": subject,
         "modules": modules,
     }
-    return render(request, "slm/subject_modules.html", context)
 
+    return render(
+        request,
+        "slm/subject_modules.html",
+        context,
+    )
 
 @login_required(login_url='account:login')
 @require_GET
@@ -409,7 +440,40 @@ def api_module_list(request, subject_id):
     Returns the same pagination meta‑structure that the subject list does.
     """
     subject = get_object_or_404(Subject, pk=subject_id)
-    qs = Module.objects.filter(subject=subject, is_archived=False).order_by("module_number")
+
+    # Archived subjects are unavailable to students.
+    if (
+        subject.is_archived
+        and getattr(request.user, "is_student_member", False)
+    ):
+        return JsonResponse(
+            {
+                "error": "This subject has been archived and is no longer available."
+            },
+            status=403,
+        )
+
+    if request.user.is_authenticated and getattr(request.user, "is_student_member", False):
+
+        year_label = getattr(request.user, "year_level", None) or ""
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            return JsonResponse(
+                {"error": "You must set your year level before viewing modules."},
+                status=403,
+            )
+
+        if subject.year != match.group():
+            return JsonResponse(
+                {"error": "You cannot view modules for a different year level."},
+                status=403,
+            )
+
+    qs = Module.objects.filter(
+        subject=subject,
+        is_archived=False
+    ).order_by("module_number")
 
     paginator = Paginator(qs, PAGE_SIZE)          # reuse PAGE_SIZE from above
     page_number = request.GET.get("page", 1)
@@ -445,6 +509,17 @@ def api_module_create(request, subject_id):
 
     if subject.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
+    
+    if subject.is_archived:
+        return JsonResponse(
+            {
+                "error": (
+                    "This subject is archived. "
+                    "Restore the subject before adding new modules."
+                )
+            },
+            status=400,
+        )
 
     module_number = request.POST.get("module_number")
     module_name   = request.POST.get("module_name", "").strip()
@@ -674,6 +749,36 @@ def module_detail(request, subject_id, module_id):
     The original file can still be downloaded.
     """
     subject = get_object_or_404(Subject, pk=subject_id)
+
+    # Students cannot directly open modules belonging to
+    # an archived subject.
+    if (
+        subject.is_archived
+        and getattr(request.user, "is_student_member", False)
+    ):
+        return HttpResponseForbidden(
+            "This subject has been archived and is no longer available."
+        )
+
+    if request.user.is_authenticated and getattr(
+        request.user,
+        "is_student_member",
+        False,
+    ):
+
+        year_label = getattr(request.user, "year_level", None) or ""
+        match = re.search(r"\d+", year_label)
+
+        if not match:
+            return HttpResponseForbidden(
+                "You must set your year level before viewing learning materials."
+            )
+
+        if subject.year != match.group():
+            return HttpResponseForbidden(
+                "You cannot view learning materials for a different year level."
+            )
+
     module = get_object_or_404(Module, pk=module_id, subject=subject)
 
     recent_modules = request.session.get("recent_modules", [])

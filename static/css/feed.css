@@ -955,7 +955,7 @@ html.dark .post-form select {
 
 .forum-sidebar {
     position: sticky;
-    top: 250px;
+    top: 110px;
     align-self: start;
     width: 320px;
     flex-shrink: 0;

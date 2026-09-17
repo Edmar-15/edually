@@ -9,18 +9,35 @@ from .models import UserConsent
 
 def _is_exempt(request):
     """
-    Return ``True`` if the request should bypass the consent check.
+    Return True if the request should bypass the consent check.
     """
+
     # 1. Anonymous users – they have no consent to check.
     if not request.user.is_authenticated:
         return True
 
-    # 2. Superusers are exempt – they never need to accept the policies.
+    # 2. Superusers are exempt.
     if request.user.is_superuser:
         return True
 
-    # 3. Explicitly exempt URLs (login, logout, register, policy pages, admin, etc.)
+    # 3. Technical/static endpoints that must remain directly accessible.
+    #
+    # The service worker is especially important here. If the consent
+    # middleware redirects /service-worker.js to the consent page, the
+    # browser can store that URL as post_consent_redirect. After the user
+    # accepts the policy, they would then be redirected to the JS file.
+    if request.path in {
+        "/service-worker.js",
+        "/manifest.json",
+        "/offline/",
+        "/robots.txt",
+        "/sitemap.xml",
+    }:
+        return True
+
+    # 4. Explicitly exempt URLs.
     resolver_match = request.resolver_match
+
     if resolver_match:
         exempt_names = {
             "login",
@@ -29,10 +46,18 @@ def _is_exempt(request):
             "terms",
             "privacy",
             "consent_required",
-            "logout_confirm"
+            "logout_confirm",
+            "service-worker",
+            "manifest",
+            "offline",
         }
-        if resolver_match.namespace == "account" and resolver_match.url_name in exempt_names:
+
+        if (
+            resolver_match.namespace == "account"
+            and resolver_match.url_name in exempt_names
+        ):
             return True
+
         if resolver_match.namespace == "admin":
             return True
 
@@ -57,9 +82,16 @@ class RequireLatestConsentMiddleware(MiddlewareMixin):
             consent = None
 
         if consent is None or consent.version != settings.POLICY_VERSION:
-            request.session["post_consent_redirect"] = request.get_full_path()
+            # Only remember actual application pages.
+            # Never redirect back to static/media resources.
+            if (
+                request.method == "GET"
+                and not request.path.startswith("/static/")
+                and not request.path.startswith("/media/")
+            ):
+                request.session["post_consent_redirect"] = request.get_full_path()
+
             return redirect(reverse("account:consent_required"))
-        return None
 
 
 def _email_verification_exempt(request) -> bool:
@@ -73,6 +105,16 @@ def _email_verification_exempt(request) -> bool:
 
     # 2️⃣  Staff / super‑users are trusted to bypass verification.
     if request.user.is_staff or request.user.is_superuser:
+        return True
+    
+        # 3. Technical/static endpoints must always remain accessible.
+    if request.path in {
+        "/service-worker.js",
+        "/manifest.json",
+        "/offline/",
+        "/robots.txt",
+        "/sitemap.xml",
+    }:
         return True
 
     # 3️⃣  Explicitly allow a handful of URLs (login, logout, registration,
@@ -95,8 +137,6 @@ def _email_verification_exempt(request) -> bool:
             # password‑reset
             "password_reset_request",
             "password_reset_confirm",
-            # logout‑confirm modal (used by the UI)
-            "logout_confirm",
         }
 
         # The view lives in the ``account`` namespace (all your auth URLs)

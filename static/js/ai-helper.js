@@ -307,7 +307,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await resp.json();
 
             if (data.messages && data.messages.length) {
-                data.messages.forEach(m => appendMessage(m.role, m.content));
+                data.messages.forEach(m => {
+                    appendMessage(
+                        m.role,
+                        m.content,
+                        false,
+                        m.source_type || null,
+                        m.source_label || null,
+                        m.source_metadata || []
+                    );
+                });
+
                 renderPromptHistory(data.messages, convId);
                 toggleEmptyState(false);
             } else {
@@ -360,7 +370,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await resp.json();
 
             if (resp.ok && data.answer) {
-                appendMessage("ai", data.answer, true);
+                appendMessage(
+                    "ai",
+                    data.answer,
+                    true,
+                    data.source || "general",
+                    data.source_label || "General knowledge",
+                    data.sources || []
+                );
 
                 // Server might have created a new conversation – keep UI in sync
                 if (!activeConversationId || activeConversationId != data.conversation_id) {
@@ -412,7 +429,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function appendMessage(role, text, animate = false) {
+    function appendMessage(
+        role,
+        text,
+        animate = false,
+        source = null,
+        sourceLabel = null,
+        sources = []
+    ) {
         const msgDiv = document.createElement("div");
         msgDiv.className = `message ${role}-message`;
         msgDiv.dataset.messageIndex = messageCounter;
@@ -420,6 +444,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const avatar = document.createElement("div");
         avatar.className = "message-avatar";
+
         if (role === "ai") {
             avatar.innerHTML = '<i class="fa-solid fa-robot"></i>';
         } else {
@@ -432,20 +457,102 @@ document.addEventListener("DOMContentLoaded", () => {
         const txt = document.createElement("div");
         txt.className = "message-text";
 
-        // Show the AI label only for assistant replies.
-        if (role === 'ai') {
+        // -------------------------------------------------------------
+        // AI RESPONSE SOURCE INDICATOR
+        // -------------------------------------------------------------
+        if (role === "ai") {
             const author = document.createElement("p");
             author.className = "message-author";
             author.textContent = "EduAlly";
-            body.append(author, txt);
+
+            body.appendChild(author);
+
+            /*
+            * Only show the source indicator when the backend tells us
+            * where the answer came from.
+            */
+            if (source) {
+                const sourceBadge = document.createElement("div");
+
+                const isSlm = source === "slm";
+
+                sourceBadge.className = isSlm
+                    ? "ai-source-badge ai-source-slm"
+                    : "ai-source-badge ai-source-general";
+
+                sourceBadge.innerHTML = isSlm
+                    ? `
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>${escapeHtml(
+                            sourceLabel || "From your learning materials"
+                        )}</span>
+                    `
+                    : `
+                        <i class="fa-solid fa-globe"></i>
+                        <span>${escapeHtml(
+                            sourceLabel || "General knowledge"
+                        )}</span>
+                    `;
+
+                body.appendChild(sourceBadge);
+
+                // -----------------------------------------------------
+                // Show the actual SLM source when available.
+                // -----------------------------------------------------
+                if (
+                    isSlm &&
+                    Array.isArray(sources) &&
+                    sources.length > 0
+                ) {
+                    const sourceDetails = document.createElement("div");
+                    sourceDetails.className = "ai-source-details";
+
+                    sources.forEach((item) => {
+                        const sourceItem = document.createElement("div");
+                        sourceItem.className = "ai-source-item";
+
+                        let label = "";
+
+                        if (item.type === "module") {
+                            label = [
+                                item.subject_code,
+                                item.subject_name,
+                                item.module_number
+                                    ? `Module ${item.module_number}`
+                                    : null,
+                                item.title
+                            ]
+                                .filter(Boolean)
+                                .join(" • ");
+                        } else if (item.type === "personal_material") {
+                            label = `Personal Material • ${item.title || "Untitled"}`;
+                        } else {
+                            label = item.title || "Learning material";
+                        }
+
+                        sourceItem.innerHTML = `
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span>${escapeHtml(label)}</span>
+                        `;
+
+                        sourceDetails.appendChild(sourceItem);
+                    });
+
+                    body.appendChild(sourceDetails);
+                }
+            }
+
+            body.appendChild(txt);
         } else {
-            body.append(txt);
+            body.appendChild(txt);
         }
+
         msgDiv.append(avatar, body);
 
         // Keep the loader at the end of the chat.
         const loaderEl = chatWindow.querySelector("#chat-loading");
         const minimap = chatWindow.querySelector(".message-minimap");
+
         if (loaderEl) {
             chatWindow.insertBefore(msgDiv, loaderEl);
         } else if (minimap) {

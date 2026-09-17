@@ -120,6 +120,27 @@ urlpatterns = [
     path('archives/personal-materials/<int:pk>/delete/',
         views.archive_personal_material_delete,
         name='archive-personal-material-delete'),
+    # --- Subjects ---
+    path(
+        'archives/subjects/',
+        views.archive_subject_list,
+        name='archive-subjects',
+    ),
+    path(
+        'archives/subjects/<int:pk>/',
+        views.archive_subject_detail,
+        name='archive-subject-detail',
+    ),
+    path(
+        'archives/subjects/<int:pk>/delete-modal/',
+        views.archive_subject_delete_modal,
+        name='archive-subject-delete-modal',
+    ),
+    path(
+        'archives/subjects/<int:pk>/delete/',
+        views.archive_subject_delete,
+        name='archive-subject-delete',
+    ),
     path("password-reset/", views.password_reset_request, name="password_reset_request"),
     path("reset-password/", views.password_reset_confirm, name="password_reset_confirm"),
 ]
