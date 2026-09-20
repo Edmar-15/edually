@@ -6,45 +6,36 @@
     <title>{% block title %}EduAlly – AI-Powered Learning Platform{% endblock %}</title>
 
     <meta name="description"
-        content="{% block meta_description %}EduAlly is an AI-powered learning platform that helps students study, understand learning materials, and receive personalized academic assistance.{% endblock %}">
+          content="{% block meta_description %}EduAlly is an AI-powered learning platform that helps students study, understand learning materials, and receive personalized academic assistance.{% endblock %}">
 
     <meta name="robots"
-        content="{% block robots %}index, follow{% endblock %}">
+          content="{% block robots %}index, follow{% endblock %}">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <meta name="theme-color" content="#0E9AA7">
 
     <link rel="canonical"
-        href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+          href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
 
     <!-- Open Graph -->
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:site_name" content="EduAlly">
-
     <meta property="og:title"
-        content="{% block og_title %}EduAlly – AI-Powered Learning Platform{% endblock %}">
-
+          content="{% block og_title %}EduAlly – AI-Powered Learning Platform{% endblock %}">
     <meta property="og:description"
-        content="{% block og_description %}EduAlly is an AI-powered learning platform designed to help students study and understand their learning materials.{% endblock %}">
-
-    <meta property="og:url"
-        content="{{ request.build_absolute_uri }}">
-
+          content="{% block og_description %}EduAlly is an AI-powered learning platform designed to help students study and understand their learning materials.{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:image"
-        content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.png' %}{% endblock %}">
+          content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.png' %}{% endblock %}">
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image">
-
     <meta name="twitter:title"
-        content="{% block twitter_title %}EduAlly – AI-Powered Learning Platform{% endblock %}">
-
+          content="{% block twitter_title %}EduAlly – AI-Powered Learning Platform{% endblock %}">
     <meta name="twitter:description"
-        content="{% block twitter_description %}EduAlly helps students study, understand learning materials, and receive AI-powered academic assistance.{% endblock %}">
-
+          content="{% block twitter_description %}EduAlly helps students study, understand learning materials, and receive AI-powered academic assistance.{% endblock %}">
     <meta name="twitter:image"
-        content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.png' %}{% endblock %}">
+          content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.png' %}{% endblock %}">
 
     <!-- 1️⃣ Manifest -->
     <link rel="manifest" href="{% url 'manifest' %}">
@@ -55,6 +46,7 @@
     <link rel="apple-touch-icon" href="{% static 'icons/icon-192x192.png' %}">
 
     <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+
     <script>
         (function () {
             const html = document.documentElement;
@@ -97,20 +89,22 @@
             html.style.colorScheme = theme;
         })();
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
     <!-- Your regular CSS/JS (adjust paths) -->
     {% block extra_head %}{% endblock %}
 </head>
 
-<body {% block body_attributes %}{% endblock  %}>
+<body {% block body_attributes %}{% endblock %}>
     {% if messages %}
-      <ul class="messages" aria-live="polite" style="display:none;">
-        {% for message in messages %}
-          <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-      </ul>
+        <ul class="messages" aria-live="polite" style="display:none;">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
     {% endif %}
 
     {% block content %}{% endblock %}
@@ -133,22 +127,22 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js?v={{ PWA_SW_VERSION|default:"20260819" }}')
                 .then(reg => {
-                // If a new SW is waiting, tell it to activate now.
-                if (reg.waiting) {
-                    reg.waiting.postMessage({type: 'SKIP_WAITING'});
-                }
-
-                // Listen for future updates and apply them automatically.
-                reg.addEventListener('updatefound', () => {
-                    const newSW = reg.installing;
-                    newSW.addEventListener('statechange', () => {
-                    if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                        newSW.postMessage({type: 'SKIP_WAITING'});
+                    // If a new SW is waiting, tell it to activate now.
+                    if (reg.waiting) {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
                     }
+
+                    // Listen for future updates and apply them automatically.
+                    reg.addEventListener('updatefound', () => {
+                        const newSW = reg.installing;
+                        newSW.addEventListener('statechange', () => {
+                            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                                newSW.postMessage({ type: 'SKIP_WAITING' });
+                            }
+                        });
                     });
                 });
-                });
-            }
+        }
 
         {% if user.is_authenticated and VAPID_PUBLIC_KEY %}
         window.enablePushNotifications = async function () {
