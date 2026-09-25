@@ -20,11 +20,11 @@ class Category(models.Model):
     
     @property
     def post_count(self):
-        return self.post_set.filter(is_deleted=False).count()
-    
+        return self.post_set.filter(is_deleted=False, is_archived=False).count()
+
     @property
     def recent_posts(self):
-        return self.post_set.filter(is_deleted=False).order_by('-created_at')[:5]
+        return self.post_set.filter(is_deleted=False, is_archived=False).order_by('-created_at')[:5]
 
 
 class Post(models.Model):
