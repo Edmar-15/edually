@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Render all toasts that were generated server‑side.
   // -----------------------------------------------------------------
   const renderToastsFromLists = () => {
-    const container = getToastContainer();
+    const renderedMessages = new Set();
 
     getMessagesLists().forEach(messagesList => {
       // Prevent double‑processing if the script re‑runs.
@@ -137,8 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const type = mapTagToType(item.className);
         const text = item.textContent.trim();
+        const messageKey = `${type}:${text}`;
 
-        if (text) {
+        if (text && !renderedMessages.has(messageKey)) {
+          renderedMessages.add(messageKey);
           window.showGlobalToast(text, type);
         }
       });
