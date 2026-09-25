@@ -615,18 +615,26 @@ self.addEventListener("push", (event) => {
   let payload = null;
 
   try {
-    payload = event.data ? event.data.json() : null;
+    if (event.data) {
+      const rawData = event.data.text();
+
+      try {
+        payload = rawData ? JSON.parse(rawData) : null;
+      } catch (error) {
+        payload = { body: rawData };
+      }
+    }
   } catch (error) {
     console.warn("EduAlly SW: invalid push payload.", error);
   }
 
-  const title = payload?.title || "EduAlly notification";
+  const title = payload?.title || "EduAlly forum activity";
 
-  const body = payload?.body || "You have a new announcement.";
+  const body = payload?.body || "You have new activity on the forum.";
 
-  const tag = payload?.tag || "edually-announcement";
+  const tag = payload?.tag || "edually-forum";
 
-  const targetUrl = payload?.url || "/account/announcements/";
+  const targetUrl = payload?.url || "/forum/notifications/";
 
   const icon = payload?.icon || "/static/icons/icon-192x192.png";
 
@@ -649,7 +657,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const targetUrl = event.notification.data?.url || "/account/announcements/";
+  const targetUrl = event.notification.data?.url || "/forum/notifications/";
 
   event.waitUntil(
     clients

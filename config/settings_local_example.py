@@ -45,6 +45,10 @@ DATABASES = {
     }
 }
 
+VAPID_PUBLIC_KEY = "pubkeyhere"
+VAPID_PRIVATE_KEY = "yprivkeyhere"
+VAPID_ADMIN_EMAIL = "email@edually.edu"
+
 # --------------------------------------------------------------
 # GOOGLE OAUTH2
 # --------------------------------------------------------------

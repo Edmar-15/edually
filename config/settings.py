@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -46,6 +47,8 @@ INSTALLED_APPS = [
     'axes',
     'django_ratelimit',
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -174,10 +177,11 @@ OLLAMA_MODEL = ""
 OPENAI_API_KEY = "OPENAI_API_KEY"          
 OPENAI_MODEL   = "gpt-4o-mini"
 
-PWA_SW_VERSION = "20260917"
+PWA_SW_VERSION = "20260926"
 
-VAPID_PUBLIC_KEY  = ""
-VAPID_PRIVATE_KEY = ""
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
+VAPID_ADMIN_EMAIL = os.getenv("VAPID_ADMIN_EMAIL", "")
 
 # settings.py
 

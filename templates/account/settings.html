@@ -358,11 +358,9 @@
                                            id="otp_code"
                                            class="authenticator-code-input"
                                            maxlength="6"
-                                           placeholder="123456"
                                            inputmode="numeric"
                                            autocomplete="one-time-code"
                                            aria-label="Authentication code">
-
                                     <label for="otp_code">
                                         Authenticator code
                                     </label>
@@ -610,7 +608,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                    name="gmail_otp"
                                    id="gmail_otp"
                                    maxlength="6"
-                                   placeholder="123456"
                                    inputmode="numeric"
                                    autocomplete="one-time-code"
                                    aria-label="Gmail verification code"
@@ -1019,6 +1016,34 @@ async function syncNotificationSubscriptionState() {
 
 window.enablePushNotifications = async function () {
 
+    const vapidPublicKey =
+        '{{ VAPID_PUBLIC_KEY|escapejs }}';
+
+    if (!vapidPublicKey) {
+        setNotificationStatus(
+            'Web push is not configured on this server. Add the VAPID keys, then refresh this page.'
+        );
+
+        return false;
+    }
+
+    let applicationServerKey;
+
+    try {
+        applicationServerKey =
+            urlBase64ToUint8Array(vapidPublicKey);
+
+        if (applicationServerKey.length !== 65 || applicationServerKey[0] !== 4) {
+            throw new Error('The configured VAPID public key is invalid.');
+        }
+    } catch (error) {
+        setNotificationStatus(
+            'The VAPID public key is invalid. Use the URL-safe public key generated for web push.'
+        );
+
+        return false;
+    }
+
     if (
         !('PushManager' in window) ||
         !('Notification' in window) ||
@@ -1083,15 +1108,53 @@ window.enablePushNotifications = async function () {
     const registration =
         await navigator.serviceWorker.ready;
 
-    const subscription =
-        await registration.pushManager.subscribe({
-            userVisibleOnly: true,
+    let subscription =
+        await registration.pushManager.getSubscription();
 
-            applicationServerKey:
-                urlBase64ToUint8Array(
-                    '{{ VAPID_PUBLIC_KEY }}'
-                ).buffer
-        });
+    if (subscription) {
+        const existingKey =
+            subscription.options && subscription.options.applicationServerKey;
+
+        const existingKeyBytes = existingKey
+            ? new Uint8Array(existingKey)
+            : null;
+
+        const usesCurrentKey =
+            existingKeyBytes &&
+            existingKeyBytes.length === applicationServerKey.length &&
+            existingKeyBytes.every(
+                (value, index) => value === applicationServerKey[index]
+            );
+
+        if (!usesCurrentKey) {
+            await subscription.unsubscribe();
+            subscription = null;
+        }
+    }
+
+    if (!subscription) {
+        try {
+            subscription =
+                await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+
+                    applicationServerKey:
+                        applicationServerKey.buffer
+                });
+        } catch (error) {
+            console.error('Failed to register browser push subscription.', error);
+
+            const message =
+                error && error.name === 'AbortError'
+                    ? 'The browser push service could not be reached. Check your internet connection, browser notification settings, and try again.'
+                    : error && error.message
+                        ? `Push registration failed: ${error.message}`
+                        : 'Push registration failed. Check your browser notification settings and try again.';
+
+            setNotificationStatus(message);
+            return false;
+        }
+    }
 
 
     const response = await fetch(
@@ -1136,7 +1199,7 @@ window.enablePushNotifications = async function () {
     applyNotificationToggleState(true);
 
     setNotificationStatus(
-        'Push notifications are enabled. New announcements will now show as browser notifications.'
+        'Push notifications are enabled. New replies and upvotes will now show as browser notifications.'
     );
 
     return true;

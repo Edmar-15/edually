@@ -282,7 +282,7 @@ class PushSubscription(models.Model):
         on_delete=models.CASCADE,
         related_name="push_subscriptions",
     )
-    endpoint = models.URLField()
+    endpoint = models.URLField(max_length=500)
     auth = models.CharField(max_length=255)
     p256dh = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)

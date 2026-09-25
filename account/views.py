@@ -1167,11 +1167,16 @@ def api_push_subscribe(request):
     if not endpoint or not auth or not p256dh:
         return JsonResponse({"error": "Incomplete push subscription payload"}, status=400)
 
-    subscription, _ = PushSubscription.objects.update_or_create(
-        user=request.user,
-        endpoint=endpoint,
-        defaults={"auth": auth, "p256dh": p256dh},
-    )
+    try:
+        subscription, _ = PushSubscription.objects.update_or_create(
+            user=request.user,
+            endpoint=endpoint,
+            defaults={"auth": auth, "p256dh": p256dh},
+        )
+    except Exception:
+        logger.exception("Failed to save push subscription for user %s", request.user.pk)
+        return JsonResponse({"error": "Could not save push subscription"}, status=500)
+
     return JsonResponse({"success": True, "id": subscription.pk})
 
 

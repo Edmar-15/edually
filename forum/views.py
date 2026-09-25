@@ -620,6 +620,15 @@ def upvote_post(request, post_id):
 
     post.save(update_fields=['upvotes'])
 
+    if created and post.author_id != request.user.id:
+        send_push_notification(
+            post.author,
+            "New upvote on your discussion",
+            f"{request.user.get_full_name() or request.user.username} upvoted {post.title}",
+            reverse('forum:post_detail', kwargs={'post_id': post.pk}),
+            tag=f"forum-post-upvote-{post.pk}",
+        )
+
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.content_type == 'application/json':
         return JsonResponse({
             'success': True,
@@ -647,6 +656,15 @@ def upvote_reply(request, reply_id):
         has_upvoted = True
 
     reply.save(update_fields=['upvotes'])
+
+    if created and reply.author_id != request.user.id:
+        send_push_notification(
+            reply.author,
+            "New upvote on your reply",
+            f"{request.user.get_full_name() or request.user.username} upvoted your reply in {reply.post.title}",
+            reverse('forum:post_detail', kwargs={'post_id': reply.post_id}),
+            tag=f"forum-reply-upvote-{reply.pk}",
+        )
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.content_type == 'application/json':
         return JsonResponse({

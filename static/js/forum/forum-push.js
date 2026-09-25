@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="button" class="modal__close" data-close-push-modal aria-label="Close notification dialog">&times;</button>
                 </div>
                 <div class="modal__body">
-                    <p>Get an alert when someone replies to one of your discussions.</p>
+                    <p>Get alerts when someone replies to or upvotes your discussions and replies.</p>
                     <p class="forum-push-modal__status" data-push-status aria-live="polite"></p>
                 </div>
                 <div class="modal__footer">
