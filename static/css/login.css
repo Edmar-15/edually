@@ -328,7 +328,8 @@ label {
     font-size: 1rem;
     line-height: 1;
     transform: translateY(-50%);
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: text;
     transition: top 0.2s ease, transform 0.2s ease, font-size 0.2s ease, color 0.2s ease;
 }
 
@@ -354,6 +355,13 @@ label {
 
 .password-reset-page .floating-label-group>label {
     top: 28px;
+}
+
+.floating-label-group:hover>label {
+    top: 0;
+    transform: translateY(-50%);
+    font-size: 0.78rem;
+    color: var(--primary);
 }
 
 /* ------------------------------------------------------------- */
@@ -1064,6 +1072,25 @@ form button[type="submit"]:hover {
         transform: translateY(-50%);
     }
 
+    .register-page .floating-label-group:focus-within>label,
+    .register-page .floating-label-group.focused>label,
+    .register-page .floating-label-group.has-value>label,
+    .register-page .floating-label-group:has(input:not(:placeholder-shown))>label {
+        top: 0;
+        left: 12px;
+        font-size: 0.78rem;
+        transform: translateY(-50%);
+    }
+
+    .register-page label[for="id_email"] {
+        display: none;
+    }
+
+    .register-page #id_email::placeholder {
+        color: #64748b;
+        opacity: 1;
+    }
+
     .password-reset-page .floating-label-group>label {
         top: 24px;
         left: 12px;
@@ -1074,11 +1101,30 @@ form button[type="submit"]:hover {
         padding: 12px;
         border-radius: 14px;
     }
+
+    .password-reset-page label[for="id_email"] {
+        display: none;
+    }
+
+    .password-reset-page #id_email::placeholder {
+        color: #64748b;
+        opacity: 1;
+    }
 }
 
 .login-page .password-input-wrapper:focus-within+label {
     top: 0;
     left: 18px;
+    transform: translateY(-50%);
+    font-size: 0.78rem;
+    color: var(--primary);
+}
+
+.login-page .floating-label-group:hover>label,
+.register-page .floating-label-group:hover>label,
+.password-reset-page .floating-label-group:hover>label,
+.add-password-page .floating-label-group:hover>label {
+    top: 0;
     transform: translateY(-50%);
     font-size: 0.78rem;
     color: var(--primary);

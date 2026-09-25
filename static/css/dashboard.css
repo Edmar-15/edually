@@ -618,6 +618,22 @@ html[data-theme="dark"] .nav-item.logout:hover {
     border-radius: var(--radius-lg);
 }
 
+@media (min-width: 1440px) {
+    .dashboard-content {
+        padding-top: var(--space-7);
+    }
+
+    .dashboard-content .container {
+        gap: var(--space-5);
+    }
+}
+
+@media (min-width: 1920px) {
+    .dashboard-home .dashboard-stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
 .SidebarProvider .sidebar {
     transition: transform 0.25s ease, width 0.25s ease, padding 0.25s ease, opacity 0.25s ease;
 }
@@ -1949,6 +1965,13 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     padding: 0 4px;
 }
 
+.floating-label-group:hover > label {
+    top: -0.75rem;
+    font-size: 0.8rem;
+    color: var(--primary);
+    background: rgba(248, 250, 252, 0.95);
+}
+
 .floating-label-group input:focus ~ label,
 .floating-label-group input:not(:placeholder-shown) ~ label,
 .floating-label-group select ~ label,
@@ -2581,6 +2604,15 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
 
     .floating-label-group label {
         font-size: 0.8rem;
+    }
+
+    .profile-details-card label[for="id_username"] {
+        display: none;
+    }
+
+    .profile-details-card #id_username::placeholder {
+        color: var(--muted);
+        opacity: 1;
     }
 
     .name-row {
@@ -3526,7 +3558,8 @@ html[data-theme="dark"] .forum-action-modal select:focus {
    ================================================================ */
 
 .dashboard-home {
-    width: min(1180px, calc(100% - 48px));
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
     gap: 28px !important;
 }

@@ -2863,7 +2863,7 @@ html[data-theme="dark"] .avatar {
 .verified-badge,
 .badge {
     display: inline-block;
-    padding: 0.5rem 1rem;
+    padding: 0.2rem 1rem;
     background: linear-gradient(135deg, #10b981, #059669);
     color: white;
     border-radius: 999px;

@@ -88,7 +88,7 @@ body {
 }
 
 .header-inner {
-    max-width: 1200px;
+    max-width: 1440px;
     margin: 0 auto;
 
     display: flex;
@@ -256,7 +256,7 @@ body {
    ============================================================ */
 
 .landing-container {
-    max-width: 1200px;
+    max-width: 1440px;
 
     margin: 0 auto;
 
@@ -904,7 +904,7 @@ body {
 }
 
 .footer-inner {
-    max-width: 1200px;
+    max-width: 1440px;
 
     margin: 0 auto;
 
@@ -970,6 +970,15 @@ body {
     font-size: 0.92rem;
 
     color: var(--muted);
+}
+
+@media (min-width: 1920px) {
+
+    .header-inner,
+    .landing-container,
+    .footer-inner {
+        max-width: 1680px;
+    }
 }
 
 
