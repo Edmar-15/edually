@@ -19,6 +19,51 @@ class LoginFormTests(TestCase):
         self.assertIsInstance(form.fields["username"].widget, forms.EmailInput)
 
 
+class EmailVerificationGateTests(TestCase):
+    def test_unverified_login_is_blocked_regardless_of_two_factor(self):
+        for two_factor_enabled in (False, True):
+            with self.subTest(two_factor_enabled=two_factor_enabled):
+                user = User.objects.create_user(
+                    email=f"unverified-{two_factor_enabled}@example.com",
+                    password="secret123",
+                    username=f"unverified-{two_factor_enabled}",
+                    two_factor_enabled=two_factor_enabled,
+                )
+
+                with patch("account.views._send_email_verification"):
+                    response = self.client.post(
+                        reverse("account:login"),
+                        {"username": user.email, "password": "secret123"},
+                    )
+
+                self.assertRedirects(
+                    response,
+                    reverse("account:email_verification_required"),
+                    fetch_redirect_response=False,
+                )
+                self.assertIn("_auth_user_id", self.client.session)
+                self.client.logout()
+
+    def test_unverified_user_with_or_without_two_factor_is_blocked_by_middleware(self):
+        for two_factor_enabled in (False, True):
+            with self.subTest(two_factor_enabled=two_factor_enabled):
+                user = User.objects.create_user(
+                    email=f"unverified-{two_factor_enabled}@example.com",
+                    password="secret123",
+                    username=f"unverified-{two_factor_enabled}",
+                    two_factor_enabled=two_factor_enabled,
+                )
+                UserConsent.objects.create(user=user, version="1.0")
+                self.client.force_login(user)
+
+                response = self.client.get(reverse("account:dashboard"))
+
+                self.assertRedirects(response, reverse("account:email_verification_required"), fetch_redirect_response=False)
+                verification_response = self.client.get(reverse("account:email_verification_required"))
+                self.assertEqual(verification_response.status_code, 200)
+                self.client.logout()
+
+
 class UserBadgeTests(TestCase):
     def test_forum_badge_labels_by_karma_thresholds(self):
         beginner = User.objects.create_user(
@@ -82,6 +127,7 @@ class SettingsPageTests(TestCase):
             email="student@example.com",
             password="secret123",
             username="student",
+            email_verified=True,
         )
         self.client.force_login(self.user)
         UserConsent.objects.create(user=self.user, version="1.0")
@@ -181,6 +227,7 @@ class RecentModuleDashboardTests(TestCase):
             email="student@example.com",
             password="secret123",
             username="student",
+            email_verified=True,
         )
         self.client.force_login(self.user)
         UserConsent.objects.create(user=self.user, version="1.0")

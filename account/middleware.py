@@ -166,7 +166,6 @@ class RequireEmailVerificationMiddleware(MiddlewareMixin):
         # If the user is logged in but still un‑verified → redirect.
         if (
             request.user.is_authenticated
-            and getattr(request.user, "two_factor_enabled", False)
             and not getattr(request.user, "email_verified", False)
         ):
             # Remember where they wanted to go so we can send them back after verification.
