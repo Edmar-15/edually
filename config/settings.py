@@ -179,7 +179,7 @@ OLLAMA_MODEL = ""
 OPENAI_API_KEY = "OPENAI_API_KEY"          
 OPENAI_MODEL   = "gpt-4o-mini"
 
-PWA_SW_VERSION = "20260926"
+PWA_SW_VERSION = "20260927"
 
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
@@ -205,7 +205,7 @@ EMAIL_USE_SSL = False
 # Default sender address
 DEFAULT_FROM_EMAIL = 'EduAlly <no-reply@yourdomain.com>'
 
-SUPPORT_EMAIL = "0323-3644@lspu.edu.ph"
+SUPPORT_EMAIL = "edually.support@gmail.com"
 
 # ── Axes configuration ─────────────────────────────────────────────────────
 # All values are optional – the defaults are safe – but we set them
