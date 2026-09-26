@@ -222,6 +222,7 @@ class RoleBasedLoginView(TemplateView):
         if getattr(user, "two_factor_enabled", False):
             request.session["pending_2fa_user_id"] = user.pk
             request.session["pending_2fa_next"] = self.get_success_url_for_user(user)
+            request.session["pending_2fa_backend"] = user.backend
             return redirect("account:verify_2fa")
 
         auth_login(request, user)
@@ -1070,7 +1071,11 @@ def verify_2fa(request):
         if pyotp.TOTP(user.two_factor_secret).verify(otp_code, valid_window=1):
             request.session.pop("pending_2fa_user_id", None)
             next_url = request.session.pop("pending_2fa_next", None) or reverse("account:dashboard")
-            auth_login(request, user)
+            backend = request.session.pop("pending_2fa_backend", None)
+            if not backend:
+                messages.error(request, "Your login session expired. Please sign in again.")
+                return redirect("account:login")
+            auth_login(request, user, backend=backend)
             return redirect(next_url)
         messages.error(request, "Invalid or expired verification code.")
 

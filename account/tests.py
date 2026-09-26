@@ -64,6 +64,44 @@ class EmailVerificationGateTests(TestCase):
                 self.client.logout()
 
 
+class TwoFactorLoginTests(TestCase):
+    def test_successful_2fa_login_preserves_authentication_backend(self):
+        user = User.objects.create_user(
+            email="two-factor@example.com",
+            password="secret123",
+            username="two-factor",
+            email_verified=True,
+            two_factor_enabled=True,
+            two_factor_secret="JBSWY3DPEHPK3PXP",
+        )
+
+        response = self.client.post(
+            reverse("account:login"),
+            {"username": user.email, "password": "secret123"},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("account:verify_2fa"),
+            fetch_redirect_response=False,
+        )
+        backend = self.client.session["pending_2fa_backend"]
+        otp_code = __import__("pyotp").TOTP(user.two_factor_secret).now()
+
+        response = self.client.post(
+            reverse("account:verify_2fa"),
+            {"otp_code": otp_code},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("account:dashboard"),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(self.client.session["_auth_user_backend"], backend)
+        self.assertNotIn("pending_2fa_backend", self.client.session)
+
+
 class UserBadgeTests(TestCase):
     def test_forum_badge_labels_by_karma_thresholds(self):
         beginner = User.objects.create_user(
