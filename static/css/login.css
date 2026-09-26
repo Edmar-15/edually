@@ -471,6 +471,15 @@ form button[type="submit"]:hover {
     box-shadow: 0 10px 22px rgba(14, 154, 167, 0.16);
 }
 
+.auth-card form button.button-danger {
+    background: #d32f2f;
+    box-shadow: 0 12px 24px rgba(211, 47, 47, 0.16);
+}
+
+.auth-card form button.button-danger:hover {
+    box-shadow: 0 10px 22px rgba(211, 47, 47, 0.2);
+}
+
 /* ============================================================= */
 /* PASSWORD TOGGLE */
 /* ============================================================= */

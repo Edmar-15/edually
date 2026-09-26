@@ -29,7 +29,7 @@
         <p class="auth-footer">
             <form method="post" action="{% url 'account:logout' %}">
                 {% csrf_token %}
-                <button type="submit" class="nav-item logout">
+                <button type="submit" class="button button-danger">
                     <i class="fas fa-sign-out-alt nav-icon"></i>
                     <span class="nav-label">Logout</span>
                 </button>
