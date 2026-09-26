@@ -1174,7 +1174,7 @@ def api_push_subscribe(request):
             defaults={"auth": auth, "p256dh": p256dh},
         )
     except Exception:
-        logger.exception("Failed to save push subscription for user %s", request.user.pk)
+        log.exception("Failed to save push subscription for user %s", request.user.pk)
         return JsonResponse({"error": "Could not save push subscription"}, status=500)
 
     return JsonResponse({"success": True, "id": subscription.pk})
