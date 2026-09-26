@@ -1,5 +1,6 @@
 # slm/views.py
 import json
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
@@ -8,6 +9,9 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.urls import reverse
+from account.models import StudentProfile
+from account.utils import send_push_notification
 from .models import Subject, Module, PersonalMaterial, HighlightAnswer, HighlightAnnotation
 import os
 from .content_extractor import extract_content
@@ -17,6 +21,29 @@ from .file_utils import delete_file, replace_file
 from functools import wraps
 from django.db import transaction
 import re
+
+def notify_students_for_subject(subject, title, body, url, tag):
+    matching_years = [
+        year_label
+        for year_label, _ in StudentProfile.YEAR_CHOICES
+        if (match := re.search(r"\d+", year_label))
+        and match.group() == subject.year
+    ]
+    if not matching_years:
+        return
+
+    students = (
+        get_user_model().objects
+        .filter(
+            groups__name="Student",
+            student_profile__year_level__in=matching_years,
+        )
+        .distinct()
+        .prefetch_related("push_subscriptions")
+    )
+    for student in students:
+        send_push_notification(student, title, body, url, tag=tag)
+
 
 # Decorators
 def teacher_required_for_mutation(view_func):
@@ -258,6 +285,13 @@ def api_subject_create(request):
         subject_name=name,
         author=request.user,
         year=clean_year or Subject.YEAR_FIRST,    # fallback to default if omitted
+    )
+    notify_students_for_subject(
+        subject,
+        "New subject available",
+        f"{subject.subject_code}: {subject.subject_name} is now available.",
+        reverse("slm:subject-modules", args=[subject.pk]),
+        tag=f"slm-subject-{subject.pk}",
     )
     return JsonResponse(
         subject_to_dict(subject, request_user=request.user),
@@ -561,6 +595,17 @@ def api_module_create(request, subject_id):
     except ValueError as exc:
         # Extraction failed – we keep the file, just warn the client.
         logger.warning("Extraction failed for module %s: %s", module.id, exc)
+
+    notify_students_for_subject(
+        subject,
+        "New module available",
+        f"{subject.subject_code}: Module {module.module_number}, {module.module_name} is now available.",
+        reverse(
+            "slm:module-detail",
+            kwargs={"subject_id": subject.pk, "module_id": module.pk},
+        ),
+        tag=f"slm-module-{module.pk}",
+    )
 
     # ---- 2️⃣ Return fresh payload ------------------------------------
     return JsonResponse(
