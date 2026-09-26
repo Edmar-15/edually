@@ -23,6 +23,11 @@ from core import views as pwa_views
 from django.contrib.sitemaps.views import sitemap
 from core.views import StaticViewSitemap
 
+handler400 = "core.views.bad_request"
+handler403 = "core.views.forbidden"
+handler404 = "core.views.page_not_found"
+handler500 = "core.views.server_error"
+
 sitemaps = {
     "static": StaticViewSitemap,
 }

@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -49,6 +49,8 @@ INSTALLED_APPS = [
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
