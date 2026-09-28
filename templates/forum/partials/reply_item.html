@@ -30,28 +30,29 @@
             <span class="reply-upvote-count">{{ reply.upvotes }}</span>
         </button>
 
-        <div class="action-menu reply-action-menu">
-            <button type="button" class="button secondary-button small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false">
-                <i class="fa-solid fa-ellipsis"></i>
-            </button>
-            <div class="action-menu-panel" role="menu" aria-hidden="true">
-                {% if request.user == reply.author %}
-                    <a href="{% url 'forum:reply_edit' reply.pk %}"
-                        class="button secondary-button small-button js-modal-trigger action-menu-item"
-                        role="menuitem">
-                        <i class="fa-solid fa-edit"></i> Edit
-                    </a>
-                    <a href="{% url 'forum:reply_delete' reply.pk %}"
-                        class="button secondary-button small-button js-modal-trigger action-menu-item"
-                        role="menuitem">
-                        <i class="fa-solid fa-trash"></i> Delete
-                    </a>
-                {% endif %}
-                <a href="{% url 'forum:flag_content' 'reply' reply.pk %}"
-                    class="button secondary-button small-button js-modal-trigger action-menu-item"
-                    role="menuitem">
-                    <i class="fa-solid fa-flag"></i> Report
-                </a>
+        <div class="reply-footer-actions">
+            <a href="{% url 'forum:flag_content' 'reply' reply.pk %}"
+                class="button secondary-button small-button js-modal-trigger reply-report-button">
+                <i class="fa-solid fa-flag"></i> Report
+            </a>
+            <div class="action-menu reply-action-menu">
+                <button type="button" class="button secondary-button small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="action-menu-panel" role="menu" aria-hidden="true">
+                    {% if request.user == reply.author %}
+                        <a href="{% url 'forum:reply_edit' reply.pk %}"
+                            class="button secondary-button small-button js-modal-trigger action-menu-item"
+                            role="menuitem">
+                            <i class="fa-solid fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'forum:reply_delete' reply.pk %}"
+                            class="button secondary-button small-button js-modal-trigger action-menu-item"
+                            role="menuitem">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

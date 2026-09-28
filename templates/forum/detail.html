@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="dashboard-container forum-detail-dashboard">
     {% include "components/navigations.html" %}
 
     <main class="main-content">
@@ -30,9 +30,17 @@
                     <i class="fa-solid fa-arrow-left"></i> Back
                 </a>
             </div>
-            <a href="{% url 'forum:notifications' %}" class="button secondary-circle small-button forum-push-button js-modal-trigger" aria-label="View forum notifications" title="Forum notifications">
-                <i class="fa-solid fa-bell" aria-hidden="true"></i>
-            </a>
+            <div class="forum-header-actions">
+                <button type="button" class="button secondary-circle small-button forum-mobile-sidebar-button" data-forum-sidebar-panel="forum-info-panel" data-forum-sidebar-title="Discussion Info" aria-label="Discussion Info" aria-haspopup="dialog" aria-controls="forum-sidebar-dialog" title="Discussion Info">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="button secondary-circle small-button forum-mobile-sidebar-button" data-forum-sidebar-panel="forum-links-panel" data-forum-sidebar-title="Quick Links" aria-label="Quick Links" aria-haspopup="dialog" aria-controls="forum-sidebar-dialog" title="Quick Links">
+                    <i class="fa-solid fa-link" aria-hidden="true"></i>
+                </button>
+                <a href="{% url 'forum:notifications' %}" class="button secondary-circle small-button forum-push-button js-modal-trigger" aria-label="View forum notifications" title="Forum notifications">
+                    <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                </a>
+            </div>
         </header>
 
         <div class="forum-container detail-view reply-page-layout">
@@ -41,22 +49,6 @@
                 <!-- Post -->
                 <article class="post-detail question-card">
                     <div class="post-header">
-                        <div>
-                            <h1 class="post-title">{{ post.title }}</h1>
-                            {% if post.category %}
-                                <span class="post-category">{{ post.category.name }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="post-meta-detail">
-                            <span class="status status-{{ post.status }}">{{ post.status|upper }}</span>
-                        </div>
-                    </div>
-
-                    <div class="post-body">
-                        {{ post.content|linebreaks }}
-                    </div>
-
-                    <div class="post-footer">
                         <div class="post-author-info">
                             <div class="author-avatar">
                                 {% load account_extras %}
@@ -73,41 +65,62 @@
                                 </span>
                             </div>
                         </div>
-
-                        <div class="post-actions">
-                            <form method="post" action="{% url 'forum:upvote_post' post.id %}" class="upvote-form">
-                                {% csrf_token %}
-                                <button type="button" class="btn-upvote upvote-btn {% if post.id in user_post_upvotes %}active{% endif %}" data-endpoint="{% url 'forum:upvote' post.id %}" title="Upvote this discussion">
-                                    <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
-                                    <span>{{ post.upvotes }}</span>
-                                </button>
-                            </form>
+                        <div class="post-meta-detail">
+                            <span class="status status-{{ post.status }}">{{ post.status|upper }}</span>
                         </div>
                     </div>
 
-                    {% if user.is_authenticated %}
-                        <section class="reply-form-section reply-composer">
-                            <form method="post"
-                                action="{% url 'forum:create_reply' post.id %}"
-                                class="reply-form ajax-form"
-                                data-target="#reply-list"
-                                data-insert="append"
-                                data-after="#reply-count"
-                                data-close-modal="false">
-                                {% csrf_token %}
-                                <div class="reply-input-row">
-                                    <textarea name="content" placeholder="Write a reply..." required class="reply-textarea" aria-label="Reply content" minlength="1"></textarea>
-                                    <button type="submit" class="btn-primary reply-send-button" aria-label="Send reply" title="Send reply">
-                                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                                    </button>
-                                </div>
-                            </form>
-                        </section>
-                    {% else %}
-                        <div class="login-prompt">
-                            <p>You must <a href="{% url 'account:login' %}">sign in</a> to reply to this discussion.</p>
+                    <div class="post-detail-fields">
+                        {% if post.category %}
+                            <div class="post-detail-field">
+                                <span class="post-detail-label">Category</span>
+                                <span class="post-category">{{ post.category.name }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="post-detail-field post-detail-field--title">
+                            <h1 class="post-title">{{ post.title }}</h1>
                         </div>
-                    {% endif %}
+                    </div>
+
+                    <div class="post-body">
+                        {{ post.content|linebreaks }}
+                    </div>
+
+                    <div class="post-interaction-row">
+                        <div class="post-actions">
+                            <form method="post" action="{% url 'forum:upvote_post' post.id %}" class="upvote-form">
+                                {% csrf_token %}
+                                <button type="button" class="btn-upvote upvote-btn {% if post.id in user_post_upvotes %}has-upvoted{% endif %}" data-endpoint="{% url 'forum:upvote' post.id %}" title="Upvote this discussion">
+                                    <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+                                    <span class="upvote-count">{{ post.upvotes }}</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        {% if user.is_authenticated %}
+                            <section class="reply-form-section reply-composer">
+                                <form method="post"
+                                    action="{% url 'forum:create_reply' post.id %}"
+                                    class="reply-form ajax-form"
+                                    data-target="#reply-list"
+                                    data-insert="append"
+                                    data-after="#reply-count"
+                                    data-close-modal="false">
+                                    {% csrf_token %}
+                                    <div class="reply-input-row">
+                                        <textarea name="content" placeholder="Write a reply..." required class="reply-textarea" aria-label="Reply content" minlength="1"></textarea>
+                                        <button type="submit" class="btn-primary reply-send-button" aria-label="Send reply" title="Send reply">
+                                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </section>
+                        {% else %}
+                            <div class="login-prompt">
+                                <p>You must <a href="{% url 'account:login' %}">sign in</a> to reply to this discussion.</p>
+                            </div>
+                        {% endif %}
+                    </div>
 
                 </article>
 
@@ -136,37 +149,76 @@
 
             <!-- Sidebar -->
             <aside class="forum-sidebar">
-                <div class="sidebar-card">
-                    <h3>Discussion Info</h3>
-                    <ul class="info-list">
-                        <li>
-                            <strong>Created</strong>
-                            <span>{{ post.created_at|date:"M d, Y" }}</span>
-                        </li>
-                        <li>
-                            <strong>Responses</strong>
-                            <span>{{ post.reply_count }}</span>
-                        </li>
-                        <li>
-                            <strong>Upvotes</strong>
-                            <span>{{ post.upvotes }}</span>
-                        </li>
-                    </ul>
-                </div>
+                <div class="forum-sidebar-sticky">
+                    <div class="sidebar-card">
+                        <h3>Discussion Info</h3>
+                        <ul class="info-list">
+                            <li>
+                                <strong>Created</strong>
+                                <span>{{ post.created_at|date:"M d, Y" }}</span>
+                            </li>
+                            <li>
+                                <strong>Responses</strong>
+                                <span>{{ post.reply_count }}</span>
+                            </li>
+                            <li>
+                                <strong>Upvotes</strong>
+                                <span>{{ post.upvotes }}</span>
+                            </li>
+                        </ul>
+                    </div>
 
-                <div class="sidebar-card">
-                    <h3>Quick Links</h3>
-                    <ul class="quick-links">
-                        <li><a href="{% url 'forum:list' %}">All Discussions</a></li>
-                        <li><a href="{% url 'forum:create' %}" class="js-modal-trigger">New Discussion</a></li>
-                    </ul>
+                    <div class="sidebar-card">
+                        <h3>Quick Links</h3>
+                        <ul class="quick-links">
+                            <li><a href="{% url 'forum:list' %}">All Discussions</a></li>
+                            <li><a href="{% url 'forum:create' %}" class="js-modal-trigger">New Discussion</a></li>
+                        </ul>
+                    </div>
                 </div>
             </aside>
         </div>
     </main>
 </div>
+<dialog class="forum-sidebar-dialog" id="forum-sidebar-dialog" aria-labelledby="forum-sidebar-dialog-title">
+    <div class="forum-sidebar-dialog-header">
+        <h2 id="forum-sidebar-dialog-title">Discussion Info</h2>
+        <form method="dialog">
+            <button type="submit" class="button secondary-circle small-button forum-sidebar-dialog-close" aria-label="Close dialog" title="Close">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </form>
+    </div>
+    <section class="forum-sidebar-dialog-panel" id="forum-info-panel">
+        <div class="sidebar-card">
+            <ul class="info-list">
+                <li>
+                    <strong>Created</strong>
+                    <span>{{ post.created_at|date:"M d, Y" }}</span>
+                </li>
+                <li>
+                    <strong>Responses</strong>
+                    <span>{{ post.reply_count }}</span>
+                </li>
+                <li>
+                    <strong>Upvotes</strong>
+                    <span>{{ post.upvotes }}</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+    <section class="forum-sidebar-dialog-panel" id="forum-links-panel" hidden>
+        <div class="sidebar-card">
+            <ul class="quick-links">
+                <li><a href="{% url 'forum:list' %}">All Discussions</a></li>
+                <li><a href="{% url 'forum:create' %}" class="js-modal-trigger">New Discussion</a></li>
+            </ul>
+        </div>
+    </section>
+</dialog>
 {% include "components/global_modal.html" %}
 <script src="{% static 'js/modal.js' %}" defer></script>
 <script src="{% static 'js/forum/forum-upvote.js' %}"></script>
 <script src="{% static 'js/forum/forum_ajax.js' %}"></script>
+<script src="{% static 'js/forum/forum-sidebar-dialog.js' %}" defer></script>
 {% endblock %}
