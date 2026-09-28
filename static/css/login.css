@@ -357,6 +357,10 @@ label {
     top: 28px;
 }
 
+.verify-2fa-page .floating-label-group>label {
+    top: 28px;
+}
+
 .floating-label-group:hover>label {
     top: 0;
     transform: translateY(-50%);
@@ -1101,6 +1105,12 @@ form button[type="submit"]:hover {
     }
 
     .password-reset-page .floating-label-group>label {
+        top: 24px;
+        left: 12px;
+        font-size: 1rem;
+    }
+
+    .verify-2fa-page .floating-label-group>label {
         top: 24px;
         left: 12px;
         font-size: 1rem;
