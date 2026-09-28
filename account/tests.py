@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from unittest.mock import patch
 
 from django import forms
@@ -6,10 +7,17 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .forms import LoginForm
 from .models import PushSubscription, User, UserConsent
-from slm.models import Module, Subject
+from slm.models import (
+    Module,
+    PersonalMaterial,
+    RecentModuleView,
+    RecentPersonalMaterialView,
+    Subject,
+)
 
 
 class LoginFormTests(TestCase):
@@ -289,9 +297,17 @@ class RecentModuleDashboardTests(TestCase):
         )
 
     def test_dashboard_shows_recently_visited_modules_by_most_recent_order(self):
-        session = self.client.session
-        session["recent_modules"] = [self.module_two.pk, self.module_one.pk]
-        session.save()
+        now = timezone.now()
+        RecentModuleView.objects.create(
+            user=self.user,
+            module=self.module_one,
+            viewed_at=now - timedelta(minutes=1),
+        )
+        RecentModuleView.objects.create(
+            user=self.user,
+            module=self.module_two,
+            viewed_at=now,
+        )
 
         response = self.client.get(reverse("account:dashboard"))
 
@@ -309,13 +325,25 @@ class RecentModuleDashboardTests(TestCase):
         )
         self.assertLess(second_link, first_link)
 
-    def test_module_detail_records_recent_visit_in_session(self):
+    def test_module_detail_records_recent_visit_for_the_user(self):
         response = self.client.get(
             reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_one.pk})
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.client.session.get("recent_modules", []), [self.module_one.pk])
+        self.assertTrue(
+            RecentModuleView.objects.filter(
+                user=self.user,
+                module=self.module_one,
+            ).exists()
+        )
+        self.assertNotIn("recent_modules", self.client.session)
+
+        self.client.logout()
+        self.client.force_login(self.user)
+        dashboard_response = self.client.get(reverse("account:dashboard"))
+        self.assertEqual(dashboard_response.status_code, 200)
+        self.assertEqual(dashboard_response.context["continue_module"], self.module_one)
 
     def test_recent_module_uses_file_type_icon(self):
         self.assertEqual(self.module_one.file_icon, "fas")
@@ -323,24 +351,28 @@ class RecentModuleDashboardTests(TestCase):
         self.assertEqual(self.module_two.file_icon, "fas")
         self.assertEqual(self.module_two.file_icon_classes, "fas fa-file-pdf activity-icon--pdf")
 
-    def test_dashboard_restores_recent_modules_from_cookie_when_session_is_empty(self):
-        self.client.cookies["eduallyRecentModules"] = json.dumps([self.module_two.pk, self.module_one.pk])
-        self.client.logout()
-        self.client.force_login(self.user)
+    def test_dashboard_ignores_legacy_recent_module_cookie(self):
         self.client.cookies["eduallyRecentModules"] = json.dumps([self.module_two.pk, self.module_one.pk])
 
         response = self.client.get(reverse("account:dashboard"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Recently visited modules")
-        self.assertContains(response, "Second Module")
-        self.assertContains(response, "First Module")
+        self.assertEqual(response.context["recent_modules"], [])
 
-        page_html = response.content.decode()
-        second_link = page_html.index(
-            f'href="{reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_two.pk})}"'
+    def test_recent_materials_are_loaded_from_user_history(self):
+        material = PersonalMaterial.objects.create(
+            title="My study notes",
+            author=self.user,
         )
-        first_link = page_html.index(
-            f'href="{reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_one.pk})}"'
+        RecentPersonalMaterialView.objects.create(
+            user=self.user,
+            personal_material=material,
         )
-        self.assertLess(second_link, first_link)
+
+        self.client.logout()
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("account:dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["recent_personal_materials"], [material])
+        self.assertEqual(response.context["continue_material"], material)

@@ -1,6 +1,7 @@
 # slm/views.py
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 class Subject(models.Model):
@@ -215,6 +216,48 @@ class PersonalMaterial(models.Model):
         if name.endswith((".html", ".htm")):
             return "fas fa-file-code activity-icon--ppt"
         return "fas fa-file-alt activity-icon--default"
+
+
+class RecentModuleView(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="recent_module_views",
+    )
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.CASCADE,
+        related_name="recent_views",
+    )
+    viewed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-viewed_at"]
+        unique_together = [("user", "module")]
+        indexes = [
+            models.Index(fields=["user", "viewed_at"], name="slm_recent_mod_user_time"),
+        ]
+
+
+class RecentPersonalMaterialView(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="recent_personal_material_views",
+    )
+    personal_material = models.ForeignKey(
+        PersonalMaterial,
+        on_delete=models.CASCADE,
+        related_name="recent_views",
+    )
+    viewed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-viewed_at"]
+        unique_together = [("user", "personal_material")]
+        indexes = [
+            models.Index(fields=["user", "viewed_at"], name="slm_recent_pm_user_time"),
+        ]
     
 
 class HighlightAnswer(models.Model):

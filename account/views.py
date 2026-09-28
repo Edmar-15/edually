@@ -32,6 +32,7 @@ from django.template.loader import render_to_string
 from functools import wraps
 from django.db import models
 import random
+
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django_ratelimit.decorators import ratelimit
@@ -56,7 +57,13 @@ from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
 # Other apps used in the dashboard
-from slm.models import Module, PersonalMaterial, Subject
+from slm.models import (
+    Module,
+    PersonalMaterial,
+    RecentModuleView,
+    RecentPersonalMaterialView,
+    Subject,
+)
 from forum.models import Post, Report
 from aihelper.models import Conversation, Message
 
@@ -308,80 +315,6 @@ def contact_page(request):
 
 
 
-def _get_recent_module_ids(request):
-    recent_module_ids = request.session.get("recent_modules", [])
-    if recent_module_ids:
-        return recent_module_ids
-
-    cookie_value = request.COOKIES.get("eduallyRecentModules")
-    if not cookie_value:
-        return []
-
-    try:
-        parsed = json.loads(cookie_value)
-    except json.JSONDecodeError:
-        # Some cookie transports escape commas as octal sequences like "\054".
-        cookie_value = cookie_value.replace("\\054", ",")
-        try:
-            parsed = json.loads(cookie_value)
-        except json.JSONDecodeError:
-            return []
-
-    if not isinstance(parsed, list):
-        return []
-
-    recent_module_ids = []
-    for item in parsed:
-        try:
-            recent_module_ids.append(int(item))
-        except (TypeError, ValueError):
-            continue
-
-    if recent_module_ids:
-        request.session["recent_modules"] = recent_module_ids
-
-    return recent_module_ids
-
-
-def _get_recent_personal_material_ids(request):
-    """
-    Mirrors ``_get_recent_module_ids`` but works for PersonalMaterial objects.
-    The IDs are stored under the session key ``recent_personal_materials``
-    and a cookie named ``eduallyRecentPersonalMaterials``.
-    """
-    recent_material_ids = request.session.get("recent_personal_materials", [])
-    if recent_material_ids:
-        return recent_material_ids
-
-    cookie_value = request.COOKIES.get("eduallyRecentPersonalMaterials")
-    if not cookie_value:
-        return []
-
-    try:
-        parsed = json.loads(cookie_value)
-    except json.JSONDecodeError:
-        # Handle escaped commas (legacy format)
-        cookie_value = cookie_value.replace("\\054", ",")
-        try:
-            parsed = json.loads(cookie_value)
-        except json.JSONDecodeError:
-            return []
-
-    if not isinstance(parsed, list):
-        return []
-
-    recent_material_ids = []
-    for item in parsed:
-        try:
-            recent_material_ids.append(int(item))
-        except (TypeError, ValueError):
-            continue
-
-    if recent_material_ids:
-        request.session["recent_personal_materials"] = recent_material_ids
-
-    return recent_material_ids
-
 @login_required(login_url='account:login')
 def dashboard(request):
     is_teacher = user_is_in_group(request.user, GROUP_TEACHER)
@@ -493,7 +426,14 @@ def dashboard(request):
     # -------------------------------------------------------------
     # Recently visited modules
     # -------------------------------------------------------------
-    recent_module_ids = _get_recent_module_ids(request)
+    recent_module_ids = list(
+        RecentModuleView.objects.filter(
+            user=request.user,
+            module__is_archived=False,
+        )
+        .order_by("-viewed_at", "-pk")
+        .values_list("module_id", flat=True)[:10]
+    )
 
     recent_modules = list(
         Module.objects.filter(
@@ -515,15 +455,23 @@ def dashboard(request):
     # -------------------------------------------------------------
     # Recently visited personal materials
     # -------------------------------------------------------------
-    recent_material_ids = _get_recent_personal_material_ids(request)
-
-    # -------------------------------------------------------------
-    # Recently visited personal materials
-    # -------------------------------------------------------------
     if is_teacher:
         recent_personal_materials = []
     else:
-        recent_material_ids = _get_recent_personal_material_ids(request)
+        recent_material_ids = list(
+            RecentPersonalMaterialView.objects.filter(
+                user=request.user,
+                personal_material__is_archived=False,
+            )
+            .filter(
+                models.Q(
+                    personal_material__visibility=PersonalMaterial.Visibility.PUBLIC
+                )
+                | models.Q(personal_material__author=request.user)
+            )
+            .order_by("-viewed_at", "-pk")
+            .values_list("personal_material_id", flat=True)[:10]
+        )
 
         recent_personal_materials = list(
             PersonalMaterial.objects.filter(

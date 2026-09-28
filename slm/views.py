@@ -9,10 +9,19 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.urls import reverse
 from account.models import StudentProfile
 from account.utils import send_push_notification
-from .models import Subject, Module, PersonalMaterial, HighlightAnswer, HighlightAnnotation
+from .models import (
+    Subject,
+    Module,
+    PersonalMaterial,
+    RecentModuleView,
+    RecentPersonalMaterialView,
+    HighlightAnswer,
+    HighlightAnnotation,
+)
 import os
 from .content_extractor import extract_content
 import logging as logger
@@ -21,6 +30,23 @@ from .file_utils import delete_file, replace_file
 from functools import wraps
 from django.db import transaction
 import re
+
+
+def _record_recent_view(view_model, user, field_name, target):
+    lookup = {field_name: target}
+    view_model.objects.update_or_create(
+        user=user,
+        defaults={"viewed_at": timezone.now()},
+        **lookup,
+    )
+
+    stale_ids = list(
+        view_model.objects.filter(user=user)
+        .order_by("-viewed_at", "-pk")
+        .values_list("pk", flat=True)[10:]
+    )
+    if stale_ids:
+        view_model.objects.filter(pk__in=stale_ids).delete()
 
 def notify_students_for_subject(subject, title, body, url, tag):
     matching_years = [
@@ -826,24 +852,13 @@ def module_detail(request, subject_id, module_id):
 
     module = get_object_or_404(Module, pk=module_id, subject=subject)
 
-    recent_modules = request.session.get("recent_modules", [])
-    recent_modules = [item for item in recent_modules if item != module.pk]
-    recent_modules.insert(0, module.pk)
-    request.session["recent_modules"] = recent_modules[:10]
-    request.session.modified = True
+    _record_recent_view(RecentModuleView, request.user, "module", module)
 
     context = {
         "subject": subject,
         "module": module,
     }
-    response = render(request, "slm/module_detail.html", context)
-    response.set_cookie(
-        "eduallyRecentModules",
-        json.dumps(recent_modules),
-        max_age=30 * 24 * 60 * 60,
-        samesite="Lax",
-    )
-    return response
+    return render(request, "slm/module_detail.html", context)
 
 
 # -----------------------------------------------------------------
@@ -1110,29 +1125,17 @@ def personal_material_detail(request, pk):
     if pm.visibility == PersonalMaterial.Visibility.PRIVATE and pm.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 
-    context = {
-        "pm": pm,                 # used by the template
-    }
-    # -----------------------------------------------------------------
-    # Record the visit in the recent‑personal‑materials list.
-    # -----------------------------------------------------------------
-    recent_materials = request.session.get("recent_personal_materials", [])
-    recent_materials = [item for item in recent_materials if item != pm.pk]
-    recent_materials.insert(0, pm.pk)
-    request.session["recent_personal_materials"] = recent_materials[:10]
-    request.session.modified = True
+    _record_recent_view(
+        RecentPersonalMaterialView,
+        request.user,
+        "personal_material",
+        pm,
+    )
 
     context = {
         "pm": pm,                 # used by the template
     }
-    response = render(request, "slm/personal_material_detail.html", context)
-    response.set_cookie(
-        "eduallyRecentPersonalMaterials",
-        json.dumps(recent_materials),
-        max_age=30 * 24 * 60 * 60,
-        samesite="Lax",
-    )
-    return response
+    return render(request, "slm/personal_material_detail.html", context)
 
 
 @login_required(login_url='account:login')
