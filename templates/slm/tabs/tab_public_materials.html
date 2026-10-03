@@ -8,8 +8,6 @@
          data-file-replace-url="{% url 'slm:personalmaterial-file-replace' 0 %}"
          data-visibility="public"><!-- hint for the widget -->
 
-    <div class="toast-container" aria-live="polite"></div>
-
     <!-- No “add” form – public page is *read‑only* for non‑owners -->
     {% if request.user.is_authenticated %}
     <section class="pm-form-card" aria-label="Upload material to the public library">

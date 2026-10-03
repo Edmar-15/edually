@@ -14,8 +14,7 @@ import { csrftoken } from "./utils.js";
  *   data-delete-url        → "/slm/api/personal-materials/0/delete/"
  *   data-file-replace-url  → "/slm/api/personal-materials/0/file/"
  *
- * All user‑feedback (success, error, info) is now shown as toast
- * notifications (the same style used for the Modules widget).
+ * User feedback uses the shared SweetAlert2 notification helper.
  */
 export function initPersonalMaterialWidget(rootEl) {
   /* -----------------------------------------------------------------
@@ -29,40 +28,8 @@ export function initPersonalMaterialWidget(rootEl) {
 
   const replaceId = (tmpl, id) => tmpl.replace(/0(?=\/|$)/, id);
 
-  /* -----------------------------------------------------------------
-   * 2️⃣  Toast helper – identical to the one used in `module_ajax.js`.
-   * ----------------------------------------------------------------- */
-  const getToastContainer = () => {
-    let container = rootEl.querySelector(".toast-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.className = "toast-container";
-      container.setAttribute("aria-live", "polite");
-      rootEl.appendChild(container);
-    }
-    return container;
-  };
-  const $toastContainer = getToastContainer();
-
-  const showToast = (message, type = "info", duration = 4000) => {
-    const toast = document.createElement("div");
-    toast.className = `toast toast--${type}`;
-    toast.style.setProperty("--toast-life", `${duration}ms`);
-
-    const icon = document.createElement("span");
-    icon.className = "toast__icon";
-    // (add icons / emojis if you wish)
-
-    const msg = document.createElement("span");
-    msg.textContent = message;
-
-    toast.appendChild(icon);
-    toast.appendChild(msg);
-    toast.addEventListener("click", () => toast.remove());
-
-    $toastContainer.appendChild(toast);
-    setTimeout(() => toast.remove(), duration + 500);
-  };
+  const showToast = (message, type = "info", duration = 4000) =>
+    window.showGlobalToast(message, type, duration);
 
   /* -----------------------------------------------------------------
    * 3️⃣  DOM shortcuts (all inside the widget)

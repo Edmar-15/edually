@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------
-// subject_ajax.js – Ajax widget for “Subjects” (toast notifications)
+// subject_ajax.js – Ajax widget for “Subjects”
 // -------------------------------------------------------------------
 import { csrftoken } from "./utils.js";
 
@@ -38,38 +38,8 @@ export function initSubjectWidget(rootEl) {
    * ----------------------------------------------------------------- */
   const replaceId = (template, id) => template.replace(/0(?=\/|$)/, id);
 
-  /* -----------------------------------------------------------------
-   * 3️⃣  Toast helper – identical to the one used in module_ajax.js.
-   * ----------------------------------------------------------------- */
-  const getToastContainer = () => {
-    let container = rootEl.querySelector(".toast-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.className = "toast-container";
-      container.setAttribute("aria-live", "polite");
-      rootEl.appendChild(container);
-    }
-    return container;
-  };
-  const $toastContainer = getToastContainer();
-
-  const showToast = (msg, type = "info", duration = 4000) => {
-    const toast = document.createElement("div");
-    toast.className = `toast toast--${type}`;
-    toast.style.setProperty("--toast-life", `${duration}ms`);
-
-    const icon = document.createElement("span");
-    icon.className = "toast__icon";
-    toast.appendChild(icon);
-
-    const text = document.createElement("span");
-    text.textContent = msg;
-    toast.appendChild(text);
-
-    toast.addEventListener("click", () => toast.remove());
-    $toastContainer.appendChild(toast);
-    setTimeout(() => toast.remove(), duration + 500);
-  };
+  const showToast = (message, type = "info", duration = 4000) =>
+    window.showGlobalToast(message, type, duration);
 
   /* -----------------------------------------------------------------
    * 4️⃣  DOM shortcuts (everything lives inside the widget).

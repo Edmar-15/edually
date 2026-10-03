@@ -29,40 +29,8 @@ export function initModuleWidget(rootEl) {
    * ----------------------------------------------------------------- */
   const replaceId = (template, id) => template.replace(/0(?=\/|$)/, id);
 
-  /* -----------------------------------------------------------------
-   * 2️⃣  Toast helper -------------------------------------------------
-   * ----------------------------------------------------------------- */
-  const getToastContainer = () => {
-    let container = rootEl.querySelector(".toast-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.className = "toast-container";
-      container.setAttribute("aria-live", "polite");
-      rootEl.appendChild(container);
-    }
-    return container;
-  };
-  const $toastContainer = getToastContainer();
-
-  const showToast = (message, type = "info", duration = 4000) => {
-    const toast = document.createElement("div");
-    toast.className = `toast toast--${type}`;
-    toast.style.setProperty("--toast-life", `${duration}ms`);
-
-    const icon = document.createElement("span");
-    icon.className = "toast__icon";
-    // (you can add emojis / SVGs here if you like)
-
-    const msg = document.createElement("span");
-    msg.textContent = message;
-
-    toast.appendChild(icon);
-    toast.appendChild(msg);
-    toast.addEventListener("click", () => toast.remove());
-
-    $toastContainer.appendChild(toast);
-    setTimeout(() => toast.remove(), duration + 500);
-  };
+  const showToast = (message, type = "info", duration = 4000) =>
+    window.showGlobalToast(message, type, duration);
 
   /* -----------------------------------------------------------------
    * 3️⃣  DOM shortcuts (all inside the widget)

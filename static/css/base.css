@@ -1,6 +1,4 @@
 ﻿/* base.css: global design tokens */
-@import "./toast.css";
-
 /* Tokens */
 :root {
   --primary: #0E9AA7;
@@ -116,6 +114,16 @@
   --transition: 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
   --transition-slow: 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
   --header-height: 4.5rem;
+}
+
+.swal2-popup.edually-swal-toast {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.16));
+  color: var(--text, #333333);
+}
+
+.swal2-popup.edually-swal-toast .swal2-title {
+  color: inherit;
 }
 
 html {

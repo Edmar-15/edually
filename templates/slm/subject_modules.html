@@ -47,8 +47,6 @@
                 data-file-replace-url="{% url 'slm:module-file-replace' 0 %}"
                 data-subject-id="{{ subject.id }}">
 
-            <div id="toast-container" class="toast-container" aria-live="polite"></div>
-
             {% if request.user == subject.author and request.user|has_group:'Teacher' %}
             <section class="module-form-card" aria-label="Add module form">
                 <div class="module-form__header">
