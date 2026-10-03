@@ -12,7 +12,7 @@
     <section class="pm-form-card" aria-label="Add learning material">
         <div class="pm-form__header">
             <h3>Add a new material</h3>
-            <p>Upload a PDF, DOCX or PPTX and optionally make it public.</p>
+            <p>Upload a PDF, DOC, DOCX, PPT, or PPTX (maximum 10 MB) and optionally make it public.</p>
         </div>
         <form class="pm-form">
             <input id="pm-title-input" type="text" placeholder="Title" required>
@@ -21,7 +21,9 @@
                 <option value="PU">Public (any logged‑in user)</option>
             </select>
             <input id="pm-file-input" type="file"
-                   accept=".pdf,.doc,.docx,.ppt,.pptx" required>
+                   accept=".pdf,.doc,.docx,.ppt,.pptx"
+                   aria-describedby="pm-upload-help" required>
+            <small id="pm-upload-help">PDF, DOC, DOCX, PPT, or PPTX; maximum 10 MB.</small>
             <button id="pm-add-btn" type="button">Add material</button>
         </form>
     </section>

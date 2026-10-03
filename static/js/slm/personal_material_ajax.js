@@ -2,6 +2,7 @@
 // personal_material_ajax.js – CRUD widget for PersonalMaterial
 // -------------------------------------------------------------------
 import { csrftoken } from "./utils.js";
+import { validateUploadFile } from "./file_validation.js";
 
 /**
  * Initialise the Personal‑Material widget.
@@ -348,8 +349,9 @@ export function initPersonalMaterialWidget(rootEl) {
     );
 
     const file = $fileInput.files[0];
-    if (!file) {
-      showToast("Choose a file before uploading.", "error");
+    const fileError = validateUploadFile(file);
+    if (fileError) {
+      showToast(fileError, "error");
       return;
     }
     form.append("file", file);
@@ -369,8 +371,14 @@ export function initPersonalMaterialWidget(rootEl) {
         if ($visibilitySelect) $visibilitySelect.value = "PR";
         load();
       } else {
-        const err = await resp.json();
-        showToast(err.error || resp.statusText, "error");
+        const err = resp.status === 413 ? null : await resp.json().catch(() => null);
+        showToast(
+          err?.error ||
+            (resp.status === 413
+              ? "File is too large. The maximum allowed size is 10 MB."
+              : resp.statusText),
+          "error"
+        );
       }
     } catch (e) {
       showToast(`Failed to create material – ${e}`, "error");

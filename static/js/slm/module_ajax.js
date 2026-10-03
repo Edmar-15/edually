@@ -2,6 +2,7 @@
 // module_ajax.js – Ajax widget for “Modules” of a Subject
 // ---------------------------------------------------------------
 import { csrftoken } from "./utils.js";
+import { validateUploadFile } from "./file_validation.js";
 
 /**
  * Initialise the modules widget.
@@ -307,18 +308,12 @@ export function initModuleWidget(rootEl) {
     form.append("module_name", $nameInput.value.trim());
 
     const file = $fileInput.files[0];
-    if (file) {
-      const ALLOWED_EXT = [".pdf", ".doc", ".docx", ".ppt", ".pptx"];
-      const name = file.name.toLowerCase();
-      if (!ALLOWED_EXT.some((ext) => name.endsWith(ext))) {
-        showToast(
-          "Only PDF, Word (.doc/.docx) and PowerPoint (.ppt/.pptx) files are allowed.",
-          "error"
-        );
-        return;
-      }
-      form.append("file", file);
+    const fileError = validateUploadFile(file);
+    if (fileError) {
+      showToast(fileError, "error");
+      return;
     }
+    form.append("file", file);
 
     try {
       const resp = await fetch(createUrl, {
@@ -335,8 +330,14 @@ export function initModuleWidget(rootEl) {
         $fileInput.value = "";
         load();
       } else {
-        const err = await resp.json();
-        showToast(err.error || resp.statusText, "error");
+        const err = resp.status === 413 ? null : await resp.json().catch(() => null);
+        showToast(
+          err?.error ||
+            (resp.status === 413
+              ? "File is too large. The maximum allowed size is 10 MB."
+              : resp.statusText),
+          "error"
+        );
       }
     } catch (e) {
       showToast(`Failed to create module – ${e}`, "error");

@@ -59,6 +59,30 @@
       e.preventDefault();
       e.stopImmediatePropagation();
 
+      const fileInput = form.querySelector('input[type="file"]');
+      const file = fileInput?.files[0];
+      if (file) {
+        const allowedExtensions = (fileInput.accept || "")
+          .split(",")
+          .map((extension) => extension.trim().toLowerCase())
+          .filter(Boolean);
+        const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+        if (!allowedExtensions.includes(extension)) {
+          window.showGlobalToast(
+            "Unsupported file type. Please choose a PDF, DOC, DOCX, PPT, or PPTX file.",
+            "error"
+          );
+          return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          window.showGlobalToast(
+            "File is too large. The maximum allowed size is 10 MB.",
+            "error"
+          );
+          return;
+        }
+      }
+
       const action = form.action;
       const method = form.method.toUpperCase();
 
@@ -75,7 +99,12 @@
         body: formData,
       });
 
-      const data = await response.json();
+      const data =
+        response.status === 413
+          ? { error: "File is too large. The maximum allowed size is 10 MB." }
+          : await response.json().catch(() => ({
+              error: "The upload could not be processed. Check the file and try again.",
+            }));
 
       if (!data.success) {
         if (data.html) {
@@ -85,6 +114,8 @@
           bindCloseEvents();
           const newForm = modal.querySelector("form[data-modal-form]");
           if (newForm) bindAjaxForm(newForm);
+        } else if (data.error) {
+          window.showGlobalToast(data.error, "error");
         }
         return;
       }

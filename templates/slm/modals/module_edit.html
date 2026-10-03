@@ -20,7 +20,9 @@
 
         <label>
             Replace file (optional)
-            <input type="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx">
+            <input type="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx"
+                   aria-describedby="module-replace-help">
+            <small id="module-replace-help">PDF, DOC, DOCX, PPT, or PPTX; maximum 10 MB.</small>
         </label>
 
         <div class="modal__actions">

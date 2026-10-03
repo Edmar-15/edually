@@ -7,7 +7,77 @@ from django.test import TestCase
 from django.urls import reverse
 
 from account.models import StudentProfile, User, UserConsent
-from .models import HighlightAnswer, Module, Subject
+from .models import HighlightAnswer, Module, PersonalMaterial, Subject
+from .views import MAX_MODULE_FILE_SIZE
+
+
+class UploadValidationTests(TestCase):
+    def setUp(self):
+        teacher_group, _ = Group.objects.get_or_create(name="Teacher")
+        self.teacher = User.objects.create_user(
+            email="upload-teacher@example.com",
+            ******,
+            username="upload-teacher",
+        )
+        self.teacher.groups.add(teacher_group)
+        UserConsent.objects.create(user=self.teacher, version="1.0")
+        self.client.force_login(self.teacher)
+        self.subject = Subject.objects.create(
+            subject_code="UPL101",
+            subject_name="Upload Testing",
+            author=self.teacher,
+        )
+
+    def test_module_create_rejects_unsupported_file_type(self):
+        response = self.client.post(
+            reverse("slm:module-create", args=[self.subject.pk]),
+            data={
+                "module_number": "1",
+                "module_name": "Unsupported",
+                "file": SimpleUploadedFile("payload.exe", b"executable"),
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["error"],
+            "Unsupported file type. Please choose a PDF, DOC, DOCX, PPT, or PPTX file.",
+        )
+        self.assertFalse(Module.objects.exists())
+
+    def test_module_create_rejects_files_over_size_limit(self):
+        response = self.client.post(
+            reverse("slm:module-create", args=[self.subject.pk]),
+            data={
+                "module_number": "1",
+                "module_name": "Too large",
+                "file": SimpleUploadedFile("large.pdf", b"x" * (MAX_MODULE_FILE_SIZE + 1)),
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["error"],
+            "File is too large. The maximum allowed size is 10 MB.",
+        )
+        self.assertFalse(Module.objects.exists())
+
+    def test_personal_material_create_rejects_unsupported_file_type(self):
+        response = self.client.post(
+            reverse("slm:personalmaterial-create"),
+            data={
+                "title": "Unsupported",
+                "visibility": PersonalMaterial.Visibility.PRIVATE,
+                "file": SimpleUploadedFile("payload.exe", b"executable"),
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["error"],
+            "Unsupported file type. Please choose a PDF, DOC, DOCX, PPT, or PPTX file.",
+        )
+        self.assertFalse(PersonalMaterial.objects.exists())
 
 
 class ModuleHighlightApiTests(TestCase):

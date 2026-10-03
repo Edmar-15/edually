@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404, render
-from django.core.exceptions import ValidationError
+from django.core.exceptions import RequestDataTooBig, ValidationError
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
@@ -201,6 +201,22 @@ def validate_year_choice(value):
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 PAGE_SIZE = 9                     # 3 cards per row × 2 rows = 6 cards (matches your static layout)
+ALLOWED_MODULE_FILE_EXTENSIONS = {".pdf", ".doc", ".docx", ".ppt", ".pptx"}
+MAX_MODULE_FILE_SIZE = 10 * 1024 * 1024
+
+
+def handle_upload_errors(view_func):
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        try:
+            return view_func(request, *args, **kwargs)
+        except RequestDataTooBig:
+            return JsonResponse(
+                {"error": "File is too large. The maximum allowed size is 10 MB."},
+                status=413,
+            )
+
+    return _wrapped
 
 @login_required(login_url='account:login')
 @require_GET
@@ -475,19 +491,19 @@ def module_to_dict(module, request_user=None):
 # -----------------------------------------------------------------
 def validate_module_file(file_obj):
     """
-    Raises ``ValidationError`` if ``file_obj`` does not have an allowed
-    extension (pdf, doc, docx, ppt, pptx).  The check is based on the
-    filename – Django’s ``FileField`` already stores the original name.
+    Raises ``ValidationError`` if the upload has an unsupported extension or
+    exceeds the maximum permitted file size.
     """
     if not file_obj:
-        raise ValidationError("No file provided")
+        raise ValidationError("Choose a file to upload.")
 
-    allowed = {".pdf", ".doc", ".docx", ".ppt", ".pptx"}
     ext = os.path.splitext(file_obj.name)[1].lower()
-    if ext not in allowed:
+    if ext not in ALLOWED_MODULE_FILE_EXTENSIONS:
         raise ValidationError(
-            f"Unsupported file type “{ext}”. Allowed types: pdf, doc, docx, ppt, pptx."
+            "Unsupported file type. Please choose a PDF, DOC, DOCX, PPT, or PPTX file."
         )
+    if file_obj.size > MAX_MODULE_FILE_SIZE:
+        raise ValidationError("File is too large. The maximum allowed size is 10 MB.")
     return True
 
 
@@ -563,6 +579,7 @@ def api_module_list(request, subject_id):
 @login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["POST"])
+@handle_upload_errors
 def api_module_create(request, subject_id):
     """POST /slm/api/subjects/<subject_id>/modules/  (multipart/form-data)"""
     subject = get_object_or_404(Subject, pk=subject_id)
@@ -745,6 +762,7 @@ def api_module_delete(request, pk):
 
 @login_required(login_url='account:login')
 @require_http_methods(["POST"])
+@handle_upload_errors
 def api_module_file_replace(request, pk):
     """
     POST /slm/api/modules/<pk>/file/   (multipart)
@@ -962,6 +980,7 @@ def api_personal_material_list(request):
 # -------------------------------------------------------------
 @login_required(login_url='account:login')
 @require_http_methods(["POST"])
+@handle_upload_errors
 def api_personal_material_create(request):
     """
     POST /slm/api/personal-materials/create/
@@ -1072,6 +1091,7 @@ def api_personal_material_delete(request, pk):
 # -------------------------------------------------------------
 @login_required(login_url='account:login')
 @require_http_methods(["POST"])
+@handle_upload_errors
 def api_personal_material_file_replace(request, pk):
     """
     POST /slm/api/personal-materials/<pk>/file/
@@ -1454,6 +1474,7 @@ def subject_edit_modal(request, pk):
 
 @login_required(login_url='account:login')
 @require_http_methods(["GET", "POST"])
+@handle_upload_errors
 def module_edit_modal(request, pk):
     module = get_object_or_404(Module, pk=pk)
 
@@ -1526,6 +1547,7 @@ def module_edit_modal(request, pk):
 
 @login_required(login_url='account:login')
 @require_http_methods(["GET", "POST"])
+@handle_upload_errors
 def personal_material_edit_modal(request, pk):
     pm = get_object_or_404(PersonalMaterial, pk=pk)
 
