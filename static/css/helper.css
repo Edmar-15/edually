@@ -995,17 +995,17 @@ html[data-theme="dark"] .send-button:focus-visible {
 /* Minimap popup control placed below the conversation map */
 
 .minimap-popup {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    width: min(330px, 88vw);
-    max-height: 440px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(330px, calc(100vw - 1rem));
+    max-height: min(440px, calc(100vh - 1rem));
     background: linear-gradient(180deg, #ffffff 0%, #f8fcfe 100%);
     border: 1px solid rgba(14, 154, 167, 0.16);
     border-radius: 16px;
     box-shadow: 0 20px 55px rgba(15, 23, 42, 0.14);
     overflow: auto;
-    z-index: 30;
+    z-index: 10020;
     padding: 0.6rem;
     backdrop-filter: blur(8px);
 }

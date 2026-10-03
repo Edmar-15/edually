@@ -120,6 +120,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const minimapToggle = document.getElementById('minimap-toggle');
     const minimapPopup = document.getElementById('minimap-popup');
     if (minimapToggle && minimapPopup) {
+        document.body.appendChild(minimapPopup);
+
+        const positionMinimapPopup = () => {
+            if (minimapPopup.classList.contains('hidden')) return;
+
+            const toggleRect = minimapToggle.getBoundingClientRect();
+            const popupRect = minimapPopup.getBoundingClientRect();
+            const margin = 8;
+            const maxLeft = window.innerWidth - popupRect.width - margin;
+            const left = Math.min(Math.max(margin, toggleRect.right - popupRect.width), maxLeft);
+            const spaceBelow = window.innerHeight - toggleRect.bottom;
+            const spaceAbove = toggleRect.top;
+            const top = spaceBelow >= popupRect.height + margin || spaceBelow >= spaceAbove
+                ? Math.min(toggleRect.bottom + margin, window.innerHeight - popupRect.height - margin)
+                : Math.max(margin, toggleRect.top - popupRect.height - margin);
+
+            minimapPopup.style.left = `${left}px`;
+            minimapPopup.style.top = `${top}px`;
+        };
+
         minimapToggle.addEventListener('click', (e) => {
             const visible = !minimapPopup.classList.contains('hidden');
             if (visible) {
@@ -127,9 +147,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 minimapToggle.setAttribute('aria-expanded', 'false');
             } else {
                 minimapPopup.classList.remove('hidden');
+                positionMinimapPopup();
                 minimapToggle.setAttribute('aria-expanded', 'true');
             }
         });
+
+        window.addEventListener('resize', positionMinimapPopup);
+        document.addEventListener('scroll', positionMinimapPopup, true);
 
         // Close the popup when clicking outside.
         document.addEventListener('click', (ev) => {

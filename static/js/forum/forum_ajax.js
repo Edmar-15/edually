@@ -281,13 +281,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const panel = menu.querySelector('.action-menu-panel');
             if (!panel) return;
             const expanded = toggle.getAttribute('aria-expanded') === 'true';
+            const menuContainer = menu.closest('.post-card, .post-item, .reply-item, .question-card, .post-detail');
+
             if (!expanded) {
-                panel.classList.add('up');
+                document.querySelectorAll('.action-menu.open').forEach(openMenu => {
+                    if (openMenu === menu) return;
+                    openMenu.classList.remove('open');
+                    openMenu.querySelector('.action-menu-panel')?.classList.remove('open', 'up');
+                    openMenu.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+                    openMenu.querySelector('.action-menu-panel')?.setAttribute('aria-hidden', 'true');
+                    openMenu.closest('.post-card, .post-item, .reply-item, .question-card, .post-detail')
+                        ?.classList.remove('has-open-action-menu');
+                });
+            }
+
+            if (!expanded) {
+                const toggleRect = toggle.getBoundingClientRect();
+                const availableAbove = toggleRect.top;
+                const availableBelow = window.innerHeight - toggleRect.bottom;
+                const panelHeight = panel.offsetHeight;
+                panel.classList.toggle('up', availableAbove >= panelHeight + 16 || availableAbove > availableBelow);
             } else {
                 panel.classList.remove('up');
             }
             menu.classList.toggle('open', !expanded);
             panel.classList.toggle('open', !expanded);
+            menuContainer?.classList.toggle('has-open-action-menu', !expanded);
             toggle.setAttribute('aria-expanded', String(!expanded));
             panel.setAttribute('aria-hidden', String(expanded));
             return;
@@ -297,9 +316,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const panel = menu.querySelector('.action-menu-panel');
             const toggle = menu.querySelector('.action-menu-toggle');
             menu.classList.remove('open');
-            if (panel) panel.classList.remove('open');
+            if (panel) panel.classList.remove('open', 'up');
             if (toggle) toggle.setAttribute('aria-expanded', 'false');
             if (panel) panel.setAttribute('aria-hidden', 'true');
+            menu.closest('.post-card, .post-item, .reply-item, .question-card, .post-detail')
+                ?.classList.remove('has-open-action-menu');
         });
     });
 

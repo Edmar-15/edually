@@ -1534,14 +1534,20 @@ html.dark .post-form select {
     border: 1px solid rgba(14,154,167,0.16);
     border-radius: 14px;
     box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
-    overflow: hidden;
-    z-index: 20;
+    max-height: min(24rem, calc(100vh - 1rem));
+    overflow-y: auto;
+    z-index: 10003;
 }
 
 .sort-group:hover .sort-options,
 .sort-group:focus-within .sort-options,
 .sort-group .sort-options.open {
     display: grid;
+}
+
+.sort-group:hover,
+.sort-group:focus-within {
+    z-index: 10002;
 }
 
 .sort-option {
@@ -2137,6 +2143,10 @@ html[data-theme="dark"] .avatar {
     position: relative;
 }
 
+.action-menu.open {
+    z-index: 10003;
+}
+
 .action-menu-toggle {
     display: inline-flex;
     align-items: center;
@@ -2198,10 +2208,12 @@ html[data-theme="dark"] .avatar {
 
 .action-menu-panel {
     position: absolute;
-    top: auto;
-    bottom: calc(100% + 0.85rem);
+    top: calc(100% + 0.85rem);
+    bottom: auto;
     right: 0;
     min-width: 220px;
+    max-height: min(24rem, calc(100vh - 1rem));
+    overflow-y: auto;
     background: #ffffff;
     box-shadow: 0 16px 40px rgba(14, 154, 167, 0.15), 
                 0 0 1px rgba(0, 0, 0, 0.1);
@@ -2211,8 +2223,8 @@ html[data-theme="dark"] .avatar {
     z-index: 10001;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(10px) scale(0.95);
-    transform-origin: bottom right;
+    transform: translateY(-10px) scale(0.95);
+    transform-origin: top right;
     pointer-events: none;
     transition: opacity 220ms cubic-bezier(0.4, 0, 0.2, 1), 
                 transform 220ms cubic-bezier(0.4, 0, 0.2, 1), 
@@ -2231,6 +2243,11 @@ html[data-theme="dark"] .avatar {
 .action-menu-panel.up {
     top: auto;
     bottom: calc(100% + 0.85rem);
+    transform-origin: bottom right;
+}
+
+.action-menu-panel.up:not(.open) {
+    transform: translateY(10px) scale(0.95);
 }
 
 .action-menu-panel.up::before {
