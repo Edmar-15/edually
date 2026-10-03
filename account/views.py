@@ -1919,7 +1919,7 @@ def password_reset_confirm(request):
     )
     
     
-@ratelimit(key='user', rate='5/d', method='POST', block=True)   # ≤ 5 password changes per day per user
+@ratelimit(key='user', rate='5/d', method='POST', block=False)   # ≤ 5 password changes per day per user
 @login_required(login_url='account:login')
 def change_password(request):
     """
@@ -1932,6 +1932,18 @@ def change_password(request):
     
     if request.method != "POST":
         return HttpResponseBadRequest("Invalid request method.")
+
+    if request.limited:
+        messages.error(
+            request,
+            "You have reached the limit of 5 password-change attempts per day. "
+            "Please try again after the limit resets.",
+        )
+        return render(request, "account/edit_profile.html", {
+            "user_obj": request.user,
+            "profile_form": ProfileForm(instance=request.user),
+            "password_form": ChangePasswordForm(user=request.user),
+        })
 
     form = ChangePasswordForm(user=request.user, data=request.POST)
     if form.is_valid():

@@ -245,6 +245,34 @@ class SettingsPageTests(TestCase):
         self.assertContains(response, "New password: This field is required.")
         self.assertContains(response, "?tab=password")
 
+    @override_settings(
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "password-change-rate-limit-tests",
+            }
+        }
+    )
+    def test_password_change_rate_limit_renders_message_instead_of_403(self):
+        url = f"{reverse('account:password_change')}?tab=password"
+        invalid_data = {
+            "old_password": "wrong-password",
+            "new_password1": "ValidPassword123!",
+            "new_password2": "ValidPassword123!",
+        }
+        for _ in range(5):
+            response = self.client.post(url, invalid_data)
+            self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(url, invalid_data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "limit of 5 password-change attempts per day.",
+        )
+        self.assertContains(response, "?tab=password")
+
     def test_profile_photo_removal_is_applied_when_form_is_saved(self):
         self.user.avatar = "avatars/current.png"
         self.user.save(update_fields=["avatar"])
