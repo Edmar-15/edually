@@ -560,21 +560,21 @@ form button[type="submit"]:hover {
 
     transition: opacity 160ms ease;
 
-    opacity: 1;
+    opacity: 0;
     pointer-events: none;
     display: block;
 }
 
 .toggle-password .eye-off-icon {
-    opacity: 0;
+    opacity: 1;
 }
 
 .password-input-wrapper.password-visible .toggle-password .eye-icon {
-    opacity: 0;
+    opacity: 1;
 }
 
 .password-input-wrapper.password-visible .toggle-password .eye-off-icon {
-    opacity: 1;
+    opacity: 0;
 }
 
 /* ============================================================= */
