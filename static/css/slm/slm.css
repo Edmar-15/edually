@@ -940,7 +940,6 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
 
 /* Label + dropdown */
 .pm-filter-row label {
-  position: relative;
   display: inline-flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -949,16 +948,28 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
   min-width: 180px;
 }
 
-/* Arrow for native select */
-.pm-filter-row label::after {
-  content: "▾";
+.pm-filter-select {
+  position: relative;
+  display: block;
+}
+
+.pm-filter-select select {
+  display: block;
+}
+
+.pm-filter-select::after {
+  content: "";
   position: absolute;
-  right: .9rem;
+  right: 1rem;
   top: 50%;
   transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-bottom: 0;
+  border-left: 4px solid transparent;
+  border-top: 5px solid rgba(15,23,42,.65);
   pointer-events: none;
-  color: rgba(15,23,42,.65);
-  font-size: 1.2rem;
 }
 
 /* Text inside label */
