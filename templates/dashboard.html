@@ -245,7 +245,7 @@ noindex, nofollow
                         <a {% if request.user|has_group:'Teacher' %}
                                href="{% url 'slm:management' %}"
                            {% else %}
-                               href="{% url 'slm:slmlists' %}"
+                            href="{% url 'slm:slmlists' %}#tab-0"
                            {% endif %}
                            class="quick-access-card">
                             <div class="quick-access-icon">

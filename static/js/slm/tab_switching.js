@@ -124,15 +124,22 @@ document.addEventListener("DOMContentLoaded", () => {
     // Never focus the tab during initial page load.
     // -------------------------------------------------------------
     let initialIndex = 0;
+    const hashIndex = Array.from(tabs).findIndex(
+      (tab) => tab.id === window.location.hash.slice(1),
+    );
 
-    try {
-      const saved = Number(localStorage.getItem(storageKey));
+    if (hashIndex >= 0) {
+      initialIndex = hashIndex;
+    } else {
+      try {
+        const saved = Number(localStorage.getItem(storageKey));
 
-      if (Number.isInteger(saved) && saved >= 0 && saved < tabs.length) {
-        initialIndex = saved;
+        if (Number.isInteger(saved) && saved >= 0 && saved < tabs.length) {
+          initialIndex = saved;
+        }
+      } catch (error) {
+        initialIndex = 0;
       }
-    } catch (error) {
-      initialIndex = 0;
     }
 
     activate(initialIndex, false);
