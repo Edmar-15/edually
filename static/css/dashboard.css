@@ -2092,6 +2092,11 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     flex: 0 0 auto !important;
     align-items: center;
     justify-content: center;
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -2103,6 +2108,7 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     background: transparent;
     color: #b91c1c;
     font: inherit;
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
 }
