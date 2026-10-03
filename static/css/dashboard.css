@@ -2000,6 +2000,124 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     font-size: 0.9rem;
 }
 
+.avatar-editor {
+    margin: 8px 0 24px;
+    padding: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 14px;
+    background: rgba(148, 163, 184, 0.04);
+}
+
+.avatar-editor-copy h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.avatar-editor-copy p {
+    margin: 4px 0 16px;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.avatar-editor-controls {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.avatar-preview {
+    display: flex;
+    width: 88px;
+    height: 88px;
+    flex: 0 0 88px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 50%;
+    background: rgba(14, 154, 167, 0.1);
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-preview [hidden] {
+    display: none;
+}
+
+.avatar-preview-fallback {
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.avatar-editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.avatar-remove-input {
+    position: absolute;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.avatar-file-input:focus-visible + .avatar-change-button {
+    outline: 3px solid rgba(14, 154, 167, 0.35);
+    outline-offset: 3px;
+}
+
+.avatar-change-button {
+    display: inline-flex;
+    flex: 0 0 auto !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.avatar-remove-button {
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid rgba(185, 28, 28, 0.25);
+    border-radius: 10px;
+    background: transparent;
+    color: #b91c1c;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.avatar-remove-button:hover {
+    background: rgba(185, 28, 28, 0.06);
+}
+
+.avatar-change-status {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
 .profile-form input:disabled,
 .profile-form select:disabled,
 .profile-form textarea:disabled {
@@ -2174,6 +2292,12 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     line-height: 1.8;
 }
 
+@media (max-width: 600px) {
+    .avatar-editor-controls {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
 
 @media (max-width: 1024px) {
     :root {

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load account_extras %}
 
 {% block title %}EduAlly – Edit Profile{% endblock %}
 
@@ -360,23 +361,82 @@
 
                                     {% endif %}
 
-                                    <!-- =================================================
-                                         PROFILE PICTURE
-                                    ================================================== -->
+                                    <section
+                                        class="avatar-editor"
+                                        aria-labelledby="avatar-editor-title"
+                                    >
+                                        <div class="avatar-editor-copy">
+                                            <h3 id="avatar-editor-title">Avatar</h3>
+                                            <p>Choose a photo to use on your profile.</p>
+                                        </div>
 
-                                    <div class="floating-label-group input-group">
+                                        <div class="avatar-editor-controls">
+                                            <div
+                                                class="avatar-preview"
+                                                aria-live="polite"
+                                                data-has-photo="{% if user_obj.avatar %}true{% else %}false{% endif %}"
+                                            >
+                                                {% if user_obj.avatar %}
+                                                    <img
+                                                        id="avatar-preview-image"
+                                                        src="{{ user_obj.avatar.url }}"
+                                                        alt="Current profile photo"
+                                                        {% if profile_form.remove_avatar.value %}hidden{% endif %}
+                                                    >
+                                                {% else %}
+                                                    <img
+                                                        id="avatar-preview-image"
+                                                        alt="Profile photo preview"
+                                                        hidden
+                                                    >
+                                                {% endif %}
 
-                                        {{ profile_form.avatar }}
+                                                <span
+                                                    id="avatar-preview-fallback"
+                                                    class="avatar-preview-fallback"
+                                                    {% if user_obj.avatar and not profile_form.remove_avatar.value %}hidden{% endif %}
+                                                >{{ user_obj|initials }}</span>
+                                            </div>
+
+                                            <div class="avatar-editor-actions">
+                                                {{ profile_form.avatar }}
+                                                <label
+                                                    class="button outline-button avatar-change-button"
+                                                    for="profile-avatar-input"
+                                                >
+                                                    Change photo
+                                                </label>
+
+                                                {{ profile_form.remove_avatar }}
+                                                {% if user_obj.avatar %}
+                                                    <button
+                                                        type="button"
+                                                        id="remove-avatar-button"
+                                                        class="avatar-remove-button"
+                                                        aria-pressed="{% if profile_form.remove_avatar.value %}true{% else %}false{% endif %}"
+                                                    >
+                                                        {% if profile_form.remove_avatar.value %}Undo removal{% else %}Remove photo{% endif %}
+                                                    </button>
+                                                {% endif %}
+
+                                                <p
+                                                    id="avatar-change-status"
+                                                    class="avatar-change-status"
+                                                    role="status"
+                                                >
+                                                    {% if profile_form.remove_avatar.value %}
+                                                        Photo removal is pending until you save changes.
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
 
                                         {% if profile_form.avatar.errors %}
-
                                             <div class="validation-error">
                                                 {{ profile_form.avatar.errors|join:", " }}
                                             </div>
-
                                         {% endif %}
-
-                                    </div>
+                                    </section>
 
                                     <!-- =================================================
                                          ACTIONS
@@ -567,6 +627,8 @@
 <script src="{% static 'js/account/floating_labels.js' %}"></script>
 
 <script src="{% static 'js/account/form_validation.js' %}"></script>
+
+<script src="{% static 'js/account/avatar_editor.js' %}" defer></script>
 
 <script src="{% static 'js/sidebar-toggle.js' %}" defer></script>
 

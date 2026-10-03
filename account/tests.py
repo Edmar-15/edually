@@ -209,6 +209,40 @@ class SettingsPageTests(TestCase):
         self.assertTrue(self.user.two_factor_enabled)
         self.assertContains(response, "Two-factor authentication enabled")
 
+    def test_profile_edit_shows_avatar_preview_and_explicit_controls(self):
+        self.user.avatar = "avatars/current.png"
+        self.user.save(update_fields=["avatar"])
+
+        response = self.client.get(reverse("account:profile_edit"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Avatar")
+        self.assertContains(response, "Current profile photo")
+        self.assertContains(response, "Change photo")
+        self.assertContains(response, "Remove photo")
+        self.assertNotContains(response, "Choose File")
+        self.assertNotContains(response, ">Clear<")
+
+    def test_profile_photo_removal_is_applied_when_form_is_saved(self):
+        self.user.avatar = "avatars/current.png"
+        self.user.save(update_fields=["avatar"])
+
+        response = self.client.post(
+            reverse("account:profile_edit"),
+            {
+                "profile_update": "1",
+                "first_name": self.user.first_name,
+                "last_name": self.user.last_name,
+                "student_id": "",
+                "year_level": "2nd Year",
+                "remove_avatar": "on",
+            },
+        )
+
+        self.assertRedirects(response, reverse("account:profile"))
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.avatar)
+
     def test_dashboard_displays_real_learning_summary(self):
         subject = Subject.objects.create(
             subject_code="GEC101",

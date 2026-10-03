@@ -270,6 +270,16 @@ class ProfileForm(forms.ModelForm):
         ),
     )
 
+    remove_avatar = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "id": "remove-avatar-input",
+                "class": "avatar-remove-input",
+            }
+        ),
+    )
+
     # ============================================================
     # STUDENT-ONLY FIELDS
     # ============================================================
@@ -335,6 +345,12 @@ class ProfileForm(forms.ModelForm):
         )
 
         widgets = {
+            "avatar": forms.FileInput(
+                attrs={
+                    "accept": "image/*",
+                    "id": "profile-avatar-input",
+                }
+            ),
             "first_name": forms.TextInput(
                 attrs={
                     "placeholder": "",
@@ -606,6 +622,12 @@ class ProfileForm(forms.ModelForm):
         if self.instance.pk and self.instance.username:
             # Do not allow POST data to change an existing username.
             self.cleaned_data["username"] = self.instance.username
+
+        if (
+            self.cleaned_data.get("remove_avatar")
+            and not self.files.get(self.add_prefix("avatar"))
+        ):
+            self.instance.avatar = None
 
         # Save the User model.
         user = super().save(commit=commit)
