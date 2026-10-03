@@ -60,10 +60,12 @@
                            placeholder="Module no." required>
                     <input id="module-name-input" type="text"
                            placeholder="Module title" required>
-                    <input id="module-file-input" type="file"
-                           accept=".pdf,.doc,.docx,.ppt,.pptx"
-                           aria-describedby="module-upload-help" required>
-                    <small id="module-upload-help">PDF, DOC, DOCX, PPT, or PPTX; maximum 10 MB.</small>
+                    <div class="form-file-field">
+                        <input id="module-file-input" type="file"
+                               accept=".pdf,.doc,.docx,.ppt,.pptx"
+                               aria-describedby="module-upload-help" required>
+                        <small id="module-upload-help">PDF, DOC, DOCX, PPT, or PPTX; maximum 10 MB.</small>
+                    </div>
                     <button id="module-add-btn" type="button">Add module</button>
                 </form>
             </section>

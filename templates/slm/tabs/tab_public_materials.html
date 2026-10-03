@@ -15,12 +15,14 @@
             <h3>Contribute a public material</h3>
             <p>Upload a PDF, DOC, DOCX, PPT, or PPTX (maximum 10 MB) to share with the community.</p>
         </div>
-        <form class="pm-form">
+        <form class="pm-form pm-form--public">
             <input id="pm-title-input" type="text" placeholder="Title" required>
-            <input id="pm-file-input" type="file"
-                   accept=".pdf,.doc,.docx,.ppt,.pptx"
-                   aria-describedby="pm-upload-help" required>
-            <small id="pm-upload-help">PDF, DOC, DOCX, PPT, or PPTX; maximum 10 MB.</small>
+            <div class="form-file-field">
+                <input id="pm-file-input" type="file"
+                       accept=".pdf,.doc,.docx,.ppt,.pptx"
+                       aria-describedby="pm-upload-help" required>
+                <small id="pm-upload-help">PDF, DOC, DOCX, PPT, or PPTX; maximum 10 MB.</small>
+            </div>
             <!-- visibility is forced to PUBLIC – hidden field -->
             <input type="hidden" id="pm-visibility-select" value="PU">
             <button id="pm-add-btn" type="button">Add to public library</button>

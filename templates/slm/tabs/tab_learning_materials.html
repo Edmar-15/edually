@@ -20,10 +20,12 @@
                 <option value="PR">Private (only me)</option>
                 <option value="PU">Public (any logged‑in user)</option>
             </select>
-            <input id="pm-file-input" type="file"
-                   accept=".pdf,.doc,.docx,.ppt,.pptx"
-                   aria-describedby="pm-upload-help" required>
-            <small id="pm-upload-help">PDF, DOC, DOCX, PPT, or PPTX; maximum 10 MB.</small>
+            <div class="form-file-field">
+                <input id="pm-file-input" type="file"
+                       accept=".pdf,.doc,.docx,.ppt,.pptx"
+                       aria-describedby="pm-upload-help" required>
+                <small id="pm-upload-help">PDF, DOC, DOCX, PPT, or PPTX; maximum 10 MB.</small>
+            </div>
             <button id="pm-add-btn" type="button">Add material</button>
         </form>
     </section>
