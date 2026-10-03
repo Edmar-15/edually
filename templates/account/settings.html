@@ -853,7 +853,7 @@ async function ensureServiceWorkerRegistration() {
 
     try {
         const version =
-            '{{ PWA_SW_VERSION|default:"20260819" }}';
+            '{{ PWA_SW_VERSION }}';
 
         await navigator.serviceWorker.register(
             '{% url "service-worker" %}?v=' + version

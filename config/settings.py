@@ -82,6 +82,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'account.context_processors.user_groups',
                 'account.context_processors.vapid_key',
+                'account.context_processors.pwa_version',
             ],
         },
     },
@@ -179,7 +180,7 @@ OLLAMA_MODEL = ""
 OPENAI_API_KEY = "OPENAI_API_KEY"          
 OPENAI_MODEL   = "gpt-4o-mini"
 
-PWA_SW_VERSION = "20260930"
+PWA_SW_VERSION = "20261001"
 
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")

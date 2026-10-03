@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -300,6 +301,15 @@ class ServiceWorkerTests(TestCase):
         self.assertEqual(response["Content-Type"], "application/javascript")
         self.assertNotContains(response, "{{")
         self.assertContains(response, 'self.addEventListener("push"')
+
+    def test_base_template_registers_service_worker_with_configured_version(self):
+        response = self.client.get(reverse("landing"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f"/service-worker.js?v={settings.PWA_SW_VERSION}",
+        )
 
 
 class RecentModuleDashboardTests(TestCase):

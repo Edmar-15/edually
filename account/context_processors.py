@@ -16,3 +16,7 @@ def user_groups(request):
     
 def vapid_key(request):
     return {"VAPID_PUBLIC_KEY": getattr(settings, "VAPID_PUBLIC_KEY", "")}
+
+
+def pwa_version(request):
+    return {"PWA_SW_VERSION": settings.PWA_SW_VERSION}

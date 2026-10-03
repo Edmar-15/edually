@@ -125,7 +125,7 @@
         }
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js?v={{ PWA_SW_VERSION|default:"20260819" }}')
+            navigator.serviceWorker.register('/service-worker.js?v={{ PWA_SW_VERSION }}')
                 .then(reg => {
                     // If a new SW is waiting, tell it to activate now.
                     if (reg.waiting) {
