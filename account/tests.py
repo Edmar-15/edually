@@ -6,7 +6,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -224,6 +224,26 @@ class SettingsPageTests(TestCase):
         self.assertContains(response, "Remove photo")
         self.assertNotContains(response, "Choose File")
         self.assertNotContains(response, ">Clear<")
+
+    @override_settings(
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "password-change-tests",
+            }
+        }
+    )
+    def test_password_change_with_missing_new_password_renders_form_errors(self):
+        response = self.client.post(
+            f"{reverse('account:password_change')}?tab=password",
+            {"old_password": "secret123"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["user_obj"], self.user)
+        self.assertContains(response, self.user.email)
+        self.assertContains(response, "New password: This field is required.")
+        self.assertContains(response, "?tab=password")
 
     def test_profile_photo_removal_is_applied_when_form_is_saved(self):
         self.user.avatar = "avatars/current.png"

@@ -1942,7 +1942,13 @@ def change_password(request):
         return redirect('account:profile')
     else:
         # Show the same edit profile page but with the form errors rendered.
+        for field, errors in form.errors.items():
+            label = form.fields[field].label or field
+            for error in errors:
+                messages.error(request, f"{label}: {error}")
+
         return render(request, "account/edit_profile.html", {
+            "user_obj": request.user,
             "profile_form": ProfileForm(instance=request.user),   # unchanged personal‑info form
             "password_form": form,
         })
