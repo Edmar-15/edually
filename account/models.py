@@ -78,6 +78,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text="Whether the user has visited the Discussion Forum.",
     )
 
+    forum_notifications_last_read = models.DateTimeField(default=timezone.now)
+
     objects = UserManager()
 
     USERNAME_FIELD = "email"

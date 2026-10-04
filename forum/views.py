@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from .forms import PostForm, ReplyForm
 from .models import Post, Category, Reply, PostUpvote, ReplyUpvote, Report
 from account.utils import send_push_notification
@@ -65,14 +66,35 @@ def feed_redirect(request):
     return redirect('forum:list')
 
 
+def _unread_forum_notification_count(user):
+    last_read = user.forum_notifications_last_read
+    replies = Reply.objects.filter(
+        post__author=user,
+        is_deleted=False,
+        created_at__gt=last_read,
+    ).exclude(author=user).count()
+    post_upvotes = PostUpvote.objects.filter(
+        post__author=user,
+        created_at__gt=last_read,
+    ).exclude(user=user).count()
+    reply_upvotes = ReplyUpvote.objects.filter(
+        reply__author=user,
+        reply__is_deleted=False,
+        created_at__gt=last_read,
+    ).exclude(user=user).count()
+    return replies + post_upvotes + reply_upvotes
+
+
 @login_required(login_url='account:login')
 def notifications(request):
     """Show recent activity from the user's forum discussions."""
     activity = []
+    read_at = timezone.now()
 
     replies = Reply.objects.filter(
         post__author=request.user,
         is_deleted=False,
+        created_at__lte=read_at,
     ).exclude(author=request.user).select_related('author', 'post')[:30]
     for reply in replies:
         activity.append({
@@ -84,6 +106,7 @@ def notifications(request):
 
     post_upvotes = PostUpvote.objects.filter(
         post__author=request.user,
+        created_at__lte=read_at,
     ).exclude(user=request.user).select_related('user', 'post')[:30]
     for upvote in post_upvotes:
         activity.append({
@@ -96,6 +119,7 @@ def notifications(request):
     reply_upvotes = ReplyUpvote.objects.filter(
         reply__author=request.user,
         reply__is_deleted=False,
+        created_at__lte=read_at,
     ).exclude(user=request.user).select_related('user', 'reply__post')[:30]
     for upvote in reply_upvotes:
         activity.append({
@@ -107,6 +131,8 @@ def notifications(request):
 
     activity.sort(key=lambda item: item['created_at'], reverse=True)
     context = {'activity': activity[:50]}
+    request.user.forum_notifications_last_read = read_at
+    request.user.save(update_fields=['forum_notifications_last_read'])
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
             'html': render_to_string('forum/partials/notifications_modal.html', context, request=request),
@@ -437,6 +463,7 @@ def forum_list(request):
         'selected_category': category_slug,
         'sort_by': sort_by,
         'user_post_upvotes': user_post_upvotes,
+        'unread_notification_count': _unread_forum_notification_count(request.user),
     }
 
     return render(
@@ -469,6 +496,7 @@ def post_detail(request, post_id):
         'user_post_upvotes': user_post_upvotes,
         'user_reply_upvotes': user_reply_upvotes,
         'reply_form': ReplyForm(),
+        'unread_notification_count': _unread_forum_notification_count(request.user),
     }
     return render(request, 'forum/detail.html', context)
 

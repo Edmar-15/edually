@@ -1076,9 +1076,9 @@ form button[type="submit"]:hover {
     }
 
     /* Floating state */
-    .floating-label-group:focus-within>label,
-    .floating-label-group.focused>label,
-    .floating-label-group.has-value>label {
+    .auth-page .floating-label-group:focus-within>label,
+    .auth-page .floating-label-group.focused>label,
+    .auth-page .floating-label-group.has-value>label {
         top: 0;
         left: 12px;
         font-size: 0.78rem;
@@ -1114,6 +1114,15 @@ form button[type="submit"]:hover {
         top: 24px;
         left: 12px;
         font-size: 1rem;
+    }
+
+    .verify-2fa-page .floating-label-group:focus-within>label,
+    .verify-2fa-page .floating-label-group.focused>label,
+    .verify-2fa-page .floating-label-group.has-value>label {
+        top: 0;
+        left: 12px;
+        font-size: 0.78rem;
+        transform: translateY(-50%);
     }
 
     .password-reset-page .floating-label-group>input {

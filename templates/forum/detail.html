@@ -37,8 +37,11 @@
                 <button type="button" class="button secondary-circle small-button forum-mobile-sidebar-button" data-forum-sidebar-panel="forum-links-panel" data-forum-sidebar-title="Quick Links" aria-label="Quick Links" aria-haspopup="dialog" aria-controls="forum-sidebar-dialog" title="Quick Links">
                     <i class="fa-solid fa-link" aria-hidden="true"></i>
                 </button>
-                <a href="{% url 'forum:notifications' %}" class="button secondary-circle small-button forum-push-button js-modal-trigger" aria-label="View forum notifications" title="Forum notifications">
+                <a href="{% url 'forum:notifications' %}" class="button secondary-circle small-button forum-push-button js-modal-trigger" aria-label="{% if unread_notification_count %}View forum notifications, {{ unread_notification_count }} unread{% else %}View forum notifications{% endif %}" title="Forum notifications">
                     <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                    {% if unread_notification_count %}
+                        <span class="forum-notification-badge" aria-hidden="true">{% if unread_notification_count > 99 %}99+{% else %}{{ unread_notification_count }}{% endif %}</span>
+                    {% endif %}
                 </a>
             </div>
         </header>

@@ -441,6 +441,26 @@ html[data-theme="dark"] .forum-container {
 
 .forum-push-button {
     margin-left: auto;
+    position: relative;
+}
+
+.forum-notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    display: inline-flex;
+    min-width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .forum-push-button.is-enabled {

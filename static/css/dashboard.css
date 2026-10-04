@@ -2391,6 +2391,7 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
         width: min(84vw, 320px);
         max-width: 320px;
         height: 100vh;
+        height: 100dvh;
         position: fixed;
         top: 0;
         left: 0;

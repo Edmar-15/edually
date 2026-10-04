@@ -89,14 +89,15 @@
                             <span class="status-pill status-pill--pending">Pending</span>
                         </div>
 
-                        {% if item.has_bad_words %}
-                            <div class="reported-warning-banner">
-                                <div>
-                                    <strong>Forum moderation warning</strong>
+                        <div class="reported-warning-banner">
+                            <div>
+                                <strong>Reported {{ item.content_type }}</strong>
+                                This {{ item.content_type }} is awaiting moderation review.
+                                {% if item.has_bad_words %}
                                     {{ item.bad_word_warning }}
-                                </div>
+                                {% endif %}
                             </div>
-                        {% endif %}
+                        </div>
 
                         <div class="report-card-body">
                             {% if item.content_type == 'post' and item.post %}

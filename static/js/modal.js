@@ -159,7 +159,7 @@
   /* -----------------------------------------------------------------
        Load modal content from a URL that returns JSON {html: …}
        ----------------------------------------------------------------- */
-  const openModalFromUrl = async (url) => {
+  const openModalFromUrl = async (url, trigger) => {
     try {
       const resp = await fetch(url, {
         method: "GET",
@@ -179,6 +179,13 @@
       modal.innerHTML = data.html.trim();
       modal.removeAttribute("hidden");
       modal.classList.add("open");
+
+      if (trigger?.classList.contains("forum-push-button")) {
+        document.querySelectorAll(".forum-push-button").forEach((button) => {
+          button.querySelector(".forum-notification-badge")?.remove();
+          button.setAttribute("aria-label", "View forum notifications");
+        });
+      }
 
       // Give focus to the first focusable element inside the dialog
       const focusable =
@@ -217,7 +224,7 @@
 
       const url = trigger.dataset.url || trigger.getAttribute("href");
       if (url) {
-        openModalFromUrl(url);
+        openModalFromUrl(url, trigger);
       }
     });
   });

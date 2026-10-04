@@ -1,10 +1,13 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from account.models import UserConsent
-from .models import Category, Post, Reply, Report
+from .models import Category, Post, PostUpvote, Reply, ReplyUpvote, Report
 
 
 class ForumLegacyRouteCompatibilityTests(TestCase):
@@ -92,12 +95,80 @@ class ForumBadWordValidationTests(TestCase):
         self.assertEqual(list(response.context['replies']), [newer_reply, older_reply])
 
 
+class ForumNotificationBadgeTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.owner = user_model.objects.create_user(
+            username='owner',
+            email='owner@example.com',
+            password='secret123',
+            email_verified=True,
+        )
+        self.actor = user_model.objects.create_user(
+            username='actor',
+            email='actor@example.com',
+            password='secret123',
+        )
+        UserConsent.objects.create(user=self.owner, version='1.0')
+        self.category = Category.objects.create(name='General', slug='general')
+        self.post = Post.objects.create(
+            author=self.owner,
+            title='My discussion',
+            content='Discussion content',
+            category=self.category,
+        )
+        self.client.force_login(self.owner)
+
+    def test_forum_bell_shows_unread_activity_count(self):
+        self.owner.forum_notifications_last_read = timezone.now() - timedelta(minutes=1)
+        self.owner.save(update_fields=['forum_notifications_last_read'])
+
+        Reply.objects.create(post=self.post, author=self.actor, content='A reply')
+        PostUpvote.objects.create(user=self.actor, post=self.post)
+        owned_reply = Reply.objects.create(
+            post=self.post,
+            author=self.owner,
+            content='My reply',
+        )
+        ReplyUpvote.objects.create(user=self.actor, reply=owned_reply)
+
+        response = self.client.get(reverse('forum:list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['unread_notification_count'], 3)
+        self.assertContains(response, 'forum-notification-badge')
+        self.assertContains(response, '>3</span>')
+
+    def test_opening_notifications_marks_activity_as_read(self):
+        self.owner.forum_notifications_last_read = timezone.now() - timedelta(minutes=1)
+        self.owner.save(update_fields=['forum_notifications_last_read'])
+        reply = Reply.objects.create(
+            post=self.post,
+            author=self.actor,
+            content='A reply',
+        )
+
+        response = self.client.get(
+            reverse('forum:notifications'),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('replied to your discussion: My discussion', response.json()['html'])
+        self.owner.refresh_from_db()
+        self.assertGreaterEqual(self.owner.forum_notifications_last_read, reply.created_at)
+
+        forum_response = self.client.get(reverse('forum:list'))
+        self.assertEqual(forum_response.context['unread_notification_count'], 0)
+
+
 class ForumModerationWarningTests(TestCase):
     def setUp(self):
         self.teacher = get_user_model().objects.create_user(
             username='teacher',
             email='teacher@example.com',
             password='secret123',
+            email_verified=True,
         )
         UserConsent.objects.create(user=self.teacher, version='1.0')
         self.teacher.groups.add(Group.objects.get_or_create(name='Teacher')[0])
@@ -132,6 +203,25 @@ class ForumModerationWarningTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'inappropriate language')
+
+    def test_moderation_dashboard_warns_on_reported_posts_and_replies(self):
+        reply = Reply.objects.create(
+            post=self.post,
+            author=self.reporter,
+            content='Could you explain this point?',
+        )
+        Report.objects.create(
+            reporter=self.reporter,
+            content_type=Report.REPLY,
+            reply=reply,
+            reason='spam',
+        )
+
+        response = self.client.get(reverse('forum:moderation_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'This post is awaiting moderation review.')
+        self.assertContains(response, 'This reply is awaiting moderation review.')
 
 
 class ForumAjaxUpvoteTests(TestCase):
