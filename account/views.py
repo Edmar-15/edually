@@ -1,4 +1,3 @@
-# account/views.py
 from __future__ import annotations
 
 import json
@@ -38,9 +37,6 @@ from django.core.mail import send_mail
 from django_ratelimit.decorators import ratelimit
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 
-# --------------------------------------------------------------
-# Local imports
-# --------------------------------------------------------------
 from .forms import (
     PublicRegisterForm,
     ProfileForm,
@@ -56,7 +52,6 @@ from .models import UserConsent, User, StudentProfile, PushSubscription, Teacher
 from .constants import GROUP_TEACHER, GROUP_STUDENT, GROUP_ADMIN
 from .utils import user_is_in_group, add_user_to_group
 
-# Other apps used in the dashboard
 from slm.models import (
     Module,
     PersonalMaterial,
@@ -69,7 +64,6 @@ from aihelper.models import Conversation, Message
 
 log = logging.getLogger(__name__)
 
-# Decorators
 def anonymous_required(view_func=None, *, redirect_to=None):
     """
     Decorator for views that should *only* be accessed by **anonymous** users.
@@ -85,23 +79,17 @@ def anonymous_required(view_func=None, *, redirect_to=None):
         @wraps(func)
         def _wrapped_view(request, *args, **kwargs):
             if request.user.is_authenticated:
-                # The user is already logged in – send them to their dashboard.
                 return redirect(reverse(redirect_target))
             return func(request, *args, **kwargs)
 
         return _wrapped_view
 
-    # If the decorator is used without parentheses: @anonymous_required
     if callable(view_func):
         return decorator(view_func)
 
-    # If used with parentheses: @anonymous_required()
     return decorator
 
 
-# -----------------------------------------------------------------
-#   EMAIL VERIFICATION HELPERS
-# -----------------------------------------------------------------
 signer = TimestampSigner()  # uses settings.SECRET_KEY automatically
 
 def _send_email_verification(request, user):
@@ -175,9 +163,6 @@ def _delete_2fa_email_otp(user, request=None):
         session_store.pop(str(user.pk), None)
         request.session.modified = True
 
-# -----------------------------------------------------------------
-#   ROLE‑BASED LOGIN VIEW
-# -----------------------------------------------------------------
 class RoleBasedLoginView(TemplateView):
     template_name = "account/login.html"
     form_class = LoginForm
@@ -196,36 +181,23 @@ class RoleBasedLoginView(TemplateView):
         user = form.get_user()
 
         if (user.is_staff or user.is_superuser) and not user.email_verified:
-            # Mark them as verified *once* so the same check never trips again.
-            # (Optional – you can also just skip the whole block.)
             user.email_verified = True
             user.save(update_fields=["email_verified"])
-        # -------------------------------------------------
-        # NEW – block login for un‑verified accounts
-        # -------------------------------------------------
         if not user.email_verified:
-            # 1️⃣  Store where they wanted to go after they become verified.
             request.session["post_verification_redirect"] = self.get_success_url_for_user(user)
 
-            # 2️⃣  Show the warning toast (your UI already does this)
             messages.warning(
                 request,
                 "You need to verify your e‑mail address before you can log in. "
                 "A verification link has been sent – please check your inbox.",
             )
-            # 3️⃣  (IMPORTANT) Log the user **temporarily** so that the
-            #     `login_required` decorator on the next view succeeds.
+            # The verification page requires an authenticated session.
             auth_login(request, user)
 
-            # 4️⃣  (Optional) Re‑send the e‑mail only if they missed it.
             _send_email_verification(request, user)
 
-            # 5️⃣  Redirect to the page that tells them “check your inbox”.
             return redirect("account:email_verification_required")
 
-        # -------------------------------------------------
-        # 2FA and normal login paths (unchanged)
-        # -------------------------------------------------
         if getattr(user, "two_factor_enabled", False):
             request.session["pending_2fa_user_id"] = user.pk
             request.session["pending_2fa_next"] = self.get_success_url_for_user(user)
@@ -246,9 +218,6 @@ class RoleBasedLoginView(TemplateView):
         return self.get_success_url_for_user(self.request.user)
 
 
-# -----------------------------------------------------------------
-#   LANDING / DASHBOARD / PROFILE etc.
-# -----------------------------------------------------------------
 @anonymous_required
 def landing(request):
     
@@ -675,7 +644,6 @@ def profile(request):
     POST → handle profile update from the inline form.
     """
     # -----------------------------------------------------------------
-    # 1️⃣  Profile edit handling (POST from the profile form)
     # -----------------------------------------------------------------
     if request.method == "POST" and "profile_update" in request.POST:
         profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
@@ -701,7 +669,6 @@ def profile_edit(request):
     POST → handle whichever form was submitted.
     """
     # -----------------------------------------------------------------
-    # 1️⃣  Profile edit handling (POST from the profile form)
     # -----------------------------------------------------------------
     if request.method == "POST" and "profile_update" in request.POST:
         profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
@@ -712,7 +679,6 @@ def profile_edit(request):
         messages.error(request, "Please correct the errors below.")
         password_form = ChangePasswordForm(user=request.user)
     # -----------------------------------------------------------------
-    # 2️⃣  Password‑change handling (POST from the password form)
     # -----------------------------------------------------------------
     elif request.method == "POST" and "change_password" in request.POST:
         password_form = ChangePasswordForm(user=request.user, data=request.POST)
@@ -841,14 +807,12 @@ def verify_email(request, token: str):
         messages.error(request, "User not found.")
         return redirect("account:login")
 
-    # Successful verification – flip the flag and log the user in.
     user.email_verified = True
     user.save(update_fields=["email_verified"])
     user.backend = "django.contrib.auth.backends.ModelBackend"
     auth_login(request, user)
 
     messages.success(request, "Your e‑mail has been verified – welcome!")
-    # redirect to the page they originally wanted (if stored) or dashboard
     next_url = request.session.pop("post_verification_redirect", reverse("account:dashboard"))
     return redirect(next_url)
 
@@ -856,14 +820,7 @@ def verify_email(request, token: str):
 @login_required(login_url='account:login')
 @ensure_csrf_cookie
 def settings(request):
-    """
-    Settings page – three vertically‑stacked sections:
-
-    1️⃣  Account Preferences (unchanged UI)
-    2️⃣  Archive – shows the user’s archived forum posts,
-        modules **and** personal learning material.
-    3️⃣  Danger Zone – permanent‑delete button.
-    """
+    """Render account settings and handle related updates."""
     if request.method == "POST" and "send_2fa_email_otp" in request.POST:
         otp_code = (request.POST.get("otp_code") or request.POST.get("authenticator_code") or "").strip()
         secret = request.user.two_factor_secret or request.session.get("pending_2fa_secret")
@@ -1242,9 +1199,6 @@ class ConsentRequiredView(TemplateView):
         return ctx
 
 
-# -----------------------------------------------------------------
-#   GOOGLE OAUTH – unchanged except for group assignment (see code
-#   block a few lines down where the user is created).
 # -----------------------------------------------------------------
 def _build_google_auth_url(state: str | None = None) -> str:
     base_url = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -1758,15 +1712,9 @@ def teacher_required_for_mutation(view_func):
     @wraps(view_func)
     @login_required(login_url='account:login')               # always require a logged‑in user
     def _wrapped(request, *args, **kwargs):
-        # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
-        # 1️⃣  GET → public read‑only
-        # -----------------------------------------------------------------
         if request.method == "GET":
             return view_func(request, *args, **kwargs)
 
-        # -----------------------------------------------------------------
-        # 2️⃣  Anything else → must be a teacher
-        # -----------------------------------------------------------------
         if getattr(request.user, "is_teacher_member", False):
             return view_func(request, *args, **kwargs)
 
@@ -1784,7 +1732,6 @@ def _send_otp_helper(email: str, user: User) -> None:
     directly from the view ``password_reset_request``.
     """
     otp = f"{random.randint(0, 999999):06d}"
-    # Cache key is scoped to the e‑mail address; expires after 10 minutes.
     cache.set(f"pwd_reset_otp_{email}", otp, timeout=10 * 60)
 
     subject = "Your EduAlly password‑reset code"
@@ -1892,18 +1839,15 @@ def password_reset_confirm(request):
                     "otp", "Invalid or expired OTP. Please request a new one."
                 )
             else:
-                # OTP is good – change the password.
                 try:
                     user = User.objects.get(email__iexact=email)
                 except User.DoesNotExist:
-                    # Very unlikely – the e‑mail existed when we sent the OTP.
                     messages.error(request, "User not found.")
                     return redirect("account:password_reset_request")
 
                 user.set_password(form.cleaned_data["password1"])
                 user.save()
 
-                # Clean‑up
                 cache.delete(f"pwd_reset_otp_{email}")
                 request.session.pop("pwd_reset_email", None)
 
@@ -1948,7 +1892,6 @@ def change_password(request):
     form = ChangePasswordForm(user=request.user, data=request.POST)
     if form.is_valid():
         form.save()
-        # Keep the user logged‑in after the password change
         update_session_auth_hash(request, request.user)
         messages.success(request, "Your password was updated.")
         return redirect('account:profile')
@@ -1961,14 +1904,11 @@ def change_password(request):
 
         return render(request, "account/edit_profile.html", {
             "user_obj": request.user,
-            "profile_form": ProfileForm(instance=request.user),   # unchanged personal‑info form
+            "profile_form": ProfileForm(instance=request.user),
             "password_form": form,
         })
         
         
-# -----------------------------------------------------------------
-#   ADD / SET PASSWORD – for OAuth‑only accounts
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 def add_password(request):
     """
@@ -1978,15 +1918,13 @@ def add_password(request):
     normal change‑password page.
     """
     if request.user.has_usable_password():
-        # This user already has a password → go to the regular page.
         messages.info(request, "You already have a password; you can change it on the Change‑Password page.")
         return redirect("account:password_change")
 
     if request.method == "POST":
         form = AddPasswordForm(user=request.user, data=request.POST)
         if form.is_valid():
-            form.save()                     # calls ``user.set_password()``
-            # Keep the user logged‑in after setting the password
+            form.save()
             update_session_auth_hash(request, request.user)
             messages.success(request, "Your password has been set – you can now sign in with email & password.")
             return redirect("account:profile")

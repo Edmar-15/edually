@@ -1,4 +1,3 @@
-# account/backends.py
 from __future__ import annotations
 
 from django.contrib.auth.backends import ModelBackend

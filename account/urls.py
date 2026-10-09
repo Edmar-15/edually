@@ -1,4 +1,3 @@
-# account/urls.py
 from __future__ import annotations
 
 from django.urls import path, reverse_lazy
@@ -44,9 +43,6 @@ urlpatterns = [
     path("api/push-subscribe/", views.api_push_subscribe, name='api_push_subscribe'),
     path("api/push-unsubscribe/", views.api_push_unsubscribe, name='api_push_unsubscribe'),
     
-    # -----------------------------------------------------------------
-    #   EMAIL VERIFICATION
-    # -----------------------------------------------------------------
     path(
         "email-verification-required/",
         EmailVerificationRequiredView.as_view(),
@@ -58,43 +54,30 @@ urlpatterns = [
         name="verify_email",
     ),
 
-    # ---------------------------------------------------------
-    # OAuth
-    # ---------------------------------------------------------
     path("login/google/", views.google_login, name="google_login"),
     path("login/google/callback/", views.google_callback, name="google_callback"),
 
-    # ---------------------------------------------------------
-    # Policy pages (real URLs – useful for SEO / screen readers)
-    # ---------------------------------------------------------
     path("terms/", TermsView.as_view(), name="terms"),
     path("privacy/", PrivacyView.as_view(), name="privacy"),
     
-    # -------------------------------------------------------------
-    # ARCHIVE – separate pages for each type
-    # -------------------------------------------------------------
     path('archives/', views.archives_home, name='archives-home'),
 
-    #  --- Forum posts ---
     path('archives/forum-posts/', views.archive_forum_post_list,
         name='archive-forum-posts'),
     path('archives/forum-posts/<int:pk>/', views.archive_forum_post_detail,
         name='archive-forum-post-detail'),
 
-    #  --- Modules ---
     path('archives/modules/', views.archive_module_list,
         name='archive-modules'),
     path('archives/modules/<int:pk>/', views.archive_module_detail,
         name='archive-module-detail'),
 
-    #  --- Personal Materials ---
     path('archives/personal-materials/', views.archive_personal_material_list,
         name='archive-personal-materials'),
     path('archives/personal-materials/<int:pk>/',
         views.archive_personal_material_detail,
         name='archive-personal-material-detail'),
     
-    # Forum‑post
     path('archives/forum-posts/<int:pk>/delete-modal/',
         views.archive_forum_post_delete_modal,
         name='archive-forum-post-delete-modal'),
@@ -103,7 +86,6 @@ urlpatterns = [
         views.archive_forum_post_delete,
         name='archive-forum-post-delete'),
 
-    # Module
     path('archives/modules/<int:pk>/delete-modal/',
         views.archive_module_delete_modal,
         name='archive-module-delete-modal'),
@@ -112,7 +94,6 @@ urlpatterns = [
         views.archive_module_delete,
         name='archive-module-delete'),
 
-    # Personal material
     path('archives/personal-materials/<int:pk>/delete-modal/',
         views.archive_personal_material_delete_modal,
         name='archive-personal-material-delete-modal'),
@@ -120,7 +101,6 @@ urlpatterns = [
     path('archives/personal-materials/<int:pk>/delete/',
         views.archive_personal_material_delete,
         name='archive-personal-material-delete'),
-    # --- Subjects ---
     path(
         'archives/subjects/',
         views.archive_subject_list,

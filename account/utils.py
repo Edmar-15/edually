@@ -1,4 +1,3 @@
-# account/utils.py
 """
 Utility helpers that wrap the built‑in Django group API.
 All code that needs to check or modify a user’s role should import

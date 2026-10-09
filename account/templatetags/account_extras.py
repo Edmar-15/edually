@@ -1,18 +1,4 @@
-# account/templatetags/account_extras.py
-"""
-Template helpers that make RBAC checks readable in the HTML.
-You can use:
-
-    {% if request.user|has_group:"Teacher" %}
-        …teacher‑only markup…
-    {% endif %}
-
-or the shortcut booleans:
-
-    {% if request.user|is_student %}
-        …student‑only markup…
-    {% endif %}
-"""
+"""Template filters for checking roles and formatting profile initials."""
 
 from django import template
 import re
@@ -31,9 +17,6 @@ def has_group(user, group_name: str) -> bool:
     return user.groups.filter(name=group_name).exists()
 
 
-# ------------------------------------------------------------
-# Shortcut booleans – they read a little nicer in templates
-# ------------------------------------------------------------
 @register.filter(name="is_student")
 def is_student(user) -> bool:
     return has_group(user, "Student")
@@ -61,13 +44,11 @@ def initials(user) -> str:
     if not user:
         return ""
 
-    # Try explicit first/last
     fn = getattr(user, "first_name", "") or ""
     ln = getattr(user, "last_name", "") or ""
     if fn and ln:
         return (fn[0] + ln[0]).upper()
 
-    # Try get_full_name() if available
     full = getattr(user, "get_full_name", None)
     name = ""
     if callable(full):
@@ -83,7 +64,6 @@ def initials(user) -> str:
             return (parts[0][0] + parts[1][0]).upper()
         return name[:2].upper()
 
-    # Fallback to username or email local-part
     uname = (getattr(user, "username", "") or "").strip()
     if uname:
         return uname[:2].upper()

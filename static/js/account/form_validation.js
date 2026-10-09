@@ -1,8 +1,3 @@
-/**
- * Form Validation
- * Client-side validation for login and register forms
- */
-
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     if (!form) return;
@@ -10,13 +5,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
     const submitButton = form.querySelector('button[type="submit"]');
 
-    // Add validation listeners
     inputs.forEach(input => {
         input.addEventListener('blur', validateInput);
         input.addEventListener('input', validateInput);
     });
 
-    // Prevent form submission if invalid
     form.addEventListener('submit', function(e) {
         let isValid = true;
         inputs.forEach(input => {
@@ -38,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let isValid = true;
         let errorText = '';
 
-        // Email validation
         if (input.type === 'email' || input.name.includes('email')) {
             if (!input.value.trim()) {
                 isValid = false;
@@ -49,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Password validation
         if (input.type === 'password') {
             if (!input.value.trim()) {
                 isValid = false;
@@ -59,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorText = 'Password must be exactly 8 characters, include a number, a special character, and start with an uppercase letter.';
             }
 
-            // Check if confirm password matches
             if (input.name.includes('password2')) {
                 const password1 = form.querySelector('input[name="password1"]');
                 if (password1 && input.value !== password1.value) {
@@ -69,9 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Username validation
         if (input.name === 'username' && input.closest('form').querySelector('input[name="email"]')) {
-            // Register form
             if (!input.value.trim()) {
                 isValid = false;
                 errorText = 'Username is required';
@@ -81,13 +69,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Required fields
         if (input.hasAttribute('required') && !input.value.trim()) {
             isValid = false;
             errorText = errorText || input.placeholder || 'This field is required';
         }
 
-        // Update UI
         if (group) {
             if (isValid) {
                 group.classList.remove('input-error');
@@ -97,11 +83,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 group.classList.remove('input-valid');
                 group.classList.add('input-error');
                 
-                // Remove old error message if exists
                 const oldError = group.querySelector('.validation-error');
                 if (oldError) oldError.remove();
 
-                // Add new error message
                 if (errorText) {
                     const errorElement = document.createElement('div');
                     errorElement.className = 'validation-error';

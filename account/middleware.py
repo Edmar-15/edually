@@ -1,4 +1,3 @@
-# account/middleware.py
 from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -12,20 +11,13 @@ def _is_exempt(request):
     Return True if the request should bypass the consent check.
     """
 
-    # 1. Anonymous users – they have no consent to check.
     if not request.user.is_authenticated:
         return True
 
-    # 2. Superusers are exempt.
     if request.user.is_superuser:
         return True
 
-    # 3. Technical/static endpoints that must remain directly accessible.
-    #
-    # The service worker is especially important here. If the consent
-    # middleware redirects /service-worker.js to the consent page, the
-    # browser can store that URL as post_consent_redirect. After the user
-    # accepts the policy, they would then be redirected to the JS file.
+    # Keep the service worker and other site metadata outside the consent flow.
     if request.path in {
         "/service-worker.js",
         "/manifest.json",
@@ -35,7 +27,6 @@ def _is_exempt(request):
     }:
         return True
 
-    # 4. Explicitly exempt URLs.
     resolver_match = request.resolver_match
 
     if resolver_match:
@@ -75,15 +66,12 @@ class RequireLatestConsentMiddleware(MiddlewareMixin):
         if _is_exempt(request):
             return None
 
-        # Safe lookup – avoids ``UserConsent.DoesNotExist`` for new users.
         try:
             consent = request.user.consent
-        except UserConsent.DoesNotExist:   # noqa: F821 – imported lazily below
+        except UserConsent.DoesNotExist:
             consent = None
 
         if consent is None or consent.version != settings.POLICY_VERSION:
-            # Only remember actual application pages.
-            # Never redirect back to static/media resources.
             if (
                 request.method == "GET"
                 and not request.path.startswith("/static/")
@@ -99,15 +87,12 @@ def _email_verification_exempt(request) -> bool:
     Return True if the current request should *not* be blocked because the
     user is allowed to visit it even when their e‑mail is un‑verified.
     """
-    # 1️⃣  Anonymous users – they have no e‑mail to verify.
     if not request.user.is_authenticated:
         return True
 
-    # 2️⃣  Staff / super‑users are trusted to bypass verification.
     if request.user.is_staff or request.user.is_superuser:
         return True
     
-        # 3. Technical/static endpoints must always remain accessible.
     if request.path in {
         "/service-worker.js",
         "/manifest.json",
@@ -117,33 +102,25 @@ def _email_verification_exempt(request) -> bool:
     }:
         return True
 
-    # 3️⃣  Explicitly allow a handful of URLs (login, logout, registration,
-    #     the verification page itself, consent, policy pages, password‑reset
-    #     flow, etc.).
     resolver = request.resolver_match
     if resolver:
         exempt_names = {
-            # authentication flow
             "login",
             "logout",
             "register",
             "verify_email",
             "email_verification_required",
             "logout_confirm",
-            # consent & policies
             "consent_required",
             "terms",
             "privacy",
-            # password‑reset
             "password_reset_request",
             "password_reset_confirm",
         }
 
-        # The view lives in the ``account`` namespace (all your auth URLs)
         if resolver.namespace == "account" and resolver.url_name in exempt_names:
             return True
 
-        # Admin is always allowed
         if resolver.namespace == "admin":
             return True
 
@@ -159,19 +136,14 @@ class RequireEmailVerificationMiddleware(MiddlewareMixin):
     """
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        # Fast‑path: the URL is on the exempt list → let the view run.
         if _email_verification_exempt(request):
             return None
 
-        # If the user is logged in but still un‑verified → redirect.
         if (
             request.user.is_authenticated
             and not getattr(request.user, "email_verified", False)
         ):
-            # Remember where they wanted to go so we can send them back after verification.
             request.session["post_verification_redirect"] = request.get_full_path()
-            # Optional: give a one‑off toast/message (your templates already read
-            # the messages framework).
             messages.warning(
                 request,
                 "You must verify your e‑mail address before you can use this page. "
@@ -179,5 +151,4 @@ class RequireEmailVerificationMiddleware(MiddlewareMixin):
             )
             return redirect(reverse("account:email_verification_required"))
 
-        # No problem – continue to the view.
         return None

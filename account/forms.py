@@ -1,4 +1,3 @@
-# account/forms.py
 from __future__ import annotations
 
 import re
@@ -16,9 +15,6 @@ from django.contrib.auth.forms import (
 from django.utils import timezone
 from django.forms import DateTimeInput
 
-# -----------------------------------------------------------------
-# Local imports
-# -----------------------------------------------------------------
 from .models import UserConsent, StudentProfile, TeacherProfile
 from .utils import add_user_to_group
 from .constants import GROUP_STUDENT
@@ -26,9 +22,6 @@ from .constants import GROUP_STUDENT
 User = get_user_model()
 
 
-# -----------------------------------------------------------------
-#  LOGIN FORM (unchanged)
-# -----------------------------------------------------------------
 class LoginForm(AuthenticationForm):
     """
     The default authentication form, but we replace the username widget with an
@@ -45,9 +38,6 @@ class LoginForm(AuthenticationForm):
         )
 
 
-# -----------------------------------------------------------------
-#  ADMIN‑SIDE USER CREATION / CHANGE FORMS (unchanged)
-# -----------------------------------------------------------------
 class UserCreationForm(DjangoUserCreationForm):
     """Admin‑side form – only the core authentication fields are exposed."""
     class Meta(DjangoUserCreationForm.Meta):
@@ -62,15 +52,11 @@ class UserChangeForm(DjangoUserChangeForm):
         fields = "__all__"
 
 
-# -----------------------------------------------------------------
-#  PUBLIC REGISTRATION FORM – **students only**
-# -----------------------------------------------------------------
 class PublicRegisterForm(forms.ModelForm):
     """
     Public registration form that creates a StudentProfile, adds the user
     to the Student group, and records the initial consent.
     """
-    # ──────  PASSWORD fields  ──────
     password1 = forms.CharField(
         label="Password",
         strip=False,
@@ -82,7 +68,6 @@ class PublicRegisterForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={"placeholder": "Confirm your password"}),
     )
 
-    # ──────  TERMS & CONDITIONS checkbox  ──────
     accept_terms = forms.BooleanField(
         label=(
             "I have read and agree to the "
@@ -114,9 +99,6 @@ class PublicRegisterForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"placeholder": "Username"}),
     )
 
-    # -----------------------------------------------------------------
-    #  STUDENT‑ONLY extra fields (these live only on the form)
-    # -----------------------------------------------------------------
     student_id = forms.CharField(
         required=True,
         max_length=30,
@@ -135,9 +117,6 @@ class PublicRegisterForm(forms.ModelForm):
         label="Year Level",
     )
 
-    # -----------------------------------------------------------------
-    #  VALIDATORS (unchanged)
-    # -----------------------------------------------------------------
     def clean_email(self):
         email = self.cleaned_data["email"].lower()
         if User.objects.filter(email__iexact=email).exists():
@@ -169,9 +148,6 @@ class PublicRegisterForm(forms.ModelForm):
             raise forms.ValidationError("Passwords do not match.")
         return cleaned
 
-    # -----------------------------------------------------------------
-    #  SAVE – always creates a StudentProfile and assigns the Student group
-    # -----------------------------------------------------------------
     def save(self, commit=True):
         """
         Create the User, a StudentProfile, assign the Student group,
@@ -183,7 +159,6 @@ class PublicRegisterForm(forms.ModelForm):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
 
-        # NEW – mark as unverified until they click the link
         user.email_verified = False
 
         if commit:
@@ -227,9 +202,6 @@ class DeleteAccountForm(forms.Form):
         return password
 
 
-# -----------------------------------------------------------------
-#  PROFILE FORM – unchanged (still edits the Student profile fields)
-# -----------------------------------------------------------------
 class ProfileForm(forms.ModelForm):
     """
     Role-aware profile form.
@@ -254,10 +226,6 @@ class ProfileForm(forms.ModelForm):
     already have one. Once assigned, it cannot be changed from the profile.
     """
 
-    # ============================================================
-    # USERNAME
-    # ============================================================
-
     username = forms.CharField(
         required=False,
         max_length=150,
@@ -279,10 +247,6 @@ class ProfileForm(forms.ModelForm):
             }
         ),
     )
-
-    # ============================================================
-    # STUDENT-ONLY FIELDS
-    # ============================================================
 
     student_id = forms.CharField(
         required=False,
@@ -719,9 +683,6 @@ class PasswordResetConfirmForm(forms.Form):
         ),
     )
 
-    # -----------------------------------------------------------------
-    #  PASSWORD VALIDATORS – exactly the same rules used during registration
-    # -----------------------------------------------------------------
     def clean_password1(self):
         password = self.cleaned_data.get("password1")
         if not password:
@@ -766,7 +727,6 @@ class ChangePasswordForm(PasswordChangeForm):
         if not password:
             return password
 
-        # ---- validations – identical to those in PublicRegisterForm ----
         if len(password) < 8:
             raise forms.ValidationError(
                 "Password must be at least 8 characters long."
@@ -786,9 +746,6 @@ class ChangePasswordForm(PasswordChangeForm):
         return password
     
 
-# -------------------------------------------------
-#  ADD / SET PASSWORD FORM (OAuth‑only accounts)
-# -------------------------------------------------
 class AddPasswordForm(SetPasswordForm):
     """
     Same validation rules as ``ChangePasswordForm`` but does NOT
@@ -800,7 +757,6 @@ class AddPasswordForm(SetPasswordForm):
         if not password:
             return password
 
-        # ---- replicate the custom strength checks from ChangePasswordForm ----
         if len(password) < 8:
             raise forms.ValidationError(
                 "Password must be at least 8 characters long."
@@ -822,9 +778,6 @@ class AddPasswordForm(SetPasswordForm):
         return password
 
 
-# --------------------------------------------------------------
-#  CONTACT FORM – allows visitors to send a message to the site admins.
-# --------------------------------------------------------------
 class ContactForm(forms.Form):
     """
     Simple contact form displayed on the public support page.

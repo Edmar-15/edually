@@ -1,4 +1,3 @@
-# account/models.py
 from __future__ import annotations
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
@@ -65,14 +64,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text="Base32 secret used for TOTP generation.",
     )
 
-    # Reputation system – kept unchanged
     karma = models.IntegerField(
         default=0,
         help_text="Points earned from helpful posts and replies. Starts at 0.",
     )
     
-    # Onboarding
-    # Becomes True when the user visits the Discussion Forum.
     onboarding_forum_visited = models.BooleanField(
         default=False,
         help_text="Whether the user has visited the Discussion Forum.",
@@ -115,10 +111,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self) -> str:
         return self.short_name
 
-    # -----------------------------------------------------------------
-    # Convenience read‑only properties that forward to the profile.
-    # They let existing templates keep using {{ user.student_id }} etc.
-    # -----------------------------------------------------------------
+    # Keep profile fields available through the user object for templates.
     @property
     def student_id(self):
         """
@@ -127,7 +120,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         """
         try:
             return self.student_profile.student_id
-        except StudentProfile.DoesNotExist:      # <-- safe fallback
+        except StudentProfile.DoesNotExist:
             return ""
 
     @property
@@ -172,9 +165,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.has_group("Admin") or self.is_superuser or self.is_staff
 
 
-# -----------------------------------------------------------------
-#   ONE‑TO‑ONE PROFILE MODELS
-# -----------------------------------------------------------------
 class StudentProfile(models.Model):
     """All data that only makes sense for a student."""
     user = models.OneToOneField(
@@ -188,14 +178,12 @@ class StudentProfile(models.Model):
         blank=True,
         help_text="University‑assigned identifier.",
     )
-    # Default programme → “Information Technology”
     program = models.CharField(
         "Program / Course",
         max_length=100,
         blank=True,
         default="Information Technology",
     )
-    # Year level is now required and limited to 1st‑4th year
     YEAR_CHOICES = [
         ("2nd Year", "2nd Year"),
         ("3rd Year", "3rd Year"),
@@ -211,7 +199,7 @@ class StudentProfile(models.Model):
         Prevent a user from changing the year level after it has been saved once.
         """
         super().clean()
-        if self.pk:                                   # only on updates
+        if self.pk:
             orig = StudentProfile.objects.filter(pk=self.pk).first()
             if orig and orig.year_level and self.year_level != orig.year_level:
                 raise ValidationError("Year level cannot be changed once set.")
@@ -233,7 +221,6 @@ class TeacherProfile(models.Model):
         blank=True,
         help_text="Internal staff identifier.",
     )
-    # Department is now always “CCS”
     department = models.CharField(
         "Department",
         max_length=100,
@@ -245,9 +232,6 @@ class TeacherProfile(models.Model):
         return f"TeacherProfile({self.user.email})"
 
 
-# -----------------------------------------------------------------
-#   CONSENT & NOTIFICATIONS (unchanged)
-# -----------------------------------------------------------------
 class UserConsent(models.Model):
     """
     Records each time a user accepts the latest Terms & Conditions &

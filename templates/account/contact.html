@@ -32,7 +32,7 @@
             <h2>Customer Service</h2>
             <p>Need help, have feedback, or want to report a moderation issue? Our customer service team is here for you.</p>
 
-            <!-- Contact Form -->
+
             <form method="post" class="contact-form" novalidate>
                 {% csrf_token %}
                 {{ form.non_field_errors }}
@@ -92,4 +92,3 @@
     });
 </script>
 {% endblock %}
-

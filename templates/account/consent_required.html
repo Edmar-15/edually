@@ -12,7 +12,6 @@
             <img src="{% static 'img/edually_logo.png' %}" alt="EduAlly" class="nav-logo">
         </a>
         <nav class="main-nav">
-            {# ---------- 1️⃣ JavaScript‑enabled trigger ---------- #}
             <button type="button"
                     class="nav-item logout js-modal-trigger"
                     data-url="{% url 'account:logout_confirm' %}">
@@ -20,7 +19,6 @@
                 <span class="nav-label">Logout</span>
             </button>
 
-            {# ---------- 2️⃣ Fallback when JS is disabled ---------- #}
             <noscript>
                 <form method="post" action="{% url 'account:logout' %}">
                     {% csrf_token %}
