@@ -1,6 +1,3 @@
-// ---------------------------------------------------------------
-// module_ajax.js – Ajax widget for “Modules” of a Subject
-// ---------------------------------------------------------------
 import { csrftoken } from "./utils.js";
 import { validateUploadFile } from "./file_validation.js";
 
@@ -16,9 +13,6 @@ import { validateUploadFile } from "./file_validation.js";
  *   data-file-replace-url   → "/slm/api/modules/0/file/"
  */
 export function initModuleWidget(rootEl) {
-  /* -----------------------------------------------------------------
-   * 1️⃣  URLs from data‑attributes – they contain the dummy “0”
-   * ----------------------------------------------------------------- */
   const listUrl = rootEl.dataset.listUrl; // …?page=
   const createUrl = rootEl.dataset.createUrl;
   const updateTpl = rootEl.dataset.updateUrl; // “…/modules/0/”
@@ -33,9 +27,6 @@ export function initModuleWidget(rootEl) {
   const showToast = (message, type = "info", duration = 4000) =>
     window.showGlobalToast(message, type, duration);
 
-  /* -----------------------------------------------------------------
-   * 3️⃣  DOM shortcuts (all inside the widget)
-   * ----------------------------------------------------------------- */
   const $list = rootEl.querySelector("#module-list");
   if (!$list) {
     console.warn("Module widget is missing #module-list container.");
@@ -94,9 +85,6 @@ export function initModuleWidget(rootEl) {
     }
   }
 
-  /* -----------------------------------------------------------------
-   * 4️⃣  Render a single module card – mirrors the pm‑card UI
-   * ----------------------------------------------------------------- */
   function renderCard(mod) {
     const card = document.createElement("div");
     card.className = "pm-card";
@@ -131,11 +119,9 @@ export function initModuleWidget(rootEl) {
     header.appendChild(content);
     card.appendChild(header);
 
-    // ---- Actions -------------------------------------------------
     const actions = document.createElement("div");
     actions.className = "pm-card__actions";
 
-    // View button – links to the module‑detail page
     const viewBtn = document.createElement("a");
     viewBtn.href = `/slm/subjects/${mod.subject_id}/modules/${mod.id}/`;
     viewBtn.className = "button button-plain";
@@ -143,9 +129,7 @@ export function initModuleWidget(rootEl) {
     viewBtn.title = "Open module preview";
     actions.appendChild(viewBtn);
 
-    // Owner‑only edit / delete – use global modal
     if (mod.is_owner) {
-      // ---- Edit (global modal) ---------------------------------
       const editLink = document.createElement("a");
       editLink.href = "#";
       editLink.title = "Edit";
@@ -155,7 +139,6 @@ export function initModuleWidget(rootEl) {
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
       actions.appendChild(editLink);
 
-      // ---- Delete (global modal) -------------------------------
       const delLink = document.createElement("a");
       delLink.href = "#";
       delLink.title = "Delete";
@@ -170,9 +153,6 @@ export function initModuleWidget(rootEl) {
     return card;
   }
 
-  /* -----------------------------------------------------------------
-   * 5️⃣  Paginator – unchanged copy‑paste from subject widget
-   * ----------------------------------------------------------------- */
   function renderPaginator(meta) {
     const old = rootEl.querySelector(".paginator");
     if (old) old.remove();
@@ -251,9 +231,6 @@ export function initModuleWidget(rootEl) {
     $list.parentNode.appendChild(nav);
   }
 
-  /* -----------------------------------------------------------------
-   * 6️⃣  LOAD – fetch a page and render
-   * ----------------------------------------------------------------- */
   async function load(page = 1) {
     try {
       const resp = await fetch(`${listUrl}?page=${page}`, {
@@ -297,9 +274,6 @@ export function initModuleWidget(rootEl) {
     }
   }
 
-  /* -----------------------------------------------------------------
-   * 7️⃣  CREATE – POST a new module (multipart/form‑data)
-   * ----------------------------------------------------------------- */
   async function create() {
     if (!$numInput || !$nameInput || !$fileInput) return;
 
@@ -344,15 +318,7 @@ export function initModuleWidget(rootEl) {
     }
   }
 
-  /* -----------------------------------------------------------------
-   * 8️⃣  UI bindings & modal handling
-   * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
-  // No longer need local edit / delete modals – the global modal handles them.
-
-  /* -----------------------------------------------------------------
-   * 9️⃣ Kick‑off – load the first page
-   * ----------------------------------------------------------------- */
   load();
 }

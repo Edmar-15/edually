@@ -1,10 +1,9 @@
 @import "../base.css";
 
 /* ==========================================================================
-   0️⃣ ROOT & GLOBAL SETTINGS
+   Root and global settings
    ========================================================================== */
 :root {
-  /* Colour palette (kept from the original) */
   --module-surface: var(--surface);
   --module-surface-soft: var(--surface-soft);
   --module-border: rgba(14, 154, 167, 0.18);
@@ -12,7 +11,6 @@
   --module-accent: #0e9aa7;
   --module-accent-dark: #0b7d86;
 
-  /* Spacing scale – used throughout the file */
   --gap-xxs: 0.25rem;
   --gap-xs: 0.5rem;
   --gap-sm: 0.75rem;
@@ -20,14 +18,12 @@
   --gap-lg: 1.25rem;
   --gap-xl: 1.5rem;
 
-  /* Fluid typography – base size will adapt to viewport width */
-  --type-base: clamp(0.875rem, 1vw + 0.5rem, 1rem);      /* ≈14‑16px */
-  --type-sm:   clamp(0.75rem, 0.9vw + 0.4rem, 0.875rem);/* ≈13‑14px */
-  --type-lg:   clamp(1rem, 1.2vw + 0.5rem, 1.125rem);    /* ≈16‑18px */
-  --type-xl:   clamp(1.125rem, 1.4vw + 0.6rem, 1.25rem);/* ≈18‑20px */
+  --type-base: clamp(0.875rem, 1vw + 0.5rem, 1rem);
+  --type-sm:   clamp(0.75rem, 0.9vw + 0.4rem, 0.875rem);
+  --type-lg:   clamp(1rem, 1.2vw + 0.5rem, 1.125rem);
+  --type-xl:   clamp(1.125rem, 1.4vw + 0.6rem, 1.25rem);
 }
 
-/* Global body tweaks – ensure the root type size is used everywhere */
 html { font-size: var(--type-base); }
 body {
   line-height: 1.5;
@@ -36,7 +32,7 @@ body {
 }
 
 /* ----------------------------------------------------------------------
-   1️⃣ MODULE WIDGET – overall layout
+   Module widget
    ---------------------------------------------------------------------- */
 #module-widget {
   display: flex;
@@ -45,7 +41,7 @@ body {
 }
 
 /* ----------------------------------------------------------------------
-   2️⃣ STATUS BANNER
+   Status banner
    ---------------------------------------------------------------------- */
 #module-status {
   min-height: 2.75rem;
@@ -58,7 +54,7 @@ body {
 }
 
 /* ----------------------------------------------------------------------
-   3️⃣ FORM CARD (module + subject)
+   Form card
    ---------------------------------------------------------------------- */
 .module-form-card,
 .subject-form-card,
@@ -105,7 +101,7 @@ body {
 }
 
 /* ----------------------------------------------------------------------
-   4️⃣ INPUT / SELECT / FILE FIELDS
+   Input, select, and file fields
    ---------------------------------------------------------------------- */
 .module-form,
 .subject-form,
@@ -218,7 +214,7 @@ html[data-theme="dark"] .pm-form input[type="file"]::file-selector-button {
 }
 
 /* ----------------------------------------------------------------------
-   5️⃣ BUTTONS (module, subject & personal‑material)
+   Buttons
    ---------------------------------------------------------------------- */
 .module-form button,
 .subject-form button,
@@ -253,7 +249,7 @@ html[data-theme="dark"] .pm-form input[type="file"]::file-selector-button {
 }
 
 /* ----------------------------------------------------------------------
-   6️⃣ MODULE LIST GRID
+   Module list grid
    ---------------------------------------------------------------------- */
 #module-list {
   display: grid;
@@ -275,7 +271,7 @@ html[data-theme="dark"] .pm-form input[type="file"]::file-selector-button {
 }
 
 /* ----------------------------------------------------------------------
-   7️⃣ MODULE & PERSONAL‑MATERIAL CARD (shared styling)
+   Module and personal material cards
    ---------------------------------------------------------------------- */
 .module-card,
 .pm-card {
@@ -446,7 +442,7 @@ html[data-theme="dark"] .pm-card__header h3 {
 .pm-card__action svg { width:18px; height:18px; fill:currentColor; }
 
 /* ----------------------------------------------------------------------
-   8️⃣ EMPTY STATE (module list)
+   Empty state
    ---------------------------------------------------------------------- */
 .module-empty-state {
   display: grid;
@@ -483,7 +479,7 @@ html[data-theme="dark"] .pm-card__header h3 {
 }
 
 /* ----------------------------------------------------------------------
-   9️⃣ TAB COMPONENT
+   Tabs
    ---------------------------------------------------------------------- */
 .tabs .tablist {
   display: flex;
@@ -563,7 +559,7 @@ html[data-theme="dark"] .pm-card__header h3 {
 }
 
 /* ----------------------------------------------------------------------
-   10️⃣ INTRO CARD (Self tab)
+   Intro card
    ---------------------------------------------------------------------- */
 .slm-intro-card {
   display: flex;
@@ -608,7 +604,7 @@ html[data-theme="dark"] .pm-card__header h3 {
 }
 
 /* ----------------------------------------------------------------------
-   11️⃣ SUBJECT WIDGET (list & form)
+   Subject widget
    ---------------------------------------------------------------------- */
 .subject-widget { display: flex; flex-direction: column; gap: var(--gap-md); }
 
@@ -685,7 +681,7 @@ html[data-theme="dark"] .pm-card__header h3 {
 }
 
 /* -------------------------------------------------------------
-   12️⃣ SUBJECT CARD (grid item)
+   Subject card
    ------------------------------------------------------------- */
 .subject-card {
   display: flex;
@@ -795,7 +791,7 @@ html[data-theme="dark"] .subject-card {
 }
 
 /* ----------------------------------------------------------------------
-   13️⃣ PERSONAL‑MATERIAL WIDGET (form + list)
+   Personal material widget
    ---------------------------------------------------------------------- */
 .personal-material-widget { display: flex; flex-direction: column; gap: var(--gap-lg); }
 
@@ -924,7 +920,7 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
 }
 
 /* ----------------------------------------------------------------------
-   14️⃣ FILTER ROW (personal‑material)
+   Filter row
    ---------------------------------------------------------------------- */
 .pm-filter-row {
   display: flex;
@@ -1012,7 +1008,7 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
 }
 
 /* ----------------------------------------------------------------------
-   15️⃣ PAGINATOR (tabs.css)
+   Paginator
    ---------------------------------------------------------------------- */
 .paginator {
   display: flex;
@@ -1078,7 +1074,7 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
 }
 
 /* ----------------------------------------------------------------------
-   18️⃣ RESPONSIVE ADJUSTMENTS – additional break‑points
+   Responsive adjustments
    ---------------------------------------------------------------------- */
 
 /* Large desktops – a little more breathing room */
@@ -1271,12 +1267,7 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
         overflow: auto;
     }
 
-    /*
-     * IMPORTANT:
-     * tab_self.html already has .widget-wrapper.
-     * Its existing 100vh-based min-height must NOT create another
-     * viewport inside the tab panel.
-     */
+    /* Let the tab panel handle scrolling instead of creating a nested viewport. */
     .main-content.slm-tab-page .tab-panel:not([hidden]) .widget-wrapper {
         min-height: 0;
         height: 100%;

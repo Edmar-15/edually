@@ -1,11 +1,8 @@
-// -------------------------------------------------------------------
-// personal_material_ajax.js – CRUD widget for PersonalMaterial
-// -------------------------------------------------------------------
 import { csrftoken } from "./utils.js";
 import { validateUploadFile } from "./file_validation.js";
 
 /**
- * Initialise the Personal‑Material widget.
+ * Set up the Personal Material widget.
  *
  * Expected data‑attributes on the root element:
  *
@@ -18,9 +15,6 @@ import { validateUploadFile } from "./file_validation.js";
  * User feedback uses the shared SweetAlert2 notification helper.
  */
 export function initPersonalMaterialWidget(rootEl) {
-  /* -----------------------------------------------------------------
-   * 1️⃣  URLs & helper to replace the dummy “0” with a real id.
-   * ----------------------------------------------------------------- */
   const listUrl = rootEl.dataset.listUrl;
   const createUrl = rootEl.dataset.createUrl;
   const updateTpl = rootEl.dataset.updateUrl; // “…/0/”
@@ -32,9 +26,6 @@ export function initPersonalMaterialWidget(rootEl) {
   const showToast = (message, type = "info", duration = 4000) =>
     window.showGlobalToast(message, type, duration);
 
-  /* -----------------------------------------------------------------
-   * 3️⃣  DOM shortcuts (all inside the widget)
-   * ----------------------------------------------------------------- */
   const $list = rootEl.querySelector("#personal-material-list");
   if (!$list) {
     console.warn(
@@ -52,9 +43,6 @@ export function initPersonalMaterialWidget(rootEl) {
   const $filterType = rootEl.querySelector("#pm-filter-type-select");
   const $addBtn = rootEl.querySelector("#pm-add-btn");
 
-  /* -----------------------------------------------------------------
-   * 4️⃣  Current filter state (used on every load)
-   * ----------------------------------------------------------------- */
   const currentFilters = {
     type: $filterType ? $filterType.value : "all",
     visibility:
@@ -62,9 +50,6 @@ export function initPersonalMaterialWidget(rootEl) {
       ($filterVisibility ? $filterVisibility.value : "own"),
   };
 
-  /* -----------------------------------------------------------------
-   * 5️⃣  Icon helpers (same as Modules widget)
-   * ----------------------------------------------------------------- */
   const getMaterialIconMarkup = (fileUrl = "") => {
     const ext = (fileUrl || "")
       .split("?")[0]
@@ -108,9 +93,6 @@ export function initPersonalMaterialWidget(rootEl) {
     }
   };
 
-  /* -----------------------------------------------------------------
-   * 6️⃣  Render a single material card
-   * ----------------------------------------------------------------- */
   function renderCard(pm) {
     const card = document.createElement("div");
     card.className = "pm-card";
@@ -134,7 +116,6 @@ export function initPersonalMaterialWidget(rootEl) {
     const meta = document.createElement("div");
     meta.className = "pm-card__meta";
 
-    // visibility pill
     const visPill = document.createElement("span");
     visPill.className = "pm-card__pill pm-card__pill--visibility";
     visPill.innerHTML =
@@ -143,7 +124,6 @@ export function initPersonalMaterialWidget(rootEl) {
         : '<i class="fas fa-lock" aria-hidden="true" title="Private"></i>';
     meta.appendChild(visPill);
 
-    // author pill
     const authorPill = document.createElement("span");
     authorPill.className = "pm-card__pill";
     authorPill.textContent = `by ${pm.author_name}`;
@@ -153,11 +133,9 @@ export function initPersonalMaterialWidget(rootEl) {
     header.appendChild(content);
     card.appendChild(header);
 
-    // ---- Actions -------------------------------------------------
     const actions = document.createElement("div");
     actions.className = "pm-card__actions";
 
-    // View (always present)
     const viewBtn = document.createElement("a");
     viewBtn.href = `/slm/personal-material/${pm.id}/`;
     viewBtn.className = "button button-plain";
@@ -165,9 +143,7 @@ export function initPersonalMaterialWidget(rootEl) {
     viewBtn.title = "Open preview page";
     actions.appendChild(viewBtn);
 
-    // Owner‑only actions – edit / delete via global modal
     if (pm.is_owner) {
-      // ---- Edit (global modal) ---------------------------------
       const editLink = document.createElement("a");
       editLink.href = "#";
       editLink.title = "Edit";
@@ -177,7 +153,6 @@ export function initPersonalMaterialWidget(rootEl) {
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
       actions.appendChild(editLink);
 
-      // ---- Delete (global modal) -------------------------------
       const delLink = document.createElement("a");
       delLink.href = "#";
       delLink.title = "Delete";
@@ -192,9 +167,6 @@ export function initPersonalMaterialWidget(rootEl) {
     return card;
   }
 
-  /* -----------------------------------------------------------------
-   * 7️⃣  Pagination – copy‑paste from the modules widget
-   * ----------------------------------------------------------------- */
   function renderPaginator(meta) {
     const old = rootEl.querySelector(".paginator");
     if (old) old.remove();
@@ -271,9 +243,6 @@ export function initPersonalMaterialWidget(rootEl) {
     $list.parentNode.appendChild(nav);
   }
 
-  /* -----------------------------------------------------------------
-   * 8️⃣  LOAD – GET a page and render the list
-   * ----------------------------------------------------------------- */
   async function load(page = 1) {
     try {
       const params = new URLSearchParams({ page });
@@ -316,9 +285,6 @@ export function initPersonalMaterialWidget(rootEl) {
     }
   }
 
-  /* -----------------------------------------------------------------
-   * 9️⃣  FILTER UI – visibility / type dropdowns
-   * ----------------------------------------------------------------- */
   function attachFilters() {
     if ($filterVisibility) {
       $filterVisibility.addEventListener("change", (e) => {
@@ -385,13 +351,7 @@ export function initPersonalMaterialWidget(rootEl) {
     }
   }
 
-  /* -----------------------------------------------------------------
-   * 1️⃣1️⃣  UI bindings – Add‑material button
-   * ----------------------------------------------------------------- */
   if ($addBtn) $addBtn.addEventListener("click", create);
 
-  /* -----------------------------------------------------------------
-   * 1️⃣2️⃣  Kick‑off – load the first page
-   * ----------------------------------------------------------------- */
   load();
 }

@@ -1,8 +1,3 @@
-// ---------------------------------------------------------------
-// tab_switching.js
-// SLM tab switching without changing the page scroll position
-// ---------------------------------------------------------------
-
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".tabs").forEach((container) => {
     const tabs = container.querySelectorAll('[role="tab"]');
@@ -14,9 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const storageKey = `activeTab_${container.id || "default"}`;
 
-    // -------------------------------------------------------------
-    // Activate a tab
-    // -------------------------------------------------------------
     const activate = (newIdx, moveFocus = false) => {
       if (newIdx < 0 || newIdx >= tabs.length) {
         return;
@@ -43,23 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
         panel.setAttribute("aria-hidden", String(!isActive));
       });
 
-      // -----------------------------------------------------------
-      // IMPORTANT:
-      // Do NOT write #tab-X into the URL.
-      //
-      // The tab IDs are inside the page. Using them as URL hashes
-      // allows the browser to treat the tab as an anchor target and
-      // can cause unwanted scrolling on mobile navigation.
-      // -----------------------------------------------------------
-
       try {
         localStorage.setItem(storageKey, String(newIdx));
       } catch (error) {
-        // Ignore storage errors.
+        // Tabs still work if storage is unavailable.
       }
 
-      // Only focus when the user intentionally changed tabs.
-      // preventScroll prevents the browser from moving the page.
       if (moveFocus) {
         try {
           tabs[newIdx].focus({ preventScroll: true });
@@ -69,18 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
-    // -------------------------------------------------------------
-    // Click
-    // -------------------------------------------------------------
     tabs.forEach((tab, index) => {
       tab.addEventListener("click", () => {
         activate(index, true);
       });
     });
 
-    // -------------------------------------------------------------
-    // Keyboard navigation
-    // -------------------------------------------------------------
     container.addEventListener("keydown", (event) => {
       const currentIndex = Array.from(tabs).findIndex(
         (tab) => tab.getAttribute("aria-selected") === "true",
@@ -118,11 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
       activate(nextIndex, true);
     });
 
-    // -------------------------------------------------------------
-    // Initial activation
-    //
-    // Never focus the tab during initial page load.
-    // -------------------------------------------------------------
     let initialIndex = 0;
     const hashIndex = Array.from(tabs).findIndex(
       (tab) => tab.id === window.location.hash.slice(1),

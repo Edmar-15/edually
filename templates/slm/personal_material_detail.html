@@ -50,7 +50,6 @@
                     <i class="fa-solid fa-download" aria-hidden="true"></i>
                 </a>
 
-                <!-- 2️⃣  Highlight‑history toggle (icon only) -->
                 <button type="button"
                         class="module-content-history__toggle"
                         id="highlight-history-toggle"
@@ -59,7 +58,6 @@
                         aria-expanded="false"
                         aria-controls="highlight-history-list">
                     <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                    <!-- Small badge that still shows the number of history items -->
                     <span id="highlight-history-count" class="badge">0</span>
                 </button>
             </div>
@@ -160,7 +158,6 @@
         const pmId      = {{ pm.id }};
         const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        // point the JS to the personal-material endpoint
         initHighlightAI(toolbar, pmId, contentRoot, '/slm/api/personal-materials/');
     </script>
     {% endif %}

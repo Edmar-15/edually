@@ -15,7 +15,6 @@
         {% include "components/navigations.html" %}
 
         <main class="main-content">
-            <!-- Re‑use the full subject‑widget (with add / edit / delete) -->
              <header class="content-header">
                 <div class="header-left">
                     <button type="button"
@@ -42,10 +41,8 @@
         </main>
     </div>
 
-    {# 1️⃣ Global modal placeholder – only once per page #}
     {% include "components/global_modal.html" %}
 
-    {# 2️⃣ Modal JS – load after the DOM #}
     <script src="{% static 'js/modal.js' %}" defer></script>
 </body>
 </html>

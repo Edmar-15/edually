@@ -13,7 +13,7 @@ export function initHighlightAI(
   apiBase = "/slm/api/modules/",
 ) {
   // ---------------------------------------------------------------
-  // 0. Validate module ID
+  // Validate the module ID.
   // ---------------------------------------------------------------
 
   const hasValidId = Number.isInteger(moduleId) && moduleId > 0;
@@ -25,7 +25,7 @@ export function initHighlightAI(
   }
 
   // ---------------------------------------------------------------
-  // 1. Resolve content root
+  // Find the content area.
   // ---------------------------------------------------------------
 
   const contentRoot =
@@ -39,7 +39,7 @@ export function initHighlightAI(
   const _originalHtml = contentRoot.innerHTML;
 
   // ---------------------------------------------------------------
-  // 2. History UI
+  // Highlight history
   // ---------------------------------------------------------------
 
   const historyList = document.getElementById("highlight-history-list");
@@ -61,13 +61,13 @@ export function initHighlightAI(
   }
 
   // ---------------------------------------------------------------
-  // 3. Normalisation
+  // Normalize selected text.
   // ---------------------------------------------------------------
 
   const normalise = (txt) => (txt || "").trim().toLowerCase();
 
   // ---------------------------------------------------------------
-  // 4. Occurrence storage
+  // Track each occurrence of a selection.
   // ---------------------------------------------------------------
 
   const occurrenceKey = (q, s, e) => `${q}|${s}-${e}`;
@@ -77,20 +77,10 @@ export function initHighlightAI(
   const pendingAiRequests = new Set();
 
   // ---------------------------------------------------------------
-  // 5. Selection state
+  // Selection state
   // ---------------------------------------------------------------
 
-  /*
-   * IMPORTANT:
-   *
-   * `range` captured during the initial double tap is NOT treated
-   * as the permanent selection.
-   *
-   * Mobile browsers update the native selection while the user
-   * drags the selection handles.
-   *
-   * selectionchange is therefore used to keep this snapshot current.
-   */
+  // Keep this range current as mobile browsers move the selection handles.
 
   let latestSelectionRange = null;
 
@@ -150,7 +140,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 6. Text-node helpers
+  // Text-node helpers
   // ---------------------------------------------------------------
 
   const getTextNodes = () => {
@@ -178,7 +168,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 7. Boundary offsets
+  // Boundary offsets
   // ---------------------------------------------------------------
 
   const getBoundaryOffset = (container, offset) => {
@@ -222,7 +212,7 @@ export function initHighlightAI(
   });
 
   // ---------------------------------------------------------------
-  // 8. Check whether selection belongs to content
+  // Check whether the selection is inside the content.
   // ---------------------------------------------------------------
 
   const isSelectionWithinContent = (sel) => {
@@ -248,7 +238,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 9. Clone current native selection
+  // Clone the current selection.
   // ---------------------------------------------------------------
 
   const cloneCurrentSelectionRange = () => {
@@ -272,7 +262,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 10. Selection data
+  // Selection data
   // ---------------------------------------------------------------
 
   const getSelectionData = (range) => {
@@ -308,7 +298,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 11. Highlight class
+  // Highlight styles
   // ---------------------------------------------------------------
 
   const getHighlightClassName = (occ) => {
@@ -349,7 +339,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 12. Messages
+  // Messages
   // ---------------------------------------------------------------
 
   const showMessage = (container, text, type = "success") => {
@@ -380,7 +370,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 13. History
+  // History
   // ---------------------------------------------------------------
 
   const toggleHistoryPopover = () => {
@@ -660,7 +650,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 14. Occurrence structures
+  // Occurrence data
   // ---------------------------------------------------------------
 
   const getOrCreateOccurrence = (queryOrig, start, end) => {
@@ -722,7 +712,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 15. Highlight event attachment
+  // Highlight events
   // ---------------------------------------------------------------
 
   const showTooltip = (span) => {
@@ -869,7 +859,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 16. Apply stored occurrences
+  // Apply saved highlights.
   // ---------------------------------------------------------------
 
   const applyOccurrences = (occs) => {
@@ -978,7 +968,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 17. Refresh highlights
+  // Refresh highlights.
   // ---------------------------------------------------------------
 
   const refreshAllHighlightsImpl = () => {
@@ -1037,7 +1027,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 18. Tooltip
+  // Tooltip
   // ---------------------------------------------------------------
 
   let activeTooltip = null;
@@ -1061,7 +1051,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 19. AI request
+  // AI request
   // ---------------------------------------------------------------
 
   const fetchAiAnswer = async (query, level, start, end) => {
@@ -1105,7 +1095,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 20. AI section
+  // AI answer section
   // ---------------------------------------------------------------
 
   const renderAiSection = (query, start, end, container) => {
@@ -1184,7 +1174,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 21. Annotation section
+  // Annotation section
   // ---------------------------------------------------------------
 
   const renderAnnotationSection = (query, start, end, container) => {
@@ -1270,7 +1260,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 22. Choice widget
+  // Selection menu
   // ---------------------------------------------------------------
 
   const createChoiceWidget = (initialRange) => {
@@ -1462,7 +1452,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 23. AI mini widget
+  // AI mini widget
   // ---------------------------------------------------------------
 
   const createAIMiniWidget = (originalRange) => {
@@ -1731,7 +1721,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 24. Annotation widget
+  // Annotation widget
   // ---------------------------------------------------------------
 
   const createAnnotationWidget = (originalRange) => {
@@ -1831,7 +1821,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 25. Markdown
+  // Markdown
   // ---------------------------------------------------------------
 
   const escapeHtml = (v) =>
@@ -2091,7 +2081,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 26. Render answer
+  // Render the answer.
   // ---------------------------------------------------------------
 
   const renderAnswer = (miniWidget, html, cached) => {
@@ -2109,21 +2099,11 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 27. Selection → choice widget
+  // Open the selection menu.
   // ---------------------------------------------------------------
 
   const onSelectionDone = (e) => {
-    /*
-     * IMPORTANT:
-     *
-     * Once the annotation widget is open, the browser's
-     * selection system must NOT process touches/clicks
-     * intended for the annotation editor.
-     *
-     * On mobile, focusing the textarea can change/collapse
-     * window.getSelection(). That must not cause this function
-     * to rebuild or destroy the selection UI.
-     */
+    // Ignore editor events; focusing its textarea can collapse the native selection.
     if (annotationWidget && annotationWidget.isConnected) {
       if (annotationWidget.contains(e.target)) {
         return;
@@ -2231,7 +2211,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 28. Preload existing data
+  // Load existing data.
   // ---------------------------------------------------------------
 
   const preloadExistingData = async () => {
@@ -2315,7 +2295,7 @@ export function initHighlightAI(
   };
 
   // ---------------------------------------------------------------
-  // 29. Initialise
+  // Initialize the widgets.
   // ---------------------------------------------------------------
 
   preloadExistingData();
@@ -2331,7 +2311,7 @@ export function initHighlightAI(
   }
 
   // ---------------------------------------------------------------
-  // 30. Mouse / touch handling
+  // Mouse and touch handling
   // ---------------------------------------------------------------
 
   /*
@@ -2341,35 +2321,10 @@ export function initHighlightAI(
    */
   document.addEventListener("mouseup", onSelectionDone);
 
-  /*
-   * Mobile:
-   *
-   * IMPORTANT:
-   *
-   * The first touchend creates the choice widget.
-   *
-   * Once the choice widget already exists, subsequent touchend
-   * events may be caused by the user dragging the browser's
-   * native selection handles.
-   *
-   * In that case we MUST NOT call onSelectionDone().
-   *
-   * selectionchange has already updated latestSelectionRange.
-   */
+  // Later touch events may drag selection handles; selectionchange keeps the range current.
   document.addEventListener("touchend", (e) => {
     requestAnimationFrame(() => {
-      /*
-       * -----------------------------------------------------------
-       * AI Mini owns the interaction.
-       *
-       * This is especially important for the native <select>.
-       * On mobile, opening/selecting an option can produce a
-       * touchend after the browser temporarily collapses the
-       * document selection.
-       *
-       * Never feed that touchend back into onSelectionDone().
-       * -----------------------------------------------------------
-       */
+      // Keep Mini controls, especially the native select, from resetting the selection.
       if (mini && mini.isConnected) {
         /*
          * If the native select is being interacted with, keep
@@ -2454,7 +2409,7 @@ export function initHighlightAI(
   });
 
   // ---------------------------------------------------------------
-  // 31. Detect mobile selection-handle interaction
+  // Detect mobile selection-handle interaction.
   // ---------------------------------------------------------------
 
   document.addEventListener(
@@ -2518,7 +2473,7 @@ export function initHighlightAI(
   );
 
   // ---------------------------------------------------------------
-  // 32. Native selectionchange
+  // Handle native selection changes.
   // ---------------------------------------------------------------
 
   document.addEventListener("selectionchange", () => {
@@ -2606,7 +2561,7 @@ export function initHighlightAI(
   });
 
   // ---------------------------------------------------------------
-  // 33. Outside click handling
+  // Close the widgets when clicking outside.
   // ---------------------------------------------------------------
 
   document.addEventListener("mousedown", (e) => {
@@ -2639,19 +2594,8 @@ export function initHighlightAI(
     }
   });
 
-  /*
-   * IMPORTANT:
-   *
-   * Do NOT duplicate the old destructive touchstart handler here.
-   *
-   * The previous handler was one of the causes of the
-   * mobile selection-handle problem because it could call
-   * mini.remove(), followed by removeAllRanges(), while
-   * Android/iOS was still adjusting the selection.
-   */
-
   // ---------------------------------------------------------------
-  // 34. Return optional cleanup
+  // Return a cleanup function.
   // ---------------------------------------------------------------
 
   return {

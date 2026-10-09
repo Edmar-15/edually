@@ -29,7 +29,6 @@ noindex, nofollow
 
 <main class="main-content slm-tab-page">
 
-    <!-- Global content header -->
     <header class="content-header">
         <div class="header-left">
 
@@ -61,15 +60,12 @@ noindex, nofollow
         </div>
     </header>
 
-    <!-- SLM page content -->
     <div class="tabs">
 
-        <!-- Page navigation, NOT the global content header -->
         <nav class="tab-header" aria-label="Self Learning Module navigation">
             {% include "slm/tabs/tab_list.html" with tabs=tabs %}
         </nav>
 
-        <!-- Active tab content -->
         <div class="tab-panels">
             {% include "slm/tabs/tab_panels.html" with tabs=tabs %}
         </div>

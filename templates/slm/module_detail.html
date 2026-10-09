@@ -12,7 +12,6 @@
         {% include "components/navigations.html" %}
         <main class="main-content">
             <header class="content-header">
-                <!-- Breadcrumb on the left -->
                  <div class="header-left">
                     <button type="button"
                             class="mobile-sidebar-trigger"
@@ -43,9 +42,7 @@
                  </div>
                 
 
-                <!-- Action icons on the right -->
                 <div class="header-actions">
-                    <!-- 1️⃣  Download (icon only) -->
                     <a href="{{ module.file.url }}" class="button download-btn"
                     download
                     aria-label="Download original file"
@@ -53,7 +50,6 @@
                         <i class="fa-solid fa-download" aria-hidden="true"></i>
                     </a>
 
-                    <!-- 2️⃣  Highlight‑history toggle (icon only) -->
                     {% if request.user|has_group:'Student' %}
                     <button type="button"
                             class="module-content-history__toggle"
@@ -63,7 +59,6 @@
                             aria-expanded="false"
                             aria-controls="highlight-history-list">
                         <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                        <!-- Small badge that still shows the number of history items -->
                         <span id="highlight-history-count" class="badge">0</span>
                     </button>
                     {% endif %}
@@ -106,7 +101,6 @@
         const moduleId  = {{ module.id|default:"null" }};
         const contentRoot = document.querySelector('.module-content-card .module-content');
 
-        // default apiBase = '/slm/api/modules/'
         initHighlightAI(toolbar, moduleId, contentRoot);
     </script>
     {% endif %}

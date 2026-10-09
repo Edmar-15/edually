@@ -1,10 +1,7 @@
-// -------------------------------------------------------------------
-// subject_ajax.js – Ajax widget for “Subjects”
-// -------------------------------------------------------------------
 import { csrftoken } from "./utils.js";
 
 /**
- * Initialise the Subjects widget.
+ * Set up the Subjects widget.
  *
  * Expected data‑attributes on the root element:
  *
@@ -13,48 +10,24 @@ import { csrftoken } from "./utils.js";
  *   data-update-url  → "/slm/api/subjects/0/"       (dummy 0)
  *   data-delete-url  → "/slm/api/subjects/0/delete/"
  *
- * Template (tab_self.html) now contains a real <form>:
- *
- *   <form id="subject-form" class="subject-form">
- *       …inputs…
- *       <button id="add-btn" type="submit">Add subject</button>
- *   </form>
- *
- * The only JavaScript the widget now needs is a listener for that
- * form’s `submit` event – everything else (validation, AJAX POST,
- * UI updates) stays exactly the same.
  */
 export function initSubjectWidget(rootEl) {
-  /* -----------------------------------------------------------------
-   * 1️⃣  URLs – pulled from `data‑*` attributes on the widget root.
-   * ----------------------------------------------------------------- */
   const listUrl   = rootEl.dataset.listUrl;
   const createUrl = rootEl.dataset.createUrl;
   const updateTpl = rootEl.dataset.updateUrl; // “…/subjects/0/”
   const deleteTpl = rootEl.dataset.deleteUrl; // “…/subjects/0/delete/”
 
-  /* -----------------------------------------------------------------
-   * 2️⃣  Tiny helper to replace the placeholder “0” with a real id.
-   * ----------------------------------------------------------------- */
   const replaceId = (template, id) => template.replace(/0(?=\/|$)/, id);
 
   const showToast = (message, type = "info", duration = 4000) =>
     window.showGlobalToast(message, type, duration);
 
-  /* -----------------------------------------------------------------
-   * 4️⃣  DOM shortcuts (everything lives inside the widget).
-   * ----------------------------------------------------------------- */
   const $list        = rootEl.querySelector("#subject-list");
   const $codeInput   = rootEl.querySelector("#code-input");
   const $nameInput   = rootEl.querySelector("#name-input");
   const $yearSelect  = rootEl.querySelector("#year-select");
   const $subjectForm = rootEl.querySelector("#subject-form"); // ← may be missing for students
 
-    // --------------------------------------------------------------
-    // The add‑subject form is only present for teachers.  If it’s
-    // missing we **don’t abort** – we still want to load and render the
-    // list of subjects.  We just skip the create‑subject wiring.
-   // --------------------------------------------------------------
   if (!$subjectForm) {
         console.info(
             "Subject widget: <form id='subject-form'> not found – " +
@@ -62,9 +35,6 @@ export function initSubjectWidget(rootEl) {
         );
     }
 
-  /* -----------------------------------------------------------------
-   * 5️⃣  Load the YEAR <select> options from the API.
-   * ----------------------------------------------------------------- */
   async function loadYearChoices() {
     if (!$yearSelect) return;
     try {
@@ -88,18 +58,11 @@ export function initSubjectWidget(rootEl) {
     }
   }
 
-  /* -----------------------------------------------------------------
-   * 6️⃣  Render a single subject card (including edit/delete actions).
-   * ----------------------------------------------------------------- */
-  /* -------------------------------------------------------------
- * 6️⃣  Render a single subject card (including edit/delete actions).
- * ------------------------------------------------------------- */
 function renderCard(subject) {
   const card = document.createElement("div");
   card.className = "subject-card";
   card.dataset.id = subject.id;
 
-  /* ---- Link that points to the detail page (kept for accessibility) ---- */
   const link = document.createElement("a");
   link.href = subject.detail_url;
   link.className = "subject-card-link";
@@ -123,12 +86,10 @@ function renderCard(subject) {
 
   card.appendChild(link);
 
-  /* ------------------------- Owner actions -------------------------- */
   if (subject.is_owner) {
     const actions = document.createElement("div");
     actions.className = "subject-card__actions";
 
-    /* ---- Edit (global modal) --------------------------------- */
     const edit = document.createElement("a");
     edit.href = "#";
     edit.title = "Edit";
@@ -142,7 +103,6 @@ function renderCard(subject) {
       </svg>`;
     actions.appendChild(edit);
 
-    /* ---- Delete (global modal) ------------------------------- */
     const del = document.createElement("a");
     del.href = "#";
     del.title = "Delete";
@@ -158,19 +118,11 @@ function renderCard(subject) {
     card.appendChild(actions);
   }
 
-  /* -----------------------------------------------------------------
-   * Make the whole card clickable (except when the click lands on a link
-   * – the edit/delete buttons are themselves <a> elements, so we let
-   * those behave normally and only handle “empty” clicks on the card).
-   * ----------------------------------------------------------------- */
   card.style.cursor = "pointer";
 
   card.addEventListener("click", e => {
-    // If the click originated on any <a> (detail link OR edit/delete), do nothing.
-    // The default navigation or modal‑trigger logic will run.
     if (e.target.closest("a")) return;
 
-    // Otherwise treat the click as “open the subject detail page”.
     window.location.href = link.href;
   });
 
@@ -178,9 +130,6 @@ function renderCard(subject) {
 }
 
 
-  /* -----------------------------------------------------------------
-   * 7️⃣  Paginator – same markup as the module widget.
-   * ----------------------------------------------------------------- */
   function renderPaginator(meta) {
     const old = rootEl.querySelector(".paginator");
     if (old) old.remove();
@@ -248,9 +197,6 @@ function renderCard(subject) {
     $list.parentNode.appendChild(nav);
   }
 
-  /* -----------------------------------------------------------------
-   * 8️⃣  LOAD – fetch a page and render the list.
-   * ----------------------------------------------------------------- */
   async function load(page = 1) {
     try {
       const resp = await fetch(`${listUrl}?page=${page}`, {
@@ -282,9 +228,6 @@ function renderCard(subject) {
     }
   }
 
-  /* -----------------------------------------------------------------
-   * 9️⃣  CREATE – POST a new subject (JSON body).
-   * ----------------------------------------------------------------- */
   async function create() {
     // Let the browser run its native validation first.
     if (typeof $subjectForm.reportValidity === "function" && !$subjectForm.reportValidity()) {
