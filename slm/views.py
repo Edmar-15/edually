@@ -299,7 +299,7 @@ def api_subject_create(request):
         subject_code=code,
         subject_name=name,
         author=request.user,
-        year=clean_year or Subject.YEAR_FIRST,    # fallback to default if omitted
+        year=clean_year or Subject.YEAR_TWO,    # fallback to default if omitted
     )
     notify_students_for_subject(
         subject,
