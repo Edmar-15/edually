@@ -7,8 +7,7 @@ def get_simplified_prompt(question: str) -> str:
     alone.  The assistant must answer in **Markdown** and keep the language
     accessible to a high‑school student.
     """
-    # NOTE: ``question`` is interpolated only for context – we never expose it
-    # to the model as a “user” turn.
+    # The question is context here, not a separate user message.
     return (
         "You are an educational AI tutor.  **Goal:** give a short, jargon‑free "
         "explanation that a high‑school student can understand.\n"
@@ -61,9 +60,6 @@ def get_socratic_prompt(question: str) -> str:
     )
 
 
-# ----------------------------------------------------------------------
-# Mapping from ``explanation_level`` → prompt‑builder.
-# ----------------------------------------------------------------------
 PROMPT_FOR_LEVEL = {
     "simplified": get_simplified_prompt,
     "technical":  get_technical_prompt,

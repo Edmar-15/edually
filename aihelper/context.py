@@ -1,5 +1,3 @@
-# aihelper/context.py
-
 import re
 from html import unescape
 
@@ -9,26 +7,14 @@ from django.db.models import Q
 from slm.models import Subject, Module, PersonalMaterial
 
 
-# ---------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------
-
-# Minimum relevance score required before we consider SLM context useful.
-#
-# This is intentionally conservative. It is better to fall back to
-# general knowledge than to claim an unrelated module answered the user.
+# Avoid attaching learning material unless it is a plausible match.
 SLM_RELEVANCE_THRESHOLD = 0.18
 
-# Maximum amount of text sent to the AI from each matching source.
+# Limit how much content is sent from each source.
 MAX_CONTEXT_CHARS = 7000
 
-# Maximum number of SLM sources returned.
 MAX_SOURCES = 5
 
-
-# ---------------------------------------------------------------------
-# Text helpers
-# ---------------------------------------------------------------------
 
 STOP_WORDS = {
     "a",
@@ -89,7 +75,6 @@ def html_to_text(html: str) -> str:
     text = soup.get_text(" ", strip=True)
     text = unescape(text)
 
-    # Collapse excessive whitespace.
     text = re.sub(r"\s+", " ", text)
 
     return text.strip()
@@ -101,10 +86,8 @@ def normalize_text(text: str) -> str:
     """
     text = (text or "").lower()
 
-    # Keep letters/numbers but remove punctuation.
     text = re.sub(r"[^a-z0-9\s]", " ", text)
 
-    # Collapse whitespace.
     text = re.sub(r"\s+", " ", text)
 
     return text.strip()
@@ -122,10 +105,6 @@ def meaningful_words(text: str) -> set[str]:
         if len(word) >= 3 and word not in STOP_WORDS
     }
 
-
-# ---------------------------------------------------------------------
-# Relevance scoring
-# ---------------------------------------------------------------------
 
 def _score_text(question: str, title: str, content: str) -> float:
     """
@@ -148,24 +127,12 @@ def _score_text(question: str, title: str, content: str) -> float:
     if not content_words:
         return 0.0
 
-    # ---------------------------------------------------------------
-    # Basic word overlap.
-    # ---------------------------------------------------------------
-
     content_overlap = len(question_words & content_words) / len(question_words)
-
-    # ---------------------------------------------------------------
-    # Title overlap receives extra weight.
-    # ---------------------------------------------------------------
 
     title_overlap = 0.0
 
     if title_words:
         title_overlap = len(question_words & title_words) / len(question_words)
-
-    # ---------------------------------------------------------------
-    # Exact phrase bonus.
-    # ---------------------------------------------------------------
 
     normalized_question = normalize_text(question)
     normalized_title = normalize_text(title)
@@ -186,13 +153,6 @@ def _score_text(question: str, title: str, content: str) -> float:
     ):
         phrase_bonus = max(phrase_bonus, 0.25)
 
-    # ---------------------------------------------------------------
-    # Combine.
-    #
-    # Content overlap is the most important signal.
-    # Title overlap helps identify the correct module.
-    # ---------------------------------------------------------------
-
     score = (
         (content_overlap * 0.60)
         + (title_overlap * 0.25)
@@ -201,10 +161,6 @@ def _score_text(question: str, title: str, content: str) -> float:
 
     return min(score, 1.0)
 
-
-# ---------------------------------------------------------------------
-# Permission-aware SLM querysets
-# ---------------------------------------------------------------------
 
 def accessible_subjects_for_user(user):
     """
@@ -279,10 +235,6 @@ def accessible_personal_materials_for_user(user):
     )
 
 
-# ---------------------------------------------------------------------
-# Context retrieval
-# ---------------------------------------------------------------------
-
 def find_relevant_slm_context(user, question: str) -> dict:
     """
     Search the SLM content available to the current user.
@@ -295,9 +247,7 @@ def find_relevant_slm_context(user, question: str) -> dict:
             "context": "..."
         }
 
-    IMPORTANT:
-    This function never searches SLM content that the user would not
-    normally be allowed to access.
+    Only searches content the user is allowed to access.
     """
     question = (question or "").strip()
 
@@ -309,10 +259,6 @@ def find_relevant_slm_context(user, question: str) -> dict:
         }
 
     candidates = []
-
-    # ---------------------------------------------------------------
-    # 1. Search accessible modules.
-    # ---------------------------------------------------------------
 
     for module in accessible_modules_for_user(user):
         content = html_to_text(module.extracted_html)
@@ -347,10 +293,6 @@ def find_relevant_slm_context(user, question: str) -> dict:
                 }
             )
 
-    # ---------------------------------------------------------------
-    # 2. Search accessible personal materials.
-    # ---------------------------------------------------------------
-
     for material in accessible_personal_materials_for_user(user):
         content = html_to_text(material.extracted_html)
 
@@ -377,10 +319,6 @@ def find_relevant_slm_context(user, question: str) -> dict:
                 }
             )
 
-    # ---------------------------------------------------------------
-    # 3. Sort strongest matches first.
-    # ---------------------------------------------------------------
-
     candidates.sort(
         key=lambda item: item["score"],
         reverse=True,
@@ -394,10 +332,6 @@ def find_relevant_slm_context(user, question: str) -> dict:
             "sources": [],
             "context": "",
         }
-
-    # ---------------------------------------------------------------
-    # 4. Build the context sent to OpenAI.
-    # ---------------------------------------------------------------
 
     context_parts = []
     source_metadata = []

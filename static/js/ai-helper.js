@@ -1,6 +1,5 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Elements used by the chat UI.
     const form        = document.getElementById("chat-form");
     const input       = document.getElementById("chat-input");
     const levelButton = document.getElementById("explanation-level");
@@ -12,10 +11,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const conversationResizer = document.getElementById("conversation-resizer");
     const conversationCloseButton = document.getElementById("conversation-close-button");
 
-    // Current conversation ID.
     let activeConversationId = document.querySelector(".conversation-item.active")?.dataset.id || null;
     let messageCounter = 0;
-    // Pause auto-scroll while the user reads.
     let userInteracting = false;
     let interactionTimer = null;
 
@@ -26,13 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
             userInteracting = false;
         }, 1800);
     }
-    // Auto-scroll only when the user is near the bottom.
     function isUserNearBottom() {
         const threshold = 140; // pixels from bottom considered "near"
         return (chatWindow.scrollHeight - chatWindow.clientHeight - chatWindow.scrollTop) < threshold;
     }
 
-    // Load conversations.
     async function loadConversationList() {
         try {
             const resp = await fetch(LIST_CONV_URL, { credentials: "same-origin" });
@@ -116,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Toggle the minimap popup.
     const minimapToggle = document.getElementById('minimap-toggle');
     const minimapPopup = document.getElementById('minimap-popup');
     if (minimapToggle && minimapPopup) {
@@ -155,7 +149,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.addEventListener('resize', positionMinimapPopup);
         document.addEventListener('scroll', positionMinimapPopup, true);
 
-        // Close the popup when clicking outside.
         document.addEventListener('click', (ev) => {
             if (!minimapPopup.classList.contains('hidden')) {
                 if (!minimapPopup.contains(ev.target) && !minimapToggle.contains(ev.target)) {
@@ -166,7 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Mobile conversation panel toggle
     const conversationToggle = document.getElementById('conversation-toggle');
     const conversationPanel = document.querySelector('.conversation-panel');
 
@@ -177,7 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Update visibility on load and window resize
     updateConversationToggleVisibility();
     window.addEventListener('resize', updateConversationToggleVisibility);
 
@@ -197,14 +188,12 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // Close panel when clicking a conversation
         document.querySelectorAll('.conversation-item').forEach(item => {
             item.addEventListener('click', () => {
                 setConversationPanelOpen(false);
             });
         });
 
-        // Close panel when clicking outside
         document.addEventListener('click', (ev) => {
             if (conversationPanel.classList.contains('mobile-open')) {
                 if (!conversationPanel.contains(ev.target) && !conversationToggle.contains(ev.target) && !conversationCloseButton?.contains(ev.target)) {
@@ -296,7 +285,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (c.id == activeConversationId) li.classList.add("active");
                 li.addEventListener("click", () => {
                     selectConversation(c.id);
-                    // Close mobile panel
                     if (conversationPanel) {
                         conversationPanel.classList.remove('mobile-open');
                         if (conversationToggle) {
@@ -309,7 +297,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Load a selected conversation.
     async function selectConversation(convId) {
         document.querySelectorAll(".conversation-item")
                 .forEach(i => i.classList.remove("active"));
@@ -357,7 +344,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Submit a new question.
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -366,7 +352,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const level = levelButton?.dataset.level || "simplified";
 
-        // Optimistic UI
         toggleEmptyState(false);
         appendMessage("user", question);
         input.value = "";
@@ -376,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const payload = {
             question,
             explanation_level: level,
-            conversation_id: activeConversationId,   // may be null
+            conversation_id: activeConversationId,
         };
 
         try {
@@ -403,7 +388,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     data.sources || []
                 );
 
-                // Server might have created a new conversation – keep UI in sync
                 if (!activeConversationId || activeConversationId != data.conversation_id) {
                     activeConversationId = data.conversation_id;
                     await loadConversationList();
@@ -417,7 +401,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderPromptHistory(promptMessages, activeConversationId);
                 updateHeaderBadge(data.title || question);
 
-                // Highlight the active conversation in the list
                 document.querySelectorAll(".conversation-item")
                         .forEach(i => i.classList.remove("active"));
                 const activeEl = document.querySelector(`.conversation-item[data-id="${activeConversationId}"]`);
@@ -442,8 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (loader) {
             loader.classList.toggle("hidden", !visible);
             if (visible) {
-                // only jump if user is already near the bottom and not
-                // actively interacting with the scroll (prevents fighting)
+                // Don't interrupt users who have scrolled away from the latest message.
                 if (isUserNearBottom() && !userInteracting) {
                     setTimeout(() => {
                         chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -481,9 +463,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const txt = document.createElement("div");
         txt.className = "message-text";
 
-        // -------------------------------------------------------------
-        // AI RESPONSE SOURCE INDICATOR
-        // -------------------------------------------------------------
         if (role === "ai") {
             const author = document.createElement("p");
             author.className = "message-author";
@@ -491,10 +470,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             body.appendChild(author);
 
-            /*
-            * Only show the source indicator when the backend tells us
-            * where the answer came from.
-            */
             if (source) {
                 const sourceBadge = document.createElement("div");
 
@@ -520,9 +495,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 body.appendChild(sourceBadge);
 
-                // -----------------------------------------------------
-                // Show the actual SLM source when available.
-                // -----------------------------------------------------
                 if (
                     isSlm &&
                     Array.isArray(sources) &&
@@ -573,7 +545,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         msgDiv.append(avatar, body);
 
-        // Keep the loader at the end of the chat.
         const loaderEl = chatWindow.querySelector("#chat-loading");
         const minimap = chatWindow.querySelector(".message-minimap");
 
@@ -608,7 +579,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const messageEl = container.closest('.message');
         const timer = setInterval(() => {
             index += 1;
-            // Render the reply as it appears.
             const snippet = fullText.slice(0, index);
             if (index % renderEvery === 0 || index === fullText.length) {
                 container.innerHTML = renderMarkdown(snippet);
@@ -616,7 +586,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 container.textContent = snippet;
             }
 
-            // Keep the latest reply visible while typing.
             if (isUserNearBottom() && !userInteracting) {
                 if (messageEl && index % scrollEvery === 0) {
                     messageEl.scrollIntoView({ behavior: 'auto', block: 'end' });
@@ -637,7 +606,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }, speed);
     }
 
-    // Render markdown safely.
     function escapeHtml(value) {
         return value
             .replace(/&/g, "&amp;")
@@ -703,7 +671,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const line = lines[i];
             const trimmed = line.trim();
 
-            // Headings: # H1, ## H2, ### H3 ... up to H6
             const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
             if (headingMatch) {
                 closeList();
@@ -714,7 +681,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 continue;
             }
 
-            // Horizontal rule: --- or *** or ___ on a single line
             if (/^(?:---|\*\*\*|___)\s*$/.test(trimmed)) {
                 closeList();
                 flushTable();
@@ -722,7 +688,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 continue;
             }
 
-            // Blockquote: > quoted text
             if (/^>\s?/.test(trimmed)) {
                 closeList();
                 flushTable();
@@ -828,7 +793,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Read the CSRF token.
     function getCookie(name) {
         const cookieValue = document.cookie
             .split("; ")
@@ -837,7 +801,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return cookieValue ? decodeURIComponent(cookieValue) : "";
     }
 
-    // Update the minimap progress bar.
     function initMiniMap() {
         const bar = chatWindow.querySelector(".message-minimap .progress");
         if (!bar) return;
@@ -852,7 +815,6 @@ document.addEventListener("DOMContentLoaded", () => {
         update();
     }
 
-    // Initialize the page.
     (async () => {
         await loadConversationList();
 

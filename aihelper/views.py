@@ -1,5 +1,3 @@
-# aihelper/views.py
-
 import json
 import logging
 
@@ -19,10 +17,6 @@ import openai
 
 log = logging.getLogger(__name__)
 
-
-# ----------------------------------------------------------------------
-# 0️⃣ Utility – fetch the most recent *n* turns
-# ----------------------------------------------------------------------
 
 def _last_n_turns(
     conversation: Conversation,
@@ -46,7 +40,6 @@ def _last_n_turns(
 
     recent = list(recent_qs)
 
-    # Reverse to chronological order.
     recent.reverse()
 
     openai_role_map = {
@@ -65,10 +58,6 @@ def _last_n_turns(
         for item in recent
     ]
 
-
-# ----------------------------------------------------------------------
-# 1️⃣ Helper that actually contacts OpenAI Cloud
-# ----------------------------------------------------------------------
 
 def _call_openai(
     messages: list[dict],
@@ -127,10 +116,6 @@ def _call_openai(
     return resp.choices[0].message.content
 
 
-# ----------------------------------------------------------------------
-# Socratic mode – completely independent from SLM/general source logic
-# ----------------------------------------------------------------------
-
 def _handle_socratic_request(
     request,
     question: str,
@@ -176,7 +161,6 @@ Your response should normally contain:
 - ONE guiding question
 """
 
-    # Get recent conversation history.
     history = _last_n_turns(
         conversation,
         n_turns=8,
@@ -217,7 +201,6 @@ Your response should normally contain:
             status=500,
         )
 
-    # Persist the Socratic exchange.
     with transaction.atomic():
 
         Message.objects.bulk_create(
@@ -261,10 +244,6 @@ Your response should normally contain:
     )
 
 
-# ----------------------------------------------------------------------
-# 2️⃣ Conversation summaries
-# ----------------------------------------------------------------------
-
 def _conversation_summaries(user) -> list[dict]:
     """
     Build lightweight summaries with the first user prompt as the
@@ -306,10 +285,6 @@ def _conversation_summaries(user) -> list[dict]:
 
     return summaries
 
-
-# ----------------------------------------------------------------------
-# 3️⃣ Page view – renders the chat UI
-# ----------------------------------------------------------------------
 
 @login_required(login_url="account:login")
 @never_cache
@@ -358,10 +333,6 @@ def helper(request):
     )
 
 
-# ----------------------------------------------------------------------
-# 4️⃣ JSON: list of all user conversations
-# ----------------------------------------------------------------------
-
 @login_required(login_url="account:login")
 @never_cache
 def list_conversations(request):
@@ -390,9 +361,6 @@ def list_conversations(request):
     )
 
 
-# ----------------------------------------------------------------------
-# 5️⃣ JSON: fetch a single conversation
-# ----------------------------------------------------------------------
 @login_required(login_url="account:login")
 @never_cache
 def get_conversation(request, pk):
@@ -426,9 +394,6 @@ def get_conversation(request, pk):
     )
 
 
-# ----------------------------------------------------------------------
-# 6️⃣ JSON API – answer a question
-# ----------------------------------------------------------------------
 @login_required(login_url="account:login")
 def helper_api(request):
     """
@@ -458,15 +423,7 @@ def helper_api(request):
             status=400,
         )
 
-    # ------------------------------------------------------------------
-    # SOCRATIC MODE
-    #
-    # This branch MUST happen before:
-    #   - system_prompt_for()
-    #   - find_relevant_slm_context()
-    #
-    # Socratic mode has its own behavior and source handling.
-    # ------------------------------------------------------------------
+    # Keep Socratic requests out of the regular prompt and source flow.
     if level == "socratic":
 
         if conv_id:
@@ -487,9 +444,6 @@ def helper_api(request):
             conversation=conversation,
         )
 
-    # ------------------------------------------------------------------
-    # 1. Resolve the system prompt.
-    # ------------------------------------------------------------------
     try:
         system_prompt = system_prompt_for(level, question)
     except ValueError:
@@ -500,9 +454,6 @@ def helper_api(request):
         level = "simplified"
         system_prompt = system_prompt_for(level, question)
 
-    # ------------------------------------------------------------------
-    # 2. Find or create the conversation.
-    # ------------------------------------------------------------------
     if conv_id:
         conversation = get_object_or_404(
             Conversation,
@@ -515,18 +466,6 @@ def helper_api(request):
             title=question[:80],
         )
 
-    # ------------------------------------------------------------------
-    # 3. Search the user's accessible SLM content.
-    #
-    # If relevant SLM material exists:
-    #   source = "slm"
-    #
-    # Otherwise:
-    #   source = "general"
-    #
-    # The source information is later stored in Message so it survives
-    # page reloads and conversation reopening.
-    # ------------------------------------------------------------------
     try:
         slm_result = find_relevant_slm_context(
             request.user,
@@ -550,10 +489,6 @@ def helper_api(request):
         source_metadata = slm_result.get("sources", [])
         slm_context = slm_result.get("context", "")
 
-        # --------------------------------------------------------------
-        # Tell the AI to use the user's learning materials as its
-        # primary source.
-        # --------------------------------------------------------------
         system_prompt = (
             f"{system_prompt}\n\n"
             "IMPORTANT LEARNING MATERIAL INSTRUCTION:\n"
@@ -576,9 +511,6 @@ def helper_api(request):
         answer_source_label = "General knowledge"
         source_metadata = []
 
-        # --------------------------------------------------------------
-        # No relevant SLM material was found.
-        # --------------------------------------------------------------
         system_prompt = (
             f"{system_prompt}\n\n"
             "There is no relevant learning material available to answer "
@@ -587,9 +519,6 @@ def helper_api(request):
             "materials."
         )
 
-    # ------------------------------------------------------------------
-    # 4. Gather recent conversation history.
-    # ------------------------------------------------------------------
     if conv_id:
         history = _last_n_turns(
             conversation,
@@ -598,9 +527,6 @@ def helper_api(request):
     else:
         history = []
 
-    # ------------------------------------------------------------------
-    # 5. Build OpenAI messages.
-    # ------------------------------------------------------------------
     openai_messages = [
         {
             "role": "system",
@@ -617,9 +543,6 @@ def helper_api(request):
         }
     )
 
-    # ------------------------------------------------------------------
-    # 6. Ask OpenAI.
-    # ------------------------------------------------------------------
     try:
         ai_reply = _call_openai(
             openai_messages,
@@ -638,13 +561,6 @@ def helper_api(request):
             f"“{question}”."
         )
 
-    # ------------------------------------------------------------------
-    # 7. Persist both user + AI messages.
-    #
-    # IMPORTANT:
-    # The source fields are stored directly on the AI Message.
-    # This is what makes the source indicator persistent after reload.
-    # ------------------------------------------------------------------
     from django.db import transaction
 
     with transaction.atomic():
@@ -664,7 +580,6 @@ def helper_api(request):
                     role="ai",
                     content=ai_reply,
 
-                    # Persistent source information
                     source_type=answer_source,
                     source_label=answer_source_label,
                     source_metadata=source_metadata,
@@ -672,18 +587,12 @@ def helper_api(request):
             ]
         )
 
-    # ------------------------------------------------------------------
-    # 8. Keep the conversation title synchronized.
-    # ------------------------------------------------------------------
     if not conversation.title:
         conversation.title = question[:80]
         conversation.save(
             update_fields=["title"]
         )
 
-    # ------------------------------------------------------------------
-    # 9. Return the answer + source information to JavaScript.
-    # ------------------------------------------------------------------
     return JsonResponse(
         {
             "answer": ai_reply,

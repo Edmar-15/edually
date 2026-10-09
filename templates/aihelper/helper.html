@@ -33,14 +33,12 @@ noindex, nofollow
                         </svg>
                     </button>
 
-                    <!-- Existing welcome text -->
                     <p class="content-header-title">AI Helper</p>
                 </div>
             </header>
         <section class="ai-helper-page">
             <div class="chat-shell">
 
-                <!-- ──────── RIGHT: CONVERSATION LIST PANEL ──────── -->
                 <div class="conversation-panel">
                     <aside class="conversation-map" id="conversation-map">
                         <div class="conversation-resizer" id="conversation-resizer" title="Drag to resize"></div>
@@ -73,7 +71,6 @@ noindex, nofollow
 
                 </div>
 
-                <!-- ──────── LEFT: ACTIVE CHAT PANEL ──────── -->
                 <div class="chat-panel">
                     <section class="chat-area">
 
@@ -127,8 +124,6 @@ noindex, nofollow
                             <p>EduAlly is analyzing your question...</p>
                         </div>
 
-                        <!-- Move the chat form inside the chat-window so it's
-                             visually combined with messages and scrolls with them. -->
                         <form id="chat-form" class="chat-form" autocomplete="off">
                             <div class="input-row">
                                 <input id="chat-input"
@@ -150,23 +145,19 @@ noindex, nofollow
                     </div>
                     </section>
                 </div>
-                <!-- END .chat-panel -->
-
-            </div> <!-- /.chat-shell -->
+            </div>
         </section>
     </main>
 </div>
-{# 1️⃣ Global modal placeholder – only once per page #}
     {% include "components/global_modal.html" %}
 {% endblock %}
 {% block extra_js %}
-    {# 2️⃣ Modal JS – load after the DOM #}
     <script src="{% static 'js/modal.js' %}" defer></script>
 
 <script>
     const AI_HELPER_API_URL = "{% url 'aihelper:helper_api' %}";
     const LIST_CONV_URL    = "{% url 'aihelper:list_conversations' %}";
-    const GET_CONV_URL     = "{% url 'aihelper:get_conversation' 0 %}".replace('/0/', '/'); // we'll append the id later
+    const GET_CONV_URL     = "{% url 'aihelper:get_conversation' 0 %}".replace('/0/', '/');
 </script>
 
 <script src="{% static 'js/ai-helper.js' %}"></script>

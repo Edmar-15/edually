@@ -695,9 +695,7 @@
     max-width: 420px;
 }
 
-/* ============================================= */
-/* DARK MODE STYLES - helper.css */
-/* ============================================= */
+/* Dark mode */
 
 html.dark .chat-area,
 html.dark .conversation-map,
@@ -1096,7 +1094,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     }
 }
 
-/* Keep the AI helper send control circular despite shared button styles. */
+/* Send button override */
 .input-row > .send-button {
     flex: 0 0 auto;
     width: 38px;
@@ -1117,18 +1115,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     }
 }
 
-/* ============================================================= */
-/* AI HELPER — ALL BUTTONS CIRCULAR */
-/* ============================================================= */
-
-/*
- * Every AI Helper action button uses the same circular shape.
- * Text buttons are kept compact so their labels still fit.
- */
-
-/* ------------------------------------------------------------- */
-/* HEADER / CONVERSATION BUTTONS */
-/* ------------------------------------------------------------- */
+/* Conversation controls */
 
 .new-chat-button,
 .minimap-button {
@@ -1158,9 +1145,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     display: none !important;
 }
 
-/* ------------------------------------------------------------- */
-/* EXPLANATION LEVEL — "SIMPLE" */
-/* ------------------------------------------------------------- */
+/* Explanation level */
 
 .explanation-button {
     width: 38px !important;
@@ -1184,10 +1169,6 @@ html[data-theme="dark"] .send-button:focus-visible {
 
     box-sizing: border-box;
 
-    /*
-     * Smaller text allows "Simple" to fit inside
-     * the circular control.
-     */
     font-size: 0.55rem !important;
     font-weight: 700;
 
@@ -1196,9 +1177,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     white-space: nowrap;
 }
 
-/* ------------------------------------------------------------- */
-/* SEND */
-/* ------------------------------------------------------------- */
+/* Send button */
 
 .send-button {
     width: 38px !important;
@@ -1223,9 +1202,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     box-sizing: border-box;
 }
 
-/* ------------------------------------------------------------- */
-/* MOBILE */
-/* ------------------------------------------------------------- */
+/* Mobile controls */
 
 @media (max-width: 640px) {
 
@@ -1287,9 +1264,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     }
 }
 
-/* ============================================================
-   AI RESPONSE SOURCE INDICATOR
-   ============================================================ */
+/* Source badges */
 
 .ai-source-badge {
     display: inline-flex;
@@ -1315,9 +1290,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     font-size: 10px;
 }
 
-/* ------------------------------------------------------------
-   SLM SOURCE
-   ------------------------------------------------------------ */
+/* Learning-material source */
 
 .ai-source-slm {
     background: rgba(59, 130, 246, 0.10);
@@ -1325,9 +1298,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     border: 1px solid rgba(59, 130, 246, 0.18);
 }
 
-/* ------------------------------------------------------------
-   GENERAL KNOWLEDGE SOURCE
-   ------------------------------------------------------------ */
+/* General-knowledge source */
 
 .ai-source-general {
     background: rgba(107, 114, 128, 0.10);
@@ -1335,9 +1306,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     border: 1px solid rgba(107, 114, 128, 0.18);
 }
 
-/* ------------------------------------------------------------
-   SLM SOURCE DETAILS
-   ------------------------------------------------------------ */
+/* Source details */
 
 .ai-source-details {
     display: flex;
@@ -1365,13 +1334,7 @@ html[data-theme="dark"] .send-button:focus-visible {
     opacity: 0.75;
 }
 
-/* ============================================================
-   AI RESPONSE SOURCE INDICATOR — DARK MODE
-   ============================================================ */
-
-/* ------------------------------------------------------------
-   SOURCE BADGE BASE
-   ------------------------------------------------------------ */
+/* Dark mode source badges */
 
 html.dark .ai-source-badge,
 html[data-theme="dark"] .ai-source-badge {
@@ -1381,10 +1344,6 @@ html[data-theme="dark"] .ai-source-badge {
 }
 
 
-/* ------------------------------------------------------------
-   SLM SOURCE
-   ------------------------------------------------------------ */
-
 html.dark .ai-source-slm,
 html[data-theme="dark"] .ai-source-slm {
     background: rgba(59, 130, 246, 0.14) !important;
@@ -1392,10 +1351,6 @@ html[data-theme="dark"] .ai-source-slm {
     border-color: rgba(96, 165, 250, 0.24) !important;
 }
 
-
-/* ------------------------------------------------------------
-   GENERAL KNOWLEDGE SOURCE
-   ------------------------------------------------------------ */
 
 html.dark .ai-source-general,
 html[data-theme="dark"] .ai-source-general {
@@ -1405,19 +1360,11 @@ html[data-theme="dark"] .ai-source-general {
 }
 
 
-/* ------------------------------------------------------------
-   SOURCE ICONS
-   ------------------------------------------------------------ */
-
 html.dark .ai-source-badge i,
 html[data-theme="dark"] .ai-source-badge i {
     opacity: 0.95;
 }
 
-
-/* ------------------------------------------------------------
-   SLM SOURCE DETAILS
-   ------------------------------------------------------------ */
 
 html.dark .ai-source-details,
 html[data-theme="dark"] .ai-source-details {
