@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - EduAlly{% endblock %}
+
+{% block content %}
+<main class="container">
+    <article class="policy-page">
+        <h1>Privacy Notice (Version {{ policy_version }})</h1>
+        <p>Effective Date: {{ effective_date|date:"F j, Y" }}</p>
+
+        <h2>1. Introduction</h2>
+        <p>This Privacy Policy explains how EduAlly collects, uses, stores, protects, and manages personal information when you use the platform.</p>
+        <p>EduAlly is an educational web application developed as a thesis project. This Privacy Policy is intended to follow the principles of transparency, legitimate purpose, and proportionality under the Philippine Data Privacy Act of 2012 (Republic Act No. 10173) and its applicable regulations.</p>
+
+        <h2>2. Information We Collect</h2>
+        <p>Depending on how you use EduAlly, the platform may collect or process the following categories of information:</p>
+        <h3>2.1 Account Information</h3>
+        <ul>
+            <li>Email address.</li>
+            <li>Username.</li>
+            <li>First name and last name.</li>
+            <li>Profile picture or avatar.</li>
+            <li>Authentication and account-security information.</li>
+            <li>Email-verification status.</li>
+            <li>Account creation information.</li>
+        </ul>
+        <h3>2.2 Academic or Profile Information</h3>
+        <ul>
+            <li>Student ID or other applicable identification information.</li>
+            <li>Program or course.</li>
+            <li>Year level.</li>
+            <li>Department or organizational information, where applicable.</li>
+            <li>User role within EduAlly.</li>
+        </ul>
+        <h3>2.3 Learning Activity</h3>
+        <ul>
+            <li>Learning materials accessed through the platform.</li>
+            <li>Personal learning materials uploaded by the user.</li>
+            <li>Highlighted text.</li>
+            <li>Personal annotations.</li>
+            <li>AI-generated explanations associated with highlights.</li>
+            <li>AI conversation history and messages.</li>
+        </ul>
+        <h3>2.4 Forum Information</h3>
+        <ul>
+            <li>Forum posts.</li>
+            <li>Replies.</li>
+            <li>Upvotes.</li>
+            <li>Reports submitted by users.</li>
+            <li>Information associated with reported content.</li>
+        </ul>
+        <h3>2.5 Notification Information</h3>
+        <p>If you enable browser notifications, EduAlly may store browser-generated push subscription information required to deliver notifications.</p>
+        <h3>2.6 Technical Information</h3>
+        <p>Depending on the hosting and server configuration, EduAlly may process technical information necessary to operate, secure, and troubleshoot the platform, such as IP address, browser information, device information, operating system information, access timestamps, and technical or security logs.</p>
+
+        <h2>3. How We Use Your Information</h2>
+        <p>EduAlly may process personal information for the following purposes:</p>
+        <ul>
+            <li>Create and manage user accounts.</li>
+            <li>Authenticate users and protect account security.</li>
+            <li>Verify user email addresses.</li>
+            <li>Provide role-based access to platform features.</li>
+            <li>Provide learning materials and educational resources.</li>
+            <li>Store highlights and personal annotations.</li>
+            <li>Provide AI-assisted educational features.</li>
+            <li>Maintain AI conversation history.</li>
+            <li>Operate discussion forums and moderation features.</li>
+            <li>Process content reports.</li>
+            <li>Deliver browser notifications when enabled.</li>
+            <li>Maintain platform security and prevent misuse.</li>
+            <li>Troubleshoot technical problems.</li>
+            <li>Maintain and evaluate the thesis project.</li>
+        </ul>
+
+        <h2>4. AI Processing</h2>
+        <p>EduAlly provides AI-assisted learning features. When you submit a question to the AI feature, the question and relevant conversation information may be processed through the third-party AI service used by EduAlly.</p>
+        <p>EduAlly currently uses OpenAI's API for AI-assisted responses. AI-related information may therefore be transmitted to OpenAI for processing as necessary to provide the requested AI functionality.</p>
+        <p>Users should not submit passwords, authentication codes, government identification numbers, financial information, confidential institutional information, or other unnecessary sensitive information to the AI feature.</p>
+
+        <h2>5. User-Generated Content</h2>
+        <p>Information that you voluntarily submit to EduAlly may be stored by the platform. This may include forum posts, replies, personal annotations, uploaded materials, AI questions, and AI conversation messages.</p>
+        <p>Users should consider the sensitivity of information before submitting content to the platform.</p>
+
+        <h2>6. Sharing of Personal Information</h2>
+        <p>EduAlly does not sell personal information. Personal information may be disclosed or made accessible only when reasonably necessary for legitimate platform purposes.</p>
+        <h3>6.1 Service Providers</h3>
+        <p>EduAlly may use third-party service providers to support platform functionality, including AI processing, hosting, email delivery, and notification services.</p>
+        <h3>6.2 Authorized Administrators</h3>
+        <p>Authorized EduAlly administrators may access information when necessary to manage the platform, maintain security, moderate content, investigate reports, or troubleshoot technical issues.</p>
+        <h3>6.3 Legal Requirements</h3>
+        <p>Personal information may be disclosed when required or permitted by applicable laws, regulations, court orders, or lawful government requests.</p>
+
+        <h2>7. Data Privacy Principles</h2>
+        <p>EduAlly follows the principles of transparency, legitimate purpose, and proportionality in processing personal information.</p>
+        <p>EduAlly aims to collect and process only information that is reasonably necessary for declared and legitimate educational, operational, security, and administrative purposes.</p>
+
+        <h2>8. Data Retention</h2>
+        <p>EduAlly retains personal information only for as long as reasonably necessary for the purposes for which it was collected, unless a longer retention period is required or permitted by applicable law.</p>
+        <p>When personal information is no longer necessary, EduAlly may delete, anonymize, or otherwise securely dispose of the information when reasonably practicable.</p>
+
+        <h2>9. Data Security</h2>
+        <p>EduAlly implements reasonable organizational, physical, and technical safeguards appropriate to the nature of the personal information being processed.</p>
+        <ul>
+            <li>Authentication and access controls.</li>
+            <li>Password protection.</li>
+            <li>Role-based permissions.</li>
+            <li>Security and session protections.</li>
+            <li>Database access controls.</li>
+            <li>Two-factor authentication where enabled.</li>
+            <li>Secure server configuration where applicable.</li>
+        </ul>
+        <p>However, no internet-based system can guarantee absolute security. Users are responsible for protecting their account credentials and avoiding unnecessary disclosure of sensitive information.</p>
+
+        <h2>10. Your Data Privacy Rights</h2>
+        <p>Subject to applicable laws and reasonable limitations, users may have the right to:</p>
+        <ul>
+            <li>Be informed about the processing of their personal information.</li>
+            <li>Request access to their personal information.</li>
+            <li>Request correction of inaccurate or incomplete information.</li>
+            <li>Object to certain forms of processing.</li>
+            <li>Withdraw consent where consent is the applicable legal basis.</li>
+            <li>Request deletion or blocking where legally applicable.</li>
+            <li>Lodge a complaint regarding privacy concerns.</li>
+            <li>Exercise other rights provided under applicable Philippine privacy laws.</li>
+        </ul>
+
+        <h2>11. Withdrawal of Consent</h2>
+        <p>Where processing is based on consent, you may withdraw your consent subject to applicable legal and technical limitations. Withdrawal of consent does not necessarily invalidate processing that was lawfully performed before the withdrawal.</p>
+
+        <h2>12. Cookies and Browser Storage</h2>
+        <p>EduAlly may use cookies and browser storage mechanisms that are necessary for authentication, session management, security, user preferences, and application functionality.</p>
+        <p>Disabling certain browser technologies may affect the functionality of the platform.</p>
+
+        <h2>13. Children's Privacy</h2>
+        <p>EduAlly is intended for authorized educational users. The platform does not intentionally request unnecessary personal information from children.</p>
+        <p>If a parent, guardian, school administrator, or authorized representative believes that personal information has been collected improperly, they may contact the EduAlly project administrator.</p>
+
+        <h2>14. Third-Party Services</h2>
+        <p>EduAlly may use third-party services to provide or support certain features, including AI processing, hosting infrastructure, email services, and browser notification services.</p>
+        <p>Third-party providers may have their own privacy policies and terms governing their processing of information.</p>
+
+        <h2>15. International Data Processing</h2>
+        <p>Some third-party service providers used by EduAlly may process information outside the Philippines. Where personal information is transferred to another jurisdiction, appropriate safeguards should be applied as required by applicable Philippine privacy laws and regulations.</p>
+
+        <h2>16. Data Breaches and Security Incidents</h2>
+        <p>EduAlly will take reasonable steps to investigate and respond to suspected personal-data breaches or security incidents. Where notification is required under applicable law or regulations, affected parties and the appropriate authorities may be notified in accordance with applicable requirements.</p>
+
+        <h2>17. Changes to this Privacy Policy</h2>
+        <p>EduAlly may update this Privacy Policy when necessary due to changes in platform functionality, data-processing practices, security requirements, third-party services, or applicable laws.</p>
+        <p>When a material change is made, the <strong>policy version</strong> will be updated. Users may be required to review and accept the updated version before continuing to use the service.</p>
+
+        <h2>18. Contact</h2>
+        <p>For privacy questions, requests, complaints, or concerns, users may contact the EduAlly project administrator through the contact information provided within the application.</p>
+
+        <h2>19. Philippine Data Privacy Authority</h2>
+        <p>Users may seek assistance from the National Privacy Commission of the Philippines regarding concerns involving the protection of personal information under the Data Privacy Act of 2012.</p>
+    </article>
+</main>
+{% endblock %}

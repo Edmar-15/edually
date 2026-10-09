@@ -95,6 +95,97 @@ class ForumBadWordValidationTests(TestCase):
         self.assertEqual(list(response.context['replies']), [newer_reply, older_reply])
 
 
+class ForumReplyActionTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='reply_author',
+            email='reply_author@example.com',
+            password='secret123',
+        )
+        self.other_user = get_user_model().objects.create_user(
+            username='other_user',
+            email='other_user@example.com',
+            password='secret123',
+        )
+        UserConsent.objects.create(user=self.user, version='1.0')
+        self.category = Category.objects.create(name='General', slug='general')
+        self.post = Post.objects.create(
+            author=self.user,
+            title='Discussion',
+            content='Discussion content',
+            category=self.category,
+        )
+        self.reply = Reply.objects.create(
+            post=self.post,
+            author=self.user,
+            content='Original reply',
+        )
+        self.client.force_login(self.user)
+
+    def test_reply_edit_modal_returns_json_and_saves_changes(self):
+        response = self.client.get(
+            reverse('forum:reply_edit', args=[self.reply.pk]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Original reply', response.json()['html'])
+
+        response = self.client.post(
+            reverse('forum:reply_edit', args=[self.reply.pk]),
+            {'content': 'Updated reply'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        self.assertIn(f'#reply-{self.reply.pk}', response.json()['redirect'])
+        self.reply.refresh_from_db()
+        self.assertEqual(self.reply.content, 'Updated reply')
+
+    def test_reply_edit_rejects_bad_words_and_renders_form_errors(self):
+        response = self.client.post(
+            reverse('forum:reply_edit', args=[self.reply.pk]),
+            {'content': 'This is stupid.'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('inappropriate language', response.json()['html'])
+        self.reply.refresh_from_db()
+        self.assertEqual(self.reply.content, 'Original reply')
+
+    def test_reply_delete_modal_returns_json_and_soft_deletes(self):
+        response = self.client.get(
+            reverse('forum:reply_delete', args=[self.reply.pk]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Delete Reply?', response.json()['html'])
+
+        response = self.client.post(
+            reverse('forum:reply_delete', args=[self.reply.pk]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        self.assertIn('#reply-list', response.json()['redirect'])
+        self.reply.refresh_from_db()
+        self.post.refresh_from_db()
+        self.assertTrue(self.reply.is_deleted)
+        self.assertEqual(self.post.reply_count, 0)
+
+    def test_reply_actions_are_limited_to_the_reply_author(self):
+        self.client.force_login(self.other_user)
+
+        for route_name in ('forum:reply_edit', 'forum:reply_delete'):
+            response = self.client.get(reverse(route_name, args=[self.reply.pk]))
+            self.assertEqual(response.status_code, 404)
+
+
 class ForumNotificationBadgeTests(TestCase):
     def setUp(self):
         user_model = get_user_model()

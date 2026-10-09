@@ -52,9 +52,7 @@ const CORE_STATIC_ASSETS = [
   "/static/css/slm/module_detail.css",
   "/static/css/slm/highlight_ai.css",
 
-  "/static/js/forum/category-dots.js",
   "/static/js/forum/forum_ajax.js",
-  "/static/js/forum/forum-reply-focus.js",
   "/static/js/forum/forum-upvote.js",
 
   "/static/js/ai-helper.js",

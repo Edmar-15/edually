@@ -336,17 +336,69 @@ def verify_post(request, post_id):
 
 
 @login_required(login_url='account:login')
+@require_http_methods(['GET', 'POST'])
 def reply_edit(request, reply_id):
-    """Backward-compatible alias for older reply edit links."""
-    reply = get_object_or_404(Reply, pk=reply_id, is_deleted=False)
-    return redirect('forum:post_detail', post_id=reply.post_id)
+    reply = get_object_or_404(
+        Reply,
+        pk=reply_id,
+        author=request.user,
+        is_deleted=False,
+    )
+    form = ReplyForm(request.POST or None, instance=reply)
+
+    if request.method == 'POST' and form.is_valid():
+        if _contains_bad_words(form.cleaned_data['content']):
+            form.add_error('content', BAD_WORD_WARNING)
+        else:
+            form.save()
+            if _is_ajax_request(request):
+                return JsonResponse({
+                    'success': True,
+                    'redirect': f"{reverse('forum:post_detail', args=[reply.post_id])}#reply-{reply.pk}",
+                })
+            return redirect('forum:post_detail', post_id=reply.post_id)
+
+    context = {'reply': reply, 'form': form}
+    if _is_ajax_request(request):
+        return JsonResponse({
+            'html': render_to_string(
+                'forum/partials/reply_edit_form.html',
+                context,
+                request=request,
+            ),
+        })
+    return render(request, 'forum/partials/reply_edit_form.html', context)
 
 
 @login_required(login_url='account:login')
+@require_http_methods(['GET', 'POST'])
 def reply_delete(request, reply_id):
-    """Backward-compatible alias for older reply deletion links."""
-    reply = get_object_or_404(Reply, pk=reply_id, is_deleted=False)
-    return redirect('forum:post_detail', post_id=reply.post_id)
+    reply = get_object_or_404(
+        Reply,
+        pk=reply_id,
+        author=request.user,
+        is_deleted=False,
+    )
+    if request.method == 'POST':
+        reply.is_deleted = True
+        reply.save(update_fields=['is_deleted', 'updated_at'])
+        if _is_ajax_request(request):
+            return JsonResponse({
+                'success': True,
+                'redirect': f"{reverse('forum:post_detail', args=[reply.post_id])}#reply-list",
+            })
+        return redirect('forum:post_detail', post_id=reply.post_id)
+
+    context = {'reply': reply}
+    if _is_ajax_request(request):
+        return JsonResponse({
+            'html': render_to_string(
+                'forum/reply_delete.html',
+                context,
+                request=request,
+            ),
+        })
+    return render(request, 'forum/reply_delete.html', context)
 
 
 @login_required(login_url='account:login')
@@ -702,4 +754,3 @@ def upvote_reply(request, reply_id):
         })
 
     return redirect('forum:post_detail', post_id=reply.post.pk)
-
