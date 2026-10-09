@@ -1,33 +1,10 @@
-/* ------------------------------------------------------------------
- * service-worker.js – EduAlly
- *
- * PURPOSE
- * ------------------------------------------------------------------
- * 1. Cache the PWA shell and important static resources.
- * 2. Make previously visited public HTML pages available offline.
- * 3. Keep dynamic/user/AI data network-only.
- * 4. Improve static-resource loading with stale-while-revalidate.
- * 5. Provide an offline fallback page.
- * 6. Handle Web Push notifications.
- *
- * IMPORTANT
- * ------------------------------------------------------------------
- * Dynamic application data is intentionally NOT cached:
- *
- *   /account/
- *   /forum/
- *   /slm/
- *   /aihelper/
- *
- * This prevents stale or user-specific application data from being
- * served as if it were current.
- *
- * Bump PWA_SW_VERSION whenever you deploy a new application version.
- * ------------------------------------------------------------------ */
+/*
+ * Cache the shell and public pages for offline use. Static assets use
+ * stale-while-revalidate; account, forum, SLM, and AI data stay network-only.
+ * Handles push notifications. Bump PWA_SW_VERSION to invalidate old caches.
+ */
 
-/* ==================================================================
- * 1. VERSIONING
- * ================================================================== */
+// Versioning
 
 const CACHE_VERSION = "{{ PWA_SW_VERSION }}";
 
@@ -37,12 +14,7 @@ const RUNTIME_CACHE = `edually-runtime-${CACHE_VERSION}`;
 
 const OFFLINE_PAGE = "/offline/";
 
-/* ==================================================================
- * 2. PRECACHED CORE ASSETS
- *
- * These are resources that EduAlly should have available immediately
- * after the Service Worker installation succeeds.
- * ================================================================== */
+// Core assets available immediately after installation.
 
 const CORE_STATIC_ASSETS = [
   "/static/css/base.css",
@@ -73,26 +45,11 @@ const CORE_STATIC_ASSETS = [
   OFFLINE_PAGE,
 ];
 
-/* ==================================================================
- * 3. CACHE LIMIT
- *
- * Runtime resources are cached as users browse the application.
- * Keep the cache bounded so it cannot grow indefinitely.
- * ================================================================== */
+// Bound the runtime cache as users browse.
 
 const MAX_RUNTIME_ENTRIES = 100;
 
-/* ==================================================================
- * 4. INSTALL
- *
- * Pre-cache the important application shell.
- *
- * We intentionally DO NOT call skipWaiting() automatically here.
- *
- * This avoids replacing an active worker in the middle of a user's
- * current session. The page can explicitly request SKIP_WAITING when
- * it is ready to update.
- * ================================================================== */
+// Pre-cache the application shell without interrupting an active session.
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -121,11 +78,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-/* ==================================================================
- * 5. ACTIVATE
- *
- * Remove caches belonging to older Service Worker versions.
- * ================================================================== */
+// Remove caches from older worker versions.
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
@@ -159,9 +112,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-/* ==================================================================
- * 6. HELPER FUNCTIONS
- * ================================================================== */
+// Cache helpers
 
 /**
  * Check whether a response is safe to put into the Cache API.
@@ -304,20 +255,7 @@ function isStaticRequest(request, url) {
   return false;
 }
 
-/* ==================================================================
- * 7. NETWORK-ONLY
- *
- * Used for:
- *
- * - account
- * - forum
- * - SLM
- * - AI Helper
- * - API requests
- * - authenticated/dynamic data
- *
- * This is intentional.
- * ================================================================== */
+// Dynamic and authenticated requests remain network-only.
 
 async function networkOnly(request) {
   try {
@@ -356,20 +294,7 @@ async function networkOnly(request) {
   }
 }
 
-/* ==================================================================
- * 8. STATIC ASSETS
- *
- * Strategy:
- *
- *     CACHE FIRST
- *          ↓
- *     return cached version immediately
- *          +
- *     network refreshes cache in background
- *
- * This gives fast loading while still allowing updated resources to
- * reach the cache.
- * ================================================================== */
+// Serve cached static assets immediately and refresh them in the background.
 
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(STATIC_CACHE);
@@ -410,23 +335,7 @@ async function staleWhileRevalidate(request) {
   });
 }
 
-/* ==================================================================
- * 9. HTML NAVIGATION
- *
- * Strategy:
- *
- *     NETWORK FIRST
- *          ↓
- *     latest server page
- *
- * If offline:
- *
- *     cached page
- *          ↓
- *     /offline/
- *
- * Dynamic/private areas are excluded before this function is called.
- * ================================================================== */
+// Use network-first navigation for public pages, with cached and offline fallbacks.
 
 async function networkFirstNavigation(request) {
   try {
@@ -453,8 +362,7 @@ async function networkFirstNavigation(request) {
     /*
      * Offline:
      *
-     * 1. Try the exact page.
-     * 2. Fall back to the dedicated offline page.
+     * Try the requested page first, then the dedicated offline page.
      */
     const cachedPage = await caches.match(request);
 
@@ -477,12 +385,7 @@ async function networkFirstNavigation(request) {
   }
 }
 
-/* ==================================================================
- * 10. RUNTIME GET RESOURCES
- *
- * Used for same-origin resources that are not part of the core
- * precache but are safe to cache.
- * ================================================================== */
+// Cache safe same-origin resources on demand.
 
 async function runtimeResource(request) {
   const cache = await caches.open(RUNTIME_CACHE);
@@ -534,9 +437,7 @@ async function runtimeResource(request) {
   }
 }
 
-/* ==================================================================
- * 11. FETCH EVENT
- * ================================================================== */
+// Route eligible requests to the appropriate cache strategy.
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
@@ -561,9 +462,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* --------------------------------------------------------------
-   * 11.1 API / dynamic application requests
-   * -------------------------------------------------------------- */
+  // API and dynamic application requests
 
   if (isApiRequest(url.pathname) || isDynamicPath(url.pathname)) {
     event.respondWith(networkOnly(request));
@@ -571,11 +470,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* --------------------------------------------------------------
-   * 11.2 HTML navigation
-   *
-   * Public/non-dynamic pages can use network-first caching.
-   * -------------------------------------------------------------- */
+  // Public HTML pages use network-first caching.
 
   const acceptsHtml = request.headers.get("Accept")?.includes("text/html");
 
@@ -585,9 +480,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* --------------------------------------------------------------
-   * 11.3 Static resources
-   * -------------------------------------------------------------- */
+  // Static resources use stale-while-revalidate.
 
   if (isStaticRequest(request, url)) {
     event.respondWith(staleWhileRevalidate(request));
@@ -595,19 +488,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* --------------------------------------------------------------
-   * 11.4 Other same-origin GET requests
-   *
-   * Use a limited runtime cache only for resources that are
-   * actually requested and successfully returned.
-   * -------------------------------------------------------------- */
+  // Other same-origin GET requests use the bounded runtime cache.
 
   event.respondWith(runtimeResource(request));
 });
 
-/* ==================================================================
- * 12. PUSH NOTIFICATIONS
- * ================================================================== */
+// Push notifications
 
 self.addEventListener("push", (event) => {
   let payload = null;
@@ -648,9 +534,7 @@ self.addEventListener("push", (event) => {
   );
 });
 
-/* ==================================================================
- * 13. NOTIFICATION CLICK
- * ================================================================== */
+// Notification clicks
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
@@ -684,18 +568,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-/* ==================================================================
- * 14. CONTROLLED SERVICE WORKER UPDATE
- *
- * Your webpage can send:
- *
- * navigator.serviceWorker.controller.postMessage({
- *     type: "SKIP_WAITING"
- * });
- *
- * when it is ready to activate a new worker.
- * ================================================================== */
-
+// Pages send { type: "SKIP_WAITING" } when ready to activate an update.
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();

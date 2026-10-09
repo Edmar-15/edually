@@ -288,9 +288,7 @@ def contact_page(request):
 def dashboard(request):
     is_teacher = user_is_in_group(request.user, GROUP_TEACHER)
 
-    # -------------------------------------------------------------
     # Subjects and SLM modules
-    # -------------------------------------------------------------
     if is_teacher:
         # Teachers see the subjects they own and their non-archived modules.
         subjects_qs = request.user.subjects.filter(
@@ -352,9 +350,7 @@ def dashboard(request):
     subject_count = subjects_qs.count()
     module_count = modules_qs.count()
 
-    # -------------------------------------------------------------
     # Role-specific dashboard metric
-    # -------------------------------------------------------------
     if is_teacher:
         # Teachers do not use Personal Materials.
         # Show unresolved forum reports instead.
@@ -373,9 +369,7 @@ def dashboard(request):
         personal_material_count = personal_materials_qs.count()
         pending_report_count = 0
 
-    # -------------------------------------------------------------
     # User activity
-    # -------------------------------------------------------------
     forum_activity_count = Post.objects.filter(
         author=request.user,
         is_deleted=False,
@@ -392,9 +386,7 @@ def dashboard(request):
         + ai_activity_count
     )
 
-    # -------------------------------------------------------------
     # Recently visited modules
-    # -------------------------------------------------------------
     recent_module_ids = list(
         RecentModuleView.objects.filter(
             user=request.user,
@@ -421,9 +413,7 @@ def dashboard(request):
         )
     ) if recent_module_ids else []
 
-    # -------------------------------------------------------------
     # Recently visited personal materials
-    # -------------------------------------------------------------
     if is_teacher:
         recent_personal_materials = []
     else:
@@ -459,9 +449,7 @@ def dashboard(request):
             )
         ) if recent_material_ids else []
 
-    # -------------------------------------------------------------
     # Continue where you left off
-    # -------------------------------------------------------------
     continue_module = recent_modules[0] if recent_modules else None
 
     continue_material = (
@@ -470,12 +458,9 @@ def dashboard(request):
         else None
     )
 
-    # -------------------------------------------------------------
     # ONBOARDING
-    # -------------------------------------------------------------
 
-    # 1. Complete your profile
-    # -------------------------------------------------------------
+    # Complete the profile
     if is_teacher:
         try:
             teacher_profile = request.user.teacher_profile
@@ -498,20 +483,14 @@ def dashboard(request):
         )
 
 
-    # -------------------------------------------------------------
-    # 2. Teacher: Create a subject
-    #    Student: Explore first SLM
-    # -------------------------------------------------------------
+    # Teacher: create a subject; student: explore an SLM.
     if is_teacher:
         subject_created = subjects_qs.exists()
     else:
         first_slm_explored = bool(recent_modules)
 
 
-    # -------------------------------------------------------------
-    # 3. Teacher: Upload an SLM
-    #    Student: Ask the AI Helper
-    # -------------------------------------------------------------
+    # Teacher: upload an SLM; student: use the AI Helper.
     if is_teacher:
         slm_uploaded = modules_qs.exists()
     else:
@@ -526,15 +505,11 @@ def dashboard(request):
         )
 
 
-    # -------------------------------------------------------------
-    # 4. Visit the Discussion Forum
-    # -------------------------------------------------------------
+    # Visit the discussion forum.
     forum_visited = request.user.onboarding_forum_visited
 
 
-    # -------------------------------------------------------------
     # Build role-specific onboarding steps
-    # -------------------------------------------------------------
     if is_teacher:
         onboarding_steps = [
             {
@@ -600,9 +575,7 @@ def dashboard(request):
         ]
 
 
-    # -------------------------------------------------------------
     # Onboarding progress
-    # -------------------------------------------------------------
     onboarding_completed = sum(
         1 for step in onboarding_steps if step["done"]
     )
@@ -643,8 +616,6 @@ def profile(request):
     GET  → show the read-only profile overview with edit buttons.
     POST → handle profile update from the inline form.
     """
-    # -----------------------------------------------------------------
-    # -----------------------------------------------------------------
     if request.method == "POST" and "profile_update" in request.POST:
         profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if profile_form.is_valid():
@@ -668,8 +639,6 @@ def profile_edit(request):
     GET  → show both the edit personal information and change password forms.
     POST → handle whichever form was submitted.
     """
-    # -----------------------------------------------------------------
-    # -----------------------------------------------------------------
     if request.method == "POST" and "profile_update" in request.POST:
         profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if profile_form.is_valid():
@@ -678,8 +647,6 @@ def profile_edit(request):
             return redirect("account:profile")
         messages.error(request, "Please correct the errors below.")
         password_form = ChangePasswordForm(user=request.user)
-    # -----------------------------------------------------------------
-    # -----------------------------------------------------------------
     elif request.method == "POST" and "change_password" in request.POST:
         password_form = ChangePasswordForm(user=request.user, data=request.POST)
         if password_form.is_valid():
@@ -718,9 +685,7 @@ def profile_modal(request, pk):
     return JsonResponse({'html': html})
 
 
-# -----------------------------------------------------------------
 #   PUBLIC REGISTRATION
-# -----------------------------------------------------------------
 @anonymous_required
 def register(request):
     """
@@ -753,9 +718,7 @@ def register(request):
     return render(request, "account/register.html", {"form": form, **policy_context})
 
 
-# -----------------------------------------------------------------
 #   EMAIL VERIFICATION REQUIRED PAGE
-# -----------------------------------------------------------------
 class EmailVerificationRequiredView(TemplateView):
     """
     Shown when a logged‑in user has ``email_verified=False``.
@@ -781,9 +744,7 @@ class EmailVerificationRequiredView(TemplateView):
         return redirect("account:login")
 
 
-# -----------------------------------------------------------------
 #   VERIFY EMAIL LINK HANDLER
-# -----------------------------------------------------------------
 def verify_email(request, token: str):
     """
     Endpoint that the user clicks from the e‑mail.
@@ -987,9 +948,7 @@ def verify_2fa(request):
     return render(request, "account/verify_2fa.html", {"user": user})
 
 
-# -----------------------------------------------------------------
 #   DANGER ZONE – account deletion (updated to require password confirm)
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 def delete_account_modal(request):
     form = DeleteAccountForm(user=request.user)
@@ -1129,10 +1088,8 @@ def api_set_theme(request):
     return response
 
 
-# -----------------------------------------------------------------
 #   POLICY VIEWS (terms / privacy) – tiny wrappers that render the same
 #   content as the modal but give a proper URL for SEO / accessibility.
-# -----------------------------------------------------------------
 class PolicyBaseView(TemplateView):
     """Inject policy version & effective date into all policy templates."""
     def get_context_data(self, **kwargs):
@@ -1152,9 +1109,7 @@ class PrivacyView(PolicyBaseView):
     template_name = "account/privacy.html"
 
 
-# -----------------------------------------------------------------
 #   CONSENT REQUIRED VIEW
-# -----------------------------------------------------------------
 class ConsentRequiredView(TemplateView):
     template_name = "account/consent_required.html"
 
@@ -1199,7 +1154,6 @@ class ConsentRequiredView(TemplateView):
         return ctx
 
 
-# -----------------------------------------------------------------
 def _build_google_auth_url(state: str | None = None) -> str:
     base_url = "https://accounts.google.com/o/oauth2/v2/auth"
     params = {
@@ -1290,9 +1244,7 @@ def google_callback(request):
         user.email_verified = True
         user.save()
 
-        # -------------------------------------------------------------
         # New user → treat as a Student, create empty profile & consent.
-        # -------------------------------------------------------------
         add_user_to_group(user, GROUP_STUDENT)
         StudentProfile.objects.get_or_create(user=user)  # empty profile
         UserConsent.objects.create(
@@ -1310,10 +1262,8 @@ def google_callback(request):
                 accepted_at=timezone.now(),
             )
 
-    # -------------------------------------------------------------
     # Log the user in – we use ``ModelBackend`` because the password‑less
     # Google flow bypasses the EmailOrUsername backend.
-    # -------------------------------------------------------------
     user.backend = "django.contrib.auth.backends.ModelBackend"
     auth_login(request, user)
 
@@ -1348,9 +1298,7 @@ def archives_home(request):
     return redirect('account:archive-forum-posts')
 
 
-# -----------------------------------------------------------------
 #   Forum posts
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 def archive_forum_post_list(request):
     posts = (
@@ -1382,9 +1330,7 @@ def archive_forum_post_detail(request, pk):
                   {'post': post})
 
 
-# -----------------------------------------------------------------
 #   Modules (subject owner only)
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 def archive_module_list(request):
     modules = (
@@ -1420,9 +1366,7 @@ def archive_module_detail(request, pk):
                   {'module': module})
 
 
-# -----------------------------------------------------------------
 #   Personal Materials (owner only)
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 def archive_personal_material_list(request):
     materials = (
@@ -1498,9 +1442,7 @@ def archive_forum_post_delete(request, pk):
     )
 
 
-# -----------------------------------------------------------------
 #  DELETE MODAL – Module
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 def archive_module_delete_modal(request, pk):
     """Return the modal that confirms permanent deletion of an archived module."""
@@ -1595,9 +1537,7 @@ def archive_subject_delete(request, pk):
         }
     )
 
-# -----------------------------------------------------------------
 #  DELETE MODAL – Personal material
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 def archive_personal_material_delete_modal(request, pk):
     """Return the modal that confirms permanent deletion of an archived material."""
@@ -1637,9 +1577,7 @@ def archive_personal_material_delete(request, pk):
     )
     
 
-# -----------------------------------------------------------------
 #   Subjects (teacher / subject owner only)
-# -----------------------------------------------------------------
 
 @login_required(login_url='account:login')
 def archive_subject_list(request):
@@ -1825,9 +1763,7 @@ def password_reset_confirm(request):
         messages.info(request, "Please start the password‑reset process again.")
         return redirect("account:password_reset_request")
 
-    # -------------------------------------------------
     #   POST → validate OTP and new password
-    # -------------------------------------------------
     if request.method == "POST":
         form = PasswordResetConfirmForm(request.POST)
         if form.is_valid():

@@ -105,8 +105,6 @@ class PublicRegisterForm(forms.ModelForm):
         label="Student ID",
         widget=forms.TextInput(attrs={"placeholder": "e.g. 20230001"}),
     )
-    # PROGRAM is no longer asked – defaults to “Information Technology”
-
     YEAR_CHOICES = [
         ("2nd Year", "2nd Year"),
         ("3rd Year", "3rd Year"),
@@ -270,9 +268,7 @@ class ProfileForm(forms.ModelForm):
         label="Year Level",
     )
 
-    # ============================================================
     # TEACHER-ONLY FIELDS
-    # ============================================================
 
     employee_id = forms.CharField(
         required=False,
@@ -333,9 +329,7 @@ class ProfileForm(forms.ModelForm):
 
         self.is_teacher = False
 
-        # ========================================================
         # DETERMINE USER ROLE
-        # ========================================================
 
         if self.instance.pk:
             try:
@@ -343,9 +337,7 @@ class ProfileForm(forms.ModelForm):
             except Exception:
                 self.is_teacher = False
 
-        # ========================================================
         # USERNAME
-        # ========================================================
 
         current_username = (
             (self.instance.username or "").strip()
@@ -363,9 +355,7 @@ class ProfileForm(forms.ModelForm):
             # Allow the user to choose one.
             self.fields["username"].required = True
 
-        # ========================================================
         # TEACHER PROFILE
-        # ========================================================
 
         if self.is_teacher:
 
@@ -400,9 +390,7 @@ class ProfileForm(forms.ModelForm):
                 }
             )
 
-        # ========================================================
         # STUDENT PROFILE
-        # ========================================================
 
         else:
 
@@ -419,9 +407,7 @@ class ProfileForm(forms.ModelForm):
 
                 if profile:
 
-                    # ------------------------------
                     # Student ID
-                    # ------------------------------
 
                     if profile.student_id:
                         self.fields["student_id"].initial = (
@@ -434,9 +420,7 @@ class ProfileForm(forms.ModelForm):
                             profile.student_id
                         )
 
-                    # ------------------------------
                     # Year Level
-                    # ------------------------------
 
                     if profile.year_level:
 
@@ -465,9 +449,7 @@ class ProfileForm(forms.ModelForm):
 
                         self.fields["year_level"].required = True
 
-        # ========================================================
         # CORE USER FIELDS
-        # ========================================================
 
         if self.instance.pk:
 
@@ -493,9 +475,7 @@ class ProfileForm(forms.ModelForm):
                     self.instance.last_name
                 )
 
-    # ============================================================
     # USERNAME VALIDATION
-    # ============================================================
 
     def clean_username(self):
         """
@@ -532,9 +512,7 @@ class ProfileForm(forms.ModelForm):
 
         return username
 
-    # ============================================================
     # STUDENT YEAR LEVEL VALIDATION
-    # ============================================================
 
     def clean_year_level(self):
         """
@@ -559,9 +537,7 @@ class ProfileForm(forms.ModelForm):
 
         return new_value
 
-    # ============================================================
     # SAVE
-    # ============================================================
 
     def save(self, commit=True):
         """
@@ -580,9 +556,7 @@ class ProfileForm(forms.ModelForm):
         - Cannot be changed after it has been assigned.
         """
 
-        # ========================================================
         # USERNAME PROTECTION
-        # ========================================================
 
         if self.instance.pk and self.instance.username:
             # Do not allow POST data to change an existing username.
@@ -594,12 +568,9 @@ class ProfileForm(forms.ModelForm):
         ):
             self.instance.avatar = None
 
-        # Save the User model.
         user = super().save(commit=commit)
 
-        # ========================================================
         # TEACHER
-        # ========================================================
 
         if self.is_teacher:
 
@@ -612,9 +583,7 @@ class ProfileForm(forms.ModelForm):
 
             return user
 
-        # ========================================================
         # STUDENT
-        # ========================================================
 
         profile, _ = StudentProfile.objects.get_or_create(
             user=user

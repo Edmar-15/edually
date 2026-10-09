@@ -301,9 +301,6 @@ export function initPersonalMaterialWidget(rootEl) {
   }
   if ($filterVisibility || $filterType) attachFilters();
 
-  /* -----------------------------------------------------------------
-   * 🔟  CREATE – multipart POST new material
-   * ----------------------------------------------------------------- */
   async function create() {
     if (!$titleInput || !$fileInput) return;
 

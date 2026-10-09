@@ -37,17 +37,13 @@ body.sidebar-mobile-open .sidebar-backdrop {
 }
 
 .mobile-sidebar-trigger {
-    /* Layout – let the header decide the position */
-    position: static;               /* <-- no more fixed */
+    position: static;
     top: auto;
     left: auto;
-    margin: 0;                      /* keep it flush with the left edge
-                                      of the header flex container */
-    margin-right: 0.5rem;           /* a little breathing room */
+    margin: 0;
+    margin-right: 0.5rem;
     
-    /* Visuals – keep everything you already liked */
-    display: none;                 /* hidden by default, JS will turn it on
-                                      on mobile (≤768 px) */
+    display: none;                 /* JS enables the trigger on mobile. */
     align-items: center;
     justify-content: center;
     min-width: 40px;
@@ -3032,28 +3028,24 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     background: rgba(0, 0, 0, 0.2);
 }
 
-/* --------------------------------------------------------------
-   Simple, accessible modal – works with the markup above
-   -------------------------------------------------------------- */
+/* Accessible modal */
 .modal {
-    display: none;                /* hidden until we add .open */
+    display: none;
     position: fixed;
     inset: 0;
-    z-index: 9999;                /* above everything else */
+    z-index: 9999;
     overflow-y: auto;
-    background: rgba(0,0,0,.5);   /* semi‑transparent backdrop */
+    background: rgba(0,0,0,.5);
     align-items: center;
     justify-content: center;
     padding: clamp(.65rem, 2vw, 1rem);
     box-sizing: border-box;
 }
 
-/* When we want it visible */
 .modal.open {
-    display: flex;                /* Flexbox to center the dialog */
+    display: flex;
 }
 
-/* Dialog box */
 .modal__dialog {
     background: #fff;
     border-radius: .5rem;
@@ -3063,7 +3055,6 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     animation: fadeIn .15s ease-out forwards;
 }
 
-/* Header */
 .modal__header {
     display: flex;
     align-items: center;
@@ -3075,7 +3066,6 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     font-size: 1.25rem;
 }
 
-/* Close icon */
 .modal__close {
     background: transparent;
     border: none;
@@ -3084,13 +3074,11 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     cursor: pointer;
 }
 
-/* Body */
 .modal__body {
     padding: 1rem;
     font-size: 1rem;
 }
 
-/* Footer (buttons) */
 .modal__footer {
     display: flex;
     justify-content: flex-end;
@@ -3098,7 +3086,7 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     padding: .75rem 1rem 1rem;
 }
 
-/* Button utilities – you can replace them with your UI framework */
+/* Button utilities */
 .btn {
     font-family: inherit;
     font-size: .95rem;
@@ -3130,22 +3118,17 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
 }
 
 .modal__backdrop {
-    position: absolute;            /* stretch over the whole viewport */
-    inset: 0;                     /* top / right / bottom / left = 0 */
-    cursor: pointer;              /* makes it obvious it’s clickable */
-    /* we keep the background transparent – the outer .modal gives the
-       dimmed overlay.  If you want a second overlay, uncomment the line
-       below and remove the background on .modal. */
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    /* The outer .modal provides the dimmed overlay. */
     /* background: rgba(0,0,0,.5); */
-    z-index: 0;                   /* behind the dialog */
+    z-index: 0;
 }
 
-/* -----------------------------------------------------------------
-   Dialog box – the visible white panel
-   ----------------------------------------------------------------- */
+/* Dialog content */
 .modal__content,
-.modal__dialog {                /* .modal__dialog is the original name,
-                                   we style both so you can keep either. */
+.modal__dialog {
     background: #ffffff;
     color: #0f172a;
     border: 1px solid rgba(15, 23, 42, 0.10);
@@ -3182,30 +3165,23 @@ html[data-theme="dark"] .modal__dialog {
     color: var(--text) !important;
 }
 
-/* -----------------------------------------------------------------
-   Optional header – if you ever want <h2 class="modal__title"> … </h2>
-   ----------------------------------------------------------------- */
+/* Modal title */
 .modal__content h2,
 .modal__dialog .modal__title {
     margin: 0 0 .75rem;
     font-size: 1.25rem;
 }
 
-/* -----------------------------------------------------------------
-   Footer / action bar – the “Save / Delete / Cancel” buttons
-   ----------------------------------------------------------------- */
+/* Modal actions */
 .modal__actions,
 .modal__footer {
     display: flex;
     justify-content: flex-end;
     gap: .75rem;
-    margin-top: 1rem;            /* space above the button row */
+    margin-top: 1rem;
 }
 
-/* -----------------------------------------------------------------
-   Buttons – unify the “button‑primary / button‑plain” that the
-   templates already use with the .btn utilities you have elsewhere.
-   ----------------------------------------------------------------- */
+/* Align modal buttons with the shared button utilities. */
 .modal__actions .button-primary,
 .modal__footer .button-primary,
 button.button-primary,
@@ -3216,7 +3192,7 @@ a.button-primary {
     border: none;
     border-radius: .3rem;
     cursor: pointer;
-    background: #d32f2f;        /* same red you use for logout */
+    background: #d32f2f;        /* Match the logout button color. */
     color: #fff;
 }
 
@@ -3275,9 +3251,7 @@ html[data-theme="dark"] a.button-primary.button--danger {
     background: #f44336 !important;
 }
 
-/* --------------------------------------------------------------
-   Form fields inside the modal – keep them readable
-   -------------------------------------------------------------- */
+/* Modal form fields */
 .modal__content label,
 .modal__dialog label {
     display: block;
@@ -3353,10 +3327,6 @@ html[data-theme="dark"] .modal__dialog select:focus {
     border-color: rgba(14, 154, 167, 0.24) !important;
 }
 
-/* -----------------------------------------------------------------
-   Close icon – you already have .modal__close in the base CSS,
-   but if you ever need it inside the injected markup it will work.
-   ----------------------------------------------------------------- */
 .modal__close {
     background: transparent;
     border: none;
@@ -3365,25 +3335,16 @@ html[data-theme="dark"] .modal__dialog select:focus {
     cursor: pointer;
 }
 
-/* -----------------------------------------------------------------
-   Make sure the modal itself stays centered even when the inner
-   content has a height that exceeds the viewport – allow scrolling.
-   ----------------------------------------------------------------- */
 .modal {
-    overflow-y: auto;   /* already set, just reminding */
+    overflow-y: auto;
 }
 
-/* --------------------------------------------------------------
-   Keep the fade‑in you already defined
-   -------------------------------------------------------------- */
 @keyframes fadeIn {
     from { opacity: .4; transform: translateY(-10px); }
     to   { opacity: 1;   transform: translateY(0); }
 }
 
-/* --------------------------------------------------------------
-   Accessibility – focus outlines for everything inside the modal
-   -------------------------------------------------------------- */
+/* Modal focus styles */
 .modal button:focus,
 .modal a:focus,
 .modal input:focus,
@@ -3688,9 +3649,7 @@ html[data-theme="dark"] .forum-action-modal select:focus {
     background: rgba(14, 154, 167, 0.5);
 }
 
-/* ================================================================
-   EDUALLY DASHBOARD HOME
-   ================================================================ */
+/* Dashboard home */
 
 .dashboard-home {
     width: 100%;
@@ -3700,9 +3659,7 @@ html[data-theme="dark"] .forum-action-modal select:focus {
 }
 
 
-/* ----------------------------------------------------------------
-   HEADER
-   ---------------------------------------------------------------- */
+/* Header */
 .dashboard-welcome {
     display: flex;
     flex-direction: column;
@@ -3726,9 +3683,7 @@ html[data-theme="dark"] .forum-action-modal select:focus {
 }
 
 
-/* ----------------------------------------------------------------
-   SECTION HEADINGS
-   ---------------------------------------------------------------- */
+/* Section headings */
 
 .dashboard-section {
     display: flex;
@@ -3751,9 +3706,7 @@ html[data-theme="dark"] .forum-action-modal select:focus {
 }
 
 
-/* ----------------------------------------------------------------
-   SUMMARY CARDS
-   ---------------------------------------------------------------- */
+/* Summary cards */
 
 .dashboard-stats {
     display: grid;
@@ -3828,9 +3781,7 @@ html[data-theme="dark"] .forum-action-modal select:focus {
 }
 
 
-/* ----------------------------------------------------------------
-   CONTINUE CARD
-   ---------------------------------------------------------------- */
+/* Continue card */
 
 .continue-card {
     min-height: 130px;
@@ -3925,9 +3876,7 @@ html[data-theme="dark"] .forum-action-modal select:focus {
 }
 
 
-/* ----------------------------------------------------------------
-   QUICK ACCESS
-   ---------------------------------------------------------------- */
+/* Quick access */
 
 .quick-access-grid {
     display: grid;
@@ -4020,9 +3969,7 @@ html[data-theme="dark"] .forum-action-modal select:focus {
 }
 
 
-/* ----------------------------------------------------------------
-   RECENTLY VISITED
-   ---------------------------------------------------------------- */
+/* Recently visited */
 
 .recent-list {
     display: flex;
@@ -4160,9 +4107,7 @@ html[data-theme="dark"] .forum-action-modal select:focus {
 }
 
 
-/* ----------------------------------------------------------------
-   DARK MODE
-   ---------------------------------------------------------------- */
+/* Dark mode */
 
 html.dark .dashboard-header,
 html[data-theme="dark"] .dashboard-header {
@@ -4187,9 +4132,7 @@ html[data-theme="dark"] .recent-item:hover {
 }
 
 
-/* ----------------------------------------------------------------
-   RESPONSIVE
-   ---------------------------------------------------------------- */
+/* Responsive layout */
 
 @media (max-width: 900px) {
 
@@ -4285,9 +4228,7 @@ html[data-theme="dark"] .recent-item:hover {
 
 }
 
-/* ============================================================
-   GETTING STARTED / ONBOARDING
-   ============================================================ */
+/* Onboarding */
 
 .onboarding-section {
     margin-top: 24px;
@@ -4444,9 +4385,7 @@ html[data-theme="dark"] .recent-item:hover {
 }
 
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+/* Responsive onboarding */
 
 @media (max-width: 768px) {
 

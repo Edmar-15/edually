@@ -1,4 +1,3 @@
-# slm/views.py
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -67,9 +66,6 @@ class Module(models.Model):
         help_text="The file that contains the module’s content (PDF, Word, PowerPoint).",
         max_length=255,
     )
-    # -------------------------------------------------------------
-    #  NEW FIELD – stores the HTML version of the uploaded file
-    # -------------------------------------------------------------
     extracted_html = models.TextField(
         blank=True,
         help_text="HTML version of the uploaded document – generated on upload.",
@@ -121,8 +117,6 @@ class Module(models.Model):
 def user_media_path(instance, filename):
     """
     Store a user’s files under `media/users/<user‑pk>/<filename>`.
-    Feel free to extend with a date‑based sub‑folder if you like:
-        f'users/{instance.author_id}/{timezone.now():%Y/%m/%d}/{filename}'
     """
     return f"users/{instance.author_id}/{filename}"
 
@@ -157,8 +151,6 @@ class PersonalMaterial(models.Model):
     class Visibility(models.TextChoices):
         PRIVATE = "PR", _("Private – only the owner can see it")
         PUBLIC = "PU", _("Public – any logged‑in user can see it")
-        # you can add RESTRICTED later without a migration
-
     visibility = models.CharField(
         max_length=2,
         choices=Visibility.choices,
@@ -182,9 +174,6 @@ class PersonalMaterial(models.Model):
     def __str__(self) -> str:
         return f"{self.title} ({self.author})"
     
-    # -----------------------------------------------------------------
-    #  File‑type icon helpers – mirrors the logic used for ``Module``.
-    # -----------------------------------------------------------------
     @property
     def file_icon(self) -> str:
         """Return the primary Font Awesome class for the uploaded file."""
@@ -286,14 +275,8 @@ class HighlightAnswer(models.Model):
         related_name="highlight_answers",
         help_text="User that asked the question – guarantees a private cache."
     )
-    # store the *canonical* version of the highlighted text (lower‑cased)
     query = models.CharField(max_length=255,
                              help_text="Exact highlighted text (lower‑cased).")
-    # -----------------------------------------------------------------
-    # NEW – character offsets of the highlighted fragment within the
-    # extracted HTML (the string that is shown on the preview page).
-    # ``start_offset`` is inclusive, ``end_offset`` is exclusive.
-    # -----------------------------------------------------------------
     start_offset = models.IntegerField(
         null=True,
         blank=True,
@@ -318,8 +301,7 @@ class HighlightAnswer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # a user can have many highlights for the same text – they are
-        # distinguished by the character offsets.
+        # Offsets distinguish repeated occurrences of the same highlighted text.
         unique_together = (
             "module",
             "personal_material",
@@ -363,9 +345,6 @@ class HighlightAnnotation(models.Model):
         max_length=255,
         help_text="Exact highlighted text (lower‑cased).",
     )
-    # -----------------------------------------------------------------
-    # NEW – offsets so the annotation is tied to the exact occurrence.
-    # -----------------------------------------------------------------
     start_offset = models.IntegerField(
         null=True,
         blank=True,
@@ -383,7 +362,7 @@ class HighlightAnnotation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # a user may have only one annotation per query + offset per target
+        # Uniqueness is scoped to the exact highlighted occurrence.
         unique_together = (
             "module",
             "personal_material",

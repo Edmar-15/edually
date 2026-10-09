@@ -13,15 +13,12 @@ import { validateUploadFile } from "./file_validation.js";
  *   data-file-replace-url   → "/slm/api/modules/0/file/"
  */
 export function initModuleWidget(rootEl) {
-  const listUrl = rootEl.dataset.listUrl; // …?page=
+  const listUrl = rootEl.dataset.listUrl;
   const createUrl = rootEl.dataset.createUrl;
-  const updateTpl = rootEl.dataset.updateUrl; // “…/modules/0/”
-  const deleteTpl = rootEl.dataset.deleteUrl; // “…/modules/0/delete/”
-  const replaceFileTpl = rootEl.dataset.fileReplaceUrl; // “…/modules/0/file/”
+  const updateTpl = rootEl.dataset.updateUrl;
+  const deleteTpl = rootEl.dataset.deleteUrl;
+  const replaceFileTpl = rootEl.dataset.fileReplaceUrl;
 
-  /* -----------------------------------------------------------------
-   * Helper – replace the dummy “0” with a real id
-   * ----------------------------------------------------------------- */
   const replaceId = (template, id) => template.replace(/0(?=\/|$)/, id);
 
   const showToast = (message, type = "info", duration = 4000) =>
@@ -38,9 +35,6 @@ export function initModuleWidget(rootEl) {
   const $fileInput = rootEl.querySelector("#module-file-input");
   const $addBtn = rootEl.querySelector("#module-add-btn");
 
-  /* -----------------------------------------------------------------
-   * Helper – icons based on file extension
-   * ----------------------------------------------------------------- */
   function getModuleIconMarkup(fileUrl = "") {
     const ext = (fileUrl || "")
       .split("?")[0]

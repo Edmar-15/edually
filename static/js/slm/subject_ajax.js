@@ -193,7 +193,6 @@ function renderCard(subject) {
     }
     ul.appendChild(makeItem("→", meta.next_page_number, !meta.has_next));
 
-    // Insert after the list (same place as before)
     $list.parentNode.appendChild(nav);
   }
 
@@ -261,12 +260,11 @@ function renderCard(subject) {
         const created = await resp.json();
         showToast(`Subject "${created.subject_name}" created`, "success");
 
-        // Reset UI
         $codeInput.value = "";
         $nameInput.value = "";
         if ($yearSelect && $yearSelect.options.length) $yearSelect.selectedIndex = 0;
 
-        load(); // refresh the list (still on page 1)
+        load();
       } else {
         const err = await resp.json();
         showToast(err.error || resp.statusText, "error");
@@ -276,20 +274,13 @@ function renderCard(subject) {
     }
   }
 
-  // --------------------------------------------------------------
-    // Attach the submit‑handler **only if the form exists**.
-    // --------------------------------------------------------------
     if ($subjectForm) {
         $subjectForm.addEventListener("submit", e => {
-            e.preventDefault(); // stop the native page‑reload
-            create();          // run the AJAX routine
+            e.preventDefault();
+            create();
         });
     }
 
-    // --------------------------------------------------------------
-    // Initialise the widget (fetch subjects, populate year choices if
-    // the <select> is present, etc.).
-    // --------------------------------------------------------------
-    loadYearChoices(); // will be a no‑op when $yearSelect is undefined
-    load();          // fetch the first page of subjects
+    loadYearChoices();
+    load();
 }

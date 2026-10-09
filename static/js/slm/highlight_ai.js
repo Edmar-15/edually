@@ -1,8 +1,4 @@
-// static/js/slm/highlight_ai.js
-
-// ---------------------------------------------------------------
 // Highlight → Ask-AI widget (occurrence-aware)
-// ---------------------------------------------------------------
 
 import { csrftoken } from "./utils.js";
 
@@ -12,10 +8,6 @@ export function initHighlightAI(
   contentScope = ".module-content-card .module-content",
   apiBase = "/slm/api/modules/",
 ) {
-  // ---------------------------------------------------------------
-  // Validate the module ID.
-  // ---------------------------------------------------------------
-
   const hasValidId = Number.isInteger(moduleId) && moduleId > 0;
 
   if (!hasValidId) {
@@ -23,10 +15,6 @@ export function initHighlightAI(
       "[highlight_ai] No valid id supplied – highlight cache disabled.",
     );
   }
-
-  // ---------------------------------------------------------------
-  // Find the content area.
-  // ---------------------------------------------------------------
 
   const contentRoot =
     typeof contentScope === "string"
@@ -38,9 +26,7 @@ export function initHighlightAI(
   // Keep the pristine server HTML.
   const _originalHtml = contentRoot.innerHTML;
 
-  // ---------------------------------------------------------------
   // Highlight history
-  // ---------------------------------------------------------------
 
   const historyList = document.getElementById("highlight-history-list");
 
@@ -60,15 +46,9 @@ export function initHighlightAI(
     historyCount.textContent = "0";
   }
 
-  // ---------------------------------------------------------------
-  // Normalize selected text.
-  // ---------------------------------------------------------------
-
   const normalise = (txt) => (txt || "").trim().toLowerCase();
 
-  // ---------------------------------------------------------------
   // Track each occurrence of a selection.
-  // ---------------------------------------------------------------
 
   const occurrenceKey = (q, s, e) => `${q}|${s}-${e}`;
 
@@ -76,9 +56,7 @@ export function initHighlightAI(
 
   const pendingAiRequests = new Set();
 
-  // ---------------------------------------------------------------
   // Selection state
-  // ---------------------------------------------------------------
 
   // Keep this range current as mobile browsers move the selection handles.
 
@@ -98,15 +76,8 @@ export function initHighlightAI(
   let selectionInteractionActive = false;
 
   /*
-   * IMPORTANT MOBILE FIX:
-   *
-   * Native <select> controls can temporarily collapse
-   * window.getSelection() while the mobile browser opens
-   * its native picker.
-   *
-   * During that short period, selectionchange/touchend must
-   * NOT interpret the collapsed selection as a reason to
-   * destroy the AI Mini.
+   * Native select menus can collapse text selection on mobile.
+   * Keep the AI Mini open while the picker is active.
    */
   let miniControlInteraction = false;
 
@@ -139,9 +110,7 @@ export function initHighlightAI(
     miniControlInteraction = false;
   };
 
-  // ---------------------------------------------------------------
   // Text-node helpers
-  // ---------------------------------------------------------------
 
   const getTextNodes = () => {
     const walker = document.createTreeWalker(
@@ -167,9 +136,7 @@ export function initHighlightAI(
     return nodes;
   };
 
-  // ---------------------------------------------------------------
   // Boundary offsets
-  // ---------------------------------------------------------------
 
   const getBoundaryOffset = (container, offset) => {
     const nodes = getTextNodes();
@@ -211,9 +178,7 @@ export function initHighlightAI(
     end: getBoundaryOffset(range.endContainer, range.endOffset),
   });
 
-  // ---------------------------------------------------------------
   // Check whether the selection is inside the content.
-  // ---------------------------------------------------------------
 
   const isSelectionWithinContent = (sel) => {
     if (!sel || sel.rangeCount === 0) {
@@ -237,9 +202,7 @@ export function initHighlightAI(
     return isInside(range.startContainer) && isInside(range.endContainer);
   };
 
-  // ---------------------------------------------------------------
   // Clone the current selection.
-  // ---------------------------------------------------------------
 
   const cloneCurrentSelectionRange = () => {
     const sel = window.getSelection();
@@ -261,9 +224,7 @@ export function initHighlightAI(
     return range.cloneRange();
   };
 
-  // ---------------------------------------------------------------
   // Selection data
-  // ---------------------------------------------------------------
 
   const getSelectionData = (range) => {
     if (!range) return null;
@@ -297,9 +258,7 @@ export function initHighlightAI(
     };
   };
 
-  // ---------------------------------------------------------------
   // Highlight styles
-  // ---------------------------------------------------------------
 
   const getHighlightClassName = (occ) => {
     const simp = !!occ.simplified;
@@ -338,9 +297,7 @@ export function initHighlightAI(
     return parts.join("\n\n");
   };
 
-  // ---------------------------------------------------------------
   // Messages
-  // ---------------------------------------------------------------
 
   const showMessage = (container, text, type = "success") => {
     const old = container.querySelector(".annotation-message");
@@ -369,9 +326,7 @@ export function initHighlightAI(
     }, 1500);
   };
 
-  // ---------------------------------------------------------------
   // History
-  // ---------------------------------------------------------------
 
   const toggleHistoryPopover = () => {
     if (!historyPopover || !historyToggle) {
@@ -428,9 +383,7 @@ export function initHighlightAI(
 
         li.tabIndex = 0;
 
-        // ---------------------------------------------------------
         // History content
-        // ---------------------------------------------------------
 
         const content = document.createElement("div");
 
@@ -458,9 +411,7 @@ export function initHighlightAI(
 
         content.append(termSpan, levelsDiv);
 
-        // ---------------------------------------------------------
         // Remove highlight button
-        // ---------------------------------------------------------
 
         const removeBtn = document.createElement("button");
 
@@ -482,9 +433,7 @@ export function initHighlightAI(
           await removeHighlight(entry.text, entry.start, entry.end);
         });
 
-        // ---------------------------------------------------------
         // Assemble history item
-        // ---------------------------------------------------------
 
         li.append(content, removeBtn);
 
@@ -649,9 +598,7 @@ export function initHighlightAI(
     historyFocusTimer = setTimeout(clearHistoryFocus, 2200);
   };
 
-  // ---------------------------------------------------------------
   // Occurrence data
-  // ---------------------------------------------------------------
 
   const getOrCreateOccurrence = (queryOrig, start, end) => {
     const queryLC = normalise(queryOrig);
@@ -711,9 +658,7 @@ export function initHighlightAI(
     _refreshAllHighlights();
   };
 
-  // ---------------------------------------------------------------
   // Highlight events
-  // ---------------------------------------------------------------
 
   const showTooltip = (span) => {
     const query = span.dataset.highlightQuery;
@@ -858,9 +803,7 @@ export function initHighlightAI(
     span.dataset.clickBound = "true";
   };
 
-  // ---------------------------------------------------------------
   // Apply saved highlights.
-  // ---------------------------------------------------------------
 
   const applyOccurrences = (occs) => {
     if (!occs.length) return;
@@ -967,9 +910,7 @@ export function initHighlightAI(
     });
   };
 
-  // ---------------------------------------------------------------
   // Refresh highlights.
-  // ---------------------------------------------------------------
 
   const refreshAllHighlightsImpl = () => {
     contentRoot.innerHTML = _originalHtml;
@@ -1026,9 +967,7 @@ export function initHighlightAI(
     refreshAllHighlightsImpl();
   };
 
-  // ---------------------------------------------------------------
   // Tooltip
-  // ---------------------------------------------------------------
 
   let activeTooltip = null;
 
@@ -1050,9 +989,7 @@ export function initHighlightAI(
     }
   };
 
-  // ---------------------------------------------------------------
   // AI request
-  // ---------------------------------------------------------------
 
   const fetchAiAnswer = async (query, level, start, end) => {
     const payload = {
@@ -1094,9 +1031,7 @@ export function initHighlightAI(
     return data;
   };
 
-  // ---------------------------------------------------------------
   // AI answer section
-  // ---------------------------------------------------------------
 
   const renderAiSection = (query, start, end, container) => {
     const occ = getOrCreateOccurrence(query, start, end);
@@ -1173,9 +1108,7 @@ export function initHighlightAI(
     });
   };
 
-  // ---------------------------------------------------------------
   // Annotation section
-  // ---------------------------------------------------------------
 
   const renderAnnotationSection = (query, start, end, container) => {
     const occ = getOrCreateOccurrence(query, start, end);
@@ -1259,9 +1192,7 @@ export function initHighlightAI(
     container.appendChild(wrapper);
   };
 
-  // ---------------------------------------------------------------
   // Selection menu
-  // ---------------------------------------------------------------
 
   const createChoiceWidget = (initialRange) => {
     /*
@@ -1292,7 +1223,6 @@ export function initHighlightAI(
 
     document.body.appendChild(choice);
 
-    // Give the newly-created widget a clear active state.
     requestAnimationFrame(() => {
       choice.classList.add("highlight-choice--active");
     });
@@ -1300,16 +1230,8 @@ export function initHighlightAI(
     choiceWidget = choice;
 
     /*
-     * IMPORTANT MOBILE FIX:
-     *
-     * Do NOT clear the native selection on touchstart
-     * when the touch occurs inside contentRoot.
-     *
-     * The user may be grabbing a native selection handle.
-     *
-     * The old implementation removed the choice and called
-     * removeAllRanges(), which destroyed the multi-word
-     * selection before the browser finished adjusting it.
+     * Do not clear selection on touchstart inside the content;
+     * the user may be moving a native selection handle.
      */
     const clickOutside = (e) => {
       if (!choice.isConnected) {
@@ -1374,9 +1296,7 @@ export function initHighlightAI(
 
     choice.style.left = `${Math.max(8, left)}px`;
 
-    // -------------------------------------------------------------
     // Ask AI
-    // -------------------------------------------------------------
 
     choice.querySelector(".choice-ask-ai").addEventListener("click", (e) => {
       e.stopPropagation();
@@ -1412,9 +1332,7 @@ export function initHighlightAI(
       mini = createAIMiniWidget(finalRange);
     });
 
-    // -------------------------------------------------------------
     // Annotation
-    // -------------------------------------------------------------
 
     choice.querySelector(".choice-annotate").addEventListener("click", (e) => {
       e.stopPropagation();
@@ -1451,9 +1369,7 @@ export function initHighlightAI(
     return choice;
   };
 
-  // ---------------------------------------------------------------
   // AI mini widget
-  // ---------------------------------------------------------------
 
   const createAIMiniWidget = (originalRange) => {
     mini = document.createElement("div");
@@ -1513,17 +1429,8 @@ export function initHighlightAI(
     );
 
     /*
-     * -------------------------------------------------------------
-     * IMPORTANT MOBILE FIX:
-     *
-     * The native select is special.
-     *
-     * When the user taps it, Android/iOS may temporarily change
-     * or collapse window.getSelection() while opening the native
-     * picker.
-     *
-     * That selectionchange must NOT close this widget.
-     * -------------------------------------------------------------
+     * Native select menus can collapse text selection on mobile.
+     * Keep the Mini open while the picker is active.
      */
     const levelSelect = mini.querySelector(".ai-level");
 
@@ -1629,9 +1536,7 @@ export function initHighlightAI(
 
     document.addEventListener("touchstart", clickOutside);
 
-    // -------------------------------------------------------------
     // Get answer
-    // -------------------------------------------------------------
 
     const btn = mini.querySelector(".ai-get");
 
@@ -1720,9 +1625,7 @@ export function initHighlightAI(
     return mini;
   };
 
-  // ---------------------------------------------------------------
   // Annotation widget
-  // ---------------------------------------------------------------
 
   const createAnnotationWidget = (originalRange) => {
     const ann = document.createElement("div");
@@ -1820,9 +1723,7 @@ export function initHighlightAI(
     return ann;
   };
 
-  // ---------------------------------------------------------------
   // Markdown
-  // ---------------------------------------------------------------
 
   const escapeHtml = (v) =>
     v
@@ -2080,9 +1981,7 @@ export function initHighlightAI(
     return html;
   };
 
-  // ---------------------------------------------------------------
   // Render the answer.
-  // ---------------------------------------------------------------
 
   const renderAnswer = (miniWidget, html, cached) => {
     const box = miniWidget.querySelector(".ai-answer");
@@ -2098,9 +1997,7 @@ export function initHighlightAI(
     box.classList.remove("hidden");
   };
 
-  // ---------------------------------------------------------------
   // Open the selection menu.
-  // ---------------------------------------------------------------
 
   const onSelectionDone = (e) => {
     // Ignore editor events; focusing its textarea can collapse the native selection.
@@ -2210,9 +2107,7 @@ export function initHighlightAI(
     choiceWidget = createChoiceWidget(range);
   };
 
-  // ---------------------------------------------------------------
   // Load existing data.
-  // ---------------------------------------------------------------
 
   const preloadExistingData = async () => {
     if (!hasValidId) return;
@@ -2224,9 +2119,7 @@ export function initHighlightAI(
         fetch(`${apiBase}${moduleId}/annotation/`),
       ]);
 
-      // ---------------------------------------------------------
       // Cached answers
-      // ---------------------------------------------------------
 
       if (answersResp.ok) {
         const data = await answersResp.json();
@@ -2264,9 +2157,7 @@ export function initHighlightAI(
         });
       }
 
-      // ---------------------------------------------------------
       // Saved annotations
-      // ---------------------------------------------------------
 
       if (annResp.ok) {
         const annData = await annResp.json();
@@ -2294,9 +2185,7 @@ export function initHighlightAI(
     }
   };
 
-  // ---------------------------------------------------------------
   // Initialize the widgets.
-  // ---------------------------------------------------------------
 
   preloadExistingData();
 
@@ -2310,9 +2199,7 @@ export function initHighlightAI(
     });
   }
 
-  // ---------------------------------------------------------------
   // Mouse and touch handling
-  // ---------------------------------------------------------------
 
   /*
    * Desktop:
@@ -2408,9 +2295,7 @@ export function initHighlightAI(
     });
   });
 
-  // ---------------------------------------------------------------
   // Detect mobile selection-handle interaction.
-  // ---------------------------------------------------------------
 
   document.addEventListener(
     "touchstart",
@@ -2472,20 +2357,14 @@ export function initHighlightAI(
     true,
   );
 
-  // ---------------------------------------------------------------
   // Handle native selection changes.
-  // ---------------------------------------------------------------
 
   document.addEventListener("selectionchange", () => {
     const sel = window.getSelection();
 
     /*
-     * IMPORTANT MOBILE FIX:
-     *
-     * When a native <select> opens on mobile, the browser may
-     * temporarily collapse or replace the text selection.
-     *
-     * The AI Mini must survive that temporary selectionchange.
+     * Mobile browsers may collapse the selection while opening a
+     * native select. Keep the Mini open until that interaction settles.
      */
     if (miniControlInteraction) {
       return;
@@ -2560,9 +2439,7 @@ export function initHighlightAI(
     latestSelectionRange = null;
   });
 
-  // ---------------------------------------------------------------
   // Close the widgets when clicking outside.
-  // ---------------------------------------------------------------
 
   document.addEventListener("mousedown", (e) => {
     /*
@@ -2594,9 +2471,7 @@ export function initHighlightAI(
     }
   });
 
-  // ---------------------------------------------------------------
   // Return a cleanup function.
-  // ---------------------------------------------------------------
 
   return {
     destroy() {

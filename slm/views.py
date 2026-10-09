@@ -81,15 +81,9 @@ def teacher_required_for_mutation(view_func):
     @wraps(view_func)
     @login_required(login_url='account:login')      # always require a logged‑in user
     def _wrapped(request, *args, **kwargs):
-        # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
-        # 1️⃣  GET → public read‑only
-        # -----------------------------------------------------------------
         if request.method == "GET":
             return view_func(request, *args, **kwargs)
 
-        # -----------------------------------------------------------------
-        # 2️⃣  Anything else → must be a teacher
-        # -----------------------------------------------------------------
         if getattr(request.user, "is_teacher_member", False):
             return view_func(request, *args, **kwargs)
 
@@ -131,7 +125,6 @@ def get_highlight_context(target, start_offset, end_offset, window=900):
     }
     
 
-# Create your views here.
 @login_required(login_url='account:login')
 def slmlists(request):
     tabs = [
@@ -155,9 +148,7 @@ def slmlists(request):
     return render(request, 'slm/slms.html', {"tabs": tabs})
 
 
-# -----------------------------------------------------------------
-# Helper – turn a Subject into the dict the front‑end expects
-# -----------------------------------------------------------------
+# Serialize a Subject for the front end.
 def subject_to_dict(subject, request_user=None):
     """
     Returns a flat dict that can be JSON‑encoded.
@@ -195,12 +186,9 @@ def validate_year_choice(value):
     return value
 
 
-# -------------------------------------------------
-# 1️⃣  GET – paginated list of public subjects
-# -------------------------------------------------
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-PAGE_SIZE = 9                     # 3 cards per row × 2 rows = 6 cards (matches your static layout)
+PAGE_SIZE = 9                     # Nine cards per page.
 ALLOWED_MODULE_FILE_EXTENSIONS = {".pdf", ".doc", ".docx", ".ppt", ".pptx"}
 MAX_MODULE_FILE_SIZE = 10 * 1024 * 1024
 
@@ -235,20 +223,11 @@ def api_subject_list(request):
         "next_page_number": 2
     }
     """
-    # -----------------------------------------------------------------
-    # 1️⃣ Base queryset – public, non-archived subjects
-    # -----------------------------------------------------------------
     qs = Subject.objects.select_related("author").filter(is_archived=False)
 
-    # -----------------------------------------------------------------
-    # 2️⃣ Teachers only see subjects they uploaded/created
-    # -----------------------------------------------------------------
     if getattr(request.user, "is_teacher_member", False):
         qs = qs.filter(author=request.user)
 
-    # -----------------------------------------------------------------
-    # 3️⃣ Students only see subjects matching their year level
-    # -----------------------------------------------------------------
     elif getattr(request.user, "is_student_member", False):
 
         # Students must have a year level before SLM subjects become visible.
@@ -262,9 +241,6 @@ def api_subject_list(request):
             numeric_year = match.group()
             qs = qs.filter(year=numeric_year)
 
-    # -----------------------------------------------------------------
-    # 3️⃣  Pagination (unchanged)
-    # -----------------------------------------------------------------
     paginator = Paginator(qs, PAGE_SIZE)
     page_number = request.GET.get("page", 1)
 
@@ -297,9 +273,6 @@ def api_subject_list(request):
     return JsonResponse(payload, safe=False)
 
 
-# -----------------------------------------------------------------
-# 2️⃣  POST – create a new subject (logged‑in users only)
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_POST
@@ -311,7 +284,7 @@ def api_subject_create(request):
 
     code = payload.get("subject_code", "").strip()
     name = payload.get("subject_name", "").strip()
-    raw_year = payload.get("year")                # <-- NEW
+    raw_year = payload.get("year")
 
     if not code or not name:
         return JsonResponse({"error": "Both fields are required."}, status=400)
@@ -340,9 +313,6 @@ def api_subject_create(request):
         status=201,
     )
 
-# -----------------------------------------------------------------
-# 3️⃣  PUT – update a subject (owner only)
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["PUT", "PATCH"])
@@ -360,13 +330,11 @@ def api_subject_update(request, pk):
     except json.JSONDecodeError:
         return HttpResponseBadRequest("Invalid JSON")
 
-    # ---- normal fields -------------------------------------------------
     if "subject_code" in payload:
         subject.subject_code = payload["subject_code"].strip()
     if "subject_name" in payload:
         subject.subject_name = payload["subject_name"].strip()
 
-    # ---- year -----------------------------------------------------------
     if "year" in payload:
         try:
             subject.year = validate_year_choice(payload["year"])
@@ -376,9 +344,6 @@ def api_subject_update(request, pk):
     subject.save()
     return JsonResponse(subject_to_dict(subject, request_user=request.user))
 
-# -----------------------------------------------------------------
-# 4️⃣  DELETE – remove a subject (owner only)
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["DELETE"])
@@ -479,16 +444,14 @@ def module_to_dict(module, request_user=None):
         "module_number": module.module_number,
         "module_name": module.module_name,
         "file_url": module.file.url if module.file else "",
-        "extracted_html": module.extracted_html or "",   # <-- NEW
+        "extracted_html": module.extracted_html or "",
         "is_owner": request_user is not None and module.subject.author_id == request_user.id,
         "created_at": getattr(module, "created_at", "").isoformat() if hasattr(module, "created_at") else "",
         "updated_at": getattr(module, "updated_at", "").isoformat() if hasattr(module, "updated_at") else "",
     }
 
 
-# -----------------------------------------------------------------
-# Helper – ensure an uploaded file is one of the three allowed types
-# -----------------------------------------------------------------
+# Validate uploaded module files.
 def validate_module_file(file_obj):
     """
     Raises ``ValidationError`` if the upload has an unsupported extension or
@@ -619,7 +582,6 @@ def api_module_create(request, subject_id):
     except ValidationError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # ---- create the Model row ---------------------------------------
     try:
         module = Module.objects.create(
             subject=subject,
@@ -630,7 +592,6 @@ def api_module_create(request, subject_id):
     except Exception as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # ---- 1️⃣ Extract content -----------------------------------------
     try:
         html = extract_content(module.file)
         module.extracted_html = html
@@ -650,17 +611,10 @@ def api_module_create(request, subject_id):
         tag=f"slm-module-{module.pk}",
     )
 
-    # ---- 2️⃣ Return fresh payload ------------------------------------
     return JsonResponse(
         module_to_dict(module, request_user=request.user),
         status=201,
     )
-# -------------------------------------------------------
-
-
-# -----------------------------------------------------------------
-# 6️⃣  UPDATE – PUT a module (JSON only – no file change)
-# -----------------------------------------------------------------
 @login_required(login_url='account:login')
 @teacher_required_for_mutation
 @require_http_methods(["PUT", "PATCH"])
@@ -680,9 +634,6 @@ def api_module_update(request, pk):
     except json.JSONDecodeError:
         return HttpResponseBadRequest("Invalid JSON")
 
-    # -------------------------------------------------------------
-    # 1️⃣  Validate & apply *module_number* (must stay unique per subject)
-    # -------------------------------------------------------------
     if "module_number" in payload:
         try:
             new_num = int(payload["module_number"])
@@ -710,9 +661,6 @@ def api_module_update(request, pk):
 
         module.module_number = new_num
 
-    # -------------------------------------------------------------
-    # 2️⃣  Validate *module_name*
-    # -------------------------------------------------------------
     if "module_name" in payload:
         name = payload["module_name"].strip()
         if not name:
@@ -765,21 +713,11 @@ def api_module_delete(request, pk):
 @handle_upload_errors
 def api_module_file_replace(request, pk):
     """
-    POST /slm/api/modules/<pk>/file/   (multipart)
+    POST /slm/api/modules/<pk>/file/ (multipart).
 
-    1️⃣  Validate ownership + file type (same as in `api_module_create`).
-    2️⃣  Replace the file on the model instance.
-    3️⃣  **Run the content extractor** on the newly‑uploaded file.
-    4️⃣  Store the resulting HTML in ``module.extracted_html``.
-    5️⃣  Return a fresh JSON payload (including the new ``extracted_html``).
-
-    The front‑end already calls this endpoint from the edit‑modal, so after
-    a successful request it will simply reload the module list and display the
-    updated preview.
+    Replace an owned module's file, attempt to refresh its extracted preview,
+    and return the module JSON with its current preview.
     """
-    # -------------------------------------------------------------
-    # 1️⃣  Grab the module & check permission
-    # -------------------------------------------------------------
     try:
         module = Module.objects.select_related("subject").get(pk=pk)
     except Module.DoesNotExist:
@@ -788,9 +726,6 @@ def api_module_file_replace(request, pk):
     if module.subject.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 
-    # -------------------------------------------------------------
-    # 2️⃣  Validate the uploaded file
-    # -------------------------------------------------------------
     file_obj = request.FILES.get("file")
     if not file_obj:
         return JsonResponse({"error": "File missing"}, status=400)
@@ -800,14 +735,8 @@ def api_module_file_replace(request, pk):
     except ValidationError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # -------------------------------------------------------------
-    # 3️⃣  Swap the file on the model instance
-    # -------------------------------------------------------------
     replace_file(module, "file", file_obj)
 
-    # -------------------------------------------------------------
-    # 4️⃣  Run the extractor and store the HTML preview
-    # -------------------------------------------------------------
     try:
         html = extract_content(module.file)
         module.extracted_html = html
@@ -823,9 +752,6 @@ def api_module_file_replace(request, pk):
         # We *don’t* abort the request – the file was successfully stored.
         # The client will simply see the old (or empty) preview.
 
-    # -------------------------------------------------------------
-    # 5️⃣  Return the fresh payload (includes the new HTML)
-    # -------------------------------------------------------------
     return JsonResponse(
         module_to_dict(module, request_user=request.user)
     )
@@ -879,9 +805,7 @@ def module_detail(request, subject_id, module_id):
     return render(request, "slm/module_detail.html", context)
 
 
-# -----------------------------------------------------------------
-# PERSONAL MATERIAL – helpers
-# -----------------------------------------------------------------
+# Personal material helpers.
 def personal_material_to_dict(pm, request_user=None):
     """
     Serialise a PersonalMaterial for the JS widget.
@@ -901,9 +825,6 @@ def personal_material_to_dict(pm, request_user=None):
     }
 
 
-# -------------------------------------------------------------
-# 1️⃣  LIST – GET (paginated)
-# -------------------------------------------------------------
 @login_required(login_url='account:login')
 @require_GET
 @ensure_csrf_cookie
@@ -918,9 +839,6 @@ def api_personal_material_list(request):
 
     * When the user is **anonymous**, we only return PUBLIC materials.
     """
-    # -----------------------------------------------------------------
-    # 1️⃣  Determine the filter
-    # -----------------------------------------------------------------
     visibility = request.GET.get("visibility", "own")   # own | public | all
     qs = PersonalMaterial.objects.all().select_related("author")
     if request.user.is_authenticated:
@@ -946,9 +864,6 @@ def api_personal_material_list(request):
         elif file_type == "ppt":
             qs = qs.filter(models.Q(file__iendswith=".ppt") | models.Q(file__iendswith=".pptx"))
 
-    # -----------------------------------------------------------------
-    # 2️⃣  Pagination (reuse PAGE_SIZE from the top of the file)
-    # -----------------------------------------------------------------
     paginator = Paginator(qs.order_by("-created_at"), PAGE_SIZE)
     page_number = request.GET.get("page", 1)
     try:
@@ -975,9 +890,6 @@ def api_personal_material_list(request):
     return JsonResponse(payload, safe=False)
 
 
-# -------------------------------------------------------------
-# 2️⃣  CREATE – POST (multipart/form‑data)
-# -------------------------------------------------------------
 @login_required(login_url='account:login')
 @require_http_methods(["POST"])
 @handle_upload_errors
@@ -993,7 +905,6 @@ def api_personal_material_create(request):
     visibility = request.POST.get("visibility", "").strip()
     file_obj = request.FILES.get("file")
 
-    # ---- basic validation -------------------------------------------------
     if not title:
         return JsonResponse({"error": "Title is required"}, status=400)
 
@@ -1008,7 +919,6 @@ def api_personal_material_create(request):
     except ValidationError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # ---- create the model -------------------------------------------------
     pm = PersonalMaterial.objects.create(
         title=title,
         author=request.user,
@@ -1016,7 +926,6 @@ def api_personal_material_create(request):
         file=file_obj,
     )
 
-    # ---- run content extractor (optional) --------------------------------
     try:
         html = extract_content(pm.file)
         pm.extracted_html = html
@@ -1030,9 +939,6 @@ def api_personal_material_create(request):
     )
 
 
-# -------------------------------------------------------------
-# 3️⃣  UPDATE – PUT / PATCH (JSON only – metadata)
-# -------------------------------------------------------------
 @login_required(login_url='account:login')
 @require_http_methods(["PUT", "PATCH"])
 def api_personal_material_update(request, pk):
@@ -1063,9 +969,6 @@ def api_personal_material_update(request, pk):
     return JsonResponse(personal_material_to_dict(pm, request_user=request.user))
 
 
-# -------------------------------------------------------------
-# 4️⃣  DELETE – DELETE
-# -------------------------------------------------------------
 @login_required(login_url='account:login')
 @require_http_methods(["DELETE"])
 def api_personal_material_delete(request, pk):
@@ -1086,9 +989,6 @@ def api_personal_material_delete(request, pk):
     return JsonResponse({}, status=204)
 
 
-# -------------------------------------------------------------
-# 5️⃣  FILE REPLACE – POST (multipart)
-# -------------------------------------------------------------
 @login_required(login_url='account:login')
 @require_http_methods(["POST"])
 @handle_upload_errors
@@ -1112,10 +1012,7 @@ def api_personal_material_file_replace(request, pk):
     except ValidationError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    # -----------------------------------------------------------------
-    # Replace the file and re‑extract
-    # -----------------------------------------------------------------
-    replace_file(pm, "file", file_obj)                         # stores the file
+    replace_file(pm, "file", file_obj)
 
     try:
         html = extract_content(pm.file)
@@ -1166,9 +1063,7 @@ def api_highlight(request, pk, target_type):
     The same JSON contract is kept but now also transports the
     start / end offsets of the highlighted fragment.
     """
-    # -----------------------------------------------------------------
     # Resolve the target object
-    # -----------------------------------------------------------------
     if target_type == "module":
         target = get_object_or_404(Module, pk=pk)
         fk_name = "module"
@@ -1181,9 +1076,7 @@ def api_highlight(request, pk, target_type):
             return JsonResponse({"error": "Permission denied"}, status=403)
         fk_name = "personal_material"
 
-        # -----------------------------------------------------------------
     # DELETE – remove one exact highlight occurrence
-    # -----------------------------------------------------------------
     if request.method == "DELETE":
         try:
             payload = json.loads(request.body)
@@ -1227,9 +1120,7 @@ def api_highlight(request, pk, target_type):
             }
         )
 
-    # -----------------------------------------------------------------
     # GET – list cached answers + offsets for the *current* user only
-    # -----------------------------------------------------------------
     if request.method == "GET":
         filter_kwargs = {fk_name: target, "owner": request.user}
         qs = (
@@ -1257,9 +1148,7 @@ def api_highlight(request, pk, target_type):
         ]
         return JsonResponse({"answers": answers}, safe=False)
 
-    # -----------------------------------------------------------------
     # POST – ask the AI for ONE level, store it (or return cached)
-    # -----------------------------------------------------------------
     try:
         payload = json.loads(request.body)
         raw_query = payload.get("query", "").strip()
@@ -1285,9 +1174,7 @@ def api_highlight(request, pk, target_type):
     # canonical (lower‑case) key that we store in the DB
     query = raw_query.lower()
 
-    # -----------------------------------------------------------------
     # Retrieve (or create) the row for *this* exact occurrence.
-    # -----------------------------------------------------------------
     get_kwargs = {
         "owner": request.user,
         "query": query,
@@ -1300,9 +1187,7 @@ def api_highlight(request, pk, target_type):
         **get_kwargs,
     )
 
-    # -----------------------------------------------------------------
     # If the specific occurrence already has an answer for the level → return it.
-    # -----------------------------------------------------------------
     cached_answer = getattr(stored, f"answer_{level}")
     if cached_answer:
         return JsonResponse(
@@ -1316,9 +1201,7 @@ def api_highlight(request, pk, target_type):
             status=200,
         )
 
-    # -----------------------------------------------------------------
     # Otherwise ask the AI (once) and store the result.
-    # -----------------------------------------------------------------
     answer_body = ask_ai_one_level(
         raw_query,
         level,
@@ -1349,9 +1232,7 @@ def api_annotation(request, pk, target_type):
     POST  →  {id, query, note, start_offset, end_offset, created_at}
             expects JSON: {query: "...", note: "...", start_offset: 123, end_offset: 135}
     """
-    # -----------------------------------------------------------------
     # Resolve target object
-    # -----------------------------------------------------------------
     if target_type == "module":
         target = get_object_or_404(Module, pk=pk)
         fk_name = "module"
@@ -1364,9 +1245,7 @@ def api_annotation(request, pk, target_type):
             return JsonResponse({"error": "Permission denied"}, status=403)
         fk_name = "personal_material"
 
-    # -----------------------------------------------------------------
     # GET – list the current user’s annotations (with offsets) for this object
-    # -----------------------------------------------------------------
     if request.method == "GET":
         ann_qs = HighlightAnnotation.objects.filter(**{fk_name: target, "owner": request.user})
         data = [
@@ -1382,9 +1261,7 @@ def api_annotation(request, pk, target_type):
         ]
         return JsonResponse({"annotations": data}, safe=False)
 
-    # -----------------------------------------------------------------
     # POST – create OR update an annotation (upsert) for a *specific* occurrence.
-    # -----------------------------------------------------------------
     try:
         payload = json.loads(request.body)
         raw_query = payload.get("query", "").strip()
@@ -1483,7 +1360,6 @@ def module_edit_modal(request, pk):
         return JsonResponse({"error": "Permission denied"}, status=403)
 
     if request.method == "POST":
-        # ----- fields -----
         number = request.POST.get("module_number")
         name = request.POST.get("module_name")
         file_obj = request.FILES.get("file")
@@ -1592,9 +1468,7 @@ def personal_material_edit_modal(request, pk):
     html = render_to_string("slm/modals/personal_material_edit.html", {"pm": pm})
     return JsonResponse({"html": html})
 
-# -----------------------------------------------------------------
-#  ARCHIVE – GET returns the modal HTML, POST toggles the flag
-# -----------------------------------------------------------------
+# Archive endpoints
 @login_required(login_url='account:login')
 @teacher_required_for_mutation                     # teachers only for subjects / modules
 @require_http_methods(["GET", "POST"])
@@ -1606,7 +1480,6 @@ def api_subject_archive(request, pk):
     """
     subject = get_object_or_404(Subject, pk=pk)
 
-    # ---- 1️⃣  GET → modal HTML -------------------------------------------------
     if request.method == "GET":
         # Only the owner may see the modal
         if subject.author_id != request.user.id:
@@ -1615,7 +1488,6 @@ def api_subject_archive(request, pk):
         html = render_to_string("slm/modals/subject_archive.html", {"subject": subject})
         return JsonResponse({"html": html})
 
-    # ---- 2️⃣  POST → toggle ----------------------------------------------------
     if subject.author_id != request.user.id:
         return JsonResponse({"error": "Permission denied"}, status=403)
 

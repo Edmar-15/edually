@@ -8,9 +8,8 @@ Features
 * DOCX → HTML that keeps headings, tables, lists and embeds images as base‑64 data‑URIs.
 * PPTX → HTML preserving slide titles, bullet lists (nested) and slide images.
 * Safety – every output string is sanitised with ``bleach`` before it is stored.
-* Central configuration (``EXTRACTOR_SETTINGS``) makes thresholds & options easy to tweak.
-* No API/model changes – the public function ``extract_content(file_obj)`` keeps the same
-  signature and still raises ``ValueError`` on failure.
+* Central configuration (``EXTRACTOR_SETTINGS``) controls extraction thresholds and options.
+* ``extract_content(file_obj)`` raises ``ValueError`` on failure.
 """
 
 import io
@@ -24,9 +23,6 @@ from typing import List
 
 from django.core.files.base import ContentFile
 
-# -------------------------------------------------------------------------
-# Third‑party libraries (install with pip if you don’t have them yet)
-# -------------------------------------------------------------------------
 import mammoth                     # docx → html
 import fitz                        # PyMuPDF (pdf)
 import pdfminer.high_level as pdfminer  # pdfminer.six
@@ -54,23 +50,14 @@ try:
 except Exception:                 # pragma: no cover
     _BS4_AVAILABLE = False
 
-# -------------------------------------------------------------------------
 # Logging
-# -------------------------------------------------------------------------
 logger = logging.getLogger(__name__)
 
-# -------------------------------------------------------------------------
-# Allowed file extensions (kept identical to the original project)
-# -------------------------------------------------------------------------
+# Allowed file extensions.
 ALLOWED_EXT = {".pdf", ".doc", ".docx", ".ppt", ".pptx"}
 
-# -------------------------------------------------------------------------
-# Central configuration – tune here without touching the extraction code
-# -------------------------------------------------------------------------
+# Extraction settings.
 EXTRACTOR_SETTINGS = {
-    # -----------------------------------------------------------------
-    # PDF‑related options
-    # -----------------------------------------------------------------
     "pdf": {
         "ocr_language": "eng",          # Tesseract language pack
         "min_text_ratio": 0.15,        # <15 % selectable text → run OCR
@@ -78,26 +65,18 @@ EXTRACTOR_SETTINGS = {
         "max_pages_for_ocr": 30,        # safety guard – don’t OCR massive PDFs
     },
 
-    # -----------------------------------------------------------------
-    # DOCX‑related options
-    # -----------------------------------------------------------------
     "docx": {
         "embed_images": True,           # embed any non‑inline images as base64 data‑uri
     },
 
-    # -----------------------------------------------------------------
-    # PPTX‑related options
-    # -----------------------------------------------------------------
     "pptx": {
         "embed_images": True,
         "max_image_dim": 1024,          # down‑scale slide images larger than this (px)
     },
 
-    # -----------------------------------------------------------------
     # Bleach sanitiser options – we start from the library defaults and
     # extend the allowed tags/attributes.  **Note:** recent Bleach versions
     # no longer accept a ``styles=`` arg, so we omit it.
-    # -----------------------------------------------------------------
     "bleach": {
         "tags": list(bleach.sanitizer.ALLOWED_TAGS) + [
             "h1", "h2", "h3", "h4", "h5", "h6",
@@ -115,9 +94,7 @@ EXTRACTOR_SETTINGS = {
     },
 }
 
-# -------------------------------------------------------------------------
-# Helper – HTML sanitiser (single point of truth)
-# -------------------------------------------------------------------------
+# HTML sanitisation.
 def _sanitize_html(raw_html: str) -> str:
     cfg = EXTRACTOR_SETTINGS["bleach"]
     return bleach.clean(
@@ -127,9 +104,6 @@ def _sanitize_html(raw_html: str) -> str:
         strip=cfg["strip"],
     )
 
-# -------------------------------------------------------------------------
-# Helper – read raw bytes from any Django FileField‑like object
-# -------------------------------------------------------------------------
 def _read_file_bytes(file_obj) -> bytes:
     """Guarantees we have the raw bytes of the uploaded file."""
     if hasattr(file_obj, "read"):
@@ -138,9 +112,6 @@ def _read_file_bytes(file_obj) -> bytes:
     with open(file_obj.path, "rb") as f:
         return f.read()
 
-# -------------------------------------------------------------------------
-# Helper – convert plain‑text to simple semantic HTML
-# -------------------------------------------------------------------------
 def _plain_text_to_html(text: str) -> str:
     """
     Convert raw text (with line‑breaks) into light‑weight HTML.
@@ -219,22 +190,16 @@ def _plain_text_to_html(text: str) -> str:
 
     return "\n".join(html_chunks)
 
-# -------------------------------------------------------------------------
-# PDF extraction -----------------------------------------------------------
-# -------------------------------------------------------------------------
+# PDF extraction.
 def _extract_pdf(raw: bytes) -> str:
     """
-    1️⃣ Try to get selectable text via pdfminer (keeps columns/tables).
-    2️⃣ If the PDF looks mostly scanned, render each page with PyMuPDF,
-       run OCR via pytesseract, and wrap the result in semantic HTML.
+    Prefer selectable text from pdfminer; use page-wise OCR for scanned PDFs.
     Returns **sanitised** HTML where every page is wrapped in
     ``<div class="pdf-page" data-page="N">…</div>``.
     """
     settings = EXTRACTOR_SETTINGS["pdf"]
 
-    # -------------------------------------------------
-    # 1️⃣ pdfminer → plain text (fast, layout‑aware)
-    # -------------------------------------------------
+    # Extract selectable text while preserving layout.
     try:
         txt = pdfminer.extract_text(io.BytesIO(raw))
     except Exception as exc:  # pdfminer can be noisy on bad PDFs
@@ -245,9 +210,7 @@ def _extract_pdf(raw: bytes) -> str:
     text_ratio = (len(txt.strip()) / len(txt)) if txt else 0.0
     need_ocr = (text_ratio < settings["min_text_ratio"]) or not txt
 
-    # -------------------------------------------------
-    # 2️⃣ If we have *good* selectable text → use it page‑by‑page
-    # -------------------------------------------------
+    # Use page-wise text extraction when selectable text is sufficient.
     if not need_ocr:
         doc = fitz.open(stream=raw, filetype="pdf")
         html_pages: List[str] = []
@@ -261,9 +224,7 @@ def _extract_pdf(raw: bytes) -> str:
             )
         return _sanitize_html("\n".join(html_pages))
 
-    # -------------------------------------------------
-    # 3️⃣ OCR fallback (only if pytesseract is available)
-    # -------------------------------------------------
+    # Use OCR when selectable text is insufficient and OCR is available.
     if not _OCR_AVAILABLE:
         logger.info("OCR not available – returning empty preview for PDF.")
         return _sanitize_html("<div></div>")
@@ -299,9 +260,7 @@ def _extract_pdf(raw: bytes) -> str:
     final_html = "\n".join(html_pages)
     return _sanitize_html(final_html)
 
-# -------------------------------------------------------------------------
-# DOCX extraction ---------------------------------------------------------
-# -------------------------------------------------------------------------
+# DOCX extraction.
 def _extract_docx(raw: bytes) -> str:
     """
     Convert DOCX (or .doc) to HTML with Mammoth.
@@ -326,7 +285,6 @@ def _extract_docx(raw: bytes) -> str:
             wrapper["class"] = "table-scroll"
             table.wrap(wrapper)
 
-        # ----- embed images -------------------------------------------------
         for img in soup.find_all("img"):
             src = img.get("src", "")
             if src.startswith("data:"):
@@ -347,15 +305,11 @@ def _extract_docx(raw: bytes) -> str:
                 logger.warning("Failed to embed DOCX image %s: %s", src, exc)
                 img["src"] = ""
 
-        # ----- convert <pre> blocks -----------------------------------------
         for pre in soup.find_all("pre"):
             converted = _plain_text_to_html(pre.get_text())
             pre.replace_with(BeautifulSoup(converted, "html.parser"))
 
-        # At this point ``soup`` contains the fully‑processed HTML.
-        # --------------------------------------------------------------
-        # Split into pages on Word “page‑break” paragraphs.
-        # --------------------------------------------------------------
+        # Split pages at Word page-break paragraphs.
         parent = soup.body if soup.body else soup
         pages: List[str] = []
         cur_parts: List[str] = []
@@ -365,17 +319,14 @@ def _extract_docx(raw: bytes) -> str:
             if getattr(elem, "name", None) == "p":
                 style = elem.get("style", "")
                 if re.search(r'page-break-(?:before|after)', style, re.I):
-                    # Finish the current page and start a new one.
                     pages.append("".join(str(p) for p in cur_parts))
                     cur_parts = []
                     continue
-            # Anything else (including normal <p> tags) belongs to the current page.
+            # Keep other elements in the current page.
             cur_parts.append(str(elem))
 
-        # Append the final page (if any content left).
         pages.append("".join(str(p) for p in cur_parts))
 
-        # Wrap each page in a <div>.
         wrapped_pages = [
             f'<div class="docx-page" data-page="{i + 1}">{page}</div>'
             for i, page in enumerate(pages) if page.strip()
@@ -383,9 +334,7 @@ def _extract_docx(raw: bytes) -> str:
         final_html = "\n".join(wrapped_pages)
 
     elif EXTRACTOR_SETTINGS["docx"]["embed_images"] and not _BS4_AVAILABLE:
-        # -----------------------------------------------------------------
-        # No BeautifulSoup – fall back to regex‑only handling.
-        # -----------------------------------------------------------------
+        # Fall back to regex-based handling without BeautifulSoup.
         # Convert <pre> blocks.
         def _pre_repl(m):
             inner = html.unescape(m.group(1))
@@ -405,11 +354,7 @@ def _extract_docx(raw: bytes) -> str:
         final_html = "\n".join(wrapped_pages)
 
     else:
-        # -----------------------------------------------------------------
-        # Neither image embedding nor BeautifulSoup is available.
-        # We still split on page‑breaks (regex‑only) so callers get a
-        # consistent structure.
-        # -----------------------------------------------------------------
+        # Use regex-based page splitting when BeautifulSoup processing is unavailable.
         split_pat = re.compile(
             r'(?i)<p[^>]*style=["\'][^"\']*page-break-(?:before|after)[^"\']*["\'][^>]*>\s*</p>'
         )
@@ -422,9 +367,7 @@ def _extract_docx(raw: bytes) -> str:
 
     return _sanitize_html(final_html)
 
-# -------------------------------------------------------------------------
-# PPTX extraction ---------------------------------------------------------
-# -------------------------------------------------------------------------
+# PPTX extraction.
 def _extract_pptx(raw: bytes) -> str:
     """
     Convert PPTX → HTML.
@@ -537,9 +480,7 @@ def _extract_pptx(raw: bytes) -> str:
 
     return _sanitize_html("\n".join(sections))
 
-# -------------------------------------------------------------------------
-# Public façade – unchanged signature (returns safe HTML or raises ValueError)
-# -------------------------------------------------------------------------
+# Public API.
 def extract_content(file_obj) -> str:
     """
     Public API used throughout the project.
@@ -563,5 +504,4 @@ def extract_content(file_obj) -> str:
         logger.exception("Failed to extract %s", file_obj.name)
         raise ValueError(f"Extraction error: {exc}")
 
-    # This line should never be reached because the extension guard is earlier
     raise ValueError(f"Unsupported extension: {ext}")
