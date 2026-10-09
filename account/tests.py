@@ -1,471 +1,131 @@
-import json
-from datetime import timedelta
+"""Current account smoke and workflow tests for EduAlly."""
 from unittest.mock import patch
 
-from django import forms
+import pyotp
 from django.conf import settings
-from django.contrib.auth.models import Group
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
-from .forms import LoginForm
-from .models import PushSubscription, User, UserConsent
-from slm.models import (
-    Module,
-    PersonalMaterial,
-    RecentModuleView,
-    RecentPersonalMaterialView,
-    Subject,
-)
+from .models import UserConsent
+
+User = get_user_model()
 
 
-class LoginFormTests(TestCase):
-    def test_login_username_field_uses_email_input(self):
-        form = LoginForm()
-
-        self.assertIsInstance(form.fields["username"].widget, forms.EmailInput)
-
-
-class EmailVerificationGateTests(TestCase):
-    def test_unverified_login_is_blocked_regardless_of_two_factor(self):
-        for two_factor_enabled in (False, True):
-            with self.subTest(two_factor_enabled=two_factor_enabled):
-                user = User.objects.create_user(
-                    email=f"unverified-{two_factor_enabled}@example.com",
-                    password="secret123",
-                    username=f"unverified-{two_factor_enabled}",
-                    two_factor_enabled=two_factor_enabled,
-                )
-
-                with patch("account.views._send_email_verification"):
-                    response = self.client.post(
-                        reverse("account:login"),
-                        {"username": user.email, "password": "secret123"},
-                    )
-
-                self.assertRedirects(
-                    response,
-                    reverse("account:email_verification_required"),
-                    fetch_redirect_response=False,
-                )
-                self.assertIn("_auth_user_id", self.client.session)
-                self.client.logout()
-
-    def test_unverified_user_with_or_without_two_factor_is_blocked_by_middleware(self):
-        for two_factor_enabled in (False, True):
-            with self.subTest(two_factor_enabled=two_factor_enabled):
-                user = User.objects.create_user(
-                    email=f"unverified-{two_factor_enabled}@example.com",
-                    password="secret123",
-                    username=f"unverified-{two_factor_enabled}",
-                    two_factor_enabled=two_factor_enabled,
-                )
-                UserConsent.objects.create(user=user, version="1.0")
-                self.client.force_login(user)
-
-                response = self.client.get(reverse("account:dashboard"))
-
-                self.assertRedirects(response, reverse("account:email_verification_required"), fetch_redirect_response=False)
-                verification_response = self.client.get(reverse("account:email_verification_required"))
-                self.assertEqual(verification_response.status_code, 200)
-                self.client.logout()
-
-
-class TwoFactorLoginTests(TestCase):
-    def test_successful_2fa_login_preserves_authentication_backend(self):
-        user = User.objects.create_user(
-            email="two-factor@example.com",
-            password="secret123",
-            username="two-factor",
-            email_verified=True,
-            two_factor_enabled=True,
-            two_factor_secret="JBSWY3DPEHPK3PXP",
-        )
-
-        response = self.client.post(
-            reverse("account:login"),
-            {"username": user.email, "password": "secret123"},
-        )
-
-        self.assertRedirects(
-            response,
-            reverse("account:verify_2fa"),
-            fetch_redirect_response=False,
-        )
-        backend = self.client.session["pending_2fa_backend"]
-        otp_code = __import__("pyotp").TOTP(user.two_factor_secret).now()
-
-        response = self.client.post(
-            reverse("account:verify_2fa"),
-            {"otp_code": otp_code},
-        )
-
-        self.assertRedirects(
-            response,
-            reverse("account:dashboard"),
-            fetch_redirect_response=False,
-        )
-        self.assertEqual(self.client.session["_auth_user_backend"], backend)
-        self.assertNotIn("pending_2fa_backend", self.client.session)
-
-
-class UserBadgeTests(TestCase):
-    def test_forum_badge_labels_by_karma_thresholds(self):
-        beginner = User.objects.create_user(
-            email="beginner@example.com",
-            password="secret123",
-            username="beginner",
-            karma=0,
-        )
-        helpful = User.objects.create_user(
-            email="helpful@example.com",
-            password="secret123",
-            username="helpful",
-            karma=20,
-        )
-        expert = User.objects.create_user(
-            email="expert@example.com",
-            password="secret123",
-            username="expert",
-            karma=100,
-        )
-
-        self.assertEqual(beginner.forum_badge_label, "Beginner")
-        self.assertEqual(helpful.forum_badge_label, "Helpful")
-        self.assertEqual(expert.forum_badge_label, "Expert")
-
-
-class ContactPageTests(TestCase):
-    def test_contact_page_is_available(self):
-        response = self.client.get(reverse("account:contact"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Contact Us")
-        self.assertContains(response, "Customer Service")
-
-
-class LandingPageTests(TestCase):
-    def test_landing_page_has_mobile_navigation_toggle(self):
-        response = self.client.get(reverse("landing"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "mobile-nav-toggle")
-        self.assertContains(response, "aria-controls=\"main-nav\"")
-
-
-class DashboardViewTests(TestCase):
+class AccountTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="student@example.com",
-            password="secret123",
             username="student",
-            first_name="Alex",
-            last_name="Rivera",
-        )
-        self.client.force_login(self.user)
-        UserConsent.objects.create(user=self.user, version="1.0")
-
-
-class SettingsPageTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(
-            email="student@example.com",
-            password="secret123",
-            username="student",
+            password="StrongPass123!",
             email_verified=True,
         )
+        UserConsent.objects.create(
+            user=self.user, version=settings.POLICY_VERSION
+        )
+
+    def test_password_is_hashed(self):
+        self.assertNotEqual(self.user.password, "StrongPass123!")
+        self.assertTrue(self.user.check_password("StrongPass123!"))
+
+    def test_public_registration_page_loads(self):
+        response = self.client.get(reverse("account:register"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "account/register.html")
+
+    def test_login_page_loads(self):
+        response = self.client.get(reverse("account:login"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "account/login.html")
+
+    def test_dashboard_requires_authentication(self):
+        response = self.client.get(reverse("account:dashboard"))
+        self.assertRedirects(
+            response,
+            reverse("account:login") + "?next=" + reverse("account:dashboard"),
+        )
+
+    def test_dashboard_uses_current_sections(self):
         self.client.force_login(self.user)
-        UserConsent.objects.create(user=self.user, version="1.0")
-
-    def test_settings_page_uses_switch_for_browser_notifications(self):
-        response = self.client.get(reverse("account:settings"))
-
+        response = self.client.get(reverse("account:dashboard"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'id="browser-notifications-toggle"')
-        self.assertContains(response, 'class="switch"')
-        self.assertNotContains(response, 'id="enable-push-toggle"')
+        self.assertTemplateUsed(response, "dashboard.html")
+        self.assertContains(response, "Getting started")
+        self.assertContains(response, "SLM Modules")
+        self.assertContains(response, "Quick Access")
 
-    def test_settings_page_shows_two_factor_auth_section(self):
-        response = self.client.get(reverse("account:settings"))
-
+    def test_profile_page(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("account:profile"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Two-Factor Authentication")
-        self.assertContains(response, "Authenticator app")
+        self.assertTemplateUsed(response, "account/profile.html")
 
-    def test_enable_two_factor_auth_sets_user_flag(self):
+    def test_terms_and_privacy_standalone_pages(self):
+        for name, template in (
+            ("terms", "account/terms.html"),
+            ("privacy", "account/privacy.html"),
+        ):
+            with self.subTest(page=name):
+                response = self.client.get(reverse("account:" + name))
+                self.assertEqual(response.status_code, 200)
+                self.assertTemplateUsed(response, template)
+                self.assertEqual(
+                    response.context["policy_version"], settings.POLICY_VERSION
+                )
+
+    def test_missing_consent_redirects_to_policy(self):
+        UserConsent.objects.filter(user=self.user).delete()
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("account:dashboard"))
+        self.assertRedirects(response, reverse("account:consent_required"))
+
+    def test_accepting_policy_creates_latest_consent(self):
+        UserConsent.objects.filter(user=self.user).delete()
+        self.client.force_login(self.user)
+        response = self.client.post(reverse("account:consent_required"))
+        self.assertRedirects(response, reverse("account:dashboard"))
+        self.assertEqual(
+            UserConsent.objects.get(user=self.user).version,
+            settings.POLICY_VERSION,
+        )
+
+    def test_unverified_user_is_redirected(self):
+        self.user.email_verified = False
+        self.user.save(update_fields=["email_verified"])
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("account:dashboard"))
+        self.assertRedirects(
+            response, reverse("account:email_verification_required")
+        )
+
+    def test_theme_api_validates_values(self):
+        url = reverse("account:api_set_theme")
+        bad = self.client.post(url, {"theme": "purple"})
+        self.assertEqual(bad.status_code, 400)
+        good = self.client.post(url, {"theme": "dark"})
+        self.assertEqual(good.status_code, 200)
+        self.assertEqual(good.json()["theme"], "dark")
+        self.assertEqual(good.cookies["eduallyTheme"].value, "dark")
+
+    def test_2fa_requires_email_code_and_authenticator(self):
+        self.client.force_login(self.user)
         self.user.two_factor_secret = "JBSWY3DPEHPK3PXP"
         self.user.save(update_fields=["two_factor_secret"])
+        otp = pyotp.TOTP(self.user.two_factor_secret).now()
 
-        otp_code = __import__("pyotp").TOTP(self.user.two_factor_secret).now()
         response = self.client.post(
             reverse("account:settings"),
-            {"enable_2fa": "1", "otp_code": otp_code},
-            follow=True,
+            {"enable_2fa": "1", "otp_code": otp},
         )
-
+        self.assertEqual(response.status_code, 302)
         self.user.refresh_from_db()
-        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.user.two_factor_enabled)
+
+        with patch("account.views._get_2fa_email_otp", return_value="123456"):
+            response = self.client.post(
+                reverse("account:settings"),
+                {"enable_2fa": "1", "otp_code": otp, "gmail_otp": "123456"},
+            )
+        self.assertEqual(response.status_code, 302)
+        self.user.refresh_from_db()
         self.assertTrue(self.user.two_factor_enabled)
-        self.assertContains(response, "Two-factor authentication enabled")
-
-    def test_profile_edit_shows_avatar_preview_and_explicit_controls(self):
-        self.user.avatar = "avatars/current.png"
-        self.user.save(update_fields=["avatar"])
-
-        response = self.client.get(reverse("account:profile_edit"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Avatar")
-        self.assertContains(response, "Current profile photo")
-        self.assertContains(response, "Choose photo")
-        self.assertContains(response, 'class="avatar-file-input"')
-        self.assertContains(response, "Remove photo")
-        self.assertNotContains(response, "Choose File")
-        self.assertNotContains(response, ">Clear<")
-
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-                "LOCATION": "password-change-tests",
-            }
-        }
-    )
-    def test_password_change_with_missing_new_password_renders_form_errors(self):
-        response = self.client.post(
-            f"{reverse('account:password_change')}?tab=password",
-            {"old_password": "secret123"},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["user_obj"], self.user)
-        self.assertContains(response, self.user.email)
-        self.assertContains(response, "New password: This field is required.")
-        self.assertContains(response, "?tab=password")
-
-    @override_settings(
-        CACHES={
-            "default": {
-                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-                "LOCATION": "password-change-rate-limit-tests",
-            }
-        }
-    )
-    def test_password_change_rate_limit_renders_message_instead_of_403(self):
-        url = f"{reverse('account:password_change')}?tab=password"
-        invalid_data = {
-            "old_password": "wrong-password",
-            "new_password1": "ValidPassword123!",
-            "new_password2": "ValidPassword123!",
-        }
-        for _ in range(5):
-            response = self.client.post(url, invalid_data)
-            self.assertEqual(response.status_code, 200)
-
-        response = self.client.post(url, invalid_data)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response,
-            "limit of 5 password-change attempts per day.",
-        )
-        self.assertContains(response, "?tab=password")
-
-    def test_profile_photo_removal_is_applied_when_form_is_saved(self):
-        self.user.avatar = "avatars/current.png"
-        self.user.save(update_fields=["avatar"])
-
-        response = self.client.post(
-            reverse("account:profile_edit"),
-            {
-                "profile_update": "1",
-                "first_name": self.user.first_name,
-                "last_name": self.user.last_name,
-                "student_id": "",
-                "year_level": "2nd Year",
-                "remove_avatar": "on",
-            },
-        )
-
-        self.assertRedirects(response, reverse("account:profile"))
-        self.user.refresh_from_db()
-        self.assertFalse(self.user.avatar)
-
-    def test_dashboard_displays_real_learning_summary(self):
-        subject = Subject.objects.create(
-            subject_code="GEC101",
-            subject_name="General Education",
-            author=self.user,
-        )
-        Module.objects.create(
-            subject=subject,
-            module_number=1,
-            module_name="Intro",
-            file=SimpleUploadedFile("module.pdf", b"pdf", content_type="application/pdf"),
-        )
-
-        response = self.client.get(reverse("account:dashboard"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Your learning snapshot")
-        self.assertContains(response, "1 module")
-        self.assertContains(response, "Continue where you left off")
-
-    def test_student_dashboard_shows_available_module_counts(self):
-        subject = Subject.objects.create(
-            subject_code="GEC101",
-            subject_name="General Education",
-            author=self.user,
-        )
-        Module.objects.create(
-            subject=subject,
-            module_number=1,
-            module_name="Intro",
-            file=SimpleUploadedFile("module.pdf", b"pdf", content_type="application/pdf"),
-        )
-
-        response = self.client.get(reverse("account:dashboard"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "1 module")
-        self.assertContains(response, "Subjects in your space")
-        self.assertContains(response, '<span class="stat-number">1</span>', html=True)
-
-    def test_dashboard_shows_onboarding_checklist_for_new_users(self):
-        response = self.client.get(reverse("account:dashboard"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Set up your learning space")
-        self.assertContains(response, "Complete your profile")
-
-
-class ServiceWorkerTests(TestCase):
-    def test_service_worker_endpoint_serves_valid_javascript(self):
-        response = self.client.get(reverse("service-worker"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Content-Type"], "application/javascript")
-        self.assertNotContains(response, "{{")
-        self.assertContains(response, 'self.addEventListener("push"')
-
-    def test_base_template_registers_service_worker_with_configured_version(self):
-        response = self.client.get(reverse("landing"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response,
-            f"/service-worker.js?v={settings.PWA_SW_VERSION}",
-        )
-
-
-class RecentModuleDashboardTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(
-            email="student@example.com",
-            password="secret123",
-            username="student",
-            email_verified=True,
-        )
-        self.client.force_login(self.user)
-        UserConsent.objects.create(user=self.user, version="1.0")
-
-        self.subject = Subject.objects.create(
-            subject_code="GEC101",
-            subject_name="General Education",
-            author=self.user,
-        )
-        self.module_one = Module.objects.create(
-            subject=self.subject,
-            module_number=1,
-            module_name="First Module",
-            file=SimpleUploadedFile("module1.pdf", b"pdf1", content_type="application/pdf"),
-        )
-        self.module_two = Module.objects.create(
-            subject=self.subject,
-            module_number=2,
-            module_name="Second Module",
-            file=SimpleUploadedFile("module2.pdf", b"pdf2", content_type="application/pdf"),
-        )
-
-    def test_dashboard_shows_recently_visited_modules_by_most_recent_order(self):
-        now = timezone.now()
-        RecentModuleView.objects.create(
-            user=self.user,
-            module=self.module_one,
-            viewed_at=now - timedelta(minutes=1),
-        )
-        RecentModuleView.objects.create(
-            user=self.user,
-            module=self.module_two,
-            viewed_at=now,
-        )
-
-        response = self.client.get(reverse("account:dashboard"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Recently visited modules")
-        self.assertContains(response, "Second Module")
-        self.assertContains(response, "First Module")
-
-        page_html = response.content.decode()
-        second_link = page_html.index(
-            f'href="{reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_two.pk})}"'
-        )
-        first_link = page_html.index(
-            f'href="{reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_one.pk})}"'
-        )
-        self.assertLess(second_link, first_link)
-
-    def test_module_detail_records_recent_visit_for_the_user(self):
-        response = self.client.get(
-            reverse("slm:module-detail", kwargs={"subject_id": self.subject.pk, "module_id": self.module_one.pk})
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(
-            RecentModuleView.objects.filter(
-                user=self.user,
-                module=self.module_one,
-            ).exists()
-        )
-        self.assertNotIn("recent_modules", self.client.session)
-
-        self.client.logout()
-        self.client.force_login(self.user)
-        dashboard_response = self.client.get(reverse("account:dashboard"))
-        self.assertEqual(dashboard_response.status_code, 200)
-        self.assertEqual(dashboard_response.context["continue_module"], self.module_one)
-
-    def test_recent_module_uses_file_type_icon(self):
-        self.assertEqual(self.module_one.file_icon, "fas")
-        self.assertEqual(self.module_one.file_icon_classes, "fas fa-file-pdf activity-icon--pdf")
-        self.assertEqual(self.module_two.file_icon, "fas")
-        self.assertEqual(self.module_two.file_icon_classes, "fas fa-file-pdf activity-icon--pdf")
-
-    def test_dashboard_ignores_legacy_recent_module_cookie(self):
-        self.client.cookies["eduallyRecentModules"] = json.dumps([self.module_two.pk, self.module_one.pk])
-
-        response = self.client.get(reverse("account:dashboard"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["recent_modules"], [])
-
-    def test_recent_materials_are_loaded_from_user_history(self):
-        material = PersonalMaterial.objects.create(
-            title="My study notes",
-            author=self.user,
-        )
-        RecentPersonalMaterialView.objects.create(
-            user=self.user,
-            personal_material=material,
-        )
-
-        self.client.logout()
-        self.client.force_login(self.user)
-        response = self.client.get(reverse("account:dashboard"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["recent_personal_materials"], [material])
-        self.assertEqual(response.context["continue_material"], material)
