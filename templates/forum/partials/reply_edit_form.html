@@ -1,14 +1,40 @@
-{% comment %}forum/partials/reply_edit_form.html – form rendered inside the global modal{% endcomment %}
-<form method="post"
-      action="{% url 'forum:reply_edit' reply.pk %}"
-      class="reply-edit-form ajax-form"
-      data-target="#global-modal"
-      data-modal-form>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div class="form-actions">
-        <button type="submit" class="button primary-button">Save Changes</button>
-        <a href="{% url 'forum:post_detail' reply.post.pk %}#reply-{{ reply.pk }}"
-           class="button secondary-button">Cancel</a>
+<div class="modal__backdrop" data-close-modal></div>
+<div class="modal__content forum-action-modal forum-reply-edit-modal">
+    <div class="forum-modal-heading">
+        <span class="forum-modal-icon forum-modal-icon--edit" aria-hidden="true"><i class="fa-solid fa-pen-to-square"></i></span>
+        <div>
+            <p class="forum-modal-kicker">Reply management</p>
+            <h2>Edit Reply</h2>
+        </div>
     </div>
-</form>
+    <p class="forum-modal-intro">Make changes to your reply before saving.</p>
+
+    <form method="post"
+          action="{% url 'forum:reply_edit' reply.pk %}"
+          class="reply-edit-form ajax-form"
+          data-target="#global-modal"
+          data-modal-form>
+        {% csrf_token %}
+        {% if form.errors %}
+            <div class="form-error-summary">
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <div class="form-field-wrapper">
+            {{ form.as_p }}
+        </div>
+        <div class="modal__actions">
+            <button type="submit" class="button primary-button">Save Changes</button>
+            <button type="button" class="button secondary-button" data-close-modal>Cancel</button>
+        </div>
+    </form>
+</div>

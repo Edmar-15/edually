@@ -1,39 +1,61 @@
-from django.test import Client, RequestFactory, TestCase, override_settings
+"""Core routes, PWA assets, and error page tests."""
+import json
+
+from django.conf import settings
+from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 
 from . import views
 
 
-class CustomErrorPageTests(TestCase):
-	@override_settings(DEBUG=False)
-	def test_unknown_url_uses_custom_404_page(self):
-		response = self.client.get("/this-page-does-not-exist/")
+class CoreTests(TestCase):
+    def test_manifest_is_served_as_json(self):
+        response = self.client.get(reverse("manifest"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("application/manifest+json", response["Content-Type"])
+        manifest = json.loads(response.content)
+        self.assertEqual(manifest["short_name"], "EduAlly")
+        self.assertTrue(manifest["icons"])
 
-		self.assertEqual(response.status_code, 404)
-		self.assertContains(response, "Page not found", status_code=404)
+    def test_service_worker_serves_versioned_javascript(self):
+        response = self.client.get(reverse("service-worker"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("application/javascript", response["Content-Type"])
+        body = response.content.decode()
+        self.assertIn(settings.PWA_SW_VERSION, body)
+        self.assertNotIn("{{ PWA_SW_VERSION }}", body)
+        self.assertIn("self.addEventListener", body)
 
-	@override_settings(DEBUG=False)
-	def test_csrf_rejection_uses_custom_403_page(self):
-		client = Client(enforce_csrf_checks=True)
+    def test_offline_page(self):
+        response = self.client.get(reverse("offline"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "offline.html")
 
-		response = client.post("/account/login/")
+    def test_robots_txt(self):
+        response = self.client.get(reverse("robots"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/plain", response["Content-Type"])
+        self.assertContains(response, "Disallow: /admin/")
 
-		self.assertEqual(response.status_code, 403)
-		self.assertContains(response, "Request blocked", status_code=403)
+    @override_settings(DEBUG=False)
+    def test_unknown_url_uses_custom_404(self):
+        response = self.client.get("/definitely-not-an-edually-route/")
+        self.assertContains(response, "Page not found", status_code=404)
 
-	@override_settings(DEBUG=False)
-	def test_standard_error_handlers_render_their_status_pages(self):
-		request = RequestFactory().get("/")
-		handlers = (
-			(views.bad_request, 400, Exception()),
-			(views.forbidden, 403, Exception()),
-			(views.page_not_found, 404, Exception()),
-			(views.server_error, 500, None),
-		)
+    def test_custom_error_handlers(self):
+        request = RequestFactory().get("/")
+        cases = (
+            (views.bad_request, 400),
+            (views.forbidden, 403),
+            (views.page_not_found, 404),
+        )
+        for handler, status in cases:
+            with self.subTest(status=status):
+                response = handler(request, Exception("test"))
+                self.assertEqual(response.status_code, status)
+        response = views.server_error(request)
+        self.assertEqual(response.status_code, 500)
 
-		for handler, status_code, exception in handlers:
-			with self.subTest(status_code=status_code):
-				if exception is None:
-					response = handler(request)
-				else:
-					response = handler(request, exception)
-				self.assertEqual(response.status_code, status_code)
+    def test_csrf_failure_handler(self):
+        response = views.csrf_failure(RequestFactory().post("/"), reason="test")
+        self.assertContains(response, "Request blocked", status_code=403)

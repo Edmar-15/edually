@@ -3532,6 +3532,10 @@ html[data-theme="dark"] .modal__dialog select:focus {
     font-size: .86rem;
 }
 
+.forum-reply-edit-modal .reply-edit-form textarea {
+    min-height: 150px;
+}
+
 .forum-action-modal input:focus,
 .forum-action-modal textarea:focus,
 .forum-action-modal select:focus {

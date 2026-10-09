@@ -1970,6 +1970,11 @@ html[data-theme="dark"] .empty-state {
     overflow-y: visible;
 }
 
+body.forum-post-detail-page {
+    overflow-x: clip;
+    overflow-y: visible;
+}
+
 .reply-page-layout .forum-main {
     min-width: 0;
     display: flex;

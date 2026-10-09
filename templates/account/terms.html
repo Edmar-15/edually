@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service - EduAlly{% endblock %}
+
+{% block content %}
+<main class="container">
+    <article class="policy-page">
+        <h1>Terms &amp; Conditions (Version {{ policy_version }})</h1>
+        <p>Effective Date: {{ effective_date|date:"F j, Y" }}</p>
+
+        <h2>1. Acceptance</h2>
+        <p>By creating an account, accessing or using EduAlly, you acknowledge that you have read, understood, and agree to be bound by these Terms &amp; Conditions.</p>
+
+        <h2>2. Description of Services</h2>
+        <p>EduAlly is an educational web application developed as a thesis project. It provides learning modules, educational materials, personal annotations, AI-assisted learning features, discussion forums, notifications, and other tools designed to support self-directed and collaborative learning.</p>
+
+        <h2>3. User Accounts</h2>
+        <p>Some EduAlly features require an account. Users are responsible for providing accurate information during registration and for keeping their account credentials secure.</p>
+        <ul>
+            <li>Provide accurate and current information.</li>
+            <li>Keep your username, password, and authentication information confidential.</li>
+            <li>Do not impersonate another person or use another person's account.</li>
+            <li>Notify the administrator if you suspect unauthorized access to your account.</li>
+        </ul>
+
+        <h2>4. User Responsibilities</h2>
+        <p>You agree to use EduAlly only for legitimate educational and lawful purposes.</p>
+        <ul>
+            <li>Respect other learners, instructors, and platform administrators.</li>
+            <li>Do not post abusive, threatening, hateful, or unlawful content.</li>
+            <li>Do not upload content that violates another person's privacy or intellectual-property rights.</li>
+            <li>Do not attempt to gain unauthorized access to accounts, materials, or system functions.</li>
+            <li>Do not introduce malware, malicious code, or other harmful content.</li>
+            <li>Do not intentionally interfere with the availability or security of the platform.</li>
+        </ul>
+
+        <h2>5. Educational Materials and User Content</h2>
+        <p>Users may be permitted to upload learning materials, create annotations, and submit content to discussion forums. Users remain responsible for the content they upload or submit and must have the necessary rights or authorization to use such content.</p>
+        <p>Users retain ownership of their original content. By submitting content to EduAlly, you grant EduAlly permission to store, display, and process that content only as reasonably necessary to provide and operate the platform.</p>
+
+        <h2>6. AI-Assisted Features</h2>
+        <p>EduAlly provides AI-assisted educational features intended to support learning. AI-generated responses may contain inaccurate, incomplete, or outdated information. Users should verify important information using official learning materials, instructors, textbooks, or other reliable sources.</p>
+        <p>AI-generated responses are not a substitute for professional advice, instructor guidance, or official academic decisions.</p>
+
+        <h2>7. Academic Integrity</h2>
+        <p>EduAlly is intended to support learning and understanding. Users remain responsible for following their school's academic-integrity policies when using AI-generated responses, learning materials, or other platform features for academic work.</p>
+
+        <h2>8. Intellectual Property</h2>
+        <p>EduAlly's original software, interface, designs, documentation, and other project components remain the intellectual property of their respective owners unless otherwise stated.</p>
+        <p>Educational materials and content provided by users, instructors, or other authorized parties remain subject to their respective ownership and licensing rights.</p>
+
+        <h2>9. Forum and Community Content</h2>
+        <p>EduAlly may provide discussion forums where users can create posts and replies. EduAlly may review reported content and take appropriate action when content violates these Terms or applicable policies.</p>
+
+        <h2>10. Notifications</h2>
+        <p>EduAlly may provide browser notifications when a user grants notification permission. Users may disable notifications through their browser or device settings. Notification availability may depend on the user's device, browser, network, and other technical conditions.</p>
+
+        <h2>11. Account Suspension or Termination</h2>
+        <p>EduAlly may suspend or terminate an account when reasonably necessary to enforce these Terms, protect users, maintain system security, investigate misuse, or comply with applicable laws and regulations.</p>
+
+        <h2>12. Service Availability</h2>
+        <p>EduAlly is provided on an "as available" basis. The platform may become temporarily unavailable because of maintenance, software updates, server problems, network failures, security incidents, or third-party service interruptions.</p>
+
+        <h2>13. Limitation of Liability</h2>
+        <p>To the fullest extent permitted by applicable law, EduAlly and its developers shall not be liable for indirect, incidental, special, consequential, or punitive damages arising from the use of the platform, including reliance on inaccurate AI-generated information, user-generated content, service interruptions, or third-party service failures.</p>
+
+        <h2>14. Privacy</h2>
+        <p>Your use of EduAlly is also governed by the EduAlly Privacy Policy. The Privacy Policy explains how personal information is collected, used, stored, protected, and processed when you use the platform.</p>
+
+        <h2>15. Third-Party Services</h2>
+        <p>EduAlly may use third-party services to provide certain features, including AI processing, email services, hosting infrastructure, and browser notifications. Third-party services may have their own terms and privacy policies.</p>
+
+        <h2>16. Governing Law</h2>
+        <p>These Terms shall be governed by and interpreted in accordance with the laws of the Republic of the Philippines, to the extent applicable.</p>
+
+        <h2>17. Changes to these Terms</h2>
+        <p>EduAlly may amend these Terms when necessary due to changes in the platform, security requirements, third-party services, or applicable laws. When a material change is made, the <strong>policy version</strong> will be updated and users may be required to accept the updated version before continuing to use the service.</p>
+
+        <h2>18. Contact</h2>
+        <p>For questions, concerns, or reports regarding these Terms, users may contact the EduAlly project administrator through the contact information provided within the application.</p>
+    </article>
+</main>
+{% endblock %}
