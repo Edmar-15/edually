@@ -1,17 +1,4 @@
-/**
- * forum-ajax.js
- * --------------------------------------------------------------
- * Handles all generic AJAX interactions:
- *   • Forms with class .ajax-form
- *   • Delete buttons (class .ajax-delete-btn)
- *   • Pagination links inside #post-list
- *   • Loading modal content (class .ajax-modal)
- * --------------------------------------------------------------
- */
 document.addEventListener('DOMContentLoaded', () => {
-    /** -----------------------------------------------------------------
-     *  Get CSRF token from cookie (same logic as in forum-upvote.js)
-     *  ----------------------------------------------------------------- */
     const getCsrfToken = () => {
         const name = 'csrftoken';
         let cookieValue = null;
@@ -93,9 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    /** -----------------------------------------------------------------
-     *  1.  Generic form submit (POST) – expects JSON {success, html, …}
-     *  ----------------------------------------------------------------- */
     document.body.addEventListener('submit', async e => {
         const form = e.target;
         if (!form.classList.contains('ajax-form')) return;
@@ -126,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await resp.json();
 
             if (!data.success) {
-                // Replace the modal/body with the HTML that contains the error message
                 if (form.dataset.target) {
                     const container = document.querySelector(form.dataset.target);
                     if (container) container.innerHTML = data.html || '';
@@ -134,9 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // -----------------------------------------------------------------
-            // Insert / replace HTML according to data-* attributes
-            // -----------------------------------------------------------------
             const targetSel = form.dataset.target;
             if (targetSel && data.html !== undefined) {
                 const container = document.querySelector(targetSel);
@@ -172,9 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (removedEl) removedEl.remove();
             }
 
-            // -----------------------------------------------------------------
-            // 6.  If a heading (like the reply count) should be updated
-            // -----------------------------------------------------------------
              if (data.replies_cnt !== undefined) {
                  const headingSelector = form.dataset.after;
                  if (headingSelector) {
@@ -194,13 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Redirect if requested by the server
             if (data.redirect) {
                 window.location.href = data.redirect;
                 return;
             }
 
-            // Close modal if the form lives inside one
+
             const modal = form.closest('.modal');
             const closeModal = form.dataset.closeModal !== 'false';
             if (closeModal && modal) modal.classList.remove('open');
@@ -209,9 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /** -----------------------------------------------------------------
-     *  2.  Delete button (class .ajax-delete-btn)
-     *  ----------------------------------------------------------------- */
     document.body.addEventListener('click', async e => {
         const btn = e.target.closest('.ajax-delete-btn');
         if (!btn) return;
@@ -242,9 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /** -----------------------------------------------------------------
-     *  3.  Pagination links inside #post-list
-     *  ----------------------------------------------------------------- */
     document.body.addEventListener('click', async e => {
         const link = e.target.closest('.pagination a');
         if (!link) return;
@@ -265,9 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /** -----------------------------------------------------------------
-     *  Optional: click outside modal to close it
-     *  ----------------------------------------------------------------- */
     document.body.addEventListener('click', e => {
         if (e.target.classList.contains('modal')) {
             e.target.classList.remove('open');
@@ -324,9 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /** -----------------------------------------------------------------
-     *  Sort trigger button toggle
-     *  ----------------------------------------------------------------- */
     document.body.addEventListener('click', e => {
         const sortTrigger = e.target.closest('.sort-trigger');
         if (sortTrigger) {
@@ -341,7 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Close sort options when clicking a sort option
         const sortOption = e.target.closest('.sort-option');
         if (sortOption) {
             const sortOptions = sortOption.closest('.sort-options');
@@ -353,7 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Close sort options when clicking outside
         const inSortGroup = e.target.closest('.sort-group');
         if (!inSortGroup) {
             document.querySelectorAll('.sort-options.open').forEach(options => {
@@ -365,8 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('click', async function (e) {
-        // The button lives inside the global modal that is loaded via
-        // the js‑modal‑trigger on the bell icon.
         const btn = e.target.closest('#mark-all-read-btn');
         if (!btn) return;
         e.preventDefault();
@@ -383,11 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await resp.json();
 
             if (data.success) {
-                // 1️⃣ Remove the red badge that shows the unread count
                 const badge = document.getElementById('notification-badge');
                 if (badge) badge.remove();
 
-                // 2️⃣ Inside the modal, turn every <li class="unread"> → normal
                 const modal = document.getElementById('global-modal');
                 if (modal) {
                     modal.querySelectorAll('li.unread')

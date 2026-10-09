@@ -62,7 +62,7 @@ def _expects_json_response(request):
 
 
 def feed_redirect(request):
-    """Backward-compatible alias for the legacy forum feed route."""
+    """Keep the old feed URL working."""
     return redirect('forum:list')
 
 
@@ -87,7 +87,6 @@ def _unread_forum_notification_count(user):
 
 @login_required(login_url='account:login')
 def notifications(request):
-    """Show recent activity from the user's forum discussions."""
     activity = []
     read_at = timezone.now()
 
@@ -150,7 +149,6 @@ moderator_required = user_passes_test(_is_moderator)
 
 @moderator_required
 def moderation_dashboard(request):
-    """Review unresolved reports grouped by the content they reference."""
     reports = Report.objects.filter(is_resolved=False).select_related(
         'reporter', 'post__author', 'post__category', 'reply__author', 'reply__post'
     )
@@ -198,7 +196,6 @@ def moderation_dashboard(request):
 
 @moderator_required
 def moderation_deleted_history(request):
-    """List content removed through moderation."""
     context = {
         'deleted_posts': Post.objects.filter(is_deleted=True).select_related('author', 'category'),
         'deleted_replies': Reply.objects.filter(is_deleted=True).select_related('author', 'post'),
@@ -210,7 +207,6 @@ def moderation_deleted_history(request):
 
 @moderator_required
 def moderation_deleted_content_detail(request, content_type, content_id):
-    """Inspect or restore deleted forum content."""
     if content_type == Report.POST:
         deleted_item = get_object_or_404(Post, pk=content_id, is_deleted=True)
         related_reports = deleted_item.reports.select_related('reporter')
@@ -234,7 +230,6 @@ def moderation_deleted_content_detail(request, content_type, content_id):
 
 @login_required(login_url='account:login')
 def flag_content(request, content_type, content_id):
-    """Display and save a report for a post or reply."""
     if content_type == 'reply':
         reply = get_object_or_404(Reply, pk=content_id, is_deleted=False)
         content = reply
@@ -331,7 +326,7 @@ def post_archive(request, post_id):
 
 @login_required(login_url='account:login')
 def verify_post(request, post_id):
-    """Backward-compatible alias for older verification actions."""
+    """Keep the old post verification URL working."""
     return redirect('forum:post_detail', post_id=post_id)
 
 
@@ -403,13 +398,11 @@ def reply_delete(request, reply_id):
 
 @login_required(login_url='account:login')
 def notification_goto(request, notification_id):
-    """Legacy notification route kept for compatibility."""
     return redirect('forum:list')
 
 
 @login_required(login_url='account:login')
 def notification_mark_all_read(request):
-    """Legacy notification route kept for compatibility."""
     return redirect('forum:list')
 
 
@@ -417,7 +410,6 @@ def notification_mark_all_read(request):
 @moderator_required
 @require_http_methods(['POST'])
 def resolve_report(request, report_id):
-    """Apply a moderation decision to a report and its referenced content."""
     report = get_object_or_404(Report, pk=report_id, is_resolved=False)
     action = request.POST.get('action')
     if action not in {'dismiss', 'delete', 'verify'}:
@@ -438,19 +430,12 @@ def resolve_report(request, report_id):
 
 @login_required(login_url='account:login')
 def conversation_map_json(request, post_id):
-    """Compatibility route for legacy conversation map data loads."""
     post = get_object_or_404(Post, pk=post_id, is_deleted=False)
     return JsonResponse({'post_id': post.pk, 'title': post.title})
 
 
 @login_required(login_url='account:login')
 def forum_list(request):
-    """List all forum posts with optional filtering."""
-
-    # -------------------------------------------------------------
-    # Mark the forum onboarding step as completed.
-    # Visiting the forum is enough.
-    # -------------------------------------------------------------
     if not request.user.onboarding_forum_visited:
         request.user.onboarding_forum_visited = True
         request.user.save(update_fields=["onboarding_forum_visited"])
@@ -460,9 +445,6 @@ def forum_list(request):
         is_archived=False,
     ).prefetch_related('author', 'category').order_by('-created_at')
 
-    # -------------------------------------------------------------
-    # Search
-    # -------------------------------------------------------------
     search_query = request.GET.get('q', '')
 
     if search_query:
@@ -471,9 +453,6 @@ def forum_list(request):
             | Q(content__icontains=search_query)
         )
 
-    # -------------------------------------------------------------
-    # Category filtering
-    # -------------------------------------------------------------
     category_slug = request.GET.get('category')
 
     if category_slug:
@@ -481,9 +460,6 @@ def forum_list(request):
             category__slug=category_slug
         )
 
-    # -------------------------------------------------------------
-    # Sorting
-    # -------------------------------------------------------------
     sort_by = request.GET.get('sort', '-created_at')
 
     if sort_by in [
@@ -527,7 +503,6 @@ def forum_list(request):
 
 @login_required(login_url='account:login')
 def post_detail(request, post_id):
-    """Show a single post with all replies"""
     post = get_object_or_404(Post, pk=post_id, is_deleted=False, is_archived=False)
 
     replies = post.replies.filter(is_deleted=False).select_related('author').order_by('-created_at', '-pk')
@@ -555,7 +530,6 @@ def post_detail(request, post_id):
 
 @login_required(login_url='account:login')
 def create_post(request):
-    """Create a new forum post"""
     is_ajax = _is_ajax_request(request)
 
     if request.method == 'POST':
@@ -631,7 +605,6 @@ def create_post(request):
 
 @login_required(login_url='account:login')
 def create_reply(request, post_id):
-    """Add a reply to a post"""
     post = get_object_or_404(Post, pk=post_id, is_deleted=False, is_archived=False)
     
     if request.method == 'POST':
@@ -685,7 +658,6 @@ def create_reply(request, post_id):
 @login_required(login_url='account:login')
 @require_http_methods(["POST"])
 def upvote_post(request, post_id):
-    """Upvote or un-upvote a forum post."""
     post = get_object_or_404(Post, pk=post_id, is_deleted=False)
 
     upvote, created = PostUpvote.objects.get_or_create(user=request.user, post=post)
@@ -722,7 +694,6 @@ def upvote_post(request, post_id):
 @login_required(login_url='account:login')
 @require_http_methods(["POST"])
 def upvote_reply(request, reply_id):
-    """Upvote or un-upvote a reply."""
     reply = get_object_or_404(Reply, pk=reply_id, is_deleted=False)
 
     upvote, created = ReplyUpvote.objects.get_or_create(user=request.user, reply=reply)

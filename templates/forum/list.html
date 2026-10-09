@@ -40,9 +40,7 @@
         </header>
 
         <div class="forum-container">
-            <!-- Main Content -->
             <section class="forum-main">
-                <!-- Search & Filters -->
                 <div class="forum-toolbar">
                     <div class="search-area">
                         <form method="get" action="{% url 'forum:list' %}" class="search-form">
@@ -75,7 +73,6 @@
                     </div>
                 </div>
 
-                <!-- Posts List -->
                 <div class="posts-list">
                     {% if posts %}
                         {% for post in posts %}
@@ -154,7 +151,6 @@
                 </div>
             </section>
 
-            <!-- Sidebar -->
             <aside class="forum-sidebar">
                 <div class="sidebar-card">
                     <h3>Quick Links</h3>

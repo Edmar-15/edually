@@ -4,7 +4,6 @@ from django.utils import timezone
 
 
 class Category(models.Model):
-    """Forum category for organizing discussions"""
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
@@ -28,7 +27,6 @@ class Category(models.Model):
 
 
 class Post(models.Model):
-    """Main forum post/discussion"""
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_posts')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=300)
@@ -63,7 +61,6 @@ class Post(models.Model):
 
 
 class Reply(models.Model):
-    """Reply to a forum post"""
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='replies')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_replies')
     content = models.TextField()
@@ -84,13 +81,11 @@ class Reply(models.Model):
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        # Always update the post's reply count after saving
         self.post.reply_count = self.post.replies.filter(is_deleted=False).count()
         self.post.save(update_fields=['reply_count'])
 
 
 class PostUpvote(models.Model):
-    """Track user upvotes on posts"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_post_upvotes')
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='upvoters')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -106,7 +101,6 @@ class PostUpvote(models.Model):
 
 
 class ReplyUpvote(models.Model):
-    """Track user upvotes on replies"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_reply_upvotes')
     reply = models.ForeignKey(Reply, on_delete=models.CASCADE, related_name='upvoters')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -122,7 +116,6 @@ class ReplyUpvote(models.Model):
 
 
 class Report(models.Model):
-    """A user's report of a forum post or reply."""
     POST = 'post'
     REPLY = 'reply'
     CONTENT_TYPE_CHOICES = [(POST, 'Post'), (REPLY, 'Reply')]
@@ -170,4 +163,3 @@ class Report(models.Model):
 
     def __str__(self):
         return f"{self.reporter} reported {self.content_type}"
-

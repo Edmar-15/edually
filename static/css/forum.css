@@ -1,7 +1,3 @@
-/* ================================================================
-   FORUM - MODERN MINIMAL DESIGN
-   ================================================================ */
-
 :root {
     --forum-bg: #ffffff;
     --forum-border: #e5e7eb;
@@ -19,10 +15,6 @@ html.dark {
     --forum-primary: #14b8a6;
     --forum-accent: #1f2937;
 }
-
-/* ================================================================
-   SIDEBAR POSITIONING
-   ================================================================ */
 
 .sidebar {
     width: var(--sidebar-width);
@@ -67,10 +59,6 @@ html[data-theme="dark"] .main-content {
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(11, 18, 32, 0.96)) !important;
 }
 
-/* ================================================================
-   DASHBOARD CONTAINER & LAYOUT
-   ================================================================ */
-
 .dashboard-container {
     display: flex;
     min-height: 100vh;
@@ -92,10 +80,6 @@ body.sidebar-mobile-open .sidebar-backdrop {
     opacity: 1;
     visibility: visible;
 }
-
-/* ================================================================
-   SIDEBAR COLLAPSED STATE
-   ================================================================ */
 
 body.sidebar-collapsed .sidebar {
     transform: none;
@@ -172,9 +156,7 @@ body.sidebar-collapsed .main-content {
     margin-left: 72px;
 }
 
-/* ================================================================
-   SIDEBAR PROVIDER & TRANSITIONS
-   ================================================================ */
+
 
 .SidebarProvider .sidebar {
     transition: transform 0.25s ease, width 0.25s ease, padding 0.25s ease, opacity 0.25s ease;
@@ -219,9 +201,7 @@ html[data-theme="dark"] .sidebar-trigger {
     display: block;
 }
 
-/* ================================================================
-   SIDEBAR NAVIGATION STYLING
-   ================================================================ */
+
 
 .sidebar-header {
     margin-bottom: 30px;
@@ -582,10 +562,6 @@ html[data-theme="dark"] .forum-side-panel .sidebar-card {
     color: var(--forum-text);
 }
 
-/* ================================================================
-   TOOLBAR & FILTERS
-   ================================================================ */
-
 .forum-toolbar {
     display: flex;
     flex-direction: column;
@@ -706,9 +682,7 @@ html[data-theme="dark"] .forum-side-panel .sidebar-card {
     background: #e5e7eb;
 }
 
-/* ================================================================
-   POSTS LIST
-   ================================================================ */
+
 
 .posts-list {
     display: flex;
@@ -864,10 +838,6 @@ html[data-theme="dark"] .forum-side-panel .sidebar-card {
 .stat i {
     color: var(--forum-primary);
 }
-
-/* ================================================================
-   POST DETAIL
-   ================================================================ */
 
 .post-detail {
     padding: 2.25rem;
@@ -1029,9 +999,7 @@ html[data-theme="dark"] .reply-page-layout .post-detail {
     border-color: var(--forum-primary);
 }
 
-/* ================================================================
-   REPLIES
-   ================================================================ */
+
 
 .replies-section {
     margin: 3rem 0;
@@ -1090,9 +1058,7 @@ html[data-theme="dark"] .reply-page-layout .post-detail {
     gap: 0.75rem;
 }
 
-/* ================================================================
-   REPLY FORM
-   ================================================================ */
+
 
 .reply-form-section {
     margin-top: 2rem;
@@ -1142,9 +1108,7 @@ html[data-theme="dark"] .reply-page-layout .post-detail {
     font-weight: 600;
 }
 
-/* ================================================================
-   CREATE FORM
-   ================================================================ */
+
 
 .create-form-card {
     padding: 2rem;
@@ -1220,9 +1184,7 @@ html[data-theme="dark"] .reply-page-layout .post-detail {
     color: #991b1b;
 }
 
-/* ================================================================
-   SIDEBAR
-   ================================================================ */
+
 
 .sidebar-card {
     padding: 1.5rem;
@@ -1332,10 +1294,6 @@ html[data-theme="dark"] .category-list a:hover {
     font-size: 0.95rem;
 }
 
-/* ================================================================
-   EMPTY STATE
-   ================================================================ */
-
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;
@@ -1358,10 +1316,6 @@ html[data-theme="dark"] .category-list a:hover {
     color: var(--forum-muted);
     margin-bottom: 1.5rem;
 }
-
-/* ================================================================
-   TIPS CARD
-   ================================================================ */
 
 .tips-card {
     padding: 1.5rem;
@@ -1397,10 +1351,6 @@ html[data-theme="dark"] .category-list a:hover {
     font-weight: 700;
 }
 
-/* ================================================================
-   BACK LINK
-   ================================================================ */
-
 .back-link {
     display: inline-flex;
     align-items: center;
@@ -1415,9 +1365,7 @@ html[data-theme="dark"] .category-list a:hover {
     color: #0d7d92;
 }
 
-/* ================================================================
-   RESPONSIVE DESIGN
-   ================================================================ */
+
 
 @media (max-width: 1024px) {
     .forum-container {
@@ -1588,11 +1536,6 @@ html[data-theme="dark"] .category-list a:hover {
     }
 }
 
-/* ================================================================
-   POLISH & ANIMATIONS
-   ================================================================ */
-
-/* Smooth transitions */
 .post-card,
 .reply-item,
 .sidebar-card,
@@ -1603,7 +1546,6 @@ html[data-theme="dark"] .category-list a:hover {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Enhanced post card styling */
 .post-card {
     position: relative;
     overflow: hidden;
@@ -1649,7 +1591,6 @@ html[data-theme="dark"] .reply-page-layout .question-card {
     box-shadow: 0 20px 40px rgba(14, 154, 167, 0.1), 0 0 0 1px rgba(14, 154, 167, 0.1);
 }
 
-/* Better reply styling */
 .reply-item {
     position: relative;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
@@ -1829,7 +1770,7 @@ html[data-theme="dark"] .reply-item {
     letter-spacing: 0.05em;
 }
 
-/* Enhanced buttons */
+
 .btn-primary {
     position: relative;
     overflow: hidden;
@@ -1865,7 +1806,6 @@ html[data-theme="dark"] .reply-item {
     box-shadow: 0 4px 12px rgba(14, 154, 167, 0.2);
 }
 
-/* Search input polish */
 .search-input {
     padding: 0.95rem 1.2rem 0.95rem 1.2rem;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.92));
@@ -1880,7 +1820,6 @@ html[data-theme="dark"] .search-input {
     opacity: 0.6;
 }
 
-/* Enhanced forum toolbar */
 .forum-toolbar {
     background: linear-gradient(135deg, rgba(14, 154, 167, 0.08), rgba(255, 255, 255, 0.98));
     box-shadow: 0 8px 20px rgba(14, 154, 167, 0.06), inset 0 0 0 1px rgba(14, 154, 167, 0.08);
@@ -1891,7 +1830,6 @@ html[data-theme="dark"] .forum-toolbar {
     background: linear-gradient(135deg, rgba(14, 154, 167, 0.12), rgba(20, 29, 48, 0.96));
 }
 
-/* Improved sidebar cards */
 .sidebar-card {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.93));
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
@@ -1910,7 +1848,7 @@ html[data-theme="dark"] .sidebar-card {
     transform: translateY(-2px);
 }
 
-/* Enhanced form elements */
+
 .reply-textarea {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.92));
     font-size: 1rem;
@@ -1938,7 +1876,6 @@ html[data-theme="dark"] .reply-textarea:focus {
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(20, 29, 48, 0.92));
 }
 
-/* Enhanced empty state */
 .empty-state {
     background: linear-gradient(135deg, rgba(247, 251, 252, 0.98), rgba(240, 245, 248, 0.94));
     box-shadow: inset 0 0 0 1px rgba(14, 154, 167, 0.1);
@@ -1952,7 +1889,6 @@ html[data-theme="dark"] .empty-state {
     border-color: rgba(14, 154, 167, 0.15);
 }
 
-/* Reply page layout */
 .reply-page-layout {
     max-width: 1240px;
     align-items: start;
@@ -2557,7 +2493,7 @@ html[data-theme="dark"] .reply-form-section {
     font-size: 2.5rem;
 }
 
-/* Status badges enhancement */
+
 .status-answered {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15));
     color: #047857;
@@ -2579,7 +2515,6 @@ html[data-theme="dark"] .reply-form-section {
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* Improved post category styling */
 .post-category {
     display: inline-flex;
     align-items: center;
@@ -2600,12 +2535,11 @@ html[data-theme="dark"] .reply-form-section {
     font-size: 0.8rem;
 }
 
-/* Link hover effects */
+
 a {
     transition: color 0.2s ease;
 }
 
-/* Post meta styling */
 .post-meta {
     display: flex;
     align-items: center;
@@ -2617,7 +2551,7 @@ a {
     margin-top: 0.75rem;
 }
 
-/* Stat indicators */
+
 .stat {
     display: inline-flex;
     align-items: center;
@@ -2640,7 +2574,6 @@ a {
     opacity: 0.8;
 }
 
-/* Post title styling */
 .post-title {
     position: relative;
     background: linear-gradient(135deg, var(--forum-text), var(--forum-text));
@@ -2655,7 +2588,7 @@ a {
     background-clip: unset;
 }
 
-/* Loading state animation */
+
 @keyframes pulse {
     0%, 100% {
         opacity: 1;
@@ -2669,7 +2602,6 @@ a {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Focus styles for accessibility */
 :focus-visible {
     outline: 2px solid var(--forum-primary);
     outline-offset: 2px;
@@ -2681,7 +2613,6 @@ a:focus-visible {
     outline-offset: 2px;
 }
 
-/* Dark mode enhancements */
 html.dark .post-title a,
 html[data-theme="dark"] .post-title a {
     color: var(--forum-text);
@@ -2691,10 +2622,6 @@ html.dark .post-title a:hover,
 html[data-theme="dark"] .post-title a:hover {
     color: var(--forum-primary);
 }
-
-/* ================================================================
-   ERROR & SUCCESS STATES
-   ================================================================ */
 
 .alert {
     padding: 1.25rem;
@@ -2775,9 +2702,7 @@ html[data-theme="dark"] .alert-info {
     color: #60a5fa;
 }
 
-/* ================================================================
-   AVATAR STYLING
-   ================================================================ */
+
 
 .author-avatar {
     width: 40px;
@@ -2815,9 +2740,7 @@ html[data-theme="dark"] .alert-info {
     font-weight: 700;
 }
 
-/* ================================================================
-   FORM ENHANCEMENTS
-   ================================================================ */
+
 
 .form-group {
     margin-bottom: 2rem;
@@ -2908,10 +2831,6 @@ html[data-theme="dark"] .form-textarea:focus {
     border-top: 1px solid rgba(148, 163, 184, 0.1);
 }
 
-/* ================================================================
-   REPLY FORM SECTION
-   ================================================================ */
-
 .reply-form-section {
     margin-top: 3rem;
     padding: 2rem;
@@ -2944,10 +2863,6 @@ html[data-theme="dark"] .reply-form-section {
     flex-direction: column;
     gap: 1.5rem;
 }
-
-/* ================================================================
-   LOGIN PROMPT
-   ================================================================ */
 
 .login-prompt {
     padding: 2.5rem;
@@ -3113,10 +3028,6 @@ html[data-theme="dark"] .reply-form-section {
     border-bottom-color: #0d7d92;
 }
 
-/* ================================================================
-   BADGE STYLES
-   ================================================================ */
-
 .badge {
     display: inline-flex;
     align-items: center;
@@ -3136,10 +3047,6 @@ html[data-theme="dark"] .reply-form-section {
     background: linear-gradient(135deg, rgba(14, 154, 167, 0.25), rgba(14, 154, 167, 0.15));
     border-color: rgba(14, 154, 167, 0.3);
 }
-
-/* ================================================================
-   TIPS CARD ENHANCEMENT
-   ================================================================ */
 
 .tips-card {
     padding: 2rem;
@@ -3200,9 +3107,7 @@ html[data-theme="dark"] .tips-card {
     color: var(--forum-primary);
 }
 
-/* ================================================================
-   ACCESSIBILITY IMPROVEMENTS
-   ================================================================ */
+
 
 .sr-only {
     position: absolute;
@@ -3229,7 +3134,6 @@ button[title],
     cursor: pointer;
 }
 
-/* Focus visible improvements */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -3246,19 +3150,11 @@ textarea:focus-visible {
     outline-offset: 2px;
 }
 
-/* ================================================================
-   TRANSITION DEFAULTS
-   ================================================================ */
-
 * {
     --transition-short: 150ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-medium: 300ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-long: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-/* ================================================================
-   BUTTON GROUP STYLING
-   ================================================================ */
 
 .button-group {
     display: flex;

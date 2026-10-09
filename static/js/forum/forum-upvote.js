@@ -1,7 +1,3 @@
-/**
- * Forum AJAX Upvote Handler
- * Handles upvoting for both posts and replies using AJAX
- */
 
 document.addEventListener('DOMContentLoaded', function() {
     const getCsrfToken = () => {

@@ -1,4 +1,3 @@
-"""Forum workflows on the current cleanup branch."""
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
