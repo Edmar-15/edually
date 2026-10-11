@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateExplanationButton();
     }
 
-    [ 'scroll', 'wheel', 'touchstart', 'pointerdown' ].forEach(ev => {
+    [ 'wheel', 'touchstart', 'pointerdown' ].forEach(ev => {
         chatWindow.addEventListener(ev, markUserInteracting, { passive: true });
     });
 
@@ -603,6 +603,8 @@ document.addEventListener("DOMContentLoaded", () => {
         sourceLabel = null,
         sources = []
     ) {
+        const followAnimatedAnswer =
+        role === "ai" && animate && isUserNearBottom();
         const msgDiv = document.createElement("div");
         msgDiv.className = `message ${role}-message`;
         msgDiv.dataset.messageIndex = messageCounter;
@@ -725,43 +727,75 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 10);
 
         if (role === "ai" && animate) {
-            animateMessageText(txt, text);
+            animateMessageText(txt, text, followAnimatedAnswer);
         } else {
             txt.innerHTML = renderMarkdown(text);
         }
     }
 
-    function animateMessageText(container, fullText) {
+    function animateMessageText(container, fullText, shouldFollow = true) {
         let index = 0;
         const speed = 18;
-        const scrollEvery = 3;
-        const renderEvery = 1;
-        const messageEl = container.closest('.message');
+        let followOutput = shouldFollow;
+
+        const previousScrollBehavior = chatWindow.style.scrollBehavior;
+
+        // The answer should follow immediately, without smooth-scroll lag.
+        chatWindow.style.scrollBehavior = "auto";
+
+        // Allow the student to interrupt automatic scrolling.
+        const stopFollowing = () => {
+            followOutput = false;
+        };
+
+        chatWindow.addEventListener("wheel", stopFollowing, {
+            passive: true
+        });
+
+        chatWindow.addEventListener("touchstart", stopFollowing, {
+            passive: true
+        });
+
+        chatWindow.addEventListener("pointerdown", stopFollowing, {
+            passive: true
+        });
+
+        function finishAnimation() {
+            clearInterval(timer);
+
+            chatWindow.removeEventListener("wheel", stopFollowing);
+            chatWindow.removeEventListener("touchstart", stopFollowing);
+            chatWindow.removeEventListener("pointerdown", stopFollowing);
+
+            chatWindow.style.scrollBehavior = previousScrollBehavior;
+        }
+
         const timer = setInterval(() => {
-            index += 1;
-            const snippet = fullText.slice(0, index);
-            if (index % renderEvery === 0 || index === fullText.length) {
-                container.innerHTML = renderMarkdown(snippet);
-            } else {
-                container.textContent = snippet;
+            // Stop if the message was removed or another chat was opened.
+            if (!container.isConnected) {
+                finishAnimation();
+                return;
             }
 
-            if (isUserNearBottom() && !userInteracting) {
-                if (messageEl && index % scrollEvery === 0) {
-                    messageEl.scrollIntoView({ behavior: 'auto', block: 'end' });
-                } else {
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
-                }
+            index = Math.min(index + 1, fullText.length);
+
+            const snippet = fullText.slice(0, index);
+
+            container.innerHTML = renderMarkdown(snippet);
+
+            // Continue following even as the answer becomes longer.
+            if (followOutput) {
+                chatWindow.scrollTop = chatWindow.scrollHeight;
             }
 
             if (index >= fullText.length) {
-                clearInterval(timer);
                 container.innerHTML = renderMarkdown(fullText);
-                setTimeout(() => {
-                    if (isUserNearBottom() && !userInteracting) {
-                        chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
-                    }
-                }, 50);
+
+                if (followOutput) {
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+
+                finishAnimation();
             }
         }, speed);
     }
@@ -985,6 +1019,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         renderExistingMessages();
         initMiniMap();
+
+        // Also restore the bottom position on direct page loads.
+        if (startId) {
+            scrollToLatestMessage();
+        }
     })();
 
 });
