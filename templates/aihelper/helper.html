@@ -125,6 +125,38 @@ noindex, nofollow
                         </div>
 
                         <form id="chat-form" class="chat-form" autocomplete="off">
+                            <div id="socratic-actions"
+                                class="socratic-actions"
+                                role="group"
+                                aria-label="Socratic learning controls"
+                                hidden>
+
+                                <button type="button"
+                                        class="socratic-action-btn"
+                                        data-socratic-action="hint"
+                                        disabled>
+                                    <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+                                    <span>Hint</span>
+                                </button>
+
+                                <button type="button"
+                                        class="socratic-action-btn"
+                                        data-socratic-action="simplify"
+                                        disabled>
+                                    <i class="fa-solid fa-wand-magic-sparkles"
+                                    aria-hidden="true"></i>
+                                    <span>Simplify</span>
+                                </button>
+
+                                <button type="button"
+                                        class="socratic-action-btn"
+                                        data-socratic-action="answer"
+                                        disabled>
+                                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                    <span>Show Answer</span>
+                                </button>
+
+                            </div>
                             <div class="input-row">
                                 <input id="chat-input"
                                        type="text"

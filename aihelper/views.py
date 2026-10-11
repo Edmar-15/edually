@@ -17,6 +17,40 @@ import openai
 
 log = logging.getLogger(__name__)
 
+SOCRATIC_ACTIONS = {
+    "hint": {
+        "label": "Hint please",
+        "instruction": (
+            "The student wants a hint for the current problem. "
+            "Give one small clue without revealing the final answer. "
+            "If previous hints were already given, provide a "
+            "slightly more specific clue. "
+            "End with one guiding question."
+        ),
+    },
+
+    "simplify": {
+        "label": "Please simplify",
+        "instruction": (
+            "The student wants an easier explanation. "
+            "Simplify the latest Socratic question using "
+            "plain language or a smaller example. "
+            "Ask one simpler guiding question."
+        ),
+    },
+
+    "answer": {
+        "label": "Show the answer",
+        "instruction": (
+            "The student explicitly requested the solution "
+            "to the current learning problem. "
+            "Provide the correct answer with a short "
+            "step-by-step explanation. "
+            "Do not withhold the answer."
+        ),
+    },
+}
+
 
 def _last_n_turns(
     conversation: Conversation,
@@ -120,6 +154,7 @@ def _handle_socratic_request(
     request,
     question: str,
     conversation: Conversation,
+    action: str | None = None,
 ) -> JsonResponse:
     """
     Handle Socratic mode separately from Simple/Technical mode.
@@ -135,6 +170,14 @@ def _handle_socratic_request(
         "socratic",
         question,
     )
+    
+    if action:
+        instruction = SOCRATIC_ACTIONS[action]["instruction"]
+
+        system_prompt += (
+            "\n\nCURRENT STUDENT ACTION:\n"
+            f"{instruction}"
+        )
 
     history = _last_n_turns(
         conversation,
@@ -388,9 +431,60 @@ def helper_api(request):
             status=400,
         )
 
-    question = (payload.get("question") or "").strip()
+    if not isinstance(payload, dict):
+        return JsonResponse(
+            {"error": "Invalid request payload"},
+            status=400,
+        )
+
+    raw_question = payload.get("question", "")
+
+    if not isinstance(raw_question, str):
+        return JsonResponse(
+            {"error": "Question must be text"},
+            status=400,
+        )
+
+    question = raw_question.strip()
+
     level = payload.get("explanation_level", "simplified")
     conv_id = payload.get("conversation_id")
+    action = payload.get("socratic_action")
+
+    if action is not None:
+
+        if (
+            not isinstance(action, str)
+            or action not in SOCRATIC_ACTIONS
+        ):
+            return JsonResponse(
+                {"error": "Invalid Socratic action"},
+                status=400,
+            )
+
+        if level != "socratic" or not conv_id:
+            return JsonResponse(
+                {
+                    "error": (
+                        "An existing Socratic conversation "
+                        "is required."
+                    )
+                },
+                status=400,
+            )
+
+        if question:
+            return JsonResponse(
+                {
+                    "error": (
+                        "Send either a question or "
+                        "a Socratic action."
+                    )
+                },
+                status=400,
+            )
+
+        question = SOCRATIC_ACTIONS[action]["label"]
 
     if not question:
         return JsonResponse(
@@ -412,11 +506,34 @@ def helper_api(request):
                 user=request.user,
                 title=question[:80],
             )
+        
+        if action:
+            latest_ai = (
+                conversation.messages
+                .filter(role="ai")
+                .order_by("-created_at", "-pk")
+                .first()
+            )
+
+            if (
+                latest_ai is None
+                or latest_ai.source_type != "socratic"
+            ):
+                return JsonResponse(
+                    {
+                        "error": (
+                            "Start a Socratic discussion "
+                            "before using learning controls."
+                        )
+                    },
+                    status=400,
+                )
 
         return _handle_socratic_request(
             request=request,
             question=question,
             conversation=conversation,
+            action=action,
         )
 
     try:

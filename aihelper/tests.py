@@ -169,3 +169,71 @@ class AIHelperTests(TestCase):
             response.json()["source"],
             "socratic",
         )
+        
+    @patch(
+        "aihelper.views._call_openai",
+        return_value="Here is some guidance."
+    )
+    def test_socratic_learning_actions(self, mock_ai):
+
+        first = self.post_question({
+            "question": "How does a Python loop work?",
+            "explanation_level": "socratic",
+        })
+
+        self.assertEqual(first.status_code, 200)
+
+        conversation_id = first.json()["conversation_id"]
+
+        actions = {
+            "hint": "Give one small clue",
+            "simplify": "Simplify the latest Socratic question",
+            "answer": "Provide the correct answer",
+        }
+
+        for action, expected_instruction in actions.items():
+
+            with self.subTest(action=action):
+
+                response = self.post_question({
+                    "question": "",
+                    "explanation_level": "socratic",
+                    "conversation_id": conversation_id,
+                    "socratic_action": action,
+                })
+
+                self.assertEqual(response.status_code, 200)
+
+                messages = mock_ai.call_args.args[0]
+
+                self.assertIn(
+                    expected_instruction,
+                    messages[0]["content"],
+                )
+
+                self.assertEqual(
+                    response.json()["source"],
+                    "socratic",
+                )
+
+        self.assertEqual(
+            Message.objects.filter(
+                conversation_id=conversation_id
+            ).count(),
+            8,
+        )
+
+    def test_socratic_action_requires_conversation(self):
+
+        response = self.post_question({
+            "question": "",
+            "explanation_level": "socratic",
+            "socratic_action": "hint",
+        })
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(
+            Conversation.objects.count(),
+            0,
+        )

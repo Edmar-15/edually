@@ -10,6 +10,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const conversationMap = document.getElementById("conversation-map");
     const conversationResizer = document.getElementById("conversation-resizer");
     const conversationCloseButton = document.getElementById("conversation-close-button");
+    const socraticActions =
+        document.getElementById("socratic-actions");
+
+    const socraticActionButtons = Array.from(
+        document.querySelectorAll("[data-socratic-action]")
+    );
+
+    let requestInFlight = false;
+    let activeConversationIsSocratic = false;
 
     let activeConversationId = document.querySelector(".conversation-item.active")?.dataset.id || null;
     let messageCounter = 0;
@@ -57,12 +66,33 @@ document.addEventListener("DOMContentLoaded", () => {
         socratic: "Socratic"
     };
 
+    function updateSocraticActions() {
+        if (!socraticActions) return;
+
+        const isSocratic =
+            levelButton?.dataset.level === "socratic";
+
+        // Display controls only in Socratic mode
+        socraticActions.hidden = !isSocratic;
+
+        // Enable only for an active Socratic discussion
+        socraticActionButtons.forEach(button => {
+            button.disabled =
+                !isSocratic ||
+                !activeConversationId ||
+                !activeConversationIsSocratic ||
+                requestInFlight ||
+                input.disabled;
+        });
+    }
+
     function updateExplanationButton(level = levelButton?.dataset.level || "simplified") {
         if (!levelButton) return;
         const normalized = ["simplified", "technical", "socratic"].includes(level) ? level : "simplified";
         levelButton.dataset.level = normalized;
         levelButton.textContent = explanationLabels[normalized] || "Simple";
         levelButton.setAttribute("aria-label", `Explanation level: ${explanationLabels[normalized] || "Simple"}`);
+        updateSocraticActions();
     }
 
     if (levelButton) {
@@ -298,6 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function selectConversation(convId) {
+        if (requestInFlight) return;
         document.querySelectorAll(".conversation-item")
                 .forEach(i => i.classList.remove("active"));
         messageCounter = 0;
@@ -305,6 +336,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (clicked) clicked.classList.add("active");
 
         activeConversationId = convId;
+        activeConversationIsSocratic = false;
+        updateSocraticActions();
         document.querySelectorAll(".message").forEach((message) => message.remove());
         updateHeaderBadge(document.querySelector(`.conversation-item[data-id="${convId}"]`)?.dataset.title || "New conversation");
         input.value = "";
@@ -316,6 +349,23 @@ document.addEventListener("DOMContentLoaded", () => {
             const url = GET_CONV_URL + convId + "/";
             const resp = await fetch(url, { credentials: "same-origin" });
             const data = await resp.json();
+
+            const savedMessages = Array.isArray(data.messages)
+                ? data.messages
+                : [];
+
+            const lastAI = [...savedMessages]
+                .reverse()
+                .find(message => message.role === "ai");
+
+            activeConversationIsSocratic =
+                lastAI?.source_type === "socratic";
+
+            updateExplanationButton(
+                activeConversationIsSocratic
+                    ? "socratic"
+                    : "simplified"
+            );
 
             if (data.messages && data.messages.length) {
                 data.messages.forEach(m => {
@@ -340,84 +390,175 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
             input.disabled = false;
             if (levelButton) levelButton.disabled = false;
+            updateSocraticActions();
             input.focus();
         }
     }
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const question = input.value.trim();
-        if (!question) return;
-
+    async function sendMessage(question, action = null) {
         const level = levelButton?.dataset.level || "simplified";
+
+        // Prevent duplicate requests
+        if (requestInFlight || !question) return;
+
+        // Validate Socratic controls
+        if (
+            action &&
+            (
+                level !== "socratic" ||
+                !activeConversationId ||
+                !activeConversationIsSocratic
+            )
+        ) {
+            return;
+        }
+
+        requestInFlight = true;
 
         toggleEmptyState(false);
         appendMessage("user", question);
-        input.value = "";
+
+        // Keep draft text when clicking a learning control
+        if (!action) {
+            input.value = "";
+        }
+
         input.disabled = true;
         if (levelButton) levelButton.disabled = true;
 
+        updateSocraticActions();
+
         const payload = {
-            question,
+            question: action ? "" : question,
             explanation_level: level,
             conversation_id: activeConversationId,
         };
 
+        if (action) {
+            payload.socratic_action = action;
+        }
+
         try {
             showTypingIndicator(true);
+
             const resp = await fetch(AI_HELPER_API_URL, {
                 method: "POST",
                 credentials: "same-origin",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie("csrftoken")
+                    "X-CSRFToken": getCookie("csrftoken"),
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
             });
 
             const data = await resp.json();
 
-            if (resp.ok && data.answer) {
-                appendMessage(
-                    "ai",
-                    data.answer,
-                    true,
-                    data.source || "general",
-                    data.source_label || "General knowledge",
-                    data.sources || []
+            if (!resp.ok || !data.answer) {
+                throw new Error(
+                    data.error || "AI request failed"
                 );
-
-                if (!activeConversationId || activeConversationId != data.conversation_id) {
-                    activeConversationId = data.conversation_id;
-                    await loadConversationList();
-                }
-
-                const promptMessages = Array.from(chatWindow.querySelectorAll('.message.user-message'))
-                    .map((messageEl) => ({
-                        role: 'user',
-                        content: messageEl.querySelector('.message-text')?.textContent || ''
-                    }));
-                renderPromptHistory(promptMessages, activeConversationId);
-                updateHeaderBadge(data.title || question);
-
-                document.querySelectorAll(".conversation-item")
-                        .forEach(i => i.classList.remove("active"));
-                const activeEl = document.querySelector(`.conversation-item[data-id="${activeConversationId}"]`);
-                if (activeEl) activeEl.classList.add("active");
-            } else {
-                console.error("API error:", data);
-                appendMessage("ai", "Sorry – something went wrong.");
             }
-        } catch (err) {
-            console.error(err);
-            appendMessage("ai", "Network error – try again later.");
+
+            appendMessage(
+                "ai",
+                data.answer,
+                true,
+                data.source || "general",
+                data.source_label || "General knowledge",
+                data.sources || []
+            );
+
+            activeConversationIsSocratic =
+                data.source === "socratic";
+
+            if (
+                !activeConversationId ||
+                activeConversationId != data.conversation_id
+            ) {
+                activeConversationId = data.conversation_id;
+                await loadConversationList();
+            }
+
+            const promptMessages = Array.from(
+                chatWindow.querySelectorAll(".message.user-message")
+            ).map(messageEl => ({
+                role: "user",
+                content:
+                    messageEl.querySelector(".message-text")
+                        ?.textContent || "",
+            }));
+
+            renderPromptHistory(
+                promptMessages,
+                activeConversationId
+            );
+
+            updateHeaderBadge(data.title || question);
+
+            document.querySelectorAll(".conversation-item")
+                .forEach(item => item.classList.remove("active"));
+
+            const activeEl = document.querySelector(
+                `.conversation-item[data-id="${activeConversationId}"]`
+            );
+
+            if (activeEl) {
+                activeEl.classList.add("active");
+            }
+
+        } catch (error) {
+            console.error(
+                "EduAlly request failed:",
+                error
+            );
+
+            appendMessage(
+                "ai",
+                "Sorry, something went wrong. Please try again."
+            );
+
         } finally {
             showTypingIndicator(false);
+
+            requestInFlight = false;
             input.disabled = false;
-            if (levelButton) levelButton.disabled = false;
+
+            if (levelButton) {
+                levelButton.disabled = false;
+            }
+
+            updateSocraticActions();
             input.focus();
         }
+    }
+
+    // Normal chat submission
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+
+        const question = input.value.trim();
+
+        if (question) {
+            sendMessage(question);
+        }
+    });
+
+    // Socratic learning actions
+    const actionLabels = {
+        hint: "Hint please",
+        simplify: "Please simplify",
+        answer: "Show the answer",
+    };
+
+    socraticActionButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const action = button.dataset.socraticAction;
+            const label = actionLabels[action];
+
+            if (!label) return;
+
+            sendMessage(label, action);
+        });
     });
 
     function showTypingIndicator(visible) {
@@ -705,7 +846,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     code += lines[i] + "\n";
                     i++;
                 }
-                html += `<pre><code>${escapeHtml(code.trim())}</code></pre>`;
+                html += `<pre><code>${code.trim()}</code></pre>`;
                 continue;
             }
 
@@ -783,7 +924,7 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .replace(/\*\*([^*]+)\*\*/g, (_, bold) => `<strong>${escapeHtml(bold)}</strong>`)
             .replace(/\*([^*]+)\*/g, (_, italic) => `<em>${escapeHtml(italic)}</em>`)
-            .replace(/`([^`]+)`/g, (_, code) => `<code>${escapeHtml(code)}</code>`);
+            .replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
     }
 
     function renderExistingMessages() {
