@@ -132,15 +132,15 @@ def _call_openai(
         )
 
     except Exception as exc:
-        log.exception(
+        log.error(
             (
-                "OpenAI request failed – model=%s, "
-                "temperature=%.2f, token_limit=%s, payload=%s"
+                "OpenAI request failed - model=%s, "
+                "temperature=%.2f, token_limit=%s, error_type=%s"
             ),
             settings.OPENAI_MODEL,
             temperature,
             1024,
-            messages,
+            type(exc).__name__,
         )
 
         raise RuntimeError(

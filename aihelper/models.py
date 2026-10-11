@@ -57,6 +57,7 @@ class Message(models.Model):
     SOURCE_TYPE_CHOICES = [
         ("slm", "SLM"),
         ("general", "General Knowledge"),
+        ("socratic", "Socratic learning"),
     ]
 
     source_type = models.CharField(

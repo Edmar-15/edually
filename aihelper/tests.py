@@ -321,3 +321,223 @@ class AIHelperTests(TestCase):
             Conversation.objects.count(),
             1,
         )
+        
+
+    @patch(
+        "aihelper.views._call_openai",
+        return_value="What do you already know about loops?"
+    )
+    @patch("aihelper.views.find_relevant_slm_context")
+    def test_socratic_does_not_search_slm(self, mock_context, mock_ai):
+        response = self.post_question({
+            "question": "Explain Python loops",
+            "explanation_level": "socratic",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["source"], "socratic")
+
+        mock_context.assert_not_called()
+        mock_ai.assert_called_once()
+
+        ai_message = Message.objects.get(
+            role="ai",
+            conversation_id=response.json()["conversation_id"],
+        )
+
+        self.assertEqual(ai_message.source_type, "socratic")
+
+
+    @patch("aihelper.views._call_openai")
+    def test_socratic_action_cannot_access_other_user(self, mock_ai):
+        foreign = Conversation.objects.create(
+            user=self.other,
+            title="Private discussion",
+            explanation_level="socratic",
+        )
+
+        Message.objects.create(
+            conversation=foreign,
+            user=self.other,
+            role="ai",
+            content="What do you think?",
+            source_type="socratic",
+        )
+
+        response = self.post_question({
+            "question": "",
+            "explanation_level": "socratic",
+            "conversation_id": foreign.pk,
+            "socratic_action": "hint",
+        })
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(foreign.messages.count(), 1)
+
+        mock_ai.assert_not_called()
+
+
+    @patch("aihelper.views._call_openai")
+    def test_socratic_action_rejected_in_simple_conversation(self, mock_ai):
+        conversation = Conversation.objects.create(
+            user=self.user,
+            title="Simple discussion",
+            explanation_level="simplified",
+        )
+
+        Message.objects.create(
+            conversation=conversation,
+            user=self.user,
+            role="ai",
+            content="A normal explanation.",
+            source_type="general",
+        )
+
+        response = self.post_question({
+            "question": "",
+            "explanation_level": "socratic",
+            "conversation_id": conversation.pk,
+            "socratic_action": "hint",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(conversation.messages.count(), 1)
+
+        mock_ai.assert_not_called()
+
+
+    @patch(
+        "aihelper.views._call_openai",
+        side_effect=RuntimeError("Simulated AI failure")
+    )
+    def test_socratic_failure_does_not_save_messages(self, mock_ai):
+        conversation = Conversation.objects.create(
+            user=self.user,
+            title="Existing conversation",
+            explanation_level="simplified",
+        )
+
+        response = self.post_question({
+            "question": "What is recursion?",
+            "explanation_level": "socratic",
+            "conversation_id": conversation.pk,
+        })
+
+        self.assertEqual(response.status_code, 500)
+
+        self.assertEqual(
+            conversation.messages.count(),
+            0,
+        )
+
+        conversation.refresh_from_db()
+
+        self.assertEqual(
+            conversation.explanation_level,
+            "simplified",
+        )
+
+
+    @patch(
+        "aihelper.views._call_openai",
+        side_effect=[
+            "What do you think a variable is?",
+            "What other types of values could it store?",
+        ],
+    )
+    def test_socratic_followup_includes_conversation_history(self, mock_ai):
+        first = self.post_question({
+            "question": "What is a variable?",
+            "explanation_level": "socratic",
+        })
+
+        self.assertEqual(first.status_code, 200)
+
+        conversation_id = first.json()["conversation_id"]
+
+        second = self.post_question({
+            "question": "Variables store numbers.",
+            "explanation_level": "socratic",
+            "conversation_id": conversation_id,
+        })
+
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(mock_ai.call_count, 2)
+
+        messages = mock_ai.call_args.args[0]
+
+        self.assertEqual(
+            [message["role"] for message in messages],
+            ["system", "user", "assistant", "user"],
+        )
+
+        self.assertEqual(
+            messages[1]["content"],
+            "What is a variable?",
+        )
+
+        self.assertEqual(
+            messages[2]["content"],
+            "What do you think a variable is?",
+        )
+
+        self.assertEqual(
+            messages[3]["content"],
+            "Variables store numbers.",
+        )
+
+        self.assertEqual(
+            Message.objects.filter(
+                conversation_id=conversation_id
+            ).count(),
+            4,
+        )
+
+    def test_socratic_source_type_is_valid_choice(self):
+        conversation = Conversation.objects.create(
+            user=self.user,
+            title="Socratic validation",
+            explanation_level="socratic",
+        )
+
+        message = Message(
+            conversation=conversation,
+            user=self.user,
+            role="ai",
+            content="What do you think?",
+            source_type="socratic",
+            source_label="Socratic learning",
+        )
+
+        message.full_clean()
+
+
+    @patch("aihelper.views.openai.OpenAI")
+    def test_openai_failure_omits_student_data_from_logs(self, mock_client):
+        from .views import _call_openai
+
+        private_text = "STUDENT_PRIVATE_MESSAGE_ABC123"
+
+        mock_client.return_value.chat.completions.create.side_effect = (
+            RuntimeError(f"Provider echoed: {private_text}")
+        )
+
+        with self.assertLogs("aihelper.views", level="ERROR") as logs:
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "OpenAI request failed",
+            ):
+                _call_openai(
+                    [
+                        {
+                            "role": "user",
+                            "content": private_text,
+                        }
+                    ],
+                    level="socratic",
+                )
+
+        logged_text = "\n".join(logs.output)
+
+        self.assertIn("OpenAI request failed", logged_text)
+        self.assertNotIn(private_text, logged_text)
