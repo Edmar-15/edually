@@ -37,6 +37,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return (chatWindow.scrollHeight - chatWindow.clientHeight - chatWindow.scrollTop) < threshold;
     }
 
+    function scrollToLatestMessage() {
+        requestAnimationFrame(() => {
+            const previousBehavior = chatWindow.style.scrollBehavior;
+
+            // Jump immediately instead of animating from the top.
+            chatWindow.style.scrollBehavior = "auto";
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            chatWindow.style.scrollBehavior = previousBehavior;
+        });
+    }
+
     async function loadConversationList() {
         try {
             const resp = await fetch(LIST_CONV_URL, { credentials: "same-origin" });
@@ -391,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderPromptHistory([], convId);
                 toggleEmptyState(true);
             }
+            scrollToLatestMessage();
         } catch (e) {
             console.error("Failed to load conversation:", e);
         } finally {
