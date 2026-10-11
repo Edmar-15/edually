@@ -242,11 +242,15 @@ def _handle_socratic_request(
             ]
         )
 
+    update_fields = ["explanation_level"]
+
+    conversation.explanation_level = "socratic"
+
     if not conversation.title:
         conversation.title = question[:80]
-        conversation.save(
-            update_fields=["title"]
-        )
+        update_fields.append("title")
+
+    conversation.save(update_fields=update_fields)
 
     return JsonResponse(
         {
@@ -407,6 +411,7 @@ def get_conversation(request, pk):
         {
             "conversation_id": conv.id,
             "title": conv.title,
+            "explanation_level": conv.explanation_level,
             "messages": msgs,
         }
     )
@@ -505,6 +510,7 @@ def helper_api(request):
             conversation = Conversation.objects.create(
                 user=request.user,
                 title=question[:80],
+                explanation_level="socratic",
             )
         
         if action:
@@ -556,6 +562,7 @@ def helper_api(request):
         conversation = Conversation.objects.create(
             user=request.user,
             title=question[:80],
+            explanation_level=level,
         )
 
     try:
@@ -679,11 +686,15 @@ def helper_api(request):
             ]
         )
 
+    update_fields = ["explanation_level"]
+
+    conversation.explanation_level = level
+
     if not conversation.title:
         conversation.title = question[:80]
-        conversation.save(
-            update_fields=["title"]
-        )
+        update_fields.append("title")
+
+    conversation.save(update_fields=update_fields)
 
     return JsonResponse(
         {

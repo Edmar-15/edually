@@ -350,22 +350,28 @@ document.addEventListener("DOMContentLoaded", () => {
             const resp = await fetch(url, { credentials: "same-origin" });
             const data = await resp.json();
 
-            const savedMessages = Array.isArray(data.messages)
-                ? data.messages
-                : [];
+            // Restore the saved learning mode from Django
+            const allowedLevels = [
+                "simplified",
+                "technical",
+                "socratic"
+            ];
 
-            const lastAI = [...savedMessages]
-                .reverse()
-                .find(message => message.role === "ai");
+            const savedLevel = allowedLevels.includes(
+                data.explanation_level
+            )
+                ? data.explanation_level
+                : "simplified";
 
+            // Determine whether Socratic controls should be enabled
             activeConversationIsSocratic =
-                lastAI?.source_type === "socratic";
+                savedLevel === "socratic";
 
-            updateExplanationButton(
-                activeConversationIsSocratic
-                    ? "socratic"
-                    : "simplified"
-            );
+            // Restore the explanation mode button
+            updateExplanationButton(savedLevel);
+
+            // Refresh the learning controls
+            updateSocraticActions();
 
             if (data.messages && data.messages.length) {
                 data.messages.forEach(m => {

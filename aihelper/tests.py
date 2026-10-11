@@ -237,3 +237,87 @@ class AIHelperTests(TestCase):
             Conversation.objects.count(),
             0,
         )
+        
+    @patch(
+        "aihelper.views._call_openai",
+        return_value="What do you already know about variables?"
+    )
+    def test_socratic_conversation_mode_is_saved(self, mock_ai):
+
+        response = self.post_question({
+            "question": "What is a Python variable?",
+            "explanation_level": "socratic",
+        })
+
+        self.assertEqual(response.status_code, 200)
+
+        conversation_id = response.json()["conversation_id"]
+
+        conversation = Conversation.objects.get(
+            pk=conversation_id
+        )
+
+        self.assertEqual(
+            conversation.explanation_level,
+            "socratic",
+        )
+
+        history = self.client.get(
+            reverse(
+                "aihelper:get_conversation",
+                args=[conversation_id],
+            )
+        )
+
+        self.assertEqual(history.status_code, 200)
+
+        self.assertEqual(
+            history.json()["explanation_level"],
+            "socratic",
+        )
+
+    @patch(
+        "aihelper.views._call_openai",
+        return_value="An explanation."
+    )
+    @patch(
+        "aihelper.views.find_relevant_slm_context"
+    )
+    def test_conversation_mode_updates(self, mock_context, mock_ai):
+
+        mock_context.return_value = {
+            "found": False,
+            "sources": [],
+            "context": "",
+        }
+
+        first = self.post_question({
+            "question": "Explain Python variables",
+            "explanation_level": "simplified",
+        })
+
+        self.assertEqual(first.status_code, 200)
+
+        conversation_id = first.json()["conversation_id"]
+
+        second = self.post_question({
+            "question": "Explain more technically",
+            "explanation_level": "technical",
+            "conversation_id": conversation_id,
+        })
+
+        self.assertEqual(second.status_code, 200)
+
+        conversation = Conversation.objects.get(
+            pk=conversation_id
+        )
+
+        self.assertEqual(
+            conversation.explanation_level,
+            "technical",
+        )
+
+        self.assertEqual(
+            Conversation.objects.count(),
+            1,
+        )

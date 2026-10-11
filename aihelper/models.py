@@ -8,6 +8,11 @@ class Conversation(models.Model):
     """
     A single chat thread belonging to a user.
     """
+    EXPLANATION_LEVEL_CHOICES = [
+        ("simplified", "Simple"),
+        ("technical", "Technical"),
+        ("socratic", "Socratic"),
+    ]
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="ai_conversations"
     )
@@ -15,6 +20,11 @@ class Conversation(models.Model):
         max_length=255,
         blank=True,
         help_text="First user question (auto‑filled) – used in the sidebar.",
+    )
+    explanation_level = models.CharField(
+        max_length=20,
+        choices=EXPLANATION_LEVEL_CHOICES,
+        default="simplified",
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
