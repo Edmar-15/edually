@@ -17,6 +17,40 @@ import openai
 
 log = logging.getLogger(__name__)
 
+SOCRATIC_ACTIONS = {
+    "hint": {
+        "label": "Hint please",
+        "instruction": (
+            "The student wants a hint for the current problem. "
+            "Give one small clue without revealing the final answer. "
+            "If previous hints were already given, provide a "
+            "slightly more specific clue. "
+            "End with one guiding question."
+        ),
+    },
+
+    "simplify": {
+        "label": "Please simplify",
+        "instruction": (
+            "The student wants an easier explanation. "
+            "Simplify the latest Socratic question using "
+            "plain language or a smaller example. "
+            "Ask one simpler guiding question."
+        ),
+    },
+
+    "answer": {
+        "label": "Show the answer",
+        "instruction": (
+            "The student explicitly requested the solution "
+            "to the current learning problem. "
+            "Provide the correct answer with a short "
+            "step-by-step explanation. "
+            "Do not withhold the answer."
+        ),
+    },
+}
+
 
 def _last_n_turns(
     conversation: Conversation,
@@ -98,15 +132,15 @@ def _call_openai(
         )
 
     except Exception as exc:
-        log.exception(
+        log.error(
             (
-                "OpenAI request failed – model=%s, "
-                "temperature=%.2f, token_limit=%s, payload=%s"
+                "OpenAI request failed - model=%s, "
+                "temperature=%.2f, token_limit=%s, error_type=%s"
             ),
             settings.OPENAI_MODEL,
             temperature,
             1024,
-            messages,
+            type(exc).__name__,
         )
 
         raise RuntimeError(
@@ -120,6 +154,7 @@ def _handle_socratic_request(
     request,
     question: str,
     conversation: Conversation,
+    action: str | None = None,
 ) -> JsonResponse:
     """
     Handle Socratic mode separately from Simple/Technical mode.
@@ -131,35 +166,18 @@ def _handle_socratic_request(
     - Stores the response source as "socratic".
     """
 
-    system_prompt = """
-You are EduAlly's Socratic learning assistant.
+    system_prompt = system_prompt_for(
+        "socratic",
+        question,
+    )
+    
+    if action:
+        instruction = SOCRATIC_ACTIONS[action]["instruction"]
 
-Your purpose is to help the student THINK and discover the answer,
-not simply provide the answer.
-
-Follow these rules:
-
-1. Do not immediately give the final answer to the student's question.
-2. Ask a meaningful guiding question that helps the student reason.
-3. Ask only ONE main question at a time.
-4. Use the student's previous responses to decide what to ask next.
-5. If the student's reasoning is correct, acknowledge it briefly and
-   guide them toward the next step.
-6. If the student's reasoning is incorrect, do not simply give the answer.
-   Point out the issue and provide a small hint or guiding question.
-7. If the student is confused, simplify the reasoning without directly
-   solving the entire problem.
-8. Encourage the student to explain their reasoning.
-9. Avoid long lectures and unnecessary definitions.
-10. Do not mention SLM, learning-material sources, or general-knowledge
-    source labels.
-11. Stay focused on helping the student understand the concept through
-    guided questioning.
-
-Your response should normally contain:
-- a brief acknowledgement or observation when useful
-- ONE guiding question
-"""
+        system_prompt += (
+            "\n\nCURRENT STUDENT ACTION:\n"
+            f"{instruction}"
+        )
 
     history = _last_n_turns(
         conversation,
@@ -224,11 +242,15 @@ Your response should normally contain:
             ]
         )
 
+    update_fields = ["explanation_level"]
+
+    conversation.explanation_level = "socratic"
+
     if not conversation.title:
         conversation.title = question[:80]
-        conversation.save(
-            update_fields=["title"]
-        )
+        update_fields.append("title")
+
+    conversation.save(update_fields=update_fields)
 
     return JsonResponse(
         {
@@ -389,6 +411,7 @@ def get_conversation(request, pk):
         {
             "conversation_id": conv.id,
             "title": conv.title,
+            "explanation_level": conv.explanation_level,
             "messages": msgs,
         }
     )
@@ -413,9 +436,60 @@ def helper_api(request):
             status=400,
         )
 
-    question = (payload.get("question") or "").strip()
+    if not isinstance(payload, dict):
+        return JsonResponse(
+            {"error": "Invalid request payload"},
+            status=400,
+        )
+
+    raw_question = payload.get("question", "")
+
+    if not isinstance(raw_question, str):
+        return JsonResponse(
+            {"error": "Question must be text"},
+            status=400,
+        )
+
+    question = raw_question.strip()
+
     level = payload.get("explanation_level", "simplified")
     conv_id = payload.get("conversation_id")
+    action = payload.get("socratic_action")
+
+    if action is not None:
+
+        if (
+            not isinstance(action, str)
+            or action not in SOCRATIC_ACTIONS
+        ):
+            return JsonResponse(
+                {"error": "Invalid Socratic action"},
+                status=400,
+            )
+
+        if level != "socratic" or not conv_id:
+            return JsonResponse(
+                {
+                    "error": (
+                        "An existing Socratic conversation "
+                        "is required."
+                    )
+                },
+                status=400,
+            )
+
+        if question:
+            return JsonResponse(
+                {
+                    "error": (
+                        "Send either a question or "
+                        "a Socratic action."
+                    )
+                },
+                status=400,
+            )
+
+        question = SOCRATIC_ACTIONS[action]["label"]
 
     if not question:
         return JsonResponse(
@@ -436,12 +510,36 @@ def helper_api(request):
             conversation = Conversation.objects.create(
                 user=request.user,
                 title=question[:80],
+                explanation_level="socratic",
             )
+        
+        if action:
+            latest_ai = (
+                conversation.messages
+                .filter(role="ai")
+                .order_by("-created_at", "-pk")
+                .first()
+            )
+
+            if (
+                latest_ai is None
+                or latest_ai.source_type != "socratic"
+            ):
+                return JsonResponse(
+                    {
+                        "error": (
+                            "Start a Socratic discussion "
+                            "before using learning controls."
+                        )
+                    },
+                    status=400,
+                )
 
         return _handle_socratic_request(
             request=request,
             question=question,
             conversation=conversation,
+            action=action,
         )
 
     try:
@@ -464,6 +562,7 @@ def helper_api(request):
         conversation = Conversation.objects.create(
             user=request.user,
             title=question[:80],
+            explanation_level=level,
         )
 
     try:
@@ -587,11 +686,15 @@ def helper_api(request):
             ]
         )
 
+    update_fields = ["explanation_level"]
+
+    conversation.explanation_level = level
+
     if not conversation.title:
         conversation.title = question[:80]
-        conversation.save(
-            update_fields=["title"]
-        )
+        update_fields.append("title")
+
+    conversation.save(update_fields=update_fields)
 
     return JsonResponse(
         {

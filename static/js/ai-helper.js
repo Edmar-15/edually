@@ -10,6 +10,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const conversationMap = document.getElementById("conversation-map");
     const conversationResizer = document.getElementById("conversation-resizer");
     const conversationCloseButton = document.getElementById("conversation-close-button");
+    const socraticActions =
+        document.getElementById("socratic-actions");
+
+    const socraticActionButtons = Array.from(
+        document.querySelectorAll("[data-socratic-action]")
+    );
+
+    let requestInFlight = false;
+    let activeConversationIsSocratic = false;
 
     let activeConversationId = document.querySelector(".conversation-item.active")?.dataset.id || null;
     let messageCounter = 0;
@@ -26,6 +35,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function isUserNearBottom() {
         const threshold = 140; // pixels from bottom considered "near"
         return (chatWindow.scrollHeight - chatWindow.clientHeight - chatWindow.scrollTop) < threshold;
+    }
+
+    function scrollToLatestMessage() {
+        requestAnimationFrame(() => {
+            const previousBehavior = chatWindow.style.scrollBehavior;
+
+            // Jump immediately instead of animating from the top.
+            chatWindow.style.scrollBehavior = "auto";
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            chatWindow.style.scrollBehavior = previousBehavior;
+        });
     }
 
     async function loadConversationList() {
@@ -57,12 +78,33 @@ document.addEventListener("DOMContentLoaded", () => {
         socratic: "Socratic"
     };
 
+    function updateSocraticActions() {
+        if (!socraticActions) return;
+
+        const isSocratic =
+            levelButton?.dataset.level === "socratic";
+
+        // Display controls only in Socratic mode
+        socraticActions.hidden = !isSocratic;
+
+        // Enable only for an active Socratic discussion
+        socraticActionButtons.forEach(button => {
+            button.disabled =
+                !isSocratic ||
+                !activeConversationId ||
+                !activeConversationIsSocratic ||
+                requestInFlight ||
+                input.disabled;
+        });
+    }
+
     function updateExplanationButton(level = levelButton?.dataset.level || "simplified") {
         if (!levelButton) return;
         const normalized = ["simplified", "technical", "socratic"].includes(level) ? level : "simplified";
         levelButton.dataset.level = normalized;
         levelButton.textContent = explanationLabels[normalized] || "Simple";
         levelButton.setAttribute("aria-label", `Explanation level: ${explanationLabels[normalized] || "Simple"}`);
+        updateSocraticActions();
     }
 
     if (levelButton) {
@@ -75,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateExplanationButton();
     }
 
-    [ 'scroll', 'wheel', 'touchstart', 'pointerdown' ].forEach(ev => {
+    [ 'wheel', 'touchstart', 'pointerdown' ].forEach(ev => {
         chatWindow.addEventListener(ev, markUserInteracting, { passive: true });
     });
 
@@ -298,6 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function selectConversation(convId) {
+        if (requestInFlight) return;
         document.querySelectorAll(".conversation-item")
                 .forEach(i => i.classList.remove("active"));
         messageCounter = 0;
@@ -305,6 +348,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (clicked) clicked.classList.add("active");
 
         activeConversationId = convId;
+        activeConversationIsSocratic = false;
+        updateSocraticActions();
         document.querySelectorAll(".message").forEach((message) => message.remove());
         updateHeaderBadge(document.querySelector(`.conversation-item[data-id="${convId}"]`)?.dataset.title || "New conversation");
         input.value = "";
@@ -316,6 +361,29 @@ document.addEventListener("DOMContentLoaded", () => {
             const url = GET_CONV_URL + convId + "/";
             const resp = await fetch(url, { credentials: "same-origin" });
             const data = await resp.json();
+
+            // Restore the saved learning mode from Django
+            const allowedLevels = [
+                "simplified",
+                "technical",
+                "socratic"
+            ];
+
+            const savedLevel = allowedLevels.includes(
+                data.explanation_level
+            )
+                ? data.explanation_level
+                : "simplified";
+
+            // Determine whether Socratic controls should be enabled
+            activeConversationIsSocratic =
+                savedLevel === "socratic";
+
+            // Restore the explanation mode button
+            updateExplanationButton(savedLevel);
+
+            // Refresh the learning controls
+            updateSocraticActions();
 
             if (data.messages && data.messages.length) {
                 data.messages.forEach(m => {
@@ -335,89 +403,181 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderPromptHistory([], convId);
                 toggleEmptyState(true);
             }
+            scrollToLatestMessage();
         } catch (e) {
             console.error("Failed to load conversation:", e);
         } finally {
             input.disabled = false;
             if (levelButton) levelButton.disabled = false;
+            updateSocraticActions();
             input.focus();
         }
     }
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const question = input.value.trim();
-        if (!question) return;
-
+    async function sendMessage(question, action = null) {
         const level = levelButton?.dataset.level || "simplified";
+
+        // Prevent duplicate requests
+        if (requestInFlight || !question) return;
+
+        // Validate Socratic controls
+        if (
+            action &&
+            (
+                level !== "socratic" ||
+                !activeConversationId ||
+                !activeConversationIsSocratic
+            )
+        ) {
+            return;
+        }
+
+        requestInFlight = true;
 
         toggleEmptyState(false);
         appendMessage("user", question);
-        input.value = "";
+
+        // Keep draft text when clicking a learning control
+        if (!action) {
+            input.value = "";
+        }
+
         input.disabled = true;
         if (levelButton) levelButton.disabled = true;
 
+        updateSocraticActions();
+
         const payload = {
-            question,
+            question: action ? "" : question,
             explanation_level: level,
             conversation_id: activeConversationId,
         };
 
+        if (action) {
+            payload.socratic_action = action;
+        }
+
         try {
             showTypingIndicator(true);
+
             const resp = await fetch(AI_HELPER_API_URL, {
                 method: "POST",
                 credentials: "same-origin",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie("csrftoken")
+                    "X-CSRFToken": getCookie("csrftoken"),
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
             });
 
             const data = await resp.json();
 
-            if (resp.ok && data.answer) {
-                appendMessage(
-                    "ai",
-                    data.answer,
-                    true,
-                    data.source || "general",
-                    data.source_label || "General knowledge",
-                    data.sources || []
+            if (!resp.ok || !data.answer) {
+                throw new Error(
+                    data.error || "AI request failed"
                 );
-
-                if (!activeConversationId || activeConversationId != data.conversation_id) {
-                    activeConversationId = data.conversation_id;
-                    await loadConversationList();
-                }
-
-                const promptMessages = Array.from(chatWindow.querySelectorAll('.message.user-message'))
-                    .map((messageEl) => ({
-                        role: 'user',
-                        content: messageEl.querySelector('.message-text')?.textContent || ''
-                    }));
-                renderPromptHistory(promptMessages, activeConversationId);
-                updateHeaderBadge(data.title || question);
-
-                document.querySelectorAll(".conversation-item")
-                        .forEach(i => i.classList.remove("active"));
-                const activeEl = document.querySelector(`.conversation-item[data-id="${activeConversationId}"]`);
-                if (activeEl) activeEl.classList.add("active");
-            } else {
-                console.error("API error:", data);
-                appendMessage("ai", "Sorry – something went wrong.");
             }
-        } catch (err) {
-            console.error(err);
-            appendMessage("ai", "Network error – try again later.");
+
+            appendMessage(
+                "ai",
+                data.answer,
+                true,
+                data.source || "general",
+                data.source_label || "General knowledge",
+                data.sources || []
+            );
+
+            activeConversationIsSocratic =
+                data.source === "socratic";
+
+            if (
+                !activeConversationId ||
+                activeConversationId != data.conversation_id
+            ) {
+                activeConversationId = data.conversation_id;
+                await loadConversationList();
+            }
+
+            const promptMessages = Array.from(
+                chatWindow.querySelectorAll(".message.user-message")
+            ).map(messageEl => ({
+                role: "user",
+                content:
+                    messageEl.querySelector(".message-text")
+                        ?.textContent || "",
+            }));
+
+            renderPromptHistory(
+                promptMessages,
+                activeConversationId
+            );
+
+            updateHeaderBadge(data.title || question);
+
+            document.querySelectorAll(".conversation-item")
+                .forEach(item => item.classList.remove("active"));
+
+            const activeEl = document.querySelector(
+                `.conversation-item[data-id="${activeConversationId}"]`
+            );
+
+            if (activeEl) {
+                activeEl.classList.add("active");
+            }
+
+        } catch (error) {
+            console.error(
+                "EduAlly request failed:",
+                error
+            );
+
+            appendMessage(
+                "ai",
+                "Sorry, something went wrong. Please try again."
+            );
+
         } finally {
             showTypingIndicator(false);
+
+            requestInFlight = false;
             input.disabled = false;
-            if (levelButton) levelButton.disabled = false;
+
+            if (levelButton) {
+                levelButton.disabled = false;
+            }
+
+            updateSocraticActions();
             input.focus();
         }
+    }
+
+    // Normal chat submission
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+
+        const question = input.value.trim();
+
+        if (question) {
+            sendMessage(question);
+        }
+    });
+
+    // Socratic learning actions
+    const actionLabels = {
+        hint: "Hint please",
+        simplify: "Please simplify",
+        answer: "Show the answer",
+    };
+
+    socraticActionButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const action = button.dataset.socraticAction;
+            const label = actionLabels[action];
+
+            if (!label) return;
+
+            sendMessage(label, action);
+        });
     });
 
     function showTypingIndicator(visible) {
@@ -443,6 +603,8 @@ document.addEventListener("DOMContentLoaded", () => {
         sourceLabel = null,
         sources = []
     ) {
+        const followAnimatedAnswer =
+        role === "ai" && animate && isUserNearBottom();
         const msgDiv = document.createElement("div");
         msgDiv.className = `message ${role}-message`;
         msgDiv.dataset.messageIndex = messageCounter;
@@ -565,43 +727,75 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 10);
 
         if (role === "ai" && animate) {
-            animateMessageText(txt, text);
+            animateMessageText(txt, text, followAnimatedAnswer);
         } else {
             txt.innerHTML = renderMarkdown(text);
         }
     }
 
-    function animateMessageText(container, fullText) {
+    function animateMessageText(container, fullText, shouldFollow = true) {
         let index = 0;
         const speed = 18;
-        const scrollEvery = 3;
-        const renderEvery = 1;
-        const messageEl = container.closest('.message');
+        let followOutput = shouldFollow;
+
+        const previousScrollBehavior = chatWindow.style.scrollBehavior;
+
+        // The answer should follow immediately, without smooth-scroll lag.
+        chatWindow.style.scrollBehavior = "auto";
+
+        // Allow the student to interrupt automatic scrolling.
+        const stopFollowing = () => {
+            followOutput = false;
+        };
+
+        chatWindow.addEventListener("wheel", stopFollowing, {
+            passive: true
+        });
+
+        chatWindow.addEventListener("touchstart", stopFollowing, {
+            passive: true
+        });
+
+        chatWindow.addEventListener("pointerdown", stopFollowing, {
+            passive: true
+        });
+
+        function finishAnimation() {
+            clearInterval(timer);
+
+            chatWindow.removeEventListener("wheel", stopFollowing);
+            chatWindow.removeEventListener("touchstart", stopFollowing);
+            chatWindow.removeEventListener("pointerdown", stopFollowing);
+
+            chatWindow.style.scrollBehavior = previousScrollBehavior;
+        }
+
         const timer = setInterval(() => {
-            index += 1;
-            const snippet = fullText.slice(0, index);
-            if (index % renderEvery === 0 || index === fullText.length) {
-                container.innerHTML = renderMarkdown(snippet);
-            } else {
-                container.textContent = snippet;
+            // Stop if the message was removed or another chat was opened.
+            if (!container.isConnected) {
+                finishAnimation();
+                return;
             }
 
-            if (isUserNearBottom() && !userInteracting) {
-                if (messageEl && index % scrollEvery === 0) {
-                    messageEl.scrollIntoView({ behavior: 'auto', block: 'end' });
-                } else {
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
-                }
+            index = Math.min(index + 1, fullText.length);
+
+            const snippet = fullText.slice(0, index);
+
+            container.innerHTML = renderMarkdown(snippet);
+
+            // Continue following even as the answer becomes longer.
+            if (followOutput) {
+                chatWindow.scrollTop = chatWindow.scrollHeight;
             }
 
             if (index >= fullText.length) {
-                clearInterval(timer);
                 container.innerHTML = renderMarkdown(fullText);
-                setTimeout(() => {
-                    if (isUserNearBottom() && !userInteracting) {
-                        chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
-                    }
-                }, 50);
+
+                if (followOutput) {
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+
+                finishAnimation();
             }
         }, speed);
     }
@@ -705,7 +899,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     code += lines[i] + "\n";
                     i++;
                 }
-                html += `<pre><code>${escapeHtml(code.trim())}</code></pre>`;
+                html += `<pre><code>${code.trim()}</code></pre>`;
                 continue;
             }
 
@@ -783,7 +977,7 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .replace(/\*\*([^*]+)\*\*/g, (_, bold) => `<strong>${escapeHtml(bold)}</strong>`)
             .replace(/\*([^*]+)\*/g, (_, italic) => `<em>${escapeHtml(italic)}</em>`)
-            .replace(/`([^`]+)`/g, (_, code) => `<code>${escapeHtml(code)}</code>`);
+            .replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
     }
 
     function renderExistingMessages() {
@@ -825,6 +1019,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         renderExistingMessages();
         initMiniMap();
+
+        // Also restore the bottom position on direct page loads.
+        if (startId) {
+            scrollToLatestMessage();
+        }
     })();
 
 });
