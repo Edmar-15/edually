@@ -128,3 +128,44 @@ class AIHelperTests(TestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertFalse(foreign.messages.exists())
+        
+    @patch(
+        "aihelper.views._call_openai",
+        return_value="What do you already know about fractions?"
+    )
+    def test_socratic_uses_shared_prompt(self, mock_openai):
+
+        from .explanations import get_socratic_prompt
+
+        question = "How do fractions work?"
+
+        response = self.post_question({
+            "question": question,
+            "explanation_level": "socratic",
+        })
+
+        self.assertEqual(response.status_code, 200)
+
+        mock_openai.assert_called_once()
+
+        messages = mock_openai.call_args.args[0]
+
+        self.assertEqual(
+            messages[0]["content"],
+            get_socratic_prompt(question),
+        )
+
+        self.assertEqual(
+            messages[-1]["content"],
+            question,
+        )
+
+        self.assertEqual(
+            mock_openai.call_args.kwargs["level"],
+            "socratic",
+        )
+
+        self.assertEqual(
+            response.json()["source"],
+            "socratic",
+        )
