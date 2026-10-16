@@ -840,12 +840,34 @@ def settings(request):
             messages.error(request, "That code is invalid or expired. Please try again.")
         return redirect("account:settings")
 
+
     if request.method == "POST" and "disable_2fa" in request.POST:
+        code = (request.POST.get("disable_2fa_code") or "").strip()
+        secret = request.user.two_factor_secret or ""
+
+        if (
+            not request.user.two_factor_enabled
+            or not secret
+            or not code.isdigit()
+            or not pyotp.TOTP(secret).verify(code, valid_window=1)
+        ):
+            messages.error(
+                request,
+                "Enter a valid authenticator code to disable 2FA."
+            )
+            return redirect("account:settings")
+
         request.user.two_factor_enabled = False
         request.user.two_factor_secret = ""
-        request.user.save(update_fields=["two_factor_enabled", "two_factor_secret"])
+        request.user.save(
+            update_fields=["two_factor_enabled", "two_factor_secret"]
+        )
         request.session.pop("pending_2fa_secret", None)
-        messages.success(request, "Two-factor authentication has been disabled.")
+
+        messages.success(
+            request,
+            "Two-factor authentication has been disabled."
+        )
         return redirect("account:settings")
 
     if request.method == "POST" and "request_new_qr" in request.POST:
@@ -1265,6 +1287,37 @@ def google_callback(request):
     # Log the user in – we use ``ModelBackend`` because the password‑less
     # Google flow bypasses the EmailOrUsername backend.
     user.backend = "django.contrib.auth.backends.ModelBackend"
+
+    if user.two_factor_enabled:
+        next_url = request.GET.get("state") or reverse(
+            "account:dashboard"
+        )
+
+        from django.utils.http import url_has_allowed_host_and_scheme
+
+        if not url_has_allowed_host_and_scheme(
+            next_url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            next_url = reverse("account:dashboard")
+
+        if user_is_in_group(user, GROUP_STUDENT):
+            profile, _ = StudentProfile.objects.get_or_create(
+                user=user
+            )
+            if not profile.student_id or not profile.year_level:
+                next_url = (
+                    reverse("account:profile_edit")
+                    + "?tab=profile"
+                )
+
+        request.session["pending_2fa_user_id"] = user.pk
+        request.session["pending_2fa_next"] = next_url
+        request.session["pending_2fa_backend"] = user.backend
+
+        return redirect("account:verify_2fa")
+
     auth_login(request, user)
 
     if user_is_in_group(user, GROUP_STUDENT):
