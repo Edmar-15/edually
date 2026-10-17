@@ -21,7 +21,6 @@ urlpatterns = [
     path('flag/<str:content_type>/<int:content_id>/', views.flag_content, name='flag_content'),
     path('post/<int:post_id>/edit/', views.post_edit, name='post_edit'),
     path('post/<int:post_id>/archive/', views.post_archive, name='post_archive'),
-    path('post/<int:post_id>/verify/', views.verify_post, name='verify_post'),
     path('reply/<int:reply_id>/edit/', views.reply_edit, name='reply_edit'),
     path('reply/<int:reply_id>/delete/', views.reply_delete, name='reply_delete'),
     path('notification/<int:notification_id>/goto/', views.notification_goto, name='notification_goto'),

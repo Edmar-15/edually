@@ -325,12 +325,6 @@ def post_archive(request, post_id):
 
 
 @login_required(login_url='account:login')
-def verify_post(request, post_id):
-    """Keep the old post verification URL working."""
-    return redirect('forum:post_detail', post_id=post_id)
-
-
-@login_required(login_url='account:login')
 @require_http_methods(['GET', 'POST'])
 def reply_edit(request, reply_id):
     reply = get_object_or_404(
@@ -410,21 +404,39 @@ def notification_mark_all_read(request):
 @moderator_required
 @require_http_methods(['POST'])
 def resolve_report(request, report_id):
-    report = get_object_or_404(Report, pk=report_id, is_resolved=False)
+    report = get_object_or_404(
+        Report,
+        pk=report_id,
+        is_resolved=False
+    )
+
     action = request.POST.get('action')
-    if action not in {'dismiss', 'delete', 'verify'}:
+
+    if action not in {'dismiss', 'delete'}:
         return redirect('forum:moderation_dashboard')
 
     if action == 'delete':
-        target = report.post if report.content_type == Report.POST else report.reply
+        target = (
+            report.post
+            if report.content_type == Report.POST
+            else report.reply
+        )
         target.is_deleted = True
         target.save(update_fields=['is_deleted', 'updated_at'])
 
     Report.objects.filter(
         is_resolved=False,
         content_type=report.content_type,
-        **({'post': report.post} if report.content_type == Report.POST else {'reply': report.reply}),
-    ).update(is_resolved=True, action_taken=action)
+        **(
+            {'post': report.post}
+            if report.content_type == Report.POST
+            else {'reply': report.reply}
+        ),
+    ).update(
+        is_resolved=True,
+        action_taken=action
+    )
+
     return redirect('forum:moderation_dashboard')
 
 
