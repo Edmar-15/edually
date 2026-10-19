@@ -43,7 +43,7 @@
                 
 
                 <div class="header-actions">
-                    <a href="{{ module.file.url }}" class="button download-btn"
+                    <a href="{% url 'slm:module-download' module.id %}" class="button download-btn"
                     download
                     aria-label="Download original file"
                     title="Download original file">

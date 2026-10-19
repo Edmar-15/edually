@@ -233,3 +233,114 @@ class SLMTests(TestCase):
             with self.subTest(url=url):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 403)
+
+
+    def test_protected_module_download_permissions(self):
+        self.module.file.save(
+            "protected-test.pdf",
+            SimpleUploadedFile(
+                "protected-test.pdf",
+                b"%PDF-1.4\nTest PDF content",
+                content_type="application/pdf",
+            ),
+            save=True,
+        )
+
+        url = reverse(
+            "slm:module-download",
+            args=[self.module.pk],
+        )
+
+        # Anonymous users must log in.
+        self.client.logout()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+
+        # Authorized student can download.
+        self.client.force_login(self.student)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.streaming)
+
+        # Student cannot download another year's module.
+        self.subject.year = "3"
+        self.subject.save(update_fields=["year"])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+        # Restore correct year level.
+        self.subject.year = "2"
+        self.subject.save(update_fields=["year"])
+
+        # Student cannot download archived modules.
+        self.module.is_archived = True
+        self.module.save(update_fields=["is_archived"])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+        self.module.is_archived = False
+        self.module.save(update_fields=["is_archived"])
+
+        # Student cannot download modules of archived subjects.
+        self.subject.is_archived = True
+        self.subject.save(update_fields=["is_archived"])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+
+    def test_protected_personal_material_download(self):
+        pm = PersonalMaterial.objects.create(
+            author=self.student,
+            title="Private Test Material",
+            visibility=PersonalMaterial.Visibility.PRIVATE,
+            file=SimpleUploadedFile(
+                "private-test.pdf",
+                b"%PDF-1.4\nPrivate test content",
+                content_type="application/pdf",
+            ),
+        )
+
+        url = reverse(
+            "slm:personalmaterial-download",
+            args=[pm.pk],
+        )
+
+        # Anonymous users cannot download.
+        self.client.logout()
+        self.assertEqual(
+            self.client.get(url).status_code,
+            302,
+        )
+
+        # Another user cannot download private materials.
+        self.client.force_login(self.teacher)
+        self.assertEqual(
+            self.client.get(url).status_code,
+            403,
+        )
+
+        # Owner can download private materials.
+        self.client.force_login(self.student)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        # Other authenticated users can download public materials.
+        pm.visibility = PersonalMaterial.Visibility.PUBLIC
+        pm.save(update_fields=["visibility"])
+
+        self.client.force_login(self.teacher)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        # Archived materials cannot be downloaded by other users.
+        pm.is_archived = True
+        pm.save(update_fields=["is_archived"])
+        self.assertEqual(
+            self.client.get(url).status_code,
+            403,
+        )
+
+        # Owner retains access to archived materials.
+        self.client.force_login(self.student)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)

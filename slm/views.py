@@ -2,7 +2,7 @@
 import json
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden, FileResponse, Http404
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.template.loader import render_to_string
@@ -811,6 +811,35 @@ def module_detail(request, subject_id, module_id):
     return render(request, "slm/module_detail.html", context)
 
 
+@login_required(login_url="account:login")
+@require_GET
+def module_download(request, pk):
+    module = get_object_or_404(
+        Module.objects.select_related("subject"),
+        pk=pk,
+    )
+
+    access_error = _student_module_access_error(
+        request.user, module
+    )
+    if access_error:
+        return HttpResponseForbidden(access_error)
+
+    if not module.file:
+        raise Http404("Module file not found.")
+
+    try:
+        file_handle = module.file.open("rb")
+    except (OSError, ValueError):
+        raise Http404("Module file not found.")
+
+    return FileResponse(
+        file_handle,
+        as_attachment=True,
+        filename=os.path.basename(module.file.name),
+    )
+
+
 # Personal material helpers.
 def personal_material_to_dict(pm, request_user=None):
     """
@@ -1059,6 +1088,37 @@ def personal_material_detail(request, pk):
         "pm": pm,                 # used by the template
     }
     return render(request, "slm/personal_material_detail.html", context)
+
+
+@login_required(login_url="account:login")
+@require_GET
+def personal_material_download(request, pk):
+    pm = get_object_or_404(PersonalMaterial, pk=pk)
+
+    is_owner = pm.author_id == request.user.pk
+
+    if not is_owner:
+        if (
+            pm.visibility != PersonalMaterial.Visibility.PUBLIC
+            or pm.is_archived
+        ):
+            return HttpResponseForbidden(
+                "You cannot access this learning material."
+            )
+
+    if not pm.file:
+        raise Http404("Learning material file not found.")
+
+    try:
+        file_handle = pm.file.open("rb")
+    except (OSError, ValueError):
+        raise Http404("Learning material file not found.")
+
+    return FileResponse(
+        file_handle,
+        as_attachment=True,
+        filename=os.path.basename(pm.file.name),
+    )
 
 
 @login_required(login_url='account:login')

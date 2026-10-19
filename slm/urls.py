@@ -53,7 +53,11 @@ urlpatterns = [
         views.module_detail,
         name="module-detail",
     ),
-
+    path(
+        "modules/<int:pk>/download/",
+        views.module_download,
+        name="module-download",
+    ),
     # -----------------------------------------------------------------
     # PERSONAL MATERIAL – CRUD + file‑replace
     # -----------------------------------------------------------------
@@ -91,7 +95,11 @@ urlpatterns = [
         views.personal_material_detail,
         name="personalmaterial-detail",
     ),
-    
+    path(
+        "personal-materials/<int:pk>/download/",
+        views.personal_material_download,
+        name="personalmaterial-download",
+    ),
     path(
     "api/personal-materials/<int:pk>/highlight/",
     views.api_highlight,

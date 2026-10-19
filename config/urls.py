@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 from core import views as pwa_views
 from django.contrib.sitemaps.views import sitemap
 from core.views import StaticViewSitemap
+from django.http import Http404
 
 handler400 = "core.views.bad_request"
 handler403 = "core.views.forbidden"
@@ -31,6 +32,9 @@ handler500 = "core.views.server_error"
 sitemaps = {
     "static": StaticViewSitemap,
 }
+
+def deny_private_media(request, filename):
+    raise Http404("Direct file access is not allowed.")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -60,6 +64,20 @@ urlpatterns = [
     name="django.contrib.sitemaps.views.sitemap",
 ),
 ]
+
+
+# Block direct access to protected learning files.
+urlpatterns += [
+    path(
+        "media/modules/<path:filename>",
+        deny_private_media,
+    ),
+    path(
+        "media/users/<path:filename>",
+        deny_private_media,
+    ),
+]
+
 
 if settings.DEBUG:
     # This will map /static/... → <PROJECT_ROOT>/staticfiles/... for development

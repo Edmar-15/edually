@@ -43,7 +43,7 @@
             </div>
             
             <div class="header-actions">
-                <a href="{{ pm.file.url }}" class="button download-btn"
+                <a href="{% url 'slm:personalmaterial-download' pm.pk %}" class="button download-btn"
                    download
                    aria-label="Download original file"
                    title="Download original file">
