@@ -188,3 +188,48 @@ class SLMTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
+        
+
+    def test_archived_module_access_is_denied(self):
+        self.module.is_archived = True
+        self.module.save(update_fields=["is_archived"])
+        self.client.force_login(self.student)
+
+        urls = [
+            reverse("slm:module-detail", args=[
+                self.subject.pk, self.module.pk
+            ]),
+            reverse("slm:module-highlight", args=[
+                self.module.pk
+            ]),
+            reverse("slm:module-annotation", args=[
+                self.module.pk
+            ]),
+        ]
+
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 403)
+
+    def test_other_year_module_access_is_denied(self):
+        self.subject.year = "3"
+        self.subject.save(update_fields=["year"])
+        self.client.force_login(self.student)
+
+        urls = [
+            reverse("slm:module-detail", args=[
+                self.subject.pk, self.module.pk
+            ]),
+            reverse("slm:module-highlight", args=[
+                self.module.pk
+            ]),
+            reverse("slm:module-annotation", args=[
+                self.module.pk
+            ]),
+        ]
+
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 403)

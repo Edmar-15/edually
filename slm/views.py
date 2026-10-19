@@ -93,6 +93,29 @@ def teacher_required_for_mutation(view_func):
     return _wrapped
 
 
+def _student_module_access_error(user, module):
+    """Return an access error for students, or None if allowed."""
+    if not getattr(user, "is_student_member", False):
+        return None
+
+    if module.subject.is_archived:
+        return "This subject has been archived and is no longer available."
+
+    if module.is_archived:
+        return "This module has been archived and is no longer available."
+
+    year_level = getattr(user, "year_level", None) or ""
+    year_match = re.search(r"\d+", year_level)
+
+    if not year_match:
+        return "You must set your year level before viewing learning materials."
+
+    if module.subject.year != year_match.group():
+        return "You cannot view learning materials for a different year level."
+
+    return None
+
+
 def get_highlight_context(target, start_offset, end_offset, window=900):
     """
     Return the selected SLM text plus nearby SLM content.
@@ -763,38 +786,21 @@ def module_detail(request, subject_id, module_id):
     Render a page that shows the extracted HTML of a module.
     The original file can still be downloaded.
     """
+
     subject = get_object_or_404(Subject, pk=subject_id)
 
-    # Students cannot directly open modules belonging to
-    # an archived subject.
-    if (
-        subject.is_archived
-        and getattr(request.user, "is_student_member", False)
-    ):
-        return HttpResponseForbidden(
-            "This subject has been archived and is no longer available."
-        )
+    module = get_object_or_404(
+        Module.objects.select_related("subject"),
+        pk=module_id,
+        subject=subject,
+    )
 
-    if request.user.is_authenticated and getattr(
-        request.user,
-        "is_student_member",
-        False,
-    ):
+    access_error = _student_module_access_error(
+        request.user, module
+    )
+    if access_error:
+        return HttpResponseForbidden(access_error)
 
-        year_label = getattr(request.user, "year_level", None) or ""
-        match = re.search(r"\d+", year_label)
-
-        if not match:
-            return HttpResponseForbidden(
-                "You must set your year level before viewing learning materials."
-            )
-
-        if subject.year != match.group():
-            return HttpResponseForbidden(
-                "You cannot view learning materials for a different year level."
-            )
-
-    module = get_object_or_404(Module, pk=module_id, subject=subject)
 
     _record_recent_view(RecentModuleView, request.user, "module", module)
 
@@ -1065,7 +1071,20 @@ def api_highlight(request, pk, target_type):
     """
     # Resolve the target object
     if target_type == "module":
-        target = get_object_or_404(Module, pk=pk)
+        target = get_object_or_404(
+            Module.objects.select_related("subject"),
+            pk=pk,
+        )
+
+        access_error = _student_module_access_error(
+            request.user, target
+        )
+        if access_error:
+            return JsonResponse(
+                {"error": access_error},
+                status=403,
+            )
+
         fk_name = "module"
     else:   # personal material
         target = get_object_or_404(PersonalMaterial, pk=pk)
@@ -1234,7 +1253,20 @@ def api_annotation(request, pk, target_type):
     """
     # Resolve target object
     if target_type == "module":
-        target = get_object_or_404(Module, pk=pk)
+        target = get_object_or_404(
+            Module.objects.select_related("subject"),
+            pk=pk,
+        )
+
+        access_error = _student_module_access_error(
+            request.user, target
+        )
+        if access_error:
+            return JsonResponse(
+                {"error": access_error},
+                status=403,
+            )
+
         fk_name = "module"
     else:   # personal material
         target = get_object_or_404(PersonalMaterial, pk=pk)
