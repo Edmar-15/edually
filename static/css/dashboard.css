@@ -2388,13 +2388,18 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
         max-width: 320px;
         height: 100vh;
         height: 100dvh;
+        min-height: 0;
         position: fixed;
         top: 0;
         left: 0;
         z-index: 1100;
         border-right: 1px solid rgba(14, 154, 167, 0.16);
         border-bottom: none;
-        padding: 18px 12px;
+        padding: 18px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: hidden;
         transform: translateX(-100%);
         box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
         transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.28s ease, width 0.28s ease, padding 0.28s ease;
@@ -2407,11 +2412,18 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     .sidebar-header {
         margin-bottom: 24px;
         padding: 0 6px;
+        flex-shrink: 0;
     }
 
     .sidebar-nav {
         flex-direction: column;
         gap: 8px;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
     }
 
     .nav-item {
@@ -2435,6 +2447,8 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
         padding-left: 0;
         padding-top: 16px;
         margin-left: 0;
+        margin-top: auto;
+        flex-shrink: 0;
     }
 
     .main-content {

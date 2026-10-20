@@ -497,15 +497,10 @@
                         type="submit"
                         name="action"
                         value="unarchive"
-                        class="button"
+                        class="button action-restore"
                         title="Unarchive"
                         aria-label="Unarchive"
-                        style="
-                            background: var(--primary);
-                            border-color: var(--primary);
-                            color: white;
-                            border-radius: .3rem;
-                        "
+                        style="border-radius: .3rem;"
                     >
                         <i
                             class="fas fa-box-open archive-detail-action-icon"
@@ -521,7 +516,7 @@
 
                 <a
                     href="#"
-                    class="button button-primary button--danger js-modal-trigger"
+                    class="button button-primary button--danger js-modal-trigger action-delete"
                     data-url="{% url 'account:archive-subject-delete-modal' subject.id %}"
                     title="Delete this subject permanently"
                     aria-label="Delete this subject permanently"

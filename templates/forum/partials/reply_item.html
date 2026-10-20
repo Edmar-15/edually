@@ -31,7 +31,7 @@
 
         <div class="reply-footer-actions">
             <a href="{% url 'forum:flag_content' 'reply' reply.pk %}"
-                class="button secondary-button small-button js-modal-trigger reply-report-button">
+                class="button secondary-button small-button js-modal-trigger reply-report-button action-report">
                 <i class="fa-solid fa-flag"></i> Report
             </a>
             <div class="action-menu reply-action-menu">
@@ -41,12 +41,12 @@
                 <div class="action-menu-panel" role="menu" aria-hidden="true">
                     {% if request.user == reply.author %}
                         <a href="{% url 'forum:reply_edit' reply.pk %}"
-                            class="button secondary-button small-button js-modal-trigger action-menu-item"
+                            class="button secondary-button small-button js-modal-trigger action-menu-item action-edit"
                             role="menuitem">
                             <i class="fa-solid fa-edit"></i> Edit
                         </a>
                         <a href="{% url 'forum:reply_delete' reply.pk %}"
-                            class="button secondary-button small-button js-modal-trigger action-menu-item"
+                            class="button secondary-button small-button js-modal-trigger action-menu-item action-delete"
                             role="menuitem">
                             <i class="fa-solid fa-trash"></i> Delete
                         </a>

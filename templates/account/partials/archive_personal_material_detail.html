@@ -146,10 +146,10 @@
                     <button type="submit"
                             name="action"
                             value="unarchive"
-                            class="button"
+                            class="button action-restore"
                             title="Unarchive"
                             aria-label="Unarchive"
-                            style="background: var(--primary); border-color: var(--primary); color: white; border-radius: .3rem;">
+                            style="border-radius: .3rem;">
                         <i class="fas fa-box-open archive-detail-action-icon"
                         aria-hidden="true"></i>
 
@@ -160,7 +160,7 @@
                 </form>
 
                 <a href="#"
-                class="button button-primary button--danger js-modal-trigger"
+                class="button button-primary button--danger js-modal-trigger action-delete"
                 data-url="{% url 'account:archive-personal-material-delete-modal' pm.id %}"
                 title="Delete this material permanently"
                 aria-label="Delete this material permanently">

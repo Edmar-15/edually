@@ -93,7 +93,7 @@ function renderCard(subject) {
     const edit = document.createElement("a");
     edit.href = "#";
     edit.title = "Edit";
-    edit.className = "subject-card__action js-modal-trigger";
+    edit.className = "subject-card__action subject-card__action--edit js-modal-trigger";
     edit.dataset.url = `/slm/api/subjects/${subject.id}/edit-modal/`;
     edit.innerHTML = `
       <svg viewBox="0 0 24 24" aria-hidden="true">

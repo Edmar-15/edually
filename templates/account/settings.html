@@ -25,13 +25,31 @@
         border-bottom: 1px solid var(--border);
     }
 
-    .danger-button {
-        background: #c0392b;
+    .danger-zone .danger-button {
+        background: #dc2626;
+        color: #fff;
+        border: 1px solid #b91c1c;
+    }
+
+    .danger-zone .danger-button:hover,
+    .danger-zone .danger-button:focus-visible {
+        background: #b91c1c;
         color: #fff;
     }
 
-    .danger-button:hover {
-        background: #e74c3c;
+    html.dark .danger-zone .danger-button,
+    html[data-theme="dark"] .danger-zone .danger-button {
+        background: #dc2626;
+        color: #fff;
+        border-color: #f87171;
+    }
+
+    html.dark .danger-zone .danger-button:hover,
+    html.dark .danger-zone .danger-button:focus-visible,
+    html[data-theme="dark"] .danger-zone .danger-button:hover,
+    html[data-theme="dark"] .danger-zone .danger-button:focus-visible {
+        background: #b91c1c;
+        color: #fff;
     }
 
     .danger-zone {

@@ -242,6 +242,17 @@
         font-size: 1rem;
     }
 
+    html.dark .archive-empty,
+    html[data-theme="dark"] .archive-empty {
+        background: linear-gradient(
+            135deg,
+            rgba(168, 85, 247, 0.08),
+            rgba(15, 23, 42, 0.96)
+        );
+        border-color: rgba(148, 163, 184, 0.28);
+        color: var(--text, #e2e8f0);
+    }
+
     .archive-empty-icon {
         display: inline-flex;
         align-items: center;

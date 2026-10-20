@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleToggle = () => {
-    if (window.innerWidth < mobileBreakpoint) {
+    if (window.innerWidth <= mobileBreakpoint) {
       if (body.classList.contains('sidebar-mobile-open')) {
         closeMobileSidebar();
       } else {

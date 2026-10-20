@@ -126,14 +126,14 @@
                                         </button>
                                         <div class="action-menu-panel" role="menu" aria-hidden="true">
                                             {% if request.user == post.author %}
-                                                <a href="{% url 'forum:post_edit' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item" role="menuitem">
+                                                <a href="{% url 'forum:post_edit' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item action-edit" role="menuitem">
                                                     <i class="fa-solid fa-edit"></i> Edit
                                                 </a>
-                                                <a href="{% url 'forum:post_archive' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item" role="menuitem">
+                                                <a href="{% url 'forum:post_archive' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item action-archive" role="menuitem">
                                                     <i class="fa-solid fa-archive"></i> Archive
                                                 </a>
                                             {% endif %}
-                                            <a href="{% url 'forum:flag_content' 'post' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item" role="menuitem">
+                                            <a href="{% url 'forum:flag_content' 'post' post.id %}" class="button secondary-button small-button js-modal-trigger action-menu-item action-report" role="menuitem">
                                                 <i class="fa-solid fa-flag"></i> Report
                                             </a>
                                         </div>

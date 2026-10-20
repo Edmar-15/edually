@@ -175,6 +175,45 @@ body {
   padding-block: 0.45rem;
 }
 
+html.dark .module-form input,
+html[data-theme="dark"] .module-form input,
+html.dark .module-form select,
+html[data-theme="dark"] .module-form select,
+html.dark .subject-form input,
+html[data-theme="dark"] .subject-form input,
+html.dark .subject-form select,
+html[data-theme="dark"] .subject-form select,
+html.dark .subject-form-card__body input,
+html[data-theme="dark"] .subject-form-card__body input,
+html.dark .subject-form-card__body select,
+html[data-theme="dark"] .subject-form-card__body select {
+  background-color: #111c32;
+  border-color: rgba(148, 163, 184, 0.3);
+  color: #e2e8f0;
+  caret-color: #e2e8f0;
+  color-scheme: dark;
+}
+
+html.dark .module-form input::placeholder,
+html[data-theme="dark"] .module-form input::placeholder,
+html.dark .subject-form input::placeholder,
+html[data-theme="dark"] .subject-form input::placeholder,
+html.dark .subject-form-card__body input::placeholder,
+html[data-theme="dark"] .subject-form-card__body input::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+html.dark .module-form input[type="file"]::file-selector-button,
+html[data-theme="dark"] .module-form input[type="file"]::file-selector-button {
+  color: #e2e8f0;
+  background: #1e293b;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  margin-right: 0.6rem;
+}
+
 html.dark .pm-form input[type="text"],
 html[data-theme="dark"] .pm-form input[type="text"] {
   color: #e2e8f0 !important;
@@ -336,6 +375,9 @@ html[data-theme="dark"] .pm-card {
 .pm-card__icon--doc { background: rgba(37,99,235,.14); color:#2563eb; }
 .module-card__icon--ppt,
 .pm-card__icon--ppt { background: rgba(234,88,12,.14); color:#ea580c; }
+.pm-card__icon--pdf { background: rgba(211,47,47,.14); color: #d32f2f; }
+.pm-card__icon--doc { background: rgba(43,87,154,.14); color: #2b579a; }
+.pm-card__icon--ppt { background: rgba(210,71,38,.14); color: #d24726; }
 
 /* Content title */
 .module-card__content h3,
@@ -427,6 +469,17 @@ html[data-theme="dark"] .pm-card__header h3 {
 }
 
 /* Delete action – red accent */
+.module-card__action--edit,
+.pm-card__action--edit {
+  background: rgba(37, 99, 235, .1);
+  color: #2563eb;
+}
+
+.module-card__action--edit:hover,
+.pm-card__action--edit:hover {
+  background: rgba(37, 99, 235, .16);
+}
+
 .module-card__action--delete,
 .pm-card__action--delete {
   background: rgba(248,113,113,.12);
@@ -453,6 +506,12 @@ html[data-theme="dark"] .pm-card__header h3 {
   border: 1px dashed rgba(14,154,167,.24);
   background: linear-gradient(135deg, rgba(14,154,167,.08), rgba(255,255,255,.96));
   box-shadow: var(--module-shadow);
+}
+html.dark .module-empty-state,
+html[data-theme="dark"] .module-empty-state {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: linear-gradient(135deg, rgba(14,154,167,.12), rgba(15,23,42,.96));
+  color: var(--text, #e2e8f0);
 }
 .module-empty-state__icon {
   display: grid;
@@ -746,12 +805,28 @@ html[data-theme="dark"] .subject-card {
   background: rgba(14,154,167,.16);
   transform: scale(1.04);
 }
+.subject-card__action--edit {
+  color: #0e9aa7;
+  background: rgba(14,154,167,.1);
+}
+.subject-card__action--edit:hover {
+  background: rgba(14,154,167,.16);
+}
 .subject-card__action--delete {
   color: #e11d48;
   background: rgba(225,29,72,.1);
 }
 .subject-card__action--delete:hover {
   background: rgba(225,29,72,.16);
+}
+.subject-card__action svg {
+  fill: currentColor;
+}
+.subject-card__action--edit svg {
+  color: #0e9aa7;
+}
+.subject-card__action--delete svg {
+  color: #e11d48;
 }
 
 /* Card content */
@@ -898,6 +973,15 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
   transform: translateY(-1px);
   background: rgba(14,154,167,.12);
   box-shadow: 0 6px 14px rgba(14,154,167,.12);
+}
+.pm-card__action--edit {
+  color: #2563eb;
+  background: rgba(37,99,235,.1);
+}
+.pm-card__action--edit:hover,
+.pm-card__action--edit:focus-visible {
+  background: rgba(37,99,235,.16);
+  box-shadow: 0 6px 14px rgba(37,99,235,.12);
 }
 .pm-card__action--delete {
   color: #dc2626;
