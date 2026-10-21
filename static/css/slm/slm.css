@@ -334,6 +334,20 @@ html[data-theme="dark"] .pm-card {
   box-shadow: 0 20px 56px rgba(2, 6, 23, 0.32);
 }
 
+html.dark .pm-card,
+html[data-theme="dark"] .pm-card {
+  background: transparent;
+}
+
+html.dark .pm-card__header,
+html[data-theme="dark"] .pm-card__header,
+html.dark .pm-card__content,
+html[data-theme="dark"] .pm-card__content,
+html.dark .pm-card__actions,
+html[data-theme="dark"] .pm-card__actions {
+  background: transparent;
+}
+
 /* Hover effect */
 .module-card:hover,
 .pm-card:hover {
@@ -794,7 +808,7 @@ html[data-theme="dark"] .subject-card {
   color: #0e9aa7;
   width: 32px;
   height: 32px;
-  border-radius: 999px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -975,22 +989,52 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
   box-shadow: 0 6px 14px rgba(14,154,167,.12);
 }
 .pm-card__action--edit {
-  color: #2563eb;
-  background: rgba(37,99,235,.1);
+  color: #0e9aa7;
+  background: rgba(14,154,167,.16);
+}
+.pm-card__action--edit svg,
+.pm-card__action--edit svg path {
+  fill: #0e9aa7;
 }
 .pm-card__action--edit:hover,
 .pm-card__action--edit:focus-visible {
-  background: rgba(37,99,235,.16);
-  box-shadow: 0 6px 14px rgba(37,99,235,.12);
+  background: rgba(14,154,167,.24);
+  color: #0e9aa7;
+  box-shadow: 0 6px 14px rgba(14,154,167,.16);
 }
 .pm-card__action--delete {
   color: #dc2626;
-  background: rgba(220,38,38,.08);
+  background: rgba(220,38,38,.16);
+}
+.pm-card__action--delete svg,
+.pm-card__action--delete svg path {
+  fill: #dc2626;
 }
 .pm-card__action--delete:hover,
 .pm-card__action--delete:focus-visible {
-  background: rgba(220,38,38,.12);
-  box-shadow: 0 6px 14px rgba(220,38,38,.12);
+  background: rgba(220,38,38,.24);
+  color: #dc2626;
+  box-shadow: 0 6px 14px rgba(220,38,38,.16);
+}
+html.dark .pm-card__action--edit,
+html[data-theme="dark"] .pm-card__action--edit {
+  background: rgba(14,154,167,.28);
+}
+html.dark .pm-card__action--edit:hover,
+html.dark .pm-card__action--edit:focus-visible,
+html[data-theme="dark"] .pm-card__action--edit:hover,
+html[data-theme="dark"] .pm-card__action--edit:focus-visible {
+  background: rgba(14,154,167,.38);
+}
+html.dark .pm-card__action--delete,
+html[data-theme="dark"] .pm-card__action--delete {
+  background: rgba(220,38,38,.28);
+}
+html.dark .pm-card__action--delete:hover,
+html.dark .pm-card__action--delete:focus-visible,
+html[data-theme="dark"] .pm-card__action--delete:hover,
+html[data-theme="dark"] .pm-card__action--delete:focus-visible {
+  background: rgba(220,38,38,.38);
 }
 
 /* Grid rows for forms & cards */

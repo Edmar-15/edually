@@ -1455,7 +1455,7 @@ h6 {
 
 html.dark body :where(
   .card,
-  [class*="-card"],
+  [class*="-card"]:not([class*="pm-card"]),
   .panel,
   [class*="-panel"],
   [class*="empty-state"],
@@ -1485,7 +1485,7 @@ html.dark body :where(
 ),
 html[data-theme="dark"] body :where(
   .card,
-  [class*="-card"],
+  [class*="-card"]:not([class*="pm-card"]),
   .panel,
   [class*="-panel"],
   [class*="empty-state"],

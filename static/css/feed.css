@@ -145,8 +145,8 @@ html[data-theme="dark"] .action-menu-item {
 
 html.dark .action-menu-item:hover,
 html[data-theme="dark"] .action-menu-item:hover {
-    background: rgba(14, 154, 167, 0.15);
-    color: #0e9aa7;
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
 }
 
 html.dark .search-box input,
@@ -2286,29 +2286,14 @@ html[data-theme="dark"] .avatar {
 }
 
 .action-menu-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: #0e9aa7;
-    border-radius: 7px 0 0 7px;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.2s ease;
+    content: none;
 }
 
 .action-menu-item:hover,
 .action-menu-item:focus-visible {
-    background: rgba(14, 154, 167, 0.12);
-    color: #0e9aa7;
-    padding-left: 1.1rem;
+    background: rgba(15, 23, 42, 0.06);
+    color: #334155;
     outline: none;
-}
-
-.action-menu-item:hover::before {
-    transform: scaleX(1);
 }
 
 .action-menu-item i {
