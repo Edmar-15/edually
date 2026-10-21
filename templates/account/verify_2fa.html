@@ -19,11 +19,6 @@
         <h1>Verify your identity</h1>
         <p class="muted-text">Enter the 6-digit code from your authenticator app to continue.</p>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="errorlist nonfield">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
 
         <form method="post" novalidate>
             {% csrf_token %}

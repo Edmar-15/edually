@@ -150,28 +150,6 @@
                                         value="1"
                                     >
 
-                                    {% if messages %}
-
-                                        <ul
-                                            class="messages"
-                                            aria-live="polite"
-                                        >
-
-                                            {% for message in messages %}
-
-                                                <li
-                                                    {% if message.tags %}
-                                                        class="{{ message.tags }}"
-                                                    {% endif %}
-                                                >
-                                                    {{ message }}
-                                                </li>
-
-                                            {% endfor %}
-
-                                        </ul>
-
-                                    {% endif %}
 
                                     {{ profile_form.non_field_errors }}
 
@@ -451,28 +429,6 @@
 
                                 </div>
 
-                                {% if messages %}
-
-                                    <ul
-                                        class="messages"
-                                        aria-live="polite"
-                                    >
-
-                                        {% for message in messages %}
-
-                                            <li
-                                                {% if message.tags %}
-                                                    class="{{ message.tags }}"
-                                                {% endif %}
-                                            >
-                                                {{ message }}
-                                            </li>
-
-                                        {% endfor %}
-
-                                    </ul>
-
-                                {% endif %}
 
                                 <form
                                     method="post"

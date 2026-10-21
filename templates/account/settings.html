@@ -243,17 +243,6 @@
         <div class="dashboard-content">
             <div class="container">
 
-                {% if messages %}
-                    <div class="settings-section" style="margin-bottom: 1rem;">
-                        <ul class="messages" aria-live="polite">
-                            {% for message in messages %}
-                                <li class="message {% if message.tags %}{{ message.tags }}{% endif %}">
-                                    {{ message }}
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
 
 
                 <!-- Account Preferences -->

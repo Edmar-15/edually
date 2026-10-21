@@ -15,9 +15,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return cookieValue;
     };
 
-    const confirmAction = (message) => {
+    const showToast = (message, type = 'info') => {
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast(message, type);
+        } else {
+            console.error('SweetAlert2 notification is unavailable:', message);
+        }
+    };
+
+    const confirmAction = async (message) => {
         if (!message) return true;
-        return confirm(message);
+        if (!window.Swal) {
+            showToast('Confirmation is unavailable. Refresh the page and try again.', 'error');
+            return false; // Never perform a destructive action without confirmation.
+        }
+        const result = await window.Swal.fire({
+            title: 'Confirm action',
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Confirm',
+            cancelButtonText: 'Cancel',
+            focusCancel: true,
+            reverseButtons: true,
+        });
+        return result.isConfirmed;
+    };
+
+    const rememberRedirectToast = (message, type = 'success') => {
+        if (!message) return;
+        try {
+            sessionStorage.setItem('eduallyToastMessage', JSON.stringify({ message, type }));
+        } catch (error) {
+            console.warn('Could not queue redirect notification:', error);
+        }
     };
 
     const BAD_WORD_WARNING = 'Warning: Your message contains inappropriate language. Please revise it before posting.';
@@ -82,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.body.addEventListener('submit', async e => {
         const form = e.target;
-        if (!form.classList.contains('ajax-form')) return;
+        if (!form.classList.contains('ajax-form') || form.hasAttribute('data-modal-form')) return;
         e.preventDefault();
 
         const badWordWarning = getBadWordWarning(form);
@@ -107,13 +138,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             });
+            if (!resp.ok) throw new Error(`Request failed (${resp.status})`);
             const data = await resp.json();
 
             if (!data.success) {
-                if (form.dataset.target) {
+                // Preserve the existing reply list: the server may send only an
+                // error fragment, which should never replace all replies.
+                if (data.html && form.dataset.target) {
                     const container = document.querySelector(form.dataset.target);
-                    if (container) container.innerHTML = data.html || '';
+                    if (container?.classList.contains('modal')) container.innerHTML = data.html;
                 }
+                showToast(data.error || data.message || 'Could not submit. Please check your input.', 'error');
                 return;
             }
 
@@ -172,16 +207,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (data.redirect) {
+                rememberRedirectToast(data.message, data.toastType || 'success');
                 window.location.href = data.redirect;
                 return;
             }
 
+            if (data.message || form.classList.contains('reply-form')) {
+                showToast(data.message || 'Reply posted successfully.', data.toastType || 'success');
+            }
 
             const modal = form.closest('.modal');
             const closeModal = form.dataset.closeModal !== 'false';
             if (closeModal && modal) modal.classList.remove('open');
         } catch (err) {
             console.error('AJAX form error:', err);
+            showToast('Could not submit your changes. Please try again.', 'error');
         }
     });
 
@@ -191,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const confirmMessage = btn.dataset.confirm || 'Are you sure you want to delete this?';
-        if (!confirmAction(confirmMessage)) return;
+        if (!await confirmAction(confirmMessage)) return;
 
         const url = btn.dataset.url;
         const targetSel = btn.dataset.target;
@@ -205,13 +245,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             });
+            if (!resp.ok) throw new Error(`Delete failed (${resp.status})`);
             const data = await resp.json();
-            if (data.success && targetSel) {
-                const el = document.querySelector(targetSel);
-                if (el) el.remove();
+            if (data.success) {
+                if (targetSel) {
+                    const el = document.querySelector(targetSel);
+                    if (el) el.remove();
+                }
+                showToast(data.message || 'Deleted successfully.', 'success');
+            } else {
+                showToast(data.error || data.message || 'Could not delete this item.', 'error');
             }
         } catch (err) {
             console.error('AJAX delete error:', err);
+            showToast('Could not delete this item. Please try again.', 'error');
         }
     });
 
@@ -225,13 +272,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const resp = await fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
             });
+            if (!resp.ok) throw new Error(`Pagination failed (${resp.status})`);
             const data = await resp.json();
             if (data.html) {
                 const container = document.querySelector('#post-list');
                 if (container) container.innerHTML = data.html;
+            } else {
+                showToast('Could not load more discussions.', 'error');
             }
-                } catch (err) {
+        } catch (err) {
             console.error('AJAX pagination error:', err);
+            showToast('Could not load more discussions. Please try again.', 'error');
         }
     });
 
@@ -326,34 +377,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.addEventListener('click', async function (e) {
-        const btn = e.target.closest('#mark-all-read-btn');
-        if (!btn) return;
-        e.preventDefault();
-
-        const url = btn.dataset.url;
-        try {
-            const resp = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X‑CSRFToken': getCsrfToken(),
-                    'X‑Requested‑With': 'XMLHttpRequest',
-                },
-            });
-            const data = await resp.json();
-
-            if (data.success) {
-                const badge = document.getElementById('notification-badge');
-                if (badge) badge.remove();
-
-                const modal = document.getElementById('global-modal');
-                if (modal) {
-                    modal.querySelectorAll('li.unread')
-                        .forEach(li => li.classList.remove('unread'));
-                }
-            }
-        } catch (err) {
-            console.error('Mark‑all‑read failed', err);
-        }
-    });
 });

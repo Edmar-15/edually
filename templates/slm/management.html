@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module Management</title>
     <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/slm/slm.css' %}">
@@ -43,6 +46,9 @@
 
     {% include "components/global_modal.html" %}
 
+    <!-- This template does not extend base.html. Load shared toast support here. -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.22.0"></script>
+    <script src="{% static 'js/toast_notifications.js' %}"></script>
     <script src="{% static 'js/modal.js' %}" defer></script>
 </body>
 </html>

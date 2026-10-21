@@ -2788,7 +2788,7 @@ html[data-theme="dark"] .form-textarea {
 .form-textarea {
     resize: vertical;
     min-height: 140px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: inherit;
 }
 
 .form-input:focus,
