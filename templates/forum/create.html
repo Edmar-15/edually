@@ -42,14 +42,13 @@
                     {% if error %}
                         <div class="alert alert-error">{{ error }}</div>
                     {% endif %}
-                    <div id="create-post-warning" class="form-error-message" role="alert" style="display:none;"></div>
 
                     <form method="post" class="create-form" id="create-post-form">
                         {% csrf_token %}
                         
                         <div class="form-group">
                             <label for="title">Discussion Title *</label>
-                            <input type="text" id="title" name="title" required placeholder="What's your question or topic?" class="form-input" maxlength="300">
+                            <input type="text" id="title" name="title" value="{{ title|default:'' }}" required placeholder="What's your question or topic?" class="form-input" maxlength="300">
                             <p class="form-help">Be specific and descriptive to get better responses</p>
                         </div>
 
@@ -58,7 +57,7 @@
                             <select id="category" name="category" class="form-select">
                                 <option value="">Select a category...</option>
                                 {% for cat in categories %}
-                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:'s' %}selected{% endif %}>{{ cat.name }}</option>
                                 {% endfor %}
                             </select>
                             <p class="form-help">Choose a category to help others find your discussion</p>
@@ -66,7 +65,7 @@
 
                         <div class="form-group">
                             <label for="content">Details *</label>
-                            <textarea id="content" name="content" required placeholder="Provide context, code snippets, or detailed description..." class="form-textarea" rows="10"></textarea>
+                            <textarea id="content" name="content" required placeholder="Provide context, code snippets, or detailed description..." class="form-textarea" rows="10">{{ content|default:'' }}</textarea>
                             <p class="form-help">Include relevant details to help others understand your question better</p>
                         </div>
 
@@ -92,50 +91,4 @@
     </main>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('create-post-form');
-        const warningBox = document.getElementById('create-post-warning');
-        const badWords = [
-            'gago', 'gaga', 'tanga', 'bobo', 'boang', 'ulol', 'bwisit', 'buwisit',
-            'hayop', 'pakyu', 'pisti', 'putang ina', 'putangina', 'pota', 'pota ka',
-            'siraulo', 'sira ulo', 'takusa', 'bastos', 'anak ng', 'tang ina',
-            'tae', 'taena', 'urupak', 'uyab', 'kupal', 'hinampak', 'bastos',
-            'stupid', 'idiot', 'dumb', 'moron', 'loser', 'trash', 'hate',
-            'fool', 'asshole', 'jerk', 'shut up', 'damn', 'crap', 'hell',
-            'bitch', 'whore', 'slut', 'freak', 'retard', 'idiotic', 'stupid ka'
-        ];
-
-        const normalize = (text = '') => text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-
-        const containsBadWords = (text = '') => {
-            const normalizedText = normalize(text);
-            if (!normalizedText) return false;
-
-            return badWords.some((badWord) => {
-                const normalizedBadWord = normalize(badWord);
-                if (!normalizedBadWord || normalizedBadWord.length <= 1) return false;
-
-                const escapedBadWord = normalizedBadWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                return new RegExp(`(^| )${escapedBadWord}( |$)`).test(normalizedText);
-            });
-        };
-
-        form.addEventListener('submit', (event) => {
-            const title = form.querySelector('#title')?.value || '';
-            const content = form.querySelector('#content')?.value || '';
-
-            if (containsBadWords(`${title} ${content}`)) {
-                event.preventDefault();
-                warningBox.textContent = 'Warning: Your message contains inappropriate language. Please revise it before posting.';
-                warningBox.style.display = 'block';
-                warningBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                return;
-            }
-
-            warningBox.textContent = '';
-            warningBox.style.display = 'none';
-        });
-    });
-</script>
 {% endblock %}

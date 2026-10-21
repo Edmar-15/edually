@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.test import SimpleTestCase
+from .content_filter import check_content
 
 from account.models import UserConsent
 from .models import Category, Post, PostUpvote, Reply, ReplyUpvote, Report
@@ -146,3 +148,172 @@ class ForumTests(TestCase):
         self.client.get(reverse("forum:list"))
         self.user.refresh_from_db()
         self.assertTrue(self.user.onboarding_forum_visited)
+
+    def test_filter_blocks_invalid_posts(self):
+        invalid_inputs = [
+            "fuck",
+            "B0B0",
+            "g@go",
+            "f.u.c.k",
+            "12467654!@@#$%^%#$sdfghgjhghfd",
+        ]
+
+        for index, content in enumerate(invalid_inputs):
+            with self.subTest(content=content):
+                title = f"Filter test {index}"
+
+                response = self.client.post(
+                    reverse("forum:create"),
+                    {
+                        "title": title,
+                        "content": content,
+                        "category": self.category.pk,
+                    },
+                    **AJAX,
+                )
+
+                self.assertFalse(response.json()["success"])
+                self.assertFalse(
+                    Post.objects.filter(title=title).exists()
+                )
+
+    def test_filter_blocks_invalid_replies(self):
+        invalid_inputs = [
+            "fuck",
+            "B0B0",
+            "g@go",
+            "12467654!@@#$%^%#$sdfghgjhghfd",
+        ]
+
+        original_count = Reply.objects.count()
+
+        for content in invalid_inputs:
+            with self.subTest(content=content):
+                response = self.client.post(
+                    reverse(
+                        "forum:create_reply",
+                        args=[self.post.pk],
+                    ),
+                    {"content": content},
+                    **AJAX,
+                )
+
+                self.assertFalse(response.json()["success"])
+                self.assertEqual(
+                    Reply.objects.count(),
+                    original_count,
+                )
+
+    def test_filter_blocks_invalid_post_edits(self):
+        url = reverse(
+            "forum:post_edit",
+            args=[self.post.pk],
+        )
+
+        response = self.client.post(
+            url,
+            {
+                "title": "Updated title",
+                "content": "g@go",
+                "category": self.category.pk,
+            },
+            **AJAX,
+        )
+
+        self.post.refresh_from_db()
+
+        self.assertEqual(
+            self.post.content,
+            "Please explain this lesson.",
+        )
+        self.assertIn("html", response.json())
+
+    def test_filter_blocks_invalid_reply_edits(self):
+        url = reverse(
+            "forum:reply_edit",
+            args=[self.reply.pk],
+        )
+
+        response = self.client.post(
+            url,
+            {"content": "f.u.c.k"},
+            **AJAX,
+        )
+
+        self.reply.refresh_from_db()
+
+        self.assertEqual(
+            self.reply.content,
+            "My original reply",
+        )
+        self.assertIn("html", response.json())
+
+    def test_filter_allows_programming_content(self):
+        response = self.client.post(
+            reverse("forum:create"),
+            {
+                "title": "What is C++?",
+                "content": (
+                    '#include <iostream>\n'
+                    'print("Hello, world!")'
+                ),
+                "category": self.category.pk,
+            },
+            **AJAX,
+        )
+
+        self.assertTrue(response.json()["success"])
+
+
+class ContentFilterRegressionTests(SimpleTestCase):
+
+    def test_blocks_profanity_and_spam(self):
+        blocked_inputs = [
+            "bobo",
+            "fuck",
+            "B0B0",
+            "g@go",
+            "f.u.c.k",
+            "f u c k",
+            "b o b o",
+            "f-u-c-k",
+            "12467654!@@#$%^%#$sdfghgjhghfd",
+            "12345678!@@#$%^&*abcdefg",
+            "hello 12345678!@@#$%^&*abcdefg world",
+            "!!!!!!!!!!!!!!!!",
+            "################",
+        ]
+
+        for text in blocked_inputs:
+            with self.subTest(text=text):
+                self.assertIsNotNone(
+                    check_content(text),
+                    msg=f"Should block: {text}",
+                )
+
+    def test_allows_legitimate_educational_content(self):
+        allowed_inputs = [
+            "What is C++?",
+            "How do Python functions work?",
+            "I hate cyberbullying.",
+            "How do we reduce trash in our school?",
+            "What is hate speech?",
+            "What does uyab mean in Cebuano?",
+            "How does the class handle errors?",
+            "#include <iostream>",
+            'print("Hello, world!")',
+            "What does #include <iostream> do?",
+            "C++ uses operators like !=, &&, and ||.",
+            'print("ABC12345!!!@@@###xyz")',
+            "https://example.com/lesson/12345?symbols=!@#$%^&abcde",
+            "What does 12345 != 67890 mean?",
+            "How do I use regex ^[A-Za-z0-9_!@#$%^&*]+$?",
+            "How do we reduce trash in school?",
+        ]
+
+        for text in allowed_inputs:
+            with self.subTest(text=text):
+                self.assertIsNone(
+                    check_content(text),
+                    msg=f"Should allow: {text}",
+                )
