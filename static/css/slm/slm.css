@@ -1098,7 +1098,7 @@ html[data-theme="dark"] .pm-card__actions .button-plain {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: inherit;
 }
 .paginator__list {
   display: flex;
