@@ -34,12 +34,12 @@
                 class="button secondary-button small-button js-modal-trigger reply-report-button action-report">
                 <i class="fa-solid fa-flag"></i> Report
             </a>
+            {% if request.user == reply.author %}
             <div class="action-menu reply-action-menu">
                 <button type="button" class="button secondary-button small-button action-menu-toggle" aria-haspopup="true" aria-expanded="false">
                     <i class="fa-solid fa-chevron-down"></i>
                 </button>
                 <div class="action-menu-panel" role="menu" aria-hidden="true">
-                    {% if request.user == reply.author %}
                         <a href="{% url 'forum:reply_edit' reply.pk %}"
                             class="button secondary-button small-button js-modal-trigger action-menu-item action-edit"
                             role="menuitem">
@@ -50,9 +50,9 @@
                             role="menuitem">
                             <i class="fa-solid fa-trash"></i> Delete
                         </a>
-                    {% endif %}
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>

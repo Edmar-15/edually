@@ -1582,7 +1582,7 @@ html[data-theme="dark"] .reply-page-layout .question-card {
 
 .has-open-action-menu {
     position: relative;
-    z-index: 10002;
+    z-index: 20;
     overflow: visible;
 }
 

@@ -1,5 +1,3 @@
-import re
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -13,41 +11,14 @@ from .forms import PostForm, ReplyForm
 from .models import Post, Category, Reply, PostUpvote, ReplyUpvote, Report
 from account.utils import send_push_notification
 
+from .content_filter import (
+    BAD_WORD_WARNING,
+    check_content,
+    contains_bad_words,
+)
+
 
 REPORT_REASONS = Report.REASON_CHOICES
-BAD_WORD_WARNING = (
-    'Warning: Your message contains inappropriate language. '
-    'Please revise it before posting.'
-)
-BAD_WORDS = [
-    'gago', 'gaga', 'tanga', 'bobo', 'boang', 'ulol', 'bwisit', 'buwisit',
-    'hayop', 'pakyu', 'pisti', 'putang ina', 'putangina', 'pota', 'pota ka',
-    'siraulo', 'sira ulo', 'takusa', 'bastos', 'anak ng', 'tang ina',
-    'tae', 'taena', 'urupak', 'uyab', 'kupal', 'hinampak', 'bastos',
-    'stupid', 'idiot', 'dumb', 'moron', 'loser', 'trash', 'hate',
-    'fool', 'asshole', 'jerk', 'shut up', 'damn', 'crap', 'hell',
-    'bitch', 'whore', 'slut', 'freak', 'retard', 'idiotic', 'stupid ka',
-]
-
-
-def _normalize_bad_word_text(text):
-    return re.sub(r'[^a-z0-9]+', ' ', (text or '').lower()).strip()
-
-
-def _contains_bad_words(text):
-    normalized_text = _normalize_bad_word_text(text)
-    if not normalized_text:
-        return False
-
-    for bad_word in BAD_WORDS:
-        normalized_bad_word = _normalize_bad_word_text(bad_word)
-        if normalized_bad_word and re.search(
-            rf'(?<![a-z0-9]){re.escape(normalized_bad_word)}(?![a-z0-9])',
-            normalized_text,
-        ):
-            return True
-
-    return False
 
 
 def _is_ajax_request(request):
@@ -180,7 +151,7 @@ def moderation_dashboard(request):
         else:
             content_text = ''
 
-        if content_text and _contains_bad_words(content_text):
+        if content_text and contains_bad_words(content_text):
             item['has_bad_words'] = True
             item['bad_word_warning'] = BAD_WORD_WARNING
 
@@ -287,24 +258,56 @@ def flag_content(request, content_type, content_id):
 
 @login_required(login_url='account:login')
 def post_edit(request, post_id):
-    post = get_object_or_404(Post, pk=post_id, author=request.user, is_deleted=False)
+    post = get_object_or_404(
+        Post,
+        pk=post_id,
+        author=request.user,
+        is_deleted=False,
+    )
+
     form = PostForm(request.POST or None, instance=post)
+
     if request.method == 'POST' and form.is_valid():
-        form.save()
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({
-                'success': True,
-                'redirect': redirect('forum:post_detail', post_id=post.pk).url,
-                'message': 'Discussion updated successfully.',
-            })
-        return redirect('forum:post_detail', post_id=post.pk)
+        for field in ('title', 'content'):
+            warning = check_content(form.cleaned_data[field])
+
+            if warning:
+                form.add_error(field, warning)
+
+        if not form.errors:
+            form.save()
+
+            if _is_ajax_request(request):
+                return JsonResponse({
+                    'success': True,
+                    'redirect': redirect(
+                        'forum:post_detail',
+                        post_id=post.pk,
+                    ).url,
+                    'message': 'Discussion updated successfully.',
+                })
+
+            return redirect(
+                'forum:post_detail',
+                post_id=post.pk,
+            )
 
     context = {'post': post, 'form': form}
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+
+    if _is_ajax_request(request):
         return JsonResponse({
-            'html': render_to_string('forum/partials/post_edit_form.html', context, request=request),
+            'html': render_to_string(
+                'forum/partials/post_edit_form.html',
+                context,
+                request=request,
+            ),
         })
-    return render(request, 'forum/partials/post_edit_form.html', context)
+
+    return render(
+        request,
+        'forum/partials/post_edit_form.html',
+        context,
+    )
 
 
 @login_required(login_url='account:login')
@@ -338,8 +341,10 @@ def reply_edit(request, reply_id):
     form = ReplyForm(request.POST or None, instance=reply)
 
     if request.method == 'POST' and form.is_valid():
-        if _contains_bad_words(form.cleaned_data['content']):
-            form.add_error('content', BAD_WORD_WARNING)
+        warning = check_content(form.cleaned_data['content'])
+
+        if warning:
+            form.add_error('content', warning)
         else:
             form.save()
             if _is_ajax_request(request):
@@ -566,14 +571,13 @@ def create_post(request):
                     'success': False,
                     'html': render_to_string('forum/partials/create_post_modal.html', context, request=request),
                 })
-            return render(request, 'forum/create.html', {
-                'error': 'Title and content are required.',
-                'categories': Category.objects.all(),
-            })
+            return render(request, 'forum/create.html', context)
 
-        if _contains_bad_words(f'{title} {content}'):
+        warning = check_content(title) or check_content(content)
+
+        if warning:
             context = {
-                'error': BAD_WORD_WARNING,
+                'error': warning,
                 'categories': Category.objects.all(),
                 'title': title,
                 'content': content,
@@ -584,10 +588,7 @@ def create_post(request):
                     'success': False,
                     'html': render_to_string('forum/partials/create_post_modal.html', context, request=request),
                 })
-            return render(request, 'forum/create.html', {
-                'error': BAD_WORD_WARNING,
-                'categories': Category.objects.all(),
-            })
+            return render(request, 'forum/create.html', context)
 
         category = None
         if category_id:
@@ -635,15 +636,24 @@ def create_reply(request, post_id):
             return redirect('forum:post_detail', post_id=post.pk)
 
         content = form.cleaned_data['content']
-        if _contains_bad_words(content):
+        warning = check_content(content)
+
+        if warning:
             if _is_ajax_request(request):
                 return JsonResponse({
                     'success': False,
-                    'html': f'<div class="form-error-message">{BAD_WORD_WARNING}</div>',
-                    'error': BAD_WORD_WARNING,
+                    'html': (
+                        f'<div class="form-error-message">'
+                        f'{warning}</div>'
+                    ),
+                    'error': warning,
                 })
-            messages.error(request, BAD_WORD_WARNING)
-            return redirect('forum:post_detail', post_id=post.pk)
+
+            messages.error(request, warning)
+            return redirect(
+                'forum:post_detail',
+                post_id=post.pk,
+            )
 
         reply = form.save(commit=False)
         reply.post = post

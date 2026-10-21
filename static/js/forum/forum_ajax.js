@@ -51,78 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const BAD_WORD_WARNING = 'Warning: Your message contains inappropriate language. Please revise it before posting.';
-    const BAD_WORDS = [
-        'gago', 'gaga', 'tanga', 'bobo', 'boang', 'ulol', 'bwisit', 'buwisit',
-        'hayop', 'pakyu', 'pisti', 'putang ina', 'putangina', 'pota', 'pota ka',
-        'siraulo', 'sira ulo', 'takusa', 'bastos', 'anak ng', 'tang ina',
-        'tae', 'taena', 'urupak', 'uyab', 'kupal', 'hinampak', 'bastos',
-        'stupid', 'idiot', 'dumb', 'moron', 'loser', 'trash', 'hate',
-        'fool', 'asshole', 'jerk', 'shut up', 'damn', 'crap', 'hell',
-        'bitch', 'whore', 'slut', 'freak', 'retard', 'idiotic', 'stupid ka',
-    ];
-
-    const normalizeBadWordText = (text = '') => text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-
-    const containsBadWords = (text = '') => {
-        const normalizedText = normalizeBadWordText(text);
-        if (!normalizedText) return false;
-
-        return BAD_WORDS.some(badWord => {
-            const normalizedBadWord = normalizeBadWordText(badWord);
-            if (!normalizedBadWord || normalizedBadWord.length <= 1) return false;
-
-            const escapedBadWord = normalizedBadWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return new RegExp(`(^| )${escapedBadWord}( |$)`).test(normalizedText);
-        });
-    };
-
-    const getBadWordWarning = (form) => {
-        const titleValue = form.querySelector('input[name="title"]')?.value || '';
-        const contentValue = form.querySelector('textarea[name="content"]')?.value || '';
-
-        if (titleValue || contentValue) {
-            return containsBadWords(`${titleValue} ${contentValue}`) ? BAD_WORD_WARNING : '';
-        }
-
-        return '';
-    };
-
-    const showFormWarning = (form, message) => {
-        let warningBox = form.querySelector('.form-error-message[data-role="bad-word-warning"]');
-        if (!warningBox) {
-            warningBox = document.createElement('div');
-            warningBox.className = 'form-error-message';
-            warningBox.setAttribute('data-role', 'bad-word-warning');
-            warningBox.setAttribute('role', 'alert');
-            form.insertBefore(warningBox, form.firstChild);
-        }
-
-        warningBox.textContent = message;
-        warningBox.style.display = 'block';
-        warningBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    };
-
-    const clearFormWarning = (form) => {
-        const warningBox = form.querySelector('.form-error-message[data-role="bad-word-warning"]');
-        if (warningBox) {
-            warningBox.textContent = '';
-            warningBox.style.display = 'none';
-        }
-    };
-
     document.body.addEventListener('submit', async e => {
         const form = e.target;
         if (!form.classList.contains('ajax-form') || form.hasAttribute('data-modal-form')) return;
         e.preventDefault();
-
-        const badWordWarning = getBadWordWarning(form);
-        if (badWordWarning) {
-            showFormWarning(form, badWordWarning);
-            return;
-        }
-
-        clearFormWarning(form);
 
         const url = form.action;
         const method = (form.method || 'POST').toUpperCase();
@@ -315,10 +247,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!expanded) {
                 const toggleRect = toggle.getBoundingClientRect();
-                const availableAbove = toggleRect.top;
-                const availableBelow = window.innerHeight - toggleRect.bottom;
+                const header = document.querySelector('.content-header');
+                const headerBottom = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+                const availableAbove = Math.max(0, toggleRect.top - headerBottom - 12);
+                const availableBelow = Math.max(0, window.innerHeight - toggleRect.bottom - 12);
+                panel.style.maxHeight = ''; // Measure the natural menu height.
                 const panelHeight = panel.offsetHeight;
-                panel.classList.toggle('up', availableAbove >= panelHeight + 16 || availableAbove > availableBelow);
+                const openUp = availableBelow < panelHeight + 8 && availableAbove > availableBelow;
+                panel.classList.toggle('up', openUp);
+                panel.style.maxHeight = `${Math.floor(openUp ? availableAbove : availableBelow)}px`;
             } else {
                 panel.classList.remove('up');
             }
