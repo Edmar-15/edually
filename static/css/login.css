@@ -834,8 +834,7 @@ form button[type="submit"]:hover {
 /* ERRORS */
 /* ============================================================= */
 
-.errorlist,
-.messages {
+.errorlist {
     margin: 0;
     padding: 0;
     list-style: none;
@@ -854,11 +853,6 @@ form button[type="submit"]:hover {
     margin-bottom: 6px;
 }
 
-.messages li {
-    margin-bottom: 10px;
-}
-
-.messages li:last-child,
 .errorlist li:last-child {
     margin-bottom: 0;
 }

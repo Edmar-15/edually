@@ -299,31 +299,9 @@ export function initHighlightAI(
 
   // Messages
 
-  const showMessage = (container, text, type = "success") => {
-    const old = container.querySelector(".annotation-message");
-
-    if (old) old.remove();
-
-    const msg = document.createElement("div");
-
-    msg.className = `annotation-message annotation-message--${type}`;
-
-    msg.textContent = text;
-
-    msg.style.fontSize = "0.9em";
-    msg.style.marginTop = "4px";
-    msg.style.color = type === "error" ? "#d00" : "#080";
-
-    container.appendChild(msg);
-
-    setTimeout(() => {
-      msg.style.transition = "opacity 0.4s";
-      msg.style.opacity = "0";
-
-      setTimeout(() => {
-        msg.remove();
-      }, 500);
-    }, 1500);
+  // Transient annotation errors use the shared SweetAlert2 toast UI.
+  const showMessage = (_container, text, type = "success") => {
+    window.showGlobalToast(text, type);
   };
 
   // History
@@ -562,7 +540,7 @@ export function initHighlightAI(
     } catch (error) {
       console.error("Failed to remove highlight:", error);
 
-      alert(error.message || "Could not remove highlight.");
+      window.showGlobalToast(error.message || "Could not remove highlight.", "error");
     }
   };
 

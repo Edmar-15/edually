@@ -72,22 +72,6 @@
 
             <div class="container">
 
-                {% if messages %}
-                    <ul
-                        class="messages"
-                        aria-live="polite"
-                    >
-                        {% for message in messages %}
-                            <li
-                                {% if message.tags %}
-                                    class="{{ message.tags }}"
-                                {% endif %}
-                            >
-                                {{ message }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
 
 
                 <section class="profile-page profile-section">

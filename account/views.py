@@ -1007,7 +1007,6 @@ def delete_account(request):
     auth_logout(request)          # log out before we delete the row
     user.delete()
     message = "Your account has been permanently deleted."
-    messages.success(request, message)
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({
             "success": True,
@@ -1016,6 +1015,8 @@ def delete_account(request):
             "toastType": "success",
             "toastDuration": 5000,
         })
+    # Non-AJAX deletion still uses Django messages via base.html.
+    messages.success(request, message)
     return redirect("landing")
 
 

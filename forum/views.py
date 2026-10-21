@@ -295,6 +295,7 @@ def post_edit(request, post_id):
             return JsonResponse({
                 'success': True,
                 'redirect': redirect('forum:post_detail', post_id=post.pk).url,
+                'message': 'Discussion updated successfully.',
             })
         return redirect('forum:post_detail', post_id=post.pk)
 
@@ -317,6 +318,7 @@ def post_archive(request, post_id):
             return JsonResponse({
                 'success': True,
                 'redirect': redirect('forum:list').url,
+                'message': 'Discussion archived successfully.',
             })
         return redirect('forum:list')
 
@@ -344,6 +346,7 @@ def reply_edit(request, reply_id):
                 return JsonResponse({
                     'success': True,
                     'redirect': f"{reverse('forum:post_detail', args=[reply.post_id])}#reply-{reply.pk}",
+                    'message': 'Reply updated successfully.',
                 })
             return redirect('forum:post_detail', post_id=reply.post_id)
 
@@ -375,6 +378,7 @@ def reply_delete(request, reply_id):
             return JsonResponse({
                 'success': True,
                 'redirect': f"{reverse('forum:post_detail', args=[reply.post_id])}#reply-list",
+                'message': 'Reply deleted successfully.',
             })
         return redirect('forum:post_detail', post_id=reply.post_id)
 
@@ -626,6 +630,7 @@ def create_reply(request, post_id):
                 return JsonResponse({
                     'success': False,
                     'html': '<div class="form-error-message">Reply content is required.</div>',
+                    'error': 'Reply content is required.',
                 })
             return redirect('forum:post_detail', post_id=post.pk)
 
@@ -635,6 +640,7 @@ def create_reply(request, post_id):
                 return JsonResponse({
                     'success': False,
                     'html': f'<div class="form-error-message">{BAD_WORD_WARNING}</div>',
+                    'error': BAD_WORD_WARNING,
                 })
             messages.error(request, BAD_WORD_WARNING)
             return redirect('forum:post_detail', post_id=post.pk)
@@ -661,6 +667,7 @@ def create_reply(request, post_id):
                     'user_reply_upvotes': set(),
                 }, request=request),
                 'replies_cnt': post.reply_count,
+                'message': 'Reply posted successfully.',
             })
         return redirect('forum:post_detail', post_id=post.pk)
     

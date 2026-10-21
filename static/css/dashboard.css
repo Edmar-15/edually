@@ -1715,8 +1715,6 @@ html.dark .profile-details-card .input-group textarea,
 html.dark .profile-page .profile-details-card .input-group input,
 html.dark .profile-page .profile-details-card .input-group select,
 html.dark .profile-page .profile-details-card .input-group textarea,
-html.dark .profile-details-card .messages li,
-html.dark .profile-page .profile-details-card .messages li,
 html.dark .profile-page .profile-details-card .profile-form-note,
 html.dark .profile-page .profile-details-card .details-header {
     background: #0b1220 !important;
@@ -1731,7 +1729,6 @@ html.dark .profile-summary p,
 html.dark .profile-overview-card h2,
 html.dark .profile-details-card .details-header h2,
 html.dark .profile-details-card .details-header p,
-html.dark .profile-details-card .messages li,
 html.dark .profile-details-card .profile-form-note {
     color: var(--text);
 }
@@ -2178,22 +2175,6 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
 .form-actions .outline-button:hover {
     background: rgba(14, 154, 167, 0.08);
     transform: translateY(-2px);
-}
-
-.profile-details-card .messages {
-    margin: 0 0 18px;
-    padding: 0;
-    list-style: none;
-}
-
-.profile-details-card .messages li {
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: rgba(14, 154, 167, 0.08);
-    color: var(--primary-dark);
-    margin-bottom: 10px;
-    font-size: 0.9rem;
-    line-height: 1.5;
 }
 
 .button.secondary-button {
@@ -3229,6 +3210,20 @@ a.button-plain {
 button.button-primary.button--danger,
 a.button-primary.button--danger {
     background: #c62828;        /* a slightly darker red */
+}
+
+/* Archive detail destructive actions must keep white text on a solid red button.
+   The shared .action-delete style otherwise sets dark-red text; its hover style
+   also changes the background to pale red. Keep both states readable. */
+.archive-detail-actions .button-primary.button--danger {
+    color: #fff;
+    background: #c62828;
+}
+
+.archive-detail-actions .button-primary.button--danger:hover,
+.archive-detail-actions .button-primary.button--danger:focus-visible {
+    color: #fff;
+    background: #b91c1c;
 }
 
 html.dark .modal__actions .button-primary,
