@@ -807,6 +807,35 @@ body.sidebar-collapsed .main-content {
     padding: 0;
 }
 
+/* Edit Profile — field spacing */
+#profile-form .name-row {
+    margin-bottom: 14px;
+}
+
+#profile-form > .floating-label-group {
+    margin-bottom: 14px;
+}
+
+/* Edit Profile — Year Level dropdown */
+#profile-form .year-level-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 44px;
+}
+
+#profile-form .year-level-field::after {
+    content: "";
+    position: absolute;
+    right: 20px;
+    top: 25px;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid #94a3b8;
+    border-bottom: 2px solid #94a3b8;
+    transform: translateY(-50%) rotate(45deg);
+    pointer-events: none;
+}
+
 /* Responsive Tab Button Styling */
 #tab-profile-btn,
 #tab-password-btn {

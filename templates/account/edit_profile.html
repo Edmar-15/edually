@@ -68,38 +68,6 @@
                         >
 
                             <div
-                                style="
-                                    padding-bottom: 16px;
-                                    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-                                    margin-bottom: 16px;
-                                "
-                            >
-
-                                <p
-                                    style="
-                                        margin: 0;
-                                        font-size: 0.9rem;
-                                        color: var(--muted);
-                                        font-weight: 500;
-                                    "
-                                >
-                                    Editing profile for
-                                </p>
-
-                                <h2
-                                    style="
-                                        margin: 6px 0 0;
-                                        font-size: 1.35rem;
-                                        color: var(--text);
-                                        font-weight: 700;
-                                    "
-                                >
-                                    {{ user_obj.get_full_name|default:user_obj.email }}
-                                </h2>
-
-                            </div>
-
-                            <div
                                 id="edit-profile-tab"
                                 style="display: none"
                             >
@@ -289,7 +257,7 @@
 
                                         </div>
 
-                                        <div class="floating-label-group input-group">
+                                        <div class="floating-label-group input-group year-level-field">
 
                                             {{ profile_form.year_level }}
 
