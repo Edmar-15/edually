@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h2>Reset Student Year Levels</h2>
+
+<p>
+    This action will clear the year-level selections
+    of {{ affected_count }} student profiles.
+</p>
+
+<p>
+    Students will need to select their year level
+    again when updating their profile.
+</p>
+
+<p><strong>This action cannot be undone automatically.</strong></p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <input
+        type="submit"
+        value="Confirm Reset"
+        class="default"
+    >
+
+    <a href="{% url 'admin:account_studentprofile_changelist' %}">
+        Cancel
+    </a>
+</form>
+{% endblock %}

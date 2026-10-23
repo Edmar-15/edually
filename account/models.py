@@ -192,6 +192,8 @@ class StudentProfile(models.Model):
         "Year Level",
         max_length=20,
         choices=YEAR_CHOICES,
+        blank=True,
+        default="",
     )
     
     def clean(self):

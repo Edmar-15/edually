@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from .forms import UserCreationForm, UserChangeForm
 from .models import (
     User,
@@ -54,6 +58,52 @@ class UserAdmin(BaseUserAdmin):
 class StudentProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "student_id", "program", "year_level")
     search_fields = ("user__email", "student_id", "program")
+
+    change_list_template = "admin/account/studentprofile/change_list.html"
+
+    def get_urls(self):
+        custom_urls = [
+            path(
+                "reset-year-levels/",
+                self.admin_site.admin_view(self.reset_year_levels),
+                name="account_studentprofile_reset_year_levels",
+            ),
+        ]
+        return custom_urls + super().get_urls()
+
+    def reset_year_levels(self, request):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+
+        if request.method == "POST":
+            updated = StudentProfile.objects.exclude(
+                year_level=""
+            ).update(year_level="")
+
+            self.message_user(
+                request,
+                f"Year levels reset for {updated} student profiles.",
+                level=messages.SUCCESS,
+            )
+
+            return HttpResponseRedirect(
+                reverse("admin:account_studentprofile_changelist")
+            )
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Confirm Year Level Reset",
+            "opts": self.model._meta,
+            "affected_count": StudentProfile.objects.exclude(
+                year_level=""
+            ).count(),
+        }
+
+        return TemplateResponse(
+            request,
+            "admin/account/studentprofile/reset_year_levels.html",
+            context,
+        )
 
 
 @admin.register(TeacherProfile)
