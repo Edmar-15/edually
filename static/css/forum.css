@@ -650,6 +650,10 @@ html[data-theme="dark"] .forum-side-panel .sidebar-card {
     text-align: center;
 }
 
+.forum-toolbar .filter-area > .btn-primary {
+    background: #0e9aa7;
+}
+
 .btn-primary[style*="width: 100%"] {
     display: block;
     width: 100% !important;
@@ -777,15 +781,15 @@ html[data-theme="dark"] .forum-side-panel .sidebar-card {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
     overflow: hidden;
     border: 1px solid rgba(14, 154, 167, .18);
     border-radius: 50%;
     background: linear-gradient(135deg, var(--forum-primary), #0d7d92);
     color: #fff;
-    font-size: .68rem;
+    font-size: .9rem;
     font-weight: 800;
     line-height: 1;
 }
@@ -1626,15 +1630,15 @@ html[data-theme="dark"] .reply-item {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
     overflow: hidden;
     border: 1px solid rgba(14, 154, 167, 0.18);
     border-radius: 50%;
     background: linear-gradient(135deg, var(--forum-primary), #0d7d92);
     color: #fff;
-    font-size: 0.68rem;
+    font-size: 0.8rem;
     font-weight: 800;
     line-height: 1;
 }
@@ -1776,19 +1780,6 @@ html[data-theme="dark"] .reply-item {
     overflow: hidden;
     font-weight: 600;
     letter-spacing: 0.02em;
-}
-
-.btn-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transform: translateX(-100%);
-}
-
-.btn-primary:hover::before {
-    transform: translateX(100%);
-    transition: transform 0.5s ease;
 }
 
 .btn-upvote {
@@ -2984,6 +2975,25 @@ html[data-theme="dark"] .reply-form-section {
         border-radius: 10px;
         background: rgba(14, 154, 167, .08);
         color: var(--forum-text);
+    }
+
+    .sidebar {
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+    }
+
+    .sidebar-nav {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .sidebar-footer {
+        flex-shrink: 0;
+        margin-top: auto;
     }
 
     .sidebar-header .sidebar-trigger:hover,

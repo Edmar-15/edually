@@ -265,9 +265,20 @@ html.dark .forum-sidebar,
 html.dark .sidebar,
 html.dark .dashboard-shell,
 html.dark .dashboard-container,
-html.dark .sidebar .sidebar-header,
 html.dark .sidebar .sidebar-footer {
   background: rgba(10, 15, 28, 0.96);
+}
+
+html.dark .sidebar .sidebar-header,
+html[data-theme="dark"] .sidebar .sidebar-header {
+  background: transparent;
+}
+
+html.dark .modal__dialog[aria-labelledby="logout-modal-title"] .btn--primary,
+html[data-theme="dark"] .modal__dialog[aria-labelledby="logout-modal-title"] .btn--primary {
+  background: #751515f2;
+  color: #fff;
+  border: 1px solid #135a77;
 }
 
 html.dark .sidebar {
@@ -330,6 +341,11 @@ html.dark .user-card p,
 html.dark .nav-label,
 html.dark .sidebar-logo {
   color: var(--text);
+}
+
+html.dark .post-author,
+html[data-theme="dark"] .post-author {
+  background: transparent;
 }
 
 html.dark .dashboard-content .card,
@@ -1575,4 +1591,31 @@ html[data-theme="dark"] body .post-side .reply-btn {
 html.dark body :is(.module-content, .pdf-page, .docx-page, .ppt-page) :is(p, li, h1, h2, h3, h4),
 html[data-theme="dark"] body :is(.module-content, .pdf-page, .docx-page, .ppt-page) :is(p, li, h1, h2, h3, h4) {
   color: var(--text);
+}
+
+html.dark body :is(
+  button,
+  .button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  .btn,
+  [class*="btn-"],
+  [class*="-btn"]
+):not(:hover),
+html[data-theme="dark"] body :is(
+  button,
+  .button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  .btn,
+  [class*="btn-"],
+  [class*="-btn"]
+):not(:hover) {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
 }

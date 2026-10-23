@@ -298,6 +298,13 @@ html.dark .post-form select {
     color: #64748b;
 }
 
+@media (min-width: 769px) {
+    .posts-list .post-card .post-meta {
+        border-top: 0;
+        border-bottom: 0;
+    }
+}
+
 .post-author {
     color: #0f172a;
     font-weight: 700;
@@ -2502,6 +2509,7 @@ html[data-theme="dark"] .avatar {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     color: var(--primary);
+    background: transparent;
 }
 
 @media (max-width: 720px) {
@@ -2842,6 +2850,11 @@ html[data-theme="dark"] .avatar {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     color: var(--primary);
+}
+
+html.dark body .forum-empty-state__icon,
+html[data-theme="dark"] body .forum-empty-state__icon {
+    background: transparent !important;
 }
 
 /* Tags and Badges */
@@ -3778,6 +3791,20 @@ html[data-theme="dark"] #global-modal .forum-action-modal--create textarea::plac
 }
 
 .reply-btn { display:inline-flex; align-items:center; gap:8px; }
+
+.posts-list .post-card .post-stats .upvote-btn,
+.posts-list .post-card .post-stats .reply-btn {
+    box-sizing: border-box;
+    flex: 0 0 72px;
+    width: 72px !important;
+    min-width: 72px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 !important;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    justify-content: center;
+}
 
 /* Keep primary buttons on a single line */
 .button.primary-button { white-space: nowrap; flex-shrink: 0; }

@@ -338,6 +338,23 @@ body.sidebar-collapsed .sidebar {
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
+.archive-card--posts,
+.archive-card--modules,
+.archive-card--subjects {
+    background: linear-gradient(135deg, rgba(14, 154, 167, 0.04), rgba(255, 255, 255, 0.96));
+    border: 1px dashed rgba(14, 154, 167, 0.2);
+}
+
+html.dark .archive-card--posts,
+html.dark .archive-card--modules,
+html.dark .archive-card--subjects,
+html[data-theme="dark"] .archive-card--posts,
+html[data-theme="dark"] .archive-card--modules,
+html[data-theme="dark"] .archive-card--subjects {
+    background: linear-gradient(135deg, rgba(14, 154, 167, 0.08), rgba(15, 23, 42, 0.96));
+    border-color: rgba(148, 163, 184, 0.28);
+}
+
 .archive-card:hover,
 .archive-card:focus-visible {
     transform: translateY(-2px);
@@ -388,8 +405,11 @@ body.sidebar-collapsed .sidebar {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(14, 154, 167, 0.08));
 }
 
-.archive-card--modules .archive-card-icon {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(14, 154, 167, 0.08));
+.archive-card--posts .archive-card-icon,
+.archive-card--modules .archive-card-icon,
+.archive-card--subjects .archive-card-icon {
+    background: #0e9aa7;
+    color: #fff;
 }
 
 .inbox-toolbar {
@@ -1906,6 +1926,15 @@ html[data-theme="dark"] .profile-details-card .floating-label-group textarea:not
     flex-wrap: nowrap;
     align-items: center;
         white-space: nowrap;
+    }
+
+    .profile-actions .button {
+        border: 1px solid #fff;
+    }
+
+    .profile-actions .button.primary-button:hover,
+    .profile-actions .button.primary-button:focus-visible {
+        color: #fff;
     }
 
     .profile-actions .button,

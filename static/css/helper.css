@@ -691,16 +691,20 @@
 
 html.dark .chat-area,
 html.dark .conversation-map,
-html.dark .chat-form,
 html.dark .minimap-popup,
 html[data-theme="dark"] .chat-area,
 html[data-theme="dark"] .conversation-map,
-html[data-theme="dark"] .chat-form,
 html[data-theme="dark"] .minimap-popup {
     background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(10, 15, 28, 0.98)) !important;
     border-color: rgba(148, 163, 184, 0.14) !important;
     color: var(--text) !important;
     transition: all var(--transition);
+}
+
+html.dark .chat-form,
+html[data-theme="dark"] .chat-form {
+    background: transparent !important;
+    border-top: 0 !important;
 }
 
 html.dark .chat-area,

@@ -270,6 +270,14 @@ html[data-theme="dark"] .pm-form input[type="file"]::file-selector-button {
   font-size: var(--type-sm);
 }
 
+#subject-widget .subject-form button {
+  background: #0e9aa7;
+}
+
+#module-widget #module-add-btn {
+  background: #0e9aa7;
+}
+
 /* Full‑width on mobile */
 @media (max-width: 768px) {
   .module-form button,
@@ -762,7 +770,7 @@ html[data-theme="dark"] .module-empty-state {
   align-items: flex-start;
   gap: 10px;
   padding: 16px 18px;
-  background: linear-gradient(135deg, #fff 0%, #effafc 100%);
+  background: transparent;
   border: 1px solid rgba(14,154,167,.16);
   border-radius: 18px;
   text-decoration: none;
@@ -773,10 +781,14 @@ html[data-theme="dark"] .module-empty-state {
   overflow: hidden;
   color: var(--text);
 }
-html.dark .subject-card,
-html[data-theme="dark"] .subject-card {
-  background: linear-gradient(121deg, rgba(17,24,39,.96) 0%, #0b1220 100%);
+html.dark body .subject-card,
+html[data-theme="dark"] body .subject-card {
+  background: transparent !important;
   color: var(--text);
+}
+html.dark body .subject-card-link,
+html[data-theme="dark"] body .subject-card-link {
+  background: transparent !important;
 }
 .subject-card::before {
   content: "";
@@ -820,27 +832,27 @@ html[data-theme="dark"] .subject-card {
   transform: scale(1.04);
 }
 .subject-card__action--edit {
-  color: #0e9aa7;
-  background: rgba(14,154,167,.1);
+  color: #fff;
+  background: #0e9aa7 !important;
 }
 .subject-card__action--edit:hover {
-  background: rgba(14,154,167,.16);
+  background: #0b7d86 !important;
 }
 .subject-card__action--delete {
-  color: #e11d48;
-  background: rgba(225,29,72,.1);
+  color: #fff;
+  background: #dc2626 !important;
 }
 .subject-card__action--delete:hover {
-  background: rgba(225,29,72,.16);
+  background: #b91c1c !important;
 }
 .subject-card__action svg {
   fill: currentColor;
 }
 .subject-card__action--edit svg {
-  color: #0e9aa7;
+  color: #fff;
 }
 .subject-card__action--delete svg {
-  color: #e11d48;
+  color: #fff;
 }
 
 /* Card content */
@@ -858,6 +870,7 @@ html[data-theme="dark"] .subject-card {
   line-height: 1.45;
   margin: 0;
   font-size: var(--type-sm);
+  background: transparent;
 }
 .subject-card i {
   display: inline-flex;
@@ -869,6 +882,10 @@ html[data-theme="dark"] .subject-card {
   color: var(--muted);
   margin-top: auto;
   font-size: var(--type-sm);
+}
+html.dark .subject-card i,
+html[data-theme="dark"] .subject-card i {
+  background: transparent;
 }
 
 /* Reduce columns on tablet & mobile */
