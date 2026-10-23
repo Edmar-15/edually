@@ -558,9 +558,21 @@ def create_post(request):
         content = request.POST.get('content', '').strip()
         category_id = request.POST.get('category')
 
-        if not title or not content:
+        try:
+            category = Category.objects.get(pk=category_id) if category_id else None
+        except (Category.DoesNotExist, ValueError, TypeError, OverflowError):
+            category = None
+
+        if not title or not content or category is None:
+            if not title or not content:
+                error = 'Title and content are required.'
+            elif not category_id:
+                error = 'Please select a category.'
+            else:
+                error = 'Please select a valid category.'
+
             context = {
-                'error': 'Title and content are required.',
+                'error': error,
                 'categories': Category.objects.all(),
                 'title': title,
                 'content': content,
@@ -589,10 +601,6 @@ def create_post(request):
                     'html': render_to_string('forum/partials/create_post_modal.html', context, request=request),
                 })
             return render(request, 'forum/create.html', context)
-
-        category = None
-        if category_id:
-            category = get_object_or_404(Category, pk=category_id)
         
         post = Post.objects.create(
             author=request.user,

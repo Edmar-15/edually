@@ -264,6 +264,69 @@ class ForumTests(TestCase):
 
         self.assertTrue(response.json()["success"])
 
+    def test_create_post_requires_category(self):
+        response = self.client.post(
+            reverse("forum:create"),
+            {
+                "title": "Missing category discussion",
+                "content": "This discussion has no category.",
+            },
+            **AJAX,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["success"])
+        self.assertIn(
+            "Please select a category.",
+            response.json()["html"],
+        )
+        self.assertFalse(
+            Post.objects.filter(
+                title="Missing category discussion"
+            ).exists()
+        )
+
+    def test_create_post_rejects_invalid_category(self):
+        response = self.client.post(
+            reverse("forum:create"),
+            {
+                "title": "Invalid category discussion",
+                "content": "This category does not exist.",
+                "category": "999999",
+            },
+            **AJAX,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["success"])
+        self.assertIn(
+            "Please select a valid category.",
+            response.json()["html"],
+        )
+        self.assertFalse(
+            Post.objects.filter(
+                title="Invalid category discussion"
+            ).exists()
+        )
+
+    def test_edit_post_requires_category(self):
+        response = self.client.post(
+            reverse("forum:post_edit", args=[self.post.pk]),
+            {
+                "title": "Updated discussion",
+                "content": "Updated discussion content.",
+                "category": "",
+            },
+            **AJAX,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json().get("success", False))
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.category, self.category)
+        self.assertEqual(self.post.title, "Need help")
+
 
 class ContentFilterRegressionTests(SimpleTestCase):
 

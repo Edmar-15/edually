@@ -26,8 +26,10 @@
         </div>
 
         <div class="forum-modal-field">
-            <label for="modal-category">Category</label>
-            <select id="modal-category" name="category">
+            <label for="modal-category">
+                Category <span aria-hidden="true">*</span>
+            </label>
+            <select id="modal-category" name="category" required>
                 <option value="">Select a category...</option>
                 {% for cat in categories %}
                     <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:'s' %}selected{% endif %}>{{ cat.name }}</option>
