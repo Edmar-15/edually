@@ -155,7 +155,7 @@ export function initPersonalMaterialWidget(rootEl) {
 
       const delLink = document.createElement("a");
       delLink.href = "#";
-      delLink.title = "Archieve";
+      delLink.title = "Archive";
       delLink.className = "pm-card__action pm-card__action--delete js-modal-trigger";
       delLink.dataset.url = `/slm/api/personal-materials/${pm.id}/archive/`;
       delLink.innerHTML =
