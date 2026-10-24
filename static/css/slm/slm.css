@@ -24,7 +24,6 @@
   --type-xl:   clamp(1.125rem, 1.4vw + 0.6rem, 1.25rem);
 }
 
-html { font-size: var(--type-base); }
 body {
   line-height: 1.5;
   color: var(--text);
