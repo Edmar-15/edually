@@ -1,0 +1,97 @@
+/* EduAlly shared danger actions v1.
+   This file loads after page CSS to keep danger buttons predictable.
+   Full destructive actions are filled; delete menu actions are soft.
+   Archive/Report controls and archived-content status badges are not danger buttons. */
+
+:root {
+    --ed-danger-fill: #b42330;
+    --ed-danger-fill-hover: #981b27;
+    --ed-danger-fill-border: #971f2a;
+    --ed-danger-on-fill: #ffffff;
+    --ed-danger-soft: #fff1f2;
+    --ed-danger-soft-hover: #ffe4e6;
+    --ed-danger-soft-border: #fecdd3;
+    --ed-danger-soft-text: #9f1239;
+    --ed-danger-focus: #b42330;
+}
+
+html.dark,
+html[data-theme="dark"] {
+    /* Muted maroon rather than the former bright red in dark mode. */
+    --ed-danger-fill: #8f2b3b;
+    --ed-danger-fill-hover: #a63749;
+    --ed-danger-fill-border: #a94453;
+    --ed-danger-on-fill: #ffffff;
+    --ed-danger-soft: rgba(190, 63, 77, 0.16);
+    --ed-danger-soft-hover: rgba(190, 63, 77, 0.28);
+    --ed-danger-soft-border: rgba(251, 113, 133, 0.38);
+    --ed-danger-soft-text: #fda4af;
+    --ed-danger-focus: #fda4af;
+}
+
+/* Solid actions: Delete Account, Confirm Disable, Remove Content,
+   Delete Reply, permanent-delete modals/links, and logout confirmations.
+   Specific !important overrides are needed for older dark-mode modal rules. */
+:is(
+    .button.danger-button,
+    .button.button-danger,
+    .button-primary.button--danger,
+    .modal__dialog[aria-labelledby="logout-modal-title"] .btn--primary
+) {
+    background: var(--ed-danger-fill) !important;
+    border: 1px solid var(--ed-danger-fill-border) !important;
+    color: var(--ed-danger-on-fill) !important;
+    box-shadow: none !important;
+}
+
+:is(
+    .button.danger-button,
+    .button.button-danger,
+    .button-primary.button--danger,
+    .modal__dialog[aria-labelledby="logout-modal-title"] .btn--primary
+):is(:hover, :focus-visible) {
+    background: var(--ed-danger-fill-hover) !important;
+    border-color: var(--ed-danger-fill-hover) !important;
+    color: var(--ed-danger-on-fill) !important;
+    box-shadow: none !important;
+}
+
+:is(
+    .button.danger-button,
+    .button.button-danger,
+    .button-primary.button--danger,
+    .modal__dialog[aria-labelledby="logout-modal-title"] .btn--primary
+):focus-visible {
+    outline: 2px solid var(--ed-danger-focus) !important;
+    outline-offset: 3px;
+}
+
+/* Compact Delete menu items should not look like major confirmation CTAs. */
+.action-menu-item.action-delete {
+    background: var(--ed-danger-soft) !important;
+    border: 1px solid var(--ed-danger-soft-border) !important;
+    color: var(--ed-danger-soft-text) !important;
+    box-shadow: none !important;
+}
+.action-menu-item.action-delete:is(:hover, :focus-visible) {
+    background: var(--ed-danger-soft-hover) !important;
+    border-color: var(--ed-danger-soft-text) !important;
+    color: var(--ed-danger-soft-text) !important;
+}
+.action-menu-item.action-delete:focus-visible {
+    outline: 2px solid var(--ed-danger-focus);
+    outline-offset: 2px;
+}
+
+/* Sidebar/header logout is a navigation control: soft, not a big red CTA. */
+:is(.sidebar-footer, .main-nav) .nav-item.logout {
+    color: var(--ed-danger-soft-text) !important;
+}
+html:is(.dark, [data-theme="dark"]) :is(.sidebar-footer, .main-nav) .nav-item.logout {
+    background: var(--ed-danger-soft) !important;
+    border-color: var(--ed-danger-soft-border) !important;
+}
+:is(.sidebar-footer, .main-nav) .nav-item.logout:is(:hover, :focus-visible) {
+    background: var(--ed-danger-soft-hover) !important;
+    color: var(--ed-danger-soft-text) !important;
+}
