@@ -95,3 +95,23 @@ html:is(.dark, [data-theme="dark"]) :is(.sidebar-footer, .main-nav) .nav-item.lo
     background: var(--ed-danger-soft-hover) !important;
     color: var(--ed-danger-soft-text) !important;
 }
+
+/* EduAlly danger dark-mode specificity fix v1 */
+/* Old dashboard.css has more-specific !important red backgrounds.
+   Match button and link confirmations with stronger selectors, while
+   preserving the shared dark-mode color variables. */
+html.dark body :is(button, a).button-primary.button--danger,
+html[data-theme="dark"] body :is(button, a).button-primary.button--danger {
+    background: var(--ed-danger-fill) !important;
+    border-color: var(--ed-danger-fill-border) !important;
+    color: var(--ed-danger-on-fill) !important;
+    box-shadow: none !important;
+}
+
+html.dark body :is(button, a).button-primary.button--danger:is(:hover, :focus-visible),
+html[data-theme="dark"] body :is(button, a).button-primary.button--danger:is(:hover, :focus-visible) {
+    background: var(--ed-danger-fill-hover) !important;
+    border-color: var(--ed-danger-fill-hover) !important;
+    color: var(--ed-danger-on-fill) !important;
+    box-shadow: none !important;
+}
