@@ -103,17 +103,17 @@ function renderCard(subject) {
       </svg>`;
     actions.appendChild(edit);
 
-    const del = document.createElement("a");
-    del.href = "#";
-    del.title = "Delete";
-    del.className = "subject-card__action subject-card__action--delete js-modal-trigger";
-    del.dataset.url = `/slm/api/subjects/${subject.id}/archive/`;
-    del.innerHTML = `
+    const archiveLink = document.createElement("a");
+    archiveLink.href = "#";
+    archiveLink.title = "Archive";
+    archiveLink.setAttribute("aria-label", "Archive subject");
+    archiveLink.className = "subject-card__action subject-card__action--archive js-modal-trigger";
+    archiveLink.dataset.url = `/slm/api/subjects/${subject.id}/archive/`;
+    archiveLink.innerHTML = `
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 
-               0h2v8h-2V9zm-8 0h2v8H7V9z"/>
+        <path d="M20 3H4c-1.1 0-2 .9-2 2v3c0 .55.45 1 1 1h1v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V9h1c.55 0 1-.45 1-1V5c0-1.1-.9-2-2-2zm-2 16H6V9h12v10zm2-12H4V5h16v2zm-5 4H9v2h6v-2z"/>
       </svg>`;
-    actions.appendChild(del);
+    actions.appendChild(archiveLink);
 
     card.appendChild(actions);
   }

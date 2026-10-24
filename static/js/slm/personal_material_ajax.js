@@ -153,14 +153,15 @@ export function initPersonalMaterialWidget(rootEl) {
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 8.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
       actions.appendChild(editLink);
 
-      const delLink = document.createElement("a");
-      delLink.href = "#";
-      delLink.title = "Archive";
-      delLink.className = "pm-card__action pm-card__action--delete js-modal-trigger";
-      delLink.dataset.url = `/slm/api/personal-materials/${pm.id}/archive/`;
-      delLink.innerHTML =
-        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm2 6h2v8h-2V9zm4 0h2v8h-2V9zm-8 0h2v8H7V9z"/></svg>';
-      actions.appendChild(delLink);
+      const archiveLink = document.createElement("a");
+      archiveLink.href = "#";
+      archiveLink.title = "Archive";
+      archiveLink.setAttribute("aria-label", "Archive material");
+      archiveLink.className = "pm-card__action pm-card__action--archive js-modal-trigger";
+      archiveLink.dataset.url = `/slm/api/personal-materials/${pm.id}/archive/`;
+      archiveLink.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 3H4c-1.1 0-2 .9-2 2v3c0 .55.45 1 1 1h1v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V9h1c.55 0 1-.45 1-1V5c0-1.1-.9-2-2-2zm-2 16H6V9h12v10zm2-12H4V5h16v2zm-5 4H9v2h6v-2z"/></svg>';
+      actions.appendChild(archiveLink);
     }
 
     card.appendChild(actions);
