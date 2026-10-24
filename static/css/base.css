@@ -1703,3 +1703,40 @@ html[data-theme="dark"] body .button.secondary-button:focus-visible {
     box-shadow: none;
 }
 /* END EduAlly action hierarchy patch v1 */
+
+/* BEGIN EduAlly capsule-free password eyes v1 */
+/* Match the capsule-free Change Password eyes on every password form.
+   Keep the 38px click target and existing keyboard focus outline. */
+html body .password-input-wrapper > button.toggle-password,
+html body .password-input-wrapper > button.toggle-password:hover,
+html body .password-input-wrapper > button.toggle-password:active,
+html body .password-input-wrapper > button.toggle-password:focus,
+html body .password-input-wrapper > button.toggle-password:focus-visible {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border-color: transparent;
+    transition: color 160ms ease;
+}
+
+/* Muted icons in light mode; a modest color change on hover or focus. */
+html body .password-input-wrapper > button.toggle-password {
+    color: #64748b;
+}
+html body .password-input-wrapper > button.toggle-password:hover,
+html body .password-input-wrapper > button.toggle-password:focus-visible {
+    color: #0f766e;
+}
+
+/* Override the global dark-mode button colors and gradients. */
+html.dark body .password-input-wrapper > button.toggle-password,
+html[data-theme="dark"] body .password-input-wrapper > button.toggle-password {
+    color: #cbd5e1;
+}
+html.dark body .password-input-wrapper > button.toggle-password:hover,
+html.dark body .password-input-wrapper > button.toggle-password:focus-visible,
+html[data-theme="dark"] body .password-input-wrapper > button.toggle-password:hover,
+html[data-theme="dark"] body .password-input-wrapper > button.toggle-password:focus-visible {
+    color: #e2e8f0;
+}
+/* END EduAlly capsule-free password eyes v1 */
