@@ -42,19 +42,22 @@
         color: #fff;
     }
 
+    /* Muted, readable destructive actions on dark surfaces. */
     html.dark .danger-button,
     html[data-theme="dark"] .danger-button {
-        background: #751515f2;
-        color: #fff;
-        border-color: #135a77;
+        background: rgba(185, 28, 28, 0.14);
+        color: #fca5a5;
+        border: 1px solid rgba(248, 113, 113, 0.42);
+        box-shadow: none;
     }
 
     html.dark .danger-button:hover,
     html.dark .danger-button:focus-visible,
     html[data-theme="dark"] .danger-button:hover,
     html[data-theme="dark"] .danger-button:focus-visible {
-        background: #b91c1c;
-        color: #fff;
+        background: rgba(185, 28, 28, 0.26);
+        color: #fee2e2;
+        border-color: rgba(248, 113, 113, 0.65);
     }
 
     .danger-zone {
@@ -274,6 +277,97 @@
             margin-top: 0.75rem;
         }
     }
+
+    /* Settings-specific toggle and archive card styling */
+
+    /* Dark-mode toggles: clear OFF and ON tracks. */
+    html.dark .settings-section .switch .slider,
+    html[data-theme="dark"] .settings-section .switch .slider {
+        background: #334155;
+        box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.30);
+    }
+
+    html.dark .settings-section .switch input:checked + .slider,
+    html[data-theme="dark"] .settings-section .switch input:checked + .slider {
+        background: #0e9aa7;
+        box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.30);
+    }
+
+    html.dark .settings-section .switch .slider::before,
+    html[data-theme="dark"] .settings-section .switch .slider::before {
+        background: #f8fafc;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    html.dark .settings-section .switch input:focus-visible + .slider,
+    html[data-theme="dark"] .settings-section .switch input:focus-visible + .slider {
+        outline: 2px solid #67e8f9;
+        outline-offset: 3px;
+    }
+
+    /* Archive cards share one visual treatment in Settings only. */
+    .settings-archive .archive-card {
+        min-height: 82px;
+        background: #f8fbfc;
+        border: 1px solid rgba(14, 154, 167, 0.18);
+        border-radius: 14px;
+        box-shadow: none;
+    }
+
+    .settings-archive .archive-card .archive-card-icon {
+        background: rgba(14, 154, 167, 0.12);
+        color: #0e9aa7;
+        border-radius: 12px;
+    }
+
+    .settings-archive .archive-card:hover,
+    .settings-archive .archive-card:focus-visible {
+        transform: translateY(-2px);
+        border-color: rgba(14, 154, 167, 0.45);
+        box-shadow: 0 8px 20px rgba(14, 154, 167, 0.08);
+    }
+
+    .settings-archive .archive-card:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
+
+    html.dark .settings-archive .archive-card,
+    html[data-theme="dark"] .settings-archive .archive-card {
+        background: #192437;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        box-shadow: none;
+    }
+
+    html.dark .settings-archive .archive-card .archive-card-icon,
+    html[data-theme="dark"] .settings-archive .archive-card .archive-card-icon {
+        background: rgba(14, 154, 167, 0.18);
+        color: #67e8f9;
+    }
+
+    html.dark .settings-archive .archive-card:hover,
+    html.dark .settings-archive .archive-card:focus-visible,
+    html[data-theme="dark"] .settings-archive .archive-card:hover,
+    html[data-theme="dark"] .settings-archive .archive-card:focus-visible {
+        background: #202e43;
+        border-color: rgba(45, 212, 191, 0.50);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    html.dark .settings-archive .archive-card .archive-card-label,
+    html[data-theme="dark"] .settings-archive .archive-card .archive-card-label {
+        color: #a5b4c8;
+    }
+
+    /* Fix unwanted dark boxes behind archive text */
+    html.dark .settings-archive .archive-card-copy,
+    html.dark .settings-archive .archive-card-label,
+    html[data-theme="dark"] .settings-archive .archive-card-copy,
+    html[data-theme="dark"] .settings-archive .archive-card-label {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 </style>
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 {% endblock %}
@@ -478,7 +572,7 @@
 
 
                 <!-- Archive -->
-                <section class="settings-section card">
+                <section class="settings-section card settings-archive">
                     <h2>Archive</h2>
 
                     <div class="archive-links-grid">
