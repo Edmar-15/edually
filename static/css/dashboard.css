@@ -4491,3 +4491,53 @@ html[data-theme="dark"] .recent-item:hover {
     }
 
 }
+
+/* BEGIN EduAlly modal action hierarchy patch v1 */
+/* Editing/archiving is a teal action, not a destructive red action. */
+.modal__actions .button-primary:not(.button--danger),
+.modal__footer .button-primary:not(.button--danger) {
+    background: linear-gradient(135deg, #0c7882, #086771);
+    border-color: transparent;
+    color: #fff;
+}
+html.dark .modal__actions .button-primary:not(.button--danger),
+html.dark .modal__footer .button-primary:not(.button--danger),
+html[data-theme="dark"] .modal__actions .button-primary:not(.button--danger),
+html[data-theme="dark"] .modal__footer .button-primary:not(.button--danger) {
+    background: linear-gradient(135deg, #0c7882, #086771) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+html.dark .modal__actions .button-primary:not(.button--danger):hover,
+html.dark .modal__footer .button-primary:not(.button--danger):hover,
+html[data-theme="dark"] .modal__actions .button-primary:not(.button--danger):hover,
+html[data-theme="dark"] .modal__footer .button-primary:not(.button--danger):hover {
+    background: linear-gradient(135deg, #0b7480, #075b65) !important;
+}
+/* Logout is intentionally red; the secondary action remains neutral. */
+html.dark .modal__footer button.btn--primary,
+html[data-theme="dark"] .modal__footer button.btn--primary {
+    background: #c62828;
+    color: #fff;
+}
+html.dark .modal__footer button.btn--primary:hover,
+html.dark .modal__footer button.btn--primary:focus-visible,
+html[data-theme="dark"] .modal__footer button.btn--primary:hover,
+html[data-theme="dark"] .modal__footer button.btn--primary:focus-visible {
+    background: #b91c1c;
+    color: #fff;
+}
+html.dark .modal__footer button.btn--secondary,
+html[data-theme="dark"] .modal__footer button.btn--secondary {
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #e2e8f0;
+}
+html.dark .modal__footer button.btn--secondary:hover,
+html.dark .modal__footer button.btn--secondary:focus-visible,
+html[data-theme="dark"] .modal__footer button.btn--secondary:hover,
+html[data-theme="dark"] .modal__footer button.btn--secondary:focus-visible {
+    background: #29374d;
+    color: #fff;
+}
+/* END EduAlly modal action hierarchy patch v1 */

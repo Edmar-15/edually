@@ -1648,3 +1648,58 @@ html[data-theme="dark"] .password-input-wrapper > button.toggle-password:hover,
 html[data-theme="dark"] .password-input-wrapper > button.toggle-password:focus-visible {
     background: rgba(14, 154, 167, 0.16);
 }
+
+/* BEGIN EduAlly action hierarchy patch v1 */
+/* Outline buttons need their own style (the old utility was .button-outline). */
+.button.outline-button {
+    background: transparent;
+    border: 1px solid rgba(14, 154, 167, .42);
+    color: #0a6972;
+    box-shadow: none;
+}
+.button.outline-button:hover,
+.button.outline-button:focus-visible {
+    background: rgba(14, 154, 167, .08);
+    border-color: #0e9aa7;
+    color: #075b65;
+    box-shadow: none;
+}
+
+/* The broad html.dark .button selector must not erase action priority. */
+html.dark body .button.primary-button:not(.danger-button):not(.button--danger),
+html[data-theme="dark"] body .button.primary-button:not(.danger-button):not(.button--danger) {
+    background: linear-gradient(135deg, #0c7882, #086771);
+    border-color: transparent;
+    color: #fff;
+}
+html.dark body .button.primary-button:not(.danger-button):not(.button--danger):hover,
+html.dark body .button.primary-button:not(.danger-button):not(.button--danger):focus-visible,
+html[data-theme="dark"] body .button.primary-button:not(.danger-button):not(.button--danger):hover,
+html[data-theme="dark"] body .button.primary-button:not(.danger-button):not(.button--danger):focus-visible {
+    background: linear-gradient(135deg, #0b7480, #075b65);
+    color: #fff;
+}
+
+html.dark body .button.outline-button,
+html[data-theme="dark"] body .button.outline-button,
+html.dark body .button.secondary-button,
+html[data-theme="dark"] body .button.secondary-button {
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #e2e8f0;
+    box-shadow: none;
+}
+html.dark body .button.outline-button:hover,
+html.dark body .button.outline-button:focus-visible,
+html[data-theme="dark"] body .button.outline-button:hover,
+html[data-theme="dark"] body .button.outline-button:focus-visible,
+html.dark body .button.secondary-button:hover,
+html.dark body .button.secondary-button:focus-visible,
+html[data-theme="dark"] body .button.secondary-button:hover,
+html[data-theme="dark"] body .button.secondary-button:focus-visible {
+    background: #29374d;
+    border-color: #64748b;
+    color: #fff;
+    box-shadow: none;
+}
+/* END EduAlly action hierarchy patch v1 */

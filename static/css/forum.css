@@ -3300,3 +3300,34 @@ html[data-theme="dark"] .forum-notification-item {
     background-size: 5px 5px;
     background-repeat: no-repeat;
 }
+
+/* BEGIN EduAlly forum action hierarchy patch v1 */
+/* Base dark mode styles every <button>; retain the forum submit emphasis. */
+html.dark body button.btn-primary,
+html[data-theme="dark"] body button.btn-primary {
+    background: linear-gradient(135deg, #0c7882, #086771);
+    border-color: transparent;
+    color: #fff;
+}
+html.dark body button.btn-primary:hover,
+html.dark body button.btn-primary:focus-visible,
+html[data-theme="dark"] body button.btn-primary:hover,
+html[data-theme="dark"] body button.btn-primary:focus-visible {
+    background: linear-gradient(135deg, #0b7480, #075b65);
+    color: #fff;
+}
+html.dark body a.btn-secondary,
+html[data-theme="dark"] body a.btn-secondary {
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #e2e8f0;
+}
+html.dark body a.btn-secondary:hover,
+html.dark body a.btn-secondary:focus-visible,
+html[data-theme="dark"] body a.btn-secondary:hover,
+html[data-theme="dark"] body a.btn-secondary:focus-visible {
+    background: #29374d;
+    border-color: #64748b;
+    color: #fff;
+}
+/* END EduAlly forum action hierarchy patch v1 */
