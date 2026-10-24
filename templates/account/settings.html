@@ -370,6 +370,7 @@
     }
 </style>
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/password_toggle_dashboard.css' %}">
 {% endblock %}
 
 
@@ -677,6 +678,7 @@
 
 
 {% block extra_js %}
+<script src="{% static 'js/account/password_toggle.js' %}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {

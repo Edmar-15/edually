@@ -13,7 +13,10 @@
 
         <div class="form-row{% if form.password.errors %} input-error{% endif %}">
             <label for="id_password">Password</label>
-            {{ form.password }}
+            <div class="password-input-wrapper">
+                {{ form.password }}
+                {% include "account/partials/password_toggle_button.html" %}
+            </div>
             {% for error in form.password.errors %}
                 <div class="validation-error">{{ error }}</div>
             {% endfor %}

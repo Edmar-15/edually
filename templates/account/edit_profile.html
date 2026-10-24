@@ -6,6 +6,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/password_toggle_dashboard.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -411,7 +412,10 @@
 
                                     <div class="floating-label-group input-group">
 
-                                        {{ password_form.old_password }}
+                                        <div class="password-input-wrapper">
+                                            {{ password_form.old_password }}
+                                            {% include "account/partials/password_toggle_button.html" %}
+                                        </div>
 
                                         <label
                                             for="{{ password_form.old_password.id_for_label }}"
@@ -429,7 +433,10 @@
 
                                     <div class="floating-label-group input-group">
 
-                                        {{ password_form.new_password1 }}
+                                        <div class="password-input-wrapper">
+                                            {{ password_form.new_password1 }}
+                                            {% include "account/partials/password_toggle_button.html" %}
+                                        </div>
 
                                         <label
                                             for="{{ password_form.new_password1.id_for_label }}"
@@ -447,7 +454,10 @@
 
                                     <div class="floating-label-group input-group">
 
-                                        {{ password_form.new_password2 }}
+                                        <div class="password-input-wrapper">
+                                            {{ password_form.new_password2 }}
+                                            {% include "account/partials/password_toggle_button.html" %}
+                                        </div>
 
                                         <label
                                             for="{{ password_form.new_password2.id_for_label }}"
@@ -505,6 +515,7 @@
 
 
 {% block extra_js %}
+<script src="{% static 'js/account/password_toggle.js' %}"></script>
 
 <script src="{% static 'js/modal.js' %}" defer></script>
 

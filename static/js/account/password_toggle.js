@@ -1,22 +1,16 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const toggleButtons = document.querySelectorAll('.toggle-password');
-    
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const passwordInput = this.parentElement.querySelector('input[type="password"], input[type="text"]');
-            
-            if (!passwordInput) return;
-            
-            const wrapper = this.closest('.password-input-wrapper');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                if (wrapper) wrapper.classList.add('password-visible');
-            } else {
-                passwordInput.type = 'password';
-                if (wrapper) wrapper.classList.remove('password-visible');
-            }
-        });
-    });
+// Shared visibility control, including AJAX-loaded password forms.
+document.addEventListener('click', function (event) {
+    const button = event.target.closest('.toggle-password');
+    if (!button) return;
+
+    const wrapper = button.closest('.password-input-wrapper');
+    const input = wrapper?.querySelector('input[type="password"], input[type="text"]');
+    if (!input) return;
+
+    event.preventDefault();
+    const showPassword = input.type === 'password';
+    input.type = showPassword ? 'text' : 'password';
+    wrapper.classList.toggle('password-visible', showPassword);
+    button.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
+    button.setAttribute('aria-pressed', String(showPassword));
 });

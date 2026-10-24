@@ -1619,3 +1619,32 @@ html[data-theme="dark"] body :is(
   filter: none !important;
   text-shadow: none !important;
 }
+
+/* PASSWORD EYE POSITION LOCK - hover/focus stability */
+/* Base dark-mode button:hover applies translateY(-1px). That can beat the
+   eye button's translateY(-50%) and make it jump below the input centre.
+   Centre without transforms so the eye never moves on hover or focus. */
+.password-input-wrapper > button.toggle-password,
+.password-input-wrapper > button.toggle-password:hover,
+.password-input-wrapper > button.toggle-password:active,
+.password-input-wrapper > button.toggle-password:focus-visible {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 14px;
+    left: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+    transform: none;
+    box-shadow: none;
+    transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+/* Maintain the same subtle hover background in dark mode rather than the
+   global dark button hover gradient. This does not shift the eye. */
+html.dark .password-input-wrapper > button.toggle-password:hover,
+html.dark .password-input-wrapper > button.toggle-password:focus-visible,
+html[data-theme="dark"] .password-input-wrapper > button.toggle-password:hover,
+html[data-theme="dark"] .password-input-wrapper > button.toggle-password:focus-visible {
+    background: rgba(14, 154, 167, 0.16);
+}
