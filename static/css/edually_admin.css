@@ -257,3 +257,346 @@ body.edually-admin-dashboard #content a.edually-admin-model-link:focus-visible {
     background: var(--darkened-bg);
     text-decoration: none;
 }
+
+
+/* Phase 2A: EduAlly user management (scoped to the User model only). */
+body.app-account.model-user .edually-user-overview { margin-bottom: 20px; }
+body.app-account.model-user .edually-user-intro h2 {
+    margin: 0 0 6px; color: var(--body-loud-color); font-size: 1.05rem;
+}
+body.app-account.model-user .edually-user-intro p {
+    color: var(--body-quiet-color); line-height: 1.6; margin: 0 0 14px;
+}
+body.app-account.model-user .edually-user-summary {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+}
+body.app-account.model-user .edually-user-stat {
+    background: var(--edually-card); border: 1px solid var(--edually-border);
+    border-radius: 12px; padding: 16px 18px; min-width: 0;
+}
+body.app-account.model-user .edually-user-stat span {
+    display: block; color: var(--body-quiet-color); font-size: .79rem; margin-bottom: 7px;
+}
+body.app-account.model-user .edually-user-stat strong {
+    color: var(--body-loud-color); font-size: 1.5rem; line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+}
+body.app-account.model-user #changelist .edually-user-primary,
+body.app-account.model-user #changelist .edually-user-secondary { display: block; }
+body.app-account.model-user #changelist .edually-user-primary {
+    font-weight: 700; overflow-wrap: anywhere; line-height: 1.5;
+}
+body.app-account.model-user #changelist .edually-user-secondary {
+    font-weight: 400; color: var(--body-quiet-color); font-size: .77rem;
+    overflow-wrap: anywhere; margin-top: 3px;
+}
+body.app-account.model-user .edually-user-badge {
+    display: inline-block; border-radius: 999px; padding: 4px 9px;
+    font-weight: 700; font-size: .77rem; white-space: nowrap;
+}
+body.app-account.model-user .edually-user-badge--active,
+body.app-account.model-user .edually-user-badge--verified {
+    background: #e1f6eb; color: #11633e;
+}
+body.app-account.model-user .edually-user-badge--inactive,
+body.app-account.model-user .edually-user-badge--unverified {
+    background: #fff0d9; color: #875116;
+}
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--active,
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--verified {
+    background: #143f31; color: #a5eed1;
+}
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--inactive,
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--unverified {
+    background: #4b3219; color: #ffd5a1;
+}
+body.app-account.model-user .edually-user-form-note {
+    border: 1px solid var(--edually-border); border-left: 4px solid var(--primary);
+    background: var(--edually-card); border-radius: 10px; padding: 15px 18px;
+    margin-bottom: 22px; line-height: 1.55;
+}
+body.app-account.model-user .edually-user-form-note strong { color: var(--body-loud-color); }
+body.app-account.model-user .edually-user-form-note p {
+    color: var(--body-quiet-color); margin: 5px 0 0;
+}
+body.app-account.model-user #changelist .results { overflow-x: auto; }
+body.app-account.model-user #changelist .results table { min-width: 720px; }
+@media (max-width: 1100px) {
+    body.app-account.model-user .edually-user-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 540px) {
+    body.app-account.model-user .edually-user-summary { grid-template-columns: 1fr; }
+    body.app-account.model-user .edually-user-stat { padding: 12px 14px; }
+}
+
+/* Phase 2A refinement: mobile user cards and form readability. */
+/* Replace confusing red boolean crosses with explicit, neutral access labels. */
+html[data-theme="light"] body.app-account.model-user .edually-user-badge--staff,
+body.app-account.model-user .edually-user-badge--staff {
+    background: #d9edf8;
+    color: #075378;
+}
+html[data-theme="light"] body.app-account.model-user .edually-user-badge--no-staff,
+body.app-account.model-user .edually-user-badge--no-staff {
+    background: #e8edf3;
+    color: #475467;
+}
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--staff {
+    background: #153c55;
+    color: #a8e2ff;
+}
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--no-staff {
+    background: #293446;
+    color: #d1dbe9;
+}
+
+/* A comfortable working width for add/edit fields instead of 180-240px inputs. */
+body.app-account.model-user.change-form #content-main {
+    max-width: 100%;
+    float: none;
+}
+body.app-account.model-user.change-form #user_form .form-row {
+    padding: 13px 18px;
+}
+body.app-account.model-user.change-form #user_form .form-row input:is(
+    [type="text"], [type="email"], [type="password"], [type="url"]
+) {
+    box-sizing: border-box;
+    width: min(100%, 520px);
+    max-width: 100%;
+    min-height: 40px;
+    padding: 8px 11px;
+}
+body.app-account.model-user.change-form #user_form .form-row textarea,
+body.app-account.model-user.change-form #user_form .form-row select {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+body.app-account.model-user.change-form #user_form .form-row .help,
+body.app-account.model-user.change-form #user_form .form-row .readonly,
+body.app-account.model-user.change-form #user_form .form-row .password-reset-link {
+    overflow-wrap: anywhere;
+}
+body.app-account.model-user.change-form #user_form fieldset.module .description {
+    padding: 10px 18px;
+    line-height: 1.5;
+}
+body.app-account.model-user.change-form #user_form .submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* On phones, present each user as a complete readable card instead of
+   forcing the whole page to scroll sideways through a seven-column table. */
+@media (max-width: 767px) {
+    body.app-account.model-user.change-list #content {
+        min-width: 0;
+    }
+    body.app-account.model-user.change-list #content-main,
+    body.app-account.model-user.change-list #changelist,
+    body.app-account.model-user.change-list #changelist .changelist-form-container,
+    body.app-account.model-user.change-list #changelist .changelist-form-container > div,
+    body.app-account.model-user.change-list #changelist-form,
+    body.app-account.model-user.change-list #changelist .results {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+    body.app-account.model-user.change-list .edually-user-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    body.app-account.model-user.change-list .edually-user-stat {
+        padding: 12px;
+    }
+    body.app-account.model-user.change-list .edually-user-stat strong {
+        font-size: 1.3rem;
+    }
+    body.app-account.model-user.change-list #changelist .results {
+        overflow: visible;
+    }
+    body.app-account.model-user.change-list #result_list {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        background: transparent;
+    }
+    /* Keep the column headers available to screen readers. */
+    body.app-account.model-user.change-list #result_list thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    body.app-account.model-user.change-list #result_list tbody {
+        display: grid;
+        gap: 12px;
+        width: 100%;
+    }
+    body.app-account.model-user.change-list #result_list tbody tr {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        box-sizing: border-box;
+        min-width: 0;
+        padding: 12px 14px;
+        border: 1px solid var(--edually-border);
+        border-radius: 12px;
+        background: var(--edually-card);
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > th,
+    body.app-account.model-user.change-list #result_list tbody tr > td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+        min-width: 0;
+        padding: 6px 0;
+        border: 0;
+        background: transparent;
+        white-space: normal;
+        box-sizing: border-box;
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-account_identity {
+        display: block;
+        order: -2;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--edually-border);
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > .action-checkbox {
+        order: -1;
+        justify-content: flex-start;
+        min-height: 30px;
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > .action-checkbox::before {
+        content: "Select account";
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--body-quiet-color);
+        margin-right: 8px;
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-role_summary::before { content: "Role / group"; }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-account_status::before { content: "Account"; }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-email_status::before { content: "Email"; }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-admin_access_badge::before { content: "Admin access"; }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-date_joined::before { content: "Joined"; }
+    body.app-account.model-user.change-list #result_list tbody tr > :is(
+        .field-role_summary, .field-account_status, .field-email_status,
+        .field-admin_access_badge, .field-date_joined
+    )::before {
+        color: var(--body-quiet-color);
+        font-size: .77rem;
+        font-weight: 650;
+    }
+    body.app-account.model-user.change-list #changelist #changelist-filter {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        margin: 18px 0 0;
+    }
+    body.app-account.model-user.change-list #changelist-filter ul {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 7px;
+        padding: 0 14px 13px;
+    }
+    body.app-account.model-user.change-list #changelist-filter li,
+    body.app-account.model-user.change-list #changelist-filter li.selected {
+        margin: 0;
+        border: 0;
+        padding: 0;
+    }
+    body.app-account.model-user.change-list #changelist-filter li a {
+        padding: 5px 9px;
+        border: 1px solid var(--edually-border);
+        border-radius: 8px;
+        background: var(--edually-card);
+        text-decoration: none;
+    }
+    body.app-account.model-user.change-list #changelist-filter li.selected a {
+        border-color: var(--primary);
+        background: var(--selected-row);
+        color: var(--link-selected-fg);
+        font-weight: 700;
+    }
+    body.app-account.model-user.change-form #user_form .form-row {
+        padding: 12px;
+    }
+    body.app-account.model-user.change-form #user_form fieldset.module .description {
+        padding: 9px 12px;
+    }
+    body.app-account.model-user.change-form #user_form .form-row input:is(
+        [type="text"], [type="email"], [type="password"], [type="url"]
+    ) {
+        width: 100%;
+    }
+    body.app-account.model-user.change-form #user_form .submit-row input[type="submit"] {
+        min-height: 40px;
+    }
+}
+
+/* Phase 2A: keep account-card values within the phone viewport. */
+/* The original 720px table minimum is appropriate for desktop, but it wins
+   over the first mobile rule due to CSS selector specificity. */
+@media (max-width: 767px) {
+    body.app-account.model-user.change-list #changelist .results table#result_list {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+}
+
+/* Phase 2A: keep mobile filters inside the Users panel. */
+/* A grid lays the results and filters out in separate, naturally-sized rows.
+   Unlike a stacked flex column, Django's 200px filter flex-basis cannot
+   cause the filter to escape or overlap its containing changelist card. */
+@media (max-width: 767px) {
+    body.app-account.model-user.change-list #content #changelist {
+        height: auto;
+        min-height: 0;
+    }
+
+    body.app-account.model-user.change-list #changelist .changelist-form-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        align-items: start;
+        height: auto;
+        min-height: 0;
+    }
+
+    body.app-account.model-user.change-list #changelist .changelist-form-container > div {
+        grid-column: 1;
+        grid-row: 1;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    body.app-account.model-user.change-list #changelist .changelist-form-container > #changelist-filter {
+        grid-column: 1;
+        grid-row: 2;
+        box-sizing: border-box;
+        width: calc(100% - 24px);
+        max-width: calc(100% - 24px);
+        margin: 14px 12px 14px;
+        flex: none;
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        overflow: hidden;
+    }
+}
