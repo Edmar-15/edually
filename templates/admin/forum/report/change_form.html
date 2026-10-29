@@ -1,0 +1,9 @@
+{% extends "admin/forum/change_form.html" %}
+
+{% block form_top %}
+{{ block.super }}
+<p class="edually-forum-report-readonly" role="note">This report is read-only. Use the bulk action on the Reports list to dismiss pending reports on the same content. To hide reported content, edit the related post or reply separately.</p>
+{% endblock %}
+
+{% block submit_buttons_top %}{% endblock %}
+{% block submit_buttons_bottom %}{% endblock %}
