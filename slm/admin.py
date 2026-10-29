@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
-from django.utils.safestring import mark_safe
+from django.db.models import Count
+from django.utils.html import format_html
 
 from .models import (
     Subject,
@@ -27,18 +28,15 @@ class ExtractedHTMLTextarea(forms.Textarea):
     def __init__(self, attrs=None):
         default_attrs = {
             "rows": 40,
+            "class": "edually-extracted-html-editor",
             "spellcheck": "false",
             "autocomplete": "off",
             "wrap": "off",
             "style": (
                 "width: 100%; "
-                "min-height: 650px; "
                 "box-sizing: border-box; "
                 "padding: 16px; "
-                "border: 1px solid #ced4da; "
                 "border-radius: 8px; "
-                "background: #f8f9fa; "
-                "color: #212529; "
                 "font-family: "
                 "'SFMono-Regular', Consolas, "
                 "'Liberation Mono', Menlo, monospace; "
@@ -104,6 +102,79 @@ class PersonalMaterialAdminForm(
         fields = "__all__"
 
 
+# Phase 2E: Learning Content admin overview
+class LearningContentAdminOverview:
+    """Read-only list summaries; leave Django Admin CRUD and access checks intact."""
+
+    change_list_template = "admin/slm/change_list.html"
+    change_form_template = "admin/slm/change_form.html"
+    overview_title = "Learning content"
+    overview_description = "Find and review learning records."
+
+    def get_overview_stats(self, request):
+        qs = self.model.objects.all()
+        total = qs.count()
+        if self.model is Subject:
+            return (
+                ("Total subjects", total),
+                ("Available subjects", qs.filter(is_archived=False).count()),
+                ("Archived subjects", qs.filter(is_archived=True).count()),
+                ("Second-year subjects", qs.filter(year=Subject.YEAR_TWO).count()),
+            )
+        if self.model is Module:
+            return (
+                ("Total modules", total),
+                ("Available modules", qs.filter(is_archived=False).count()),
+                ("Archived modules", qs.filter(is_archived=True).count()),
+                ("Extracted content ready", qs.exclude(extracted_html="").count()),
+            )
+        if self.model is PersonalMaterial:
+            return (
+                ("Total materials", total),
+                ("Private materials", qs.filter(visibility=PersonalMaterial.Visibility.PRIVATE).count()),
+                ("Public materials", qs.filter(visibility=PersonalMaterial.Visibility.PUBLIC).count()),
+                ("Archived materials", qs.filter(is_archived=True).count()),
+            )
+        return (
+            ("Total records", total),
+            ("Module highlights", qs.filter(module__isnull=False).count()),
+            ("Personal material highlights", qs.filter(personal_material__isnull=False).count()),
+        )
+
+    def changelist_view(self, request, extra_context=None):
+        if request.method == "GET" and self.has_view_or_change_permission(request):
+            extra_context = {
+                **(extra_context or {}),
+                "edually_slm_overview": {
+                    "title": self.overview_title,
+                    "description": self.overview_description,
+                    "stats": [
+                        {"label": label, "value": value}
+                        for label, value in self.get_overview_stats(request)
+                    ],
+                },
+            }
+        return super().changelist_view(request, extra_context=extra_context)
+
+    @admin.display(description="Availability", ordering="is_archived")
+    def availability_badge(self, obj):
+        archived = obj.is_archived
+        return format_html(
+            '<span class="edually-slm-badge edually-slm-badge--{}">{}</span>',
+            "muted" if archived else "positive",
+            "Archived" if archived else "Available",
+        )
+
+    @admin.display(description="Extracted HTML")
+    def extraction_badge(self, obj):
+        ready = bool(obj.extracted_html)
+        return format_html(
+            '<span class="edually-slm-badge edually-slm-badge--{}">{}</span>',
+            "positive" if ready else "warning",
+            "Ready" if ready else "Not available",
+        )
+
+
 # ============================================================
 # MODULE INLINE
 # ============================================================
@@ -134,17 +205,12 @@ class ModuleInline(admin.TabularInline):
 # ============================================================
 
 @admin.register(Subject)
-class SubjectAdmin(admin.ModelAdmin):
+class SubjectAdmin(LearningContentAdminOverview, admin.ModelAdmin):
+    overview_title = "Learning subjects"
+    overview_description = "Review subject owners, year levels, module totals, and availability."
 
-    list_display = (
-        "subject_code",
-        "subject_name",
-        "year",
-        "author",
-        "module_count",
-        "is_archived",
-        "updated_at",
-    )
+    list_display = ("subject_identity", "year", "author", "module_count", "availability_badge", "updated_at")
+    list_display_links = ("subject_identity",)
 
     list_filter = (
         "year",
@@ -164,6 +230,7 @@ class SubjectAdmin(admin.ModelAdmin):
     )
 
     list_per_page = 25
+    search_help_text = "Search subject code, name, or owner."
 
     autocomplete_fields = (
         "author",
@@ -212,9 +279,21 @@ class SubjectAdmin(admin.ModelAdmin):
         ),
     )
 
-    @admin.display(description="Modules", ordering="modules")
+    @admin.display(description="Modules", ordering="_edually_module_total")
     def module_count(self, obj):
-        return obj.modules.count()
+        return obj._edually_module_total
+
+    @admin.display(description="Subject", ordering="subject_code")
+    def subject_identity(self, obj):
+        return format_html(
+            '<span class="edually-slm-primary">{}</span><span class="edually-slm-secondary">{}</span>',
+            obj.subject_code, obj.subject_name,
+        )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("author").annotate(
+            _edually_module_total=Count("modules", distinct=True)
+        )
 
 
 # ============================================================
@@ -222,19 +301,14 @@ class SubjectAdmin(admin.ModelAdmin):
 # ============================================================
 
 @admin.register(Module)
-class ModuleAdmin(admin.ModelAdmin):
+class ModuleAdmin(LearningContentAdminOverview, admin.ModelAdmin):
+    overview_title = "Learning modules"
+    overview_description = "Find module files, review extraction readiness, and archive status."
 
     form = ModuleAdminForm
 
-    list_display = (
-        "module_number",
-        "module_name",
-        "subject",
-        "file_type",
-        "has_extracted_html",
-        "is_archived",
-        "updated_at",
-    )
+    list_display = ("module_identity", "subject", "file_type", "has_extracted_html", "availability_badge", "updated_at")
+    list_display_links = ("module_identity",)
 
     list_filter = (
         "subject",
@@ -255,6 +329,7 @@ class ModuleAdmin(admin.ModelAdmin):
     )
 
     list_per_page = 25
+    search_help_text = "Search module name, subject code, or subject name."
 
     autocomplete_fields = (
         "subject",
@@ -334,33 +409,21 @@ class ModuleAdmin(admin.ModelAdmin):
 
     @admin.display(description="Extracted HTML")
     def has_extracted_html(self, obj):
-        if obj.extracted_html:
-            return mark_safe(
-                '<span style="color:#198754;font-weight:600;">'
-                '✓ Yes'
-                '</span>'
-            )
-
-        return mark_safe(
-            '<span style="color:#dc3545;font-weight:600;">'
-            '✕ No'
-            '</span>'
-        )
+        return self.extraction_badge(obj)
 
     @admin.display(description="Extraction status")
     def extracted_html_status(self, obj):
-        if not obj.extracted_html:
-            return mark_safe(
-                '<strong style="color:#dc3545;">'
-                'No extracted content'
-                '</strong>'
-            )
+        return self.extraction_badge(obj)
 
-        return mark_safe(
-            '<strong style="color:#198754;">'
-            'Extracted content available'
-            '</strong>'
+    @admin.display(description="Module", ordering="module_number")
+    def module_identity(self, obj):
+        return format_html(
+            '<span class="edually-slm-primary">Module {} · {}</span>',
+            obj.module_number, obj.module_name,
         )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("subject")
 
 
 # ============================================================
@@ -368,18 +431,14 @@ class ModuleAdmin(admin.ModelAdmin):
 # ============================================================
 
 @admin.register(PersonalMaterial)
-class PersonalMaterialAdmin(admin.ModelAdmin):
+class PersonalMaterialAdmin(LearningContentAdminOverview, admin.ModelAdmin):
+    overview_title = "Personal learning materials"
+    overview_description = "Review user-owned files, visibility, extraction readiness, and archive status."
 
     form = PersonalMaterialAdminForm
 
-    list_display = (
-        "title",
-        "author",
-        "visibility",
-        "has_extracted_html",
-        "is_archived",
-        "updated_at",
-    )
+    list_display = ("material_identity", "author", "visibility_badge", "has_extracted_html", "availability_badge", "updated_at")
+    list_display_links = ("material_identity",)
 
     list_filter = (
         "visibility",
@@ -399,6 +458,7 @@ class PersonalMaterialAdmin(admin.ModelAdmin):
     )
 
     list_per_page = 25
+    search_help_text = "Search material title, owner username, or email."
 
     autocomplete_fields = (
         "author",
@@ -461,7 +521,23 @@ class PersonalMaterialAdmin(admin.ModelAdmin):
 
     @admin.display(description="Extracted HTML")
     def has_extracted_html(self, obj):
-        return bool(obj.extracted_html)
+        return self.extraction_badge(obj)
+
+    @admin.display(description="Material", ordering="title")
+    def material_identity(self, obj):
+        return format_html('<span class="edually-slm-primary">{}</span>', obj.title)
+
+    @admin.display(description="Visibility", ordering="visibility")
+    def visibility_badge(self, obj):
+        public = obj.visibility == PersonalMaterial.Visibility.PUBLIC
+        return format_html(
+            '<span class="edually-slm-badge edually-slm-badge--{}">{}</span>',
+            "positive" if public else "muted",
+            "Public" if public else "Private",
+        )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("author")
 
 
 # ============================================================
@@ -469,8 +545,10 @@ class PersonalMaterialAdmin(admin.ModelAdmin):
 # ============================================================
 
 @admin.register(HighlightAnswer)
-class HighlightAnswerAdmin(admin.ModelAdmin):
+class HighlightAnswerAdmin(LearningContentAdminOverview, admin.ModelAdmin):
 
+    overview_title = "AI highlight answers"
+    overview_description = "Review existing AI explanations and their linked learning material."
     list_display = (
         "query",
         "owner",
@@ -499,6 +577,7 @@ class HighlightAnswerAdmin(admin.ModelAdmin):
     )
 
     list_per_page = 25
+    search_help_text = "Search highlighted text, owner, or related material."
 
     autocomplete_fields = (
         "module",
@@ -569,8 +648,10 @@ class HighlightAnswerAdmin(admin.ModelAdmin):
 # ============================================================
 
 @admin.register(HighlightAnnotation)
-class HighlightAnnotationAdmin(admin.ModelAdmin):
+class HighlightAnnotationAdmin(LearningContentAdminOverview, admin.ModelAdmin):
 
+    overview_title = "Highlight annotations"
+    overview_description = "Find learner notes attached to highlighted passages."
     list_display = (
         "query",
         "owner",
@@ -598,6 +679,7 @@ class HighlightAnnotationAdmin(admin.ModelAdmin):
     )
 
     list_per_page = 25
+    search_help_text = "Search highlighted text, owner, or related material."
 
     autocomplete_fields = (
         "module",

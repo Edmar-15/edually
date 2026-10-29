@@ -1,0 +1,14 @@
+{% extends "admin/change_form.html" %}
+
+{% block form_top %}
+{{ block.super }}
+<div class="edually-user-form-note" role="note">
+    {% if add %}
+        <strong>Creating a new account</strong>
+        <p>Provide the user's sign-in details. After saving, review their group membership and permissions before giving admin access.</p>
+    {% else %}
+        <strong>Editing an account</strong>
+        <p>Changes to account status or access permissions can affect what this person can do. Check them carefully before saving.</p>
+    {% endif %}
+</div>
+{% endblock %}

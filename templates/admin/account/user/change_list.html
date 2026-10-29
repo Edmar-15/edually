@@ -1,0 +1,31 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+<section class="edually-user-overview" aria-label="User account overview">
+    <div class="edually-user-intro">
+        <h2>Account overview</h2>
+        <p>Find users by name or email, check account status, and open a record to make changes. Use the filters below to narrow your results.</p>
+    </div>
+    {% if edually_user_summary %}
+    <div class="edually-user-summary" role="list" aria-label="Account counts">
+        <div class="edually-user-stat" role="listitem">
+            <span>Total accounts</span>
+            <strong>{{ edually_user_summary.total }}</strong>
+        </div>
+        <div class="edually-user-stat" role="listitem">
+            <span>Active</span>
+            <strong>{{ edually_user_summary.active }}</strong>
+        </div>
+        <div class="edually-user-stat" role="listitem">
+            <span>Inactive</span>
+            <strong>{{ edually_user_summary.inactive }}</strong>
+        </div>
+        <div class="edually-user-stat" role="listitem">
+            <span>Email not verified</span>
+            <strong>{{ edually_user_summary.not_verified }}</strong>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{{ block.super }}
+{% endblock %}

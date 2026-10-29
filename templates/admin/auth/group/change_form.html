@@ -1,0 +1,15 @@
+{% extends "admin/change_form.html" %}
+
+{% block form_top %}
+{{ block.super }}
+<div class="edually-group-form-note" role="note">
+    {% if add %}
+        <strong>Creating a new group</strong>
+        <p>Name the group, select only the permissions it needs, and save. You can add users to this group from User Management afterward.</p>
+    {% else %}
+        <strong>Editing group permissions</strong>
+        <p>Changing these permissions affects every user assigned to this group. Review the selected permissions before saving.</p>
+    {% endif %}
+    <p>Available permissions appear on the left; selected permissions appear on the right. Group membership does not automatically grant Admin login.</p>
+</div>
+{% endblock %}

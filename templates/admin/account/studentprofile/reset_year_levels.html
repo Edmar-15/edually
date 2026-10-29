@@ -1,5 +1,73 @@
 {% extends "admin/base_site.html" %}
 
+{% block extrastyle %}
+{{ block.super }}
+{# Scoped to this confirmation page to avoid stale static CSS and global button overrides. #}
+<style>
+#content .edually-year-reset-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+#content .edually-year-reset-actions input[type="submit"].edually-profile-reset-confirm {
+    background: #b4233c;
+    border: 1px solid #9f2036;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 16px;
+    min-height: 40px;
+    font-weight: 700;
+    cursor: pointer;
+    margin: 0;
+}
+#content .edually-year-reset-actions input[type="submit"].edually-profile-reset-confirm:hover,
+#content .edually-year-reset-actions input[type="submit"].edually-profile-reset-confirm:focus-visible {
+    background: #921b30;
+    border-color: #7f192a;
+    color: #fff;
+}
+#content .edually-year-reset-actions a.edually-profile-reset-cancel {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 40px;
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--edually-card);
+    color: var(--body-fg);
+    font-weight: 600;
+    text-decoration: none;
+}
+#content .edually-year-reset-actions a.edually-profile-reset-cancel:hover,
+#content .edually-year-reset-actions a.edually-profile-reset-cancel:focus-visible {
+    background: var(--darkened-bg);
+    color: var(--body-loud-color);
+    text-decoration: none;
+}
+html[data-theme="dark"] #content .edually-year-reset-actions input[type="submit"].edually-profile-reset-confirm {
+    background: #92273b;
+    border-color: #c95067;
+    color: #fff;
+}
+html[data-theme="dark"] #content .edually-year-reset-actions input[type="submit"].edually-profile-reset-confirm:hover,
+html[data-theme="dark"] #content .edually-year-reset-actions input[type="submit"].edually-profile-reset-confirm:focus-visible {
+    background: #aa3148;
+    border-color: #e16b7e;
+}
+@media (max-width: 540px) {
+    #content .edually-year-reset-actions > input,
+    #content .edually-year-reset-actions > a {
+        flex: 1 1 130px;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <h2>Reset Student Year Levels</h2>
 
@@ -18,14 +86,16 @@
 <form method="post">
     {% csrf_token %}
 
-    <input
-        type="submit"
-        value="Confirm Reset"
-        class="default"
-    >
+    <div class="edually-year-reset-actions">
+        <input
+            type="submit"
+            value="Confirm Reset"
+            class="default edually-profile-reset-confirm"
+        >
 
-    <a href="{% url 'admin:account_studentprofile_changelist' %}">
-        Cancel
-    </a>
+        <a class="edually-profile-reset-cancel" href="{% url 'admin:account_studentprofile_changelist' %}">
+            Cancel
+        </a>
+    </div>
 </form>
 {% endblock %}

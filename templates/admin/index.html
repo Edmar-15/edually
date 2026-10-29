@@ -1,0 +1,85 @@
+{% extends "admin/base_site.html" %}
+{% load i18n log %}
+
+{% block bodyclass %}{{ block.super }} dashboard edually-admin-dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<div class="edually-admin-home">
+    <header class="edually-admin-intro">
+        <span class="edually-admin-eyebrow">Administration workspace</span>
+        <h1>Manage EduAlly</h1>
+        <p>Choose a section below to review and manage records. Only the areas you have permission to access are shown.</p>
+    </header>
+
+    <section aria-labelledby="edually-admin-sections-title">
+        <div class="edually-admin-section-heading">
+            <h2 id="edually-admin-sections-title">Management sections</h2>
+            <p>Open a section to search, add, or update records.</p>
+        </div>
+        <div class="edually-admin-app-grid">
+        {% for app in app_list %}
+            <article class="edually-admin-app-card">
+                <header>
+                    <h3>
+                    {% if app.app_label == 'account' %}People &amp; Accounts
+                    {% elif app.app_label == 'slm' %}Learning Content
+                    {% elif app.app_label == 'forum' %}Forum Management
+                    {% elif app.app_label == 'auth' %}Roles &amp; Permissions
+                    {% elif app.app_label == 'axes' %}Login Security
+                    {% else %}{{ app.name }}{% endif %}
+                    </h3>
+                    <p>
+                    {% if app.app_label == 'account' %}Users, student and teacher profiles, and consent
+                    {% elif app.app_label == 'slm' %}Subjects, modules, materials, and highlights
+                    {% elif app.app_label == 'forum' %}Categories, discussions, replies, reports, and votes
+                    {% elif app.app_label == 'auth' %}Groups and access rights
+                    {% elif app.app_label == 'axes' %}Review sign-in attempts and access records
+                    {% else %}Manage {{ app.name|lower }} records{% endif %}
+                    </p>
+                </header>
+                <div class="edually-admin-model-links">
+                {% for model in app.models %}
+                    {% if model.admin_url %}
+                    <a href="{{ model.admin_url }}" class="edually-admin-model-link">
+                        <span>{{ model.name }}</span>
+                        <span class="edually-admin-model-action">{% if model.view_only %}View{% else %}Manage{% endif %} <span aria-hidden="true">›</span></span>
+                    </a>
+                    {% else %}
+                    <span class="edually-admin-model-link edually-admin-model-link-disabled">{{ model.name }}</span>
+                    {% endif %}
+                {% endfor %}
+                </div>
+            </article>
+        {% empty %}
+            <p>No management sections are available for your account.</p>
+        {% endfor %}
+        </div>
+    </section>
+
+    <section class="edually-admin-recent" aria-labelledby="edually-admin-recent-title">
+        <div class="edually-admin-section-heading">
+            <h2 id="edually-admin-recent-title">Your recent activity</h2>
+            <p>Changes made through the administration interface.</p>
+        </div>
+        {% get_admin_log 8 as admin_log for_user user %}
+        <ul class="edually-admin-activity-list">
+        {% for entry in admin_log %}
+            <li>
+                <span class="edually-admin-activity-kind">
+                    {% if entry.is_addition %}Added{% elif entry.is_change %}Updated{% elif entry.is_deletion %}Deleted{% else %}Action{% endif %}
+                </span>
+                <span class="edually-admin-activity-object">
+                    {% if entry.is_deletion or not entry.get_admin_url %}{{ entry.object_repr }}
+                    {% else %}<a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>{% endif %}
+                </span>
+                <span class="edually-admin-activity-date">{{ entry.action_time|date:"M j, Y · g:i A" }}</span>
+            </li>
+        {% empty %}
+            <li class="edually-admin-empty">No recent admin actions.</li>
+        {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | EduAlly Administration{% endblock %}
+
+{# Preserve Django's dark CSS, but use the same saved light/dark choice as the rest of EduAlly. #}
+{% block dark-mode-vars %}
+<link rel="stylesheet" href="{% static 'admin/css/dark_mode.css' %}">
+<script>
+(function () {
+    var theme = 'light';
+    try {
+        var saved = localStorage.getItem('eduallyDarkMode');
+        if (saved === 'dark' || saved === 'light') {
+            theme = saved;
+        } else {
+            var match = document.cookie.match(/(?:^|;\s*)eduallyTheme=(dark|light)(?:;|$)/);
+            if (match) theme = match[1];
+        }
+    } catch (e) {
+        // Storage can be unavailable in privacy-restricted contexts.
+    }
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+})();
+</script>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/edually_admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+    <a href="{% url 'admin:index' %}" aria-label="EduAlly administration home">
+        <span class="edually-admin-wordmark">EduAlly</span>
+        <span class="edually-admin-brand-subtitle">Administration</span>
+    </a>
+</div>
+{% if not has_permission %}
+<button class="edually-admin-theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch between light and dark mode">
+    <span class="edually-admin-theme-glyph" aria-hidden="true">◐</span>
+    <span class="theme-toggle-label">Dark Mode</span>
+</button>
+{% endif %}
+{% endblock %}
+
+{# Replace only the header's theme control; preserve standard admin account links/logout. #}
+{% block userlinks %}
+    {% if site_url %}<a href="{{ site_url }}">{% translate 'View site' %}</a>{% endif %}
+    {% if user.has_usable_password %}
+        <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a>
+    {% endif %}
+    <button class="edually-admin-theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch between light and dark mode">
+        <span class="edually-admin-theme-glyph" aria-hidden="true">◐</span>
+        <span class="theme-toggle-label">Dark Mode</span>
+    </button>
+    <form id="logout-form" method="post" action="{% url 'admin:logout' %}">
+        {% csrf_token %}
+        <button type="submit">{% translate 'Log out' %}</button>
+    </form>
+{% endblock %}
+
+{% block extrabody %}
+{{ block.super }}
+<script src="{% static 'js/theme.js' %}"></script>
+{% endblock %}

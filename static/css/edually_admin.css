@@ -1,0 +1,1269 @@
+/* EduAlly Administration — visual layer only. Django Admin handles all behavior. */
+html[data-theme="light"],
+:root {
+    --primary: #0e9aa7;
+    --secondary: #0b7b80;
+    --primary-fg: #fff;
+    --body-fg: #233144;
+    --body-bg: #f6f7fa;
+    --body-quiet-color: #667085;
+    --body-medium-color: #475467;
+    --body-loud-color: #142438;
+    --header-bg: #ffffff;
+    --header-color: #233144;
+    --header-branding-color: #0e9aa7;
+    --header-link-color: #344054;
+    --breadcrumbs-bg: #eff8f9;
+    --breadcrumbs-fg: #475467;
+    --breadcrumbs-link-fg: #0b7b80;
+    --link-fg: #087b85;
+    --link-hover-color: #075e66;
+    --link-selected-fg: #087b85;
+    --hairline-color: #e8edf3;
+    --border-color: #d7e0e8;
+    --darkened-bg: #f1f5f9;
+    --selected-bg: #e1f4f5;
+    --selected-row: #e6f7f7;
+    --button-bg: #0b7b80;
+    --button-hover-bg: #09686e;
+    --default-button-bg: #0e9aa7;
+    --default-button-hover-bg: #0b7b80;
+    --object-tools-bg: #42566c;
+    --object-tools-hover-bg: #34465c;
+    --edually-card: #fff;
+    --edually-border: #e5eaf0;
+    --edually-shadow: 0 10px 26px rgba(16, 42, 67, .045);
+    --font-family-primary: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color-scheme: light;
+}
+
+html[data-theme="dark"] {
+    --primary: #0e9aa7;
+    --secondary: #0e9aa7;
+    --primary-fg: #fff;
+    --body-fg: #e5eefb;
+    --body-bg: #0b1220;
+    --body-quiet-color: #97a4ba;
+    --body-medium-color: #bcc9d9;
+    --body-loud-color: #f1f5fa;
+    --header-bg: #111827;
+    --header-color: #e5eefb;
+    --header-branding-color: #65d8df;
+    --header-link-color: #c8d5e5;
+    --breadcrumbs-bg: #121e30;
+    --breadcrumbs-fg: #aab9cd;
+    --breadcrumbs-link-fg: #7cdee3;
+    --link-fg: #7cdee3;
+    --link-hover-color: #b5f2f5;
+    --link-selected-fg: #7cdee3;
+    --hairline-color: #243349;
+    --border-color: #35435a;
+    --darkened-bg: #172235;
+    --selected-bg: #173743;
+    --selected-row: #193944;
+    --button-bg: #0b7b80;
+    --button-hover-bg: #09686e;
+    --default-button-bg: #0e9aa7;
+    --default-button-hover-bg: #0b7b80;
+    --object-tools-bg: #33475d;
+    --object-tools-hover-bg: #476079;
+    --edually-card: #111827;
+    --edually-border: #263347;
+    --edually-shadow: 0 12px 30px rgba(0, 0, 0, .17);
+    --error-fg: #ff9b9b;
+    --message-info-bg: #143446;
+    --message-success-bg: #164532;
+    --message-warning-bg: #593d16;
+    --message-error-bg: #58282c;
+    color-scheme: dark;
+}
+
+body { font-family: var(--font-family-primary); }
+#container { min-height: 100vh; }
+
+/* Header: same clean surface, typography and brand as other EduAlly pages. */
+#header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--edually-border);
+    padding: 16px 26px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+    color: var(--header-color);
+    box-shadow: 0 3px 12px rgba(12, 23, 41, .025);
+}
+#branding { display: flex; align-items: center; gap: 16px; }
+#site-name { margin: 0; font-size: 1.3rem; line-height: 1.15; }
+#site-name a { display: inline-flex; flex-direction: column; gap: 2px; }
+#site-name a:link, #site-name a:visited { color: var(--header-branding-color); }
+.edually-admin-wordmark { font-size: 1.25rem; font-weight: 800; letter-spacing: -.045em; }
+.edually-admin-brand-subtitle { font-size: .69rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--body-quiet-color); }
+#user-tools { margin: 0 0 0 auto; display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px 16px; font-size: .82rem; font-weight: 500; line-height: 1.6; text-transform: none; letter-spacing: normal; white-space: normal; color: var(--header-color); }
+#user-tools a:link, #user-tools a:visited, #header a:link, #header a:visited { color: var(--header-link-color); }
+#site-name a:link, #site-name a:visited { color: var(--header-branding-color); }
+#user-tools strong { color: var(--header-color); }
+#logout-form { display: inline-flex; }
+#logout-form button, .edually-admin-theme-toggle { font: inherit; border-radius: 9px; cursor: pointer; min-height: 35px; padding: 6px 11px; }
+#logout-form button { border: 1px solid var(--edually-border); background: var(--darkened-bg); color: var(--body-fg); }
+#logout-form button:hover, #logout-form button:focus-visible { background: var(--selected-bg); }
+.edually-admin-theme-toggle { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--edually-border); background: transparent; color: var(--body-fg); font-size: .81rem; font-weight: 600; }
+.edually-admin-theme-toggle:hover, .edually-admin-theme-toggle:focus-visible { background: var(--darkened-bg); }
+.edually-admin-theme-glyph { font-size: 1.15rem; line-height: 1; }
+#header button:focus-visible, #nav-sidebar a:focus-visible, .edually-admin-home a:focus-visible { outline: 2px solid #0e9aa7; outline-offset: 3px; }
+
+nav[aria-label="Breadcrumbs"] { background: var(--breadcrumbs-bg); border-bottom: 1px solid var(--edually-border); }
+.breadcrumbs { padding: 11px 24px; background: transparent; color: var(--breadcrumbs-fg); }
+.breadcrumbs a { color: var(--breadcrumbs-link-fg); }
+
+/* Preserve Django's built-in sidebar, search, permission filtering and toggle. */
+#nav-sidebar { background: var(--edually-card); border-right: 1px solid var(--edually-border); }
+.toggle-nav-sidebar { border-right-color: var(--edually-border); color: var(--link-fg); background: var(--edually-card); }
+#nav-filter { display: block; width: calc(100% - 28px); margin: 20px 14px 12px; border-radius: 10px; padding: 9px 11px; border: 1px solid var(--border-color); background: var(--body-bg); color: var(--body-fg); }
+#nav-filter:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+#nav-sidebar .module { border: 0; background: transparent; margin: 4px 8px 12px; }
+#nav-sidebar .module table { border: 0; background: transparent; }
+#nav-sidebar .module caption { text-align: left; padding: 12px 10px 5px; border: 0; background: transparent; font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; }
+#nav-sidebar .module caption a:link, #nav-sidebar .module caption a:visited, #nav-sidebar .current-app .section:link, #nav-sidebar .current-app .section:visited { color: var(--body-quiet-color); font-weight: 700; }
+#nav-sidebar .module tr { background: transparent; border: 0; }
+#nav-sidebar .module th { padding: 0; font-size: .82rem; font-weight: 500; border: 0; background: transparent; }
+#nav-sidebar .module th a { display: block; margin: 2px 5px; padding: 9px 12px; border-radius: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+#nav-sidebar .module th a:link, #nav-sidebar .module th a:visited { color: var(--body-medium-color); }
+#nav-sidebar .module th a:hover, #nav-sidebar .module th a:focus { background: var(--darkened-bg); color: var(--link-fg); text-decoration: none; }
+#nav-sidebar .current-model { background: transparent; }
+#nav-sidebar .current-model th a:link, #nav-sidebar .current-model th a:visited { background: var(--selected-row); color: var(--link-selected-fg); font-weight: 700; }
+#nav-sidebar .module td { display: none; }
+
+/* Main admin pages: cards, rounded fields and a readable working width. */
+#content { padding: 28px 32px 36px; }
+#content h1 { font-size: 1.45rem; font-weight: 750; letter-spacing: -.02em; color: var(--body-loud-color); }
+#content .module, #content fieldset.module { border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); overflow: hidden; }
+#content .module h2, #content .module caption { background: var(--darkened-bg); color: var(--body-fg); }
+#content .module h2 { border-radius: 0; }
+#content input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+#content select, #content textarea { background-color: var(--edually-card); color: var(--body-fg); border: 1px solid var(--border-color); border-radius: 8px; }
+#content input:focus-visible, #content select:focus-visible, #content textarea:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+#content .button, #content input[type="submit"], #content .submit-row input { border-radius: 8px; }
+#content .submit-row { border: 1px solid var(--edually-border); background: var(--edually-card); border-radius: 12px; }
+#content .object-tools a { border-radius: 8px; }
+#content table { max-width: 100%; }
+#content .results, #content .inline-group { overflow-x: auto; }
+#changelist-filter { border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); overflow: hidden; }
+#changelist-filter h2 { background: var(--darkened-bg); color: var(--body-fg); }
+#changelist .results table { background: var(--edually-card); }
+#changelist .results table thead th { background: var(--darkened-bg); }
+#changelist .results table tr:hover { background: var(--selected-row); }
+
+/* Accessible, permission-aware overview: no new views or database queries. */
+.edually-admin-home { max-width: 1220px; margin: 0 auto; }
+.edually-admin-intro { padding: 5px 0 25px; }
+.edually-admin-eyebrow { display: block; color: var(--link-fg); text-transform: uppercase; font-size: .73rem; font-weight: 800; letter-spacing: .1em; margin-bottom: 7px; }
+.edually-admin-intro h1 { margin: 0 0 10px; font-size: clamp(1.6rem, 2.5vw, 2rem) !important; font-weight: 750; }
+.edually-admin-intro p { max-width: 700px; color: var(--body-quiet-color); font-size: .94rem; line-height: 1.65; }
+.edually-admin-section-heading { margin: 4px 0 15px; }
+.edually-admin-section-heading h2 { font-size: 1.07rem; margin: 0 0 5px; color: var(--body-loud-color); }
+.edually-admin-section-heading p { color: var(--body-quiet-color); font-size: .83rem; }
+.edually-admin-app-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.edually-admin-app-card { background: var(--edually-card); border: 1px solid var(--edually-border); border-radius: 15px; box-shadow: var(--edually-shadow); padding: 21px; min-width: 0; }
+.edually-admin-app-card header { background: transparent; padding: 0 0 15px; border-bottom: 1px solid var(--edually-border); }
+.edually-admin-app-card h3 { font-size: 1rem; font-weight: 750; color: var(--body-loud-color); margin: 0 0 7px; }
+.edually-admin-app-card header p { color: var(--body-quiet-color); font-size: .8rem; line-height: 1.5; margin: 0; }
+.edually-admin-model-links { display: grid; gap: 3px; margin-top: 9px; }
+.edually-admin-model-link { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 10px 9px; border-radius: 9px; font-size: .84rem; }
+.edually-admin-model-link:link, .edually-admin-model-link:visited { color: var(--body-fg); text-decoration: none; }
+.edually-admin-model-link:hover, .edually-admin-model-link:focus-visible { background: var(--darkened-bg); text-decoration: none; }
+.edually-admin-model-action { flex-shrink: 0; color: var(--link-fg); font-weight: 650; font-size: .77rem; }
+.edually-admin-model-action span { font-size: 1.2rem; vertical-align: -1px; margin-left: 3px; }
+.edually-admin-model-link-disabled { color: var(--body-quiet-color); }
+.edually-admin-recent { margin-top: 27px; }
+.edually-admin-activity-list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--edually-border); border-radius: 14px; background: var(--edually-card); overflow: hidden; }
+.edually-admin-activity-list li { display: flex; align-items: center; gap: 15px; padding: 13px 18px; border-bottom: 1px solid var(--edually-border); list-style: none; min-width: 0; }
+.edually-admin-activity-list li:last-child { border-bottom: 0; }
+.edually-admin-activity-kind { min-width: 65px; color: var(--body-quiet-color); font-size: .75rem; font-weight: 750; }
+.edually-admin-activity-object { flex: 1; overflow-wrap: anywhere; font-size: .84rem; }
+.edually-admin-activity-date { flex-shrink: 0; font-size: .74rem; color: var(--body-quiet-color); }
+.edually-admin-empty { color: var(--body-quiet-color); }
+
+@media (max-width: 1150px) {
+    .edually-admin-app-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 767px) {
+    #header { padding: 14px 18px; flex-direction: column; align-items: stretch; gap: 12px; }
+    #branding { justify-content: space-between; }
+    #site-name { margin: 0; }
+    #user-tools { margin: 0; justify-content: flex-start; gap: 6px 12px; }
+    #content { padding: 21px 16px 30px; }
+    .breadcrumbs { padding: 10px 16px; }
+    .edually-admin-app-card { padding: 16px; }
+    .edually-admin-activity-list li { flex-wrap: wrap; gap: 6px 12px; }
+    .edually-admin-activity-object { flex-basis: calc(100% - 88px); }
+    .edually-admin-activity-date { padding-left: 77px; }
+    /* Django deliberately hides its wide sidebar on mobile; the dashboard links remain available. */
+}
+@media (prefers-reduced-motion: reduce) {
+    .edually-admin-home a { transition: none; }
+}
+
+/* Phase 1b: full-width admin dashboard and responsive management cards. */
+/* Django's default .dashboard #content width is 600px. Override only our home. */
+body.edually-admin-dashboard #content {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+body.edually-admin-dashboard .edually-admin-home {
+    width: 100%;
+    max-width: 1260px;
+    margin-inline: auto;
+}
+
+/* Automatically create 1, 2 or 3 columns based on actual available width. */
+body.edually-admin-dashboard .edually-admin-app-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    align-items: stretch;
+}
+
+body.edually-admin-dashboard .edually-admin-app-card {
+    box-sizing: border-box;
+    height: auto;
+}
+
+body.edually-admin-dashboard .edually-admin-recent,
+body.edually-admin-dashboard .edually-admin-activity-list {
+    width: 100%;
+}
+
+/* Give the admin menu readable category headings. All model links are retained. */
+#nav-sidebar .module caption {
+    padding-block: 12px 6px;
+    letter-spacing: .055em;
+}
+
+@media (max-width: 767px) {
+    body.edually-admin-dashboard #content { width: 100%; }
+    body.edually-admin-dashboard .edually-admin-app-grid { grid-template-columns: 1fr; }
+}
+
+
+/* Phase 1c: unobtrusive, accessible dashboard management links. */
+body.edually-admin-dashboard #content a.edually-admin-model-link,
+body.edually-admin-dashboard #content a.edually-admin-model-link:visited {
+    text-decoration: none;
+}
+body.edually-admin-dashboard #content a.edually-admin-model-link:hover,
+body.edually-admin-dashboard #content a.edually-admin-model-link:focus-visible {
+    background: var(--darkened-bg);
+    text-decoration: none;
+}
+
+
+/* Phase 2A: EduAlly user management (scoped to the User model only). */
+body.app-account.model-user .edually-user-overview { margin-bottom: 20px; }
+body.app-account.model-user .edually-user-intro h2 {
+    margin: 0 0 6px; color: var(--body-loud-color); font-size: 1.05rem;
+}
+body.app-account.model-user .edually-user-intro p {
+    color: var(--body-quiet-color); line-height: 1.6; margin: 0 0 14px;
+}
+body.app-account.model-user .edually-user-summary {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+}
+body.app-account.model-user .edually-user-stat {
+    background: var(--edually-card); border: 1px solid var(--edually-border);
+    border-radius: 12px; padding: 16px 18px; min-width: 0;
+}
+body.app-account.model-user .edually-user-stat span {
+    display: block; color: var(--body-quiet-color); font-size: .79rem; margin-bottom: 7px;
+}
+body.app-account.model-user .edually-user-stat strong {
+    color: var(--body-loud-color); font-size: 1.5rem; line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+}
+body.app-account.model-user #changelist .edually-user-primary,
+body.app-account.model-user #changelist .edually-user-secondary { display: block; }
+body.app-account.model-user #changelist .edually-user-primary {
+    font-weight: 700; overflow-wrap: anywhere; line-height: 1.5;
+}
+body.app-account.model-user #changelist .edually-user-secondary {
+    font-weight: 400; color: var(--body-quiet-color); font-size: .77rem;
+    overflow-wrap: anywhere; margin-top: 3px;
+}
+body.app-account.model-user .edually-user-badge {
+    display: inline-block; border-radius: 999px; padding: 4px 9px;
+    font-weight: 700; font-size: .77rem; white-space: nowrap;
+}
+body.app-account.model-user .edually-user-badge--active,
+body.app-account.model-user .edually-user-badge--verified {
+    background: #e1f6eb; color: #11633e;
+}
+body.app-account.model-user .edually-user-badge--inactive,
+body.app-account.model-user .edually-user-badge--unverified {
+    background: #fff0d9; color: #875116;
+}
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--active,
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--verified {
+    background: #143f31; color: #a5eed1;
+}
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--inactive,
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--unverified {
+    background: #4b3219; color: #ffd5a1;
+}
+body.app-account.model-user .edually-user-form-note {
+    border: 1px solid var(--edually-border); border-left: 4px solid var(--primary);
+    background: var(--edually-card); border-radius: 10px; padding: 15px 18px;
+    margin-bottom: 22px; line-height: 1.55;
+}
+body.app-account.model-user .edually-user-form-note strong { color: var(--body-loud-color); }
+body.app-account.model-user .edually-user-form-note p {
+    color: var(--body-quiet-color); margin: 5px 0 0;
+}
+body.app-account.model-user #changelist .results { overflow-x: auto; }
+body.app-account.model-user #changelist .results table { min-width: 720px; }
+@media (max-width: 1100px) {
+    body.app-account.model-user .edually-user-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 540px) {
+    body.app-account.model-user .edually-user-summary { grid-template-columns: 1fr; }
+    body.app-account.model-user .edually-user-stat { padding: 12px 14px; }
+}
+
+/* Phase 2A refinement: mobile user cards and form readability. */
+/* Replace confusing red boolean crosses with explicit, neutral access labels. */
+html[data-theme="light"] body.app-account.model-user .edually-user-badge--staff,
+body.app-account.model-user .edually-user-badge--staff {
+    background: #d9edf8;
+    color: #075378;
+}
+html[data-theme="light"] body.app-account.model-user .edually-user-badge--no-staff,
+body.app-account.model-user .edually-user-badge--no-staff {
+    background: #e8edf3;
+    color: #475467;
+}
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--staff {
+    background: #153c55;
+    color: #a8e2ff;
+}
+html[data-theme="dark"] body.app-account.model-user .edually-user-badge--no-staff {
+    background: #293446;
+    color: #d1dbe9;
+}
+
+/* A comfortable working width for add/edit fields instead of 180-240px inputs. */
+body.app-account.model-user.change-form #content-main {
+    max-width: 100%;
+    float: none;
+}
+body.app-account.model-user.change-form #user_form .form-row {
+    padding: 13px 18px;
+}
+body.app-account.model-user.change-form #user_form .form-row input:is(
+    [type="text"], [type="email"], [type="password"], [type="url"]
+) {
+    box-sizing: border-box;
+    width: min(100%, 520px);
+    max-width: 100%;
+    min-height: 40px;
+    padding: 8px 11px;
+}
+body.app-account.model-user.change-form #user_form .form-row textarea,
+body.app-account.model-user.change-form #user_form .form-row select {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+body.app-account.model-user.change-form #user_form .form-row .help,
+body.app-account.model-user.change-form #user_form .form-row .readonly,
+body.app-account.model-user.change-form #user_form .form-row .password-reset-link {
+    overflow-wrap: anywhere;
+}
+body.app-account.model-user.change-form #user_form fieldset.module .description {
+    padding: 10px 18px;
+    line-height: 1.5;
+}
+body.app-account.model-user.change-form #user_form .submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* On phones, present each user as a complete readable card instead of
+   forcing the whole page to scroll sideways through a seven-column table. */
+@media (max-width: 767px) {
+    body.app-account.model-user.change-list #content {
+        min-width: 0;
+    }
+    body.app-account.model-user.change-list #content-main,
+    body.app-account.model-user.change-list #changelist,
+    body.app-account.model-user.change-list #changelist .changelist-form-container,
+    body.app-account.model-user.change-list #changelist .changelist-form-container > div,
+    body.app-account.model-user.change-list #changelist-form,
+    body.app-account.model-user.change-list #changelist .results {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+    body.app-account.model-user.change-list .edually-user-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    body.app-account.model-user.change-list .edually-user-stat {
+        padding: 12px;
+    }
+    body.app-account.model-user.change-list .edually-user-stat strong {
+        font-size: 1.3rem;
+    }
+    body.app-account.model-user.change-list #changelist .results {
+        overflow: visible;
+    }
+    body.app-account.model-user.change-list #result_list {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        background: transparent;
+    }
+    /* Keep the column headers available to screen readers. */
+    body.app-account.model-user.change-list #result_list thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    body.app-account.model-user.change-list #result_list tbody {
+        display: grid;
+        gap: 12px;
+        width: 100%;
+    }
+    body.app-account.model-user.change-list #result_list tbody tr {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        box-sizing: border-box;
+        min-width: 0;
+        padding: 12px 14px;
+        border: 1px solid var(--edually-border);
+        border-radius: 12px;
+        background: var(--edually-card);
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > th,
+    body.app-account.model-user.change-list #result_list tbody tr > td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+        min-width: 0;
+        padding: 6px 0;
+        border: 0;
+        background: transparent;
+        white-space: normal;
+        box-sizing: border-box;
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-account_identity {
+        display: block;
+        order: -2;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--edually-border);
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > .action-checkbox {
+        order: -1;
+        justify-content: flex-start;
+        min-height: 30px;
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > .action-checkbox::before {
+        content: "Select account";
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--body-quiet-color);
+        margin-right: 8px;
+    }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-role_summary::before { content: "Role / group"; }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-account_status::before { content: "Account"; }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-email_status::before { content: "Email"; }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-admin_access_badge::before { content: "Admin access"; }
+    body.app-account.model-user.change-list #result_list tbody tr > .field-date_joined::before { content: "Joined"; }
+    body.app-account.model-user.change-list #result_list tbody tr > :is(
+        .field-role_summary, .field-account_status, .field-email_status,
+        .field-admin_access_badge, .field-date_joined
+    )::before {
+        color: var(--body-quiet-color);
+        font-size: .77rem;
+        font-weight: 650;
+    }
+    body.app-account.model-user.change-list #changelist #changelist-filter {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        margin: 18px 0 0;
+    }
+    body.app-account.model-user.change-list #changelist-filter ul {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 7px;
+        padding: 0 14px 13px;
+    }
+    body.app-account.model-user.change-list #changelist-filter li,
+    body.app-account.model-user.change-list #changelist-filter li.selected {
+        margin: 0;
+        border: 0;
+        padding: 0;
+    }
+    body.app-account.model-user.change-list #changelist-filter li a {
+        padding: 5px 9px;
+        border: 1px solid var(--edually-border);
+        border-radius: 8px;
+        background: var(--edually-card);
+        text-decoration: none;
+    }
+    body.app-account.model-user.change-list #changelist-filter li.selected a {
+        border-color: var(--primary);
+        background: var(--selected-row);
+        color: var(--link-selected-fg);
+        font-weight: 700;
+    }
+    body.app-account.model-user.change-form #user_form .form-row {
+        padding: 12px;
+    }
+    body.app-account.model-user.change-form #user_form fieldset.module .description {
+        padding: 9px 12px;
+    }
+    body.app-account.model-user.change-form #user_form .form-row input:is(
+        [type="text"], [type="email"], [type="password"], [type="url"]
+    ) {
+        width: 100%;
+    }
+    body.app-account.model-user.change-form #user_form .submit-row input[type="submit"] {
+        min-height: 40px;
+    }
+}
+
+/* Phase 2A: keep account-card values within the phone viewport. */
+/* The original 720px table minimum is appropriate for desktop, but it wins
+   over the first mobile rule due to CSS selector specificity. */
+@media (max-width: 767px) {
+    body.app-account.model-user.change-list #changelist .results table#result_list {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+}
+
+/* Phase 2A: keep mobile filters inside the Users panel. */
+/* A grid lays the results and filters out in separate, naturally-sized rows.
+   Unlike a stacked flex column, Django's 200px filter flex-basis cannot
+   cause the filter to escape or overlap its containing changelist card. */
+@media (max-width: 767px) {
+    body.app-account.model-user.change-list #content #changelist {
+        height: auto;
+        min-height: 0;
+    }
+
+    body.app-account.model-user.change-list #changelist .changelist-form-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        align-items: start;
+        height: auto;
+        min-height: 0;
+    }
+
+    body.app-account.model-user.change-list #changelist .changelist-form-container > div {
+        grid-column: 1;
+        grid-row: 1;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    body.app-account.model-user.change-list #changelist .changelist-form-container > #changelist-filter {
+        grid-column: 1;
+        grid-row: 2;
+        box-sizing: border-box;
+        width: calc(100% - 24px);
+        max-width: calc(100% - 24px);
+        margin: 14px 12px 14px;
+        flex: none;
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        overflow: hidden;
+    }
+}
+
+/* Phase 2B: student and teacher profile management */
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-overview { margin-bottom: 20px; }
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-intro h2 {
+    color: var(--body-loud-color); font-size: 1.05rem; margin: 0 0 6px;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-intro p {
+    color: var(--body-quiet-color); line-height: 1.6; margin: 0 0 14px;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-summary {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-stat {
+    background: var(--edually-card); border: 1px solid var(--edually-border);
+    border-radius: 12px; padding: 16px 18px; min-width: 0;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-stat span {
+    display: block; font-size: .79rem; color: var(--body-quiet-color); margin-bottom: 7px;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-stat strong {
+    color: var(--body-loud-color); font-size: 1.5rem; font-variant-numeric: tabular-nums;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-primary,
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-secondary { display: block; }
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-primary {
+    font-weight: 700; line-height: 1.5; overflow-wrap: anywhere;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-secondary {
+    color: var(--body-quiet-color); font-size: .77rem; margin-top: 3px; overflow-wrap: anywhere;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-badge {
+    display: inline-block; border-radius: 999px; padding: 4px 9px;
+    font-size: .77rem; font-weight: 700; white-space: nowrap;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-badge--positive {
+    background: #e1f6eb; color: #11633e;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-badge--pending {
+    background: #fff0d9; color: #875116;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-badge--muted {
+    background: #e8edf3; color: #475467;
+}
+html[data-theme="dark"] body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-badge--positive {
+    background: #143f31; color: #a5eed1;
+}
+html[data-theme="dark"] body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-badge--pending {
+    background: #4b3219; color: #ffd5a1;
+}
+html[data-theme="dark"] body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-badge--muted {
+    background: #293446; color: #d1dbe9;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-form-note {
+    border: 1px solid var(--edually-border); border-left: 4px solid var(--primary);
+    border-radius: 10px; padding: 15px 18px; background: var(--edually-card);
+    margin-bottom: 22px; line-height: 1.55;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-form-note strong {
+    color: var(--body-loud-color);
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-form-note p {
+    margin: 5px 0 0; color: var(--body-quiet-color);
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile).change-form #content-main {
+    max-width: 100%; float: none;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile).change-form #content-main .form-row {
+    padding: 13px 18px;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile).change-form #content-main .form-row input:not([type="checkbox"]),
+body.app-account:is(.model-studentprofile, .model-teacherprofile).change-form #content-main .form-row select {
+    box-sizing: border-box; width: min(100%, 520px); max-width: 100%; min-height: 40px; padding: 8px 11px;
+}
+body.app-account:is(.model-studentprofile, .model-teacherprofile).change-form #content-main fieldset.module .description {
+    padding: 10px 18px; line-height: 1.5;
+}
+@media (max-width: 1100px) {
+    body.app-account:is(.model-studentprofile, .model-teacherprofile) .edually-profile-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 767px) {
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #content,
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #content-main,
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist,
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist-form,
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist .results {
+        min-width: 0; max-width: 100%; box-sizing: border-box;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list .edually-profile-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list .edually-profile-stat {
+        padding: 12px;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list .edually-profile-stat strong {
+        font-size: 1.3rem;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist .results {
+        overflow: visible;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist table#result_list {
+        display: block; width: 100%; min-width: 0; max-width: 100%; background: transparent;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list thead {
+        position: absolute; width: 1px; height: 1px; overflow: hidden;
+        clip-path: inset(50%); white-space: nowrap;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list tbody {
+        display: grid; width: 100%; gap: 12px;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list tbody tr {
+        display: flex; flex-direction: column; gap: 2px; box-sizing: border-box;
+        min-width: 0; padding: 12px 14px; border: 1px solid var(--edually-border);
+        border-radius: 12px; background: var(--edually-card);
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list tbody tr > :is(th, td) {
+        display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+        gap: 8px; width: 100%; min-width: 0; padding: 6px 0; border: 0;
+        background: transparent; box-sizing: border-box; text-align: left;
+        overflow-wrap: anywhere; white-space: normal;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list tbody tr > .field-profile_identity {
+        display: block; order: -2; padding-bottom: 10px; border-bottom: 1px solid var(--edually-border);
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list tbody tr > .action-checkbox {
+        order: -1; justify-content: flex-start; min-height: 30px;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list tbody tr > .action-checkbox::before {
+        content: "Select profile"; font-size: .8rem; font-weight: 600;
+        color: var(--body-quiet-color); margin-right: 8px;
+    }
+    body.app-account.model-studentprofile.change-list #result_list .field-student_id_display::before { content: "Student ID"; }
+    body.app-account.model-studentprofile.change-list #result_list .field-program_display::before { content: "Program / Course"; }
+    body.app-account.model-studentprofile.change-list #result_list .field-year_level_display::before { content: "Year level"; }
+    body.app-account.model-teacherprofile.change-list #result_list .field-employee_id_display::before { content: "Employee ID"; }
+    body.app-account.model-teacherprofile.change-list #result_list .field-department_display::before { content: "Department"; }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list .field-user_status::before { content: "Account"; }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #result_list :is(
+        .field-student_id_display, .field-program_display, .field-year_level_display,
+        .field-employee_id_display, .field-department_display, .field-user_status
+    )::before {
+        color: var(--body-quiet-color); font-size: .77rem; font-weight: 650;
+    }
+    /* Keep table and filters in separate naturally sized grid rows. */
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist .changelist-form-container {
+        display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto;
+        align-items: start; height: auto; min-height: 0; width: 100%; max-width: 100%;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist .changelist-form-container:has(#changelist-filter) > div {
+        grid-column: 1; grid-row: 1; width: 100%; max-width: 100%; min-width: 0;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist .changelist-form-container > #changelist-filter {
+        grid-column: 1; grid-row: 2; box-sizing: border-box;
+        width: calc(100% - 24px); max-width: calc(100% - 24px);
+        margin: 14px 12px; flex: none; height: auto; max-height: none; min-height: 0;
+        overflow: hidden;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist-filter ul {
+        display: flex; flex-wrap: wrap; gap: 7px; align-items: center; padding: 0 14px 13px;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist-filter li,
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist-filter li.selected {
+        margin: 0; border: 0; padding: 0;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist-filter li a {
+        padding: 5px 9px; border: 1px solid var(--edually-border);
+        border-radius: 8px; background: var(--edually-card); text-decoration: none;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-list #changelist-filter li.selected a {
+        border-color: var(--primary); background: var(--selected-row);
+        color: var(--link-selected-fg); font-weight: 700;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-form #content-main .form-row {
+        padding: 12px;
+    }
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-form #content-main .form-row input:not([type="checkbox"]),
+    body.app-account:is(.model-studentprofile, .model-teacherprofile).change-form #content-main .form-row select {
+        width: 100%;
+    }
+}
+
+/* Phase 2B refinement: clearly marked destructive year-level reset. */
+/* Override Django's object-tools styles without changing the reset URL or POST. */
+body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger,
+body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger:link,
+body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger:visited {
+    background: #b4233c;
+    border: 1px solid #9f2036;
+    color: #fff;
+}
+body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger:hover,
+body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger:focus-visible {
+    background: #921b30;
+    border-color: #7f192a;
+    color: #fff;
+    text-decoration: none;
+}
+html[data-theme="dark"] body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger,
+html[data-theme="dark"] body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger:link,
+html[data-theme="dark"] body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger:visited {
+    background: #92273b;
+    border-color: #c95067;
+    color: #fff;
+}
+html[data-theme="dark"] body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger:hover,
+html[data-theme="dark"] body.app-account.model-studentprofile.change-list #content .object-tools a.edually-profile-reset-danger:focus-visible {
+    background: #aa3148;
+    border-color: #e16b7e;
+    color: #fff;
+}
+/* Confirmation is a separate Django Admin page; keep its existing text and POST. */
+#content input[type="submit"].edually-profile-reset-confirm {
+    background: #b4233c;
+    border: 1px solid #9f2036;
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 700;
+}
+#content input[type="submit"].edually-profile-reset-confirm:hover,
+#content input[type="submit"].edually-profile-reset-confirm:focus-visible {
+    background: #921b30;
+    border-color: #7f192a;
+    color: #fff;
+}
+html[data-theme="dark"] #content input[type="submit"].edually-profile-reset-confirm {
+    background: #92273b;
+    border-color: #c95067;
+    color: #fff;
+}
+html[data-theme="dark"] #content input[type="submit"].edually-profile-reset-confirm:hover,
+html[data-theme="dark"] #content input[type="submit"].edually-profile-reset-confirm:focus-visible {
+    background: #aa3148;
+    border-color: #e16b7e;
+    color: #fff;
+}
+
+/* Phase 2B polish: consistent desktop changelist gutters. */
+/* Scope this to Account administration only: Users, User Consents, and
+   Student/Teacher Profiles. The existing phone card/filter layouts stay intact. */
+@media (min-width: 768px) {
+    body.app-account.change-list #content-main #changelist {
+        box-sizing: border-box;
+        padding: 14px;
+    }
+}
+
+/* Phase 2C: Group / Roles & Permissions admin */
+body.app-auth.model-group.change-list .edually-group-overview { margin: 0 0 20px; }
+body.app-auth.model-group.change-list .edually-group-intro h2 {
+    margin: 0 0 6px; font-size: 1.05rem; color: var(--body-loud-color);
+}
+body.app-auth.model-group.change-list .edually-group-intro p {
+    color: var(--body-quiet-color); line-height: 1.6; margin: 0 0 14px;
+}
+body.app-auth.model-group.change-list .edually-group-stats {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+}
+body.app-auth.model-group.change-list .edually-group-stat {
+    box-sizing: border-box; min-width: 0; background: var(--edually-card);
+    border: 1px solid var(--edually-border); border-radius: 12px; padding: 16px 18px;
+}
+body.app-auth.model-group.change-list .edually-group-stat span {
+    display: block; color: var(--body-quiet-color); font-size: .79rem; margin-bottom: 7px;
+}
+body.app-auth.model-group.change-list .edually-group-stat strong {
+    display: block; color: var(--body-loud-color); font-size: 1.5rem;
+    font-variant-numeric: tabular-nums; line-height: 1.3;
+}
+body.app-auth.model-group.change-list .edually-group-guidance,
+body.app-auth.model-group.change-form .edually-group-form-note {
+    background: var(--edually-card); color: var(--body-quiet-color);
+    border: 1px solid var(--edually-border); border-left: 4px solid var(--primary);
+    border-radius: 10px; line-height: 1.6;
+}
+body.app-auth.model-group.change-list .edually-group-guidance {
+    padding: 12px 16px; margin: 14px 0 0;
+}
+body.app-auth.model-group.change-list #content-main #changelist {
+    box-sizing: border-box; padding: 14px;
+}
+body.app-auth.model-group.change-list #changelist .edually-group-primary {
+    font-weight: 700; overflow-wrap: anywhere;
+}
+body.app-auth.model-group.change-list .edually-group-badge {
+    display: inline-block; border-radius: 999px; padding: 4px 9px;
+    font-size: .77rem; font-weight: 700; white-space: nowrap;
+}
+body.app-auth.model-group.change-list .edually-group-badge--assigned {
+    background: #e1f6eb; color: #11633e;
+}
+body.app-auth.model-group.change-list .edually-group-badge--empty {
+    background: #e8edf3; color: #475467;
+}
+html[data-theme="dark"] body.app-auth.model-group.change-list .edually-group-badge--assigned {
+    background: #143f31; color: #a5eed1;
+}
+html[data-theme="dark"] body.app-auth.model-group.change-list .edually-group-badge--empty {
+    background: #293446; color: #d1dbe9;
+}
+body.app-auth.model-group.change-form .edually-group-form-note {
+    padding: 15px 18px; margin: 0 0 20px;
+}
+body.app-auth.model-group.change-form .edually-group-form-note strong { color: var(--body-loud-color); }
+body.app-auth.model-group.change-form .edually-group-form-note p { margin: 5px 0 0; }
+body.app-auth.model-group.change-form #content-main .form-row { padding: 14px 18px; }
+body.app-auth.model-group.change-form #content-main .form-row input[type="text"] {
+    box-sizing: border-box; width: min(100%, 520px); min-height: 40px; padding: 8px 11px;
+}
+body.app-auth.model-group.change-form #content-main fieldset.module .description { padding: 10px 18px; }
+/* Keep Django's native permission-selector behavior and filter buttons. */
+body.app-auth.model-group.change-form #content-main .selector {
+    box-sizing: border-box; max-width: 100%;
+}
+body.app-auth.model-group.change-form #content-main .selector select { max-width: 100%; }
+@media (max-width: 1100px) {
+    body.app-auth.model-group.change-list .edually-group-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+    body.app-auth.model-group.change-list #content-main,
+    body.app-auth.model-group.change-list #changelist,
+    body.app-auth.model-group.change-list #changelist .changelist-form-container,
+    body.app-auth.model-group.change-list #changelist .changelist-form-container > div,
+    body.app-auth.model-group.change-list #changelist-form,
+    body.app-auth.model-group.change-list #changelist .results {
+        box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0;
+    }
+    body.app-auth.model-group.change-list .edually-group-stats { gap: 8px; }
+    body.app-auth.model-group.change-list .edually-group-stat { padding: 12px; }
+    body.app-auth.model-group.change-list .edually-group-stat strong { font-size: 1.3rem; }
+    body.app-auth.model-group.change-list #content-main #changelist { padding: 0; }
+    body.app-auth.model-group.change-list #changelist .results { overflow: visible; }
+    body.app-auth.model-group.change-list #changelist .results table#result_list {
+        display: block; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%;
+    }
+    body.app-auth.model-group.change-list #result_list thead {
+        position: absolute; width: 1px; height: 1px; overflow: hidden;
+        clip-path: inset(50%); white-space: nowrap;
+    }
+    body.app-auth.model-group.change-list #result_list tbody {
+        display: grid; gap: 12px; width: 100%;
+    }
+    body.app-auth.model-group.change-list #result_list tbody tr {
+        display: flex; flex-direction: column; gap: 2px; box-sizing: border-box;
+        min-width: 0; padding: 12px 14px; border: 1px solid var(--edually-border);
+        border-radius: 12px; background: var(--edually-card);
+    }
+    body.app-auth.model-group.change-list #result_list tbody tr > :is(th, td) {
+        display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+        gap: 8px; width: 100%; min-width: 0; padding: 6px 0; border: 0;
+        background: transparent; box-sizing: border-box; text-align: left;
+        overflow-wrap: anywhere; white-space: normal;
+    }
+    body.app-auth.model-group.change-list #result_list tbody tr > .field-group_identity {
+        display: block; order: -2; padding-bottom: 10px;
+        border-bottom: 1px solid var(--edually-border);
+    }
+    body.app-auth.model-group.change-list #result_list tbody tr > .action-checkbox {
+        order: -1; justify-content: flex-start; min-height: 30px;
+    }
+    body.app-auth.model-group.change-list #result_list tbody tr > .action-checkbox::before {
+        content: "Select group"; font-size: .8rem; font-weight: 600;
+        color: var(--body-quiet-color); margin-right: 8px;
+    }
+    body.app-auth.model-group.change-list #result_list .field-member_count::before { content: "Members"; }
+    body.app-auth.model-group.change-list #result_list .field-permission_count::before { content: "Permissions"; }
+    body.app-auth.model-group.change-list #result_list .field-permission_state::before { content: "Status"; }
+    body.app-auth.model-group.change-list #result_list :is(
+        .field-member_count, .field-permission_count, .field-permission_state
+    )::before {
+        color: var(--body-quiet-color); font-size: .77rem; font-weight: 650;
+    }
+    body.app-auth.model-group.change-list #changelist .changelist-form-container {
+        display: grid; grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto; align-items: start;
+        height: auto; min-height: 0;
+    }
+    body.app-auth.model-group.change-list #changelist .changelist-form-container > div {
+        grid-column: 1; grid-row: 1; width: 100%; max-width: 100%; min-width: 0;
+    }
+    body.app-auth.model-group.change-list #changelist .changelist-form-container > #changelist-filter {
+        grid-column: 1; grid-row: 2; box-sizing: border-box;
+        width: calc(100% - 24px); max-width: calc(100% - 24px);
+        margin: 14px 12px; flex: none; height: auto; max-height: none;
+        min-height: 0; overflow: hidden;
+    }
+    body.app-auth.model-group.change-list #changelist-filter ul {
+        display: flex; flex-wrap: wrap; gap: 7px; align-items: center;
+        padding: 0 14px 13px;
+    }
+    body.app-auth.model-group.change-list #changelist-filter li,
+    body.app-auth.model-group.change-list #changelist-filter li.selected {
+        margin: 0; padding: 0; border: 0;
+    }
+    body.app-auth.model-group.change-list #changelist-filter li a {
+        padding: 5px 9px; border: 1px solid var(--edually-border);
+        border-radius: 8px; background: var(--edually-card); text-decoration: none;
+    }
+    body.app-auth.model-group.change-list #changelist-filter li.selected a {
+        border-color: var(--primary); background: var(--selected-row);
+        color: var(--link-selected-fg); font-weight: 700;
+    }
+    body.app-auth.model-group.change-form #content-main .form-row { padding: 12px; }
+    body.app-auth.model-group.change-form #content-main fieldset.module .description { padding: 9px 12px; }
+    body.app-auth.model-group.change-form #content-main .selector {
+        display: flex; flex-direction: column; gap: 12px;
+        width: 100%; max-width: 100%;
+    }
+    body.app-auth.model-group.change-form #content-main .selector :is(.selector-available, .selector-chosen) {
+        width: 100%; max-width: 100%; box-sizing: border-box;
+    }
+}
+
+/* Phase 2D: Forum Management */
+body.app-forum.change-list .edually-forum-overview { margin: 0 0 18px; }
+body.app-forum.change-list .edually-forum-intro h2 { margin: 0 0 6px; font-size: 1.05rem; color: var(--body-loud-color); }
+body.app-forum.change-list .edually-forum-intro p { color: var(--body-quiet-color); line-height: 1.55; margin: 0 0 14px; }
+body.app-forum.change-list .edually-forum-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+body.app-forum.change-list .edually-forum-stat { box-sizing: border-box; min-width: 0; padding: 16px 18px; border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); }
+body.app-forum.change-list .edually-forum-stat span { display: block; color: var(--body-quiet-color); font-size: .79rem; margin-bottom: 7px; }
+body.app-forum.change-list .edually-forum-stat strong { display: block; font-size: 1.5rem; color: var(--body-loud-color); font-variant-numeric: tabular-nums; }
+body.app-forum.change-list .edually-forum-guidance,
+body.app-forum.change-form .edually-forum-form-note,
+body.app-forum.change-form .edually-forum-report-readonly { box-sizing: border-box; border: 1px solid var(--edually-border); border-left: 4px solid var(--primary); border-radius: 10px; background: var(--edually-card); color: var(--body-quiet-color); line-height: 1.55; padding: 13px 16px; }
+body.app-forum.change-list .edually-forum-guidance { margin: 14px 0 0; }
+body.app-forum.change-form .edually-forum-form-note { margin: 0 0 18px; }
+body.app-forum.change-form .edually-forum-form-note strong { color: var(--body-loud-color); }
+body.app-forum.change-form .edually-forum-form-note p { margin: 5px 0 0; }
+body.app-forum.change-form .edually-forum-report-readonly { margin: 0 0 18px; }
+body.app-forum.change-list #content-main #changelist { box-sizing: border-box; padding: 14px; }
+body.app-forum.change-list #changelist .edually-forum-primary { display: block; font-weight: 700; overflow-wrap: anywhere; }
+body.app-forum.change-list #changelist .edually-forum-secondary { display: block; color: var(--body-quiet-color); font-size: .79rem; margin-top: 3px; }
+body.app-forum.change-list .edually-forum-badge { display: inline-block; border-radius: 999px; padding: 4px 9px; font-weight: 700; font-size: .77rem; white-space: nowrap; }
+body.app-forum.change-list .edually-forum-badge--positive { background: #dff5e9; color: #11633e; }
+body.app-forum.change-list .edually-forum-badge--muted { background: #e9edf4; color: #475467; }
+body.app-forum.change-list .edually-forum-badge--warning { background: #fff0d9; color: #945300; }
+body.app-forum.change-list .edually-forum-badge--danger { background: #fce0e4; color: #98293c; }
+html[data-theme="dark"] body.app-forum.change-list .edually-forum-badge--positive { background: #163e30; color: #9ce8c1; }
+html[data-theme="dark"] body.app-forum.change-list .edually-forum-badge--muted { background: #293445; color: #d0dae6; }
+html[data-theme="dark"] body.app-forum.change-list .edually-forum-badge--warning { background: #48351a; color: #ffd38d; }
+html[data-theme="dark"] body.app-forum.change-list .edually-forum-badge--danger { background: #50242e; color: #ffabb9; }
+body.app-forum.change-form #content-main .form-row { padding: 13px 18px; }
+body.app-forum.change-form #content-main .form-row input:is([type="text"], [type="email"], [type="number"]),
+body.app-forum.change-form #content-main .form-row textarea,
+body.app-forum.change-form #content-main .form-row select { box-sizing: border-box; max-width: 100%; }
+body.app-forum.change-form #content-main .form-row input:is([type="text"], [type="email"], [type="number"]) { width: min(100%, 560px); min-height: 40px; padding: 8px 11px; }
+body.app-forum.change-form #content-main .form-row textarea { width: min(100%, 780px); }
+body.app-forum.change-form #content-main fieldset.module .description { padding: 10px 18px; line-height: 1.55; }
+@media (max-width: 1100px) {
+    body.app-forum.change-list .edually-forum-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+    body.app-forum.change-list #content-main,
+    body.app-forum.change-list #changelist,
+    body.app-forum.change-list #changelist .changelist-form-container,
+    body.app-forum.change-list #changelist .changelist-form-container > div,
+    body.app-forum.change-list #changelist-form,
+    body.app-forum.change-list #changelist .results { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+    body.app-forum.change-list .edually-forum-stats { gap: 8px; }
+    body.app-forum.change-list .edually-forum-stat { padding: 12px; }
+    body.app-forum.change-list .edually-forum-stat strong { font-size: 1.3rem; }
+    body.app-forum.change-list #content-main #changelist { padding: 0; }
+    body.app-forum.change-list #changelist .results { overflow: visible; }
+    body.app-forum.change-list #changelist .results table#result_list { display: block; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; }
+    body.app-forum.change-list #result_list thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    body.app-forum.change-list #result_list tbody { display: grid; width: 100%; gap: 12px; }
+    body.app-forum.change-list #result_list tbody tr { display: flex; flex-direction: column; gap: 2px; box-sizing: border-box; min-width: 0; padding: 12px 14px; border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); }
+    body.app-forum.change-list #result_list tbody tr > :is(th, td) { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; width: 100%; min-width: 0; padding: 6px 0; border: 0; background: transparent; box-sizing: border-box; text-align: left; overflow-wrap: anywhere; white-space: normal; }
+    body.app-forum.change-list #result_list tbody tr > :is(.field-category_identity, .field-post_identity, .field-reply_identity, .field-reported_content, th.field-__str__) { display: block; order: -2; padding-bottom: 10px; border-bottom: 1px solid var(--edually-border); }
+    body.app-forum.change-list #result_list tbody tr > .action-checkbox { order: -1; justify-content: flex-start; min-height: 30px; }
+    body.app-forum.change-list #result_list tbody tr > .action-checkbox::before { content: "Select record"; color: var(--body-quiet-color); font-size: .8rem; font-weight: 650; margin-right: 8px; }
+    body.app-forum.model-category.change-list #result_list .field-slug::before { content: "Slug"; }
+    body.app-forum.model-category.change-list #result_list .field-visible_posts::before { content: "Visible posts"; }
+    body.app-forum.model-post.change-list #result_list .field-author::before,
+    body.app-forum.model-reply.change-list #result_list .field-author::before { content: "Author"; }
+    body.app-forum.model-post.change-list #result_list .field-category::before { content: "Category"; }
+    body.app-forum.model-post.change-list #result_list .field-visibility_status::before { content: "Visibility"; }
+    body.app-forum.model-post.change-list #result_list .field-moderation_flags::before { content: "Controls"; }
+    body.app-forum.model-reply.change-list #result_list .field-post::before { content: "Discussion"; }
+    body.app-forum.model-reply.change-list #result_list .field-reply_state::before { content: "Visibility"; }
+    body.app-forum.model-reply.change-list #result_list .field-best_answer_state::before { content: "Best answer"; }
+    body.app-forum.model-report.change-list #result_list .field-reporter::before { content: "Reporter"; }
+    body.app-forum.model-report.change-list #result_list .field-reason::before { content: "Reason"; }
+    body.app-forum.model-report.change-list #result_list .field-report_status::before { content: "Status"; }
+    body.app-forum.change-list #result_list .field-upvotes::before { content: "Upvotes"; }
+    body.app-forum.change-list #result_list .field-reply_count::before { content: "Replies"; }
+    body.app-forum.change-list #result_list .field-created_at::before { content: "Created"; }
+    body.app-forum.change-list #result_list :is(td, th):not(.field-category_identity):not(.field-post_identity):not(.field-reply_identity):not(.field-reported_content):not(.action-checkbox)::before { color: var(--body-quiet-color); font-size: .77rem; font-weight: 650; }
+    body.app-forum.change-list #changelist .changelist-form-container { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-items: start; height: auto; min-height: 0; }
+    body.app-forum.change-list #changelist .changelist-form-container > div { grid-column: 1; grid-row: 1; min-width: 0; }
+    body.app-forum.change-list #changelist .changelist-form-container > #changelist-filter { grid-column: 1; grid-row: 2; box-sizing: border-box; width: calc(100% - 24px); max-width: calc(100% - 24px); margin: 14px 12px; flex: none; height: auto; max-height: none; min-height: 0; overflow: hidden; }
+    body.app-forum.change-list #changelist-filter ul { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; padding: 0 14px 13px; }
+    body.app-forum.change-list #changelist-filter li,
+    body.app-forum.change-list #changelist-filter li.selected { margin: 0; padding: 0; border: 0; }
+    body.app-forum.change-list #changelist-filter li a { padding: 5px 9px; border: 1px solid var(--edually-border); border-radius: 8px; background: var(--edually-card); text-decoration: none; }
+    body.app-forum.change-list #changelist-filter li.selected a { border-color: var(--primary); background: var(--selected-row); color: var(--link-selected-fg); font-weight: 700; }
+    body.app-forum.change-form #content-main .form-row { padding: 12px; }
+    body.app-forum.change-form #content-main .form-row input:not([type="checkbox"]),
+    body.app-forum.change-form #content-main .form-row select,
+    body.app-forum.change-form #content-main .form-row textarea { max-width: 100%; }
+}
+
+/* Phase 2E: Learning Content Management */
+body.app-slm.change-list .edually-slm-overview { margin: 0 0 18px; }
+body.app-slm.change-list .edually-slm-intro h2 { margin: 0 0 6px; font-size: 1.05rem; color: var(--body-loud-color); }
+body.app-slm.change-list .edually-slm-intro p { color: var(--body-quiet-color); line-height: 1.55; margin: 0 0 14px; }
+body.app-slm.change-list .edually-slm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+body.app-slm.change-list .edually-slm-stat { box-sizing: border-box; min-width: 0; padding: 16px 18px; border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); }
+body.app-slm.change-list .edually-slm-stat span { display: block; color: var(--body-quiet-color); font-size: .79rem; margin-bottom: 7px; }
+body.app-slm.change-list .edually-slm-stat strong { display: block; font-size: 1.5rem; color: var(--body-loud-color); font-variant-numeric: tabular-nums; }
+body.app-slm.change-list .edually-slm-guidance,
+body.app-slm.change-form .edually-slm-form-note { box-sizing: border-box; border: 1px solid var(--edually-border); border-left: 4px solid var(--primary); border-radius: 10px; background: var(--edually-card); color: var(--body-quiet-color); line-height: 1.55; padding: 13px 16px; }
+body.app-slm.change-list .edually-slm-guidance { margin: 14px 0 0; }
+body.app-slm.change-form .edually-slm-form-note { margin: 0 0 18px; }
+body.app-slm.change-form .edually-slm-form-note strong { color: var(--body-loud-color); }
+body.app-slm.change-form .edually-slm-form-note p { margin: 5px 0 0; }
+body.app-slm.change-list #content-main #changelist { box-sizing: border-box; padding: 14px; }
+body.app-slm.change-list #changelist .edually-slm-primary { display: block; font-weight: 700; overflow-wrap: anywhere; }
+body.app-slm.change-list #changelist .edually-slm-secondary { display: block; color: var(--body-quiet-color); font-size: .79rem; margin-top: 3px; overflow-wrap: anywhere; }
+body.app-slm.change-list .edually-slm-badge,
+body.app-slm.change-form .edually-slm-badge { display: inline-block; border-radius: 999px; padding: 4px 9px; font-weight: 700; font-size: .77rem; white-space: nowrap; }
+body.app-slm .edually-slm-badge--positive { background: #dff5e9; color: #11633e; }
+body.app-slm .edually-slm-badge--muted { background: #e9edf4; color: #475467; }
+body.app-slm .edually-slm-badge--warning { background: #fff0d9; color: #945300; }
+html[data-theme="dark"] body.app-slm .edually-slm-badge--positive { background: #163e30; color: #9ce8c1; }
+html[data-theme="dark"] body.app-slm .edually-slm-badge--muted { background: #293445; color: #d0dae6; }
+html[data-theme="dark"] body.app-slm .edually-slm-badge--warning { background: #48351a; color: #ffd38d; }
+body.app-slm.change-form #content-main .form-row { padding: 13px 18px; }
+body.app-slm.change-form #content-main fieldset.module .description { padding: 10px 18px; line-height: 1.55; }
+body.app-slm.change-form #content-main .form-row input:is([type="text"], [type="number"]),
+body.app-slm.change-form #content-main .form-row select,
+body.app-slm.change-form #content-main .form-row textarea { box-sizing: border-box; max-width: 100%; }
+body.app-slm.change-form #content-main .form-row input:is([type="text"], [type="number"]) { min-height: 38px; padding: 8px 11px; }
+body.app-slm.change-form #content-main .form-row textarea:not(.edually-extracted-html-editor) { width: min(100%, 780px); }
+body.app-slm.change-form #content-main textarea.edually-extracted-html-editor {
+    box-sizing: border-box; display: block; width: 100%; max-width: 100%; min-height: clamp(260px, 52vh, 650px);
+    padding: 14px; border: 1px solid var(--border-color); border-radius: 8px;
+    background: var(--body-bg); color: var(--body-fg); font-size: 13px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+    line-height: 1.55; resize: vertical;
+}
+body.app-slm.change-form #content-main textarea.edually-extracted-html-editor:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* Inline modules may contain wide file inputs; allow smaller viewports to scroll safely. */
+body.app-slm.model-subject.change-form #content-main .inline-group { max-width: 100%; overflow-x: auto; }
+@media (max-width: 1100px) {
+    body.app-slm.change-list .edually-slm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+    body.app-slm.change-list #content-main,
+    body.app-slm.change-list #changelist,
+    body.app-slm.change-list #changelist .changelist-form-container,
+    body.app-slm.change-list #changelist .changelist-form-container > div,
+    body.app-slm.change-list #changelist-form,
+    body.app-slm.change-list #changelist .results { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+    body.app-slm.change-list .edually-slm-stats { gap: 8px; }
+    body.app-slm.change-list .edually-slm-stat { padding: 12px; }
+    body.app-slm.change-list .edually-slm-stat strong { font-size: 1.3rem; }
+    body.app-slm.change-list #content-main #changelist { padding: 0; }
+    body.app-slm.change-list #changelist .results { overflow: visible; }
+    body.app-slm.change-list #changelist .results table#result_list { display: block; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; }
+    body.app-slm.change-list #result_list thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    body.app-slm.change-list #result_list tbody { display: grid; width: 100%; gap: 12px; }
+    body.app-slm.change-list #result_list tbody tr { display: flex; flex-direction: column; gap: 2px; box-sizing: border-box; min-width: 0; padding: 12px 14px; border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); }
+    body.app-slm.change-list #result_list tbody tr > :is(th, td) { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; width: 100%; min-width: 0; padding: 6px 0; border: 0; background: transparent; box-sizing: border-box; text-align: left; overflow-wrap: anywhere; white-space: normal; }
+    body.app-slm.change-list #result_list tbody tr > :is(.field-subject_identity, .field-module_identity, .field-material_identity, .field-query) { display: block; order: -2; padding-bottom: 10px; border-bottom: 1px solid var(--edually-border); }
+    body.app-slm.change-list #result_list tbody tr > .action-checkbox { order: -1; justify-content: flex-start; min-height: 30px; }
+    body.app-slm.change-list #result_list tbody tr > .action-checkbox::before { content: "Select record"; color: var(--body-quiet-color); font-size: .8rem; font-weight: 650; margin-right: 8px; }
+    body.app-slm.model-subject.change-list #result_list .field-year::before { content: "Year"; }
+    body.app-slm.model-subject.change-list #result_list .field-module_count::before { content: "Modules"; }
+    body.app-slm.model-module.change-list #result_list .field-subject::before { content: "Subject"; }
+    body.app-slm.model-module.change-list #result_list .field-file_type::before { content: "File type"; }
+    body.app-slm.model-personalmaterial.change-list #result_list .field-visibility_badge::before { content: "Visibility"; }
+    body.app-slm.change-list #result_list .field-author::before,
+    body.app-slm.change-list #result_list .field-owner::before { content: "Owner"; }
+    body.app-slm.change-list #result_list .field-availability_badge::before { content: "Availability"; }
+    body.app-slm.change-list #result_list .field-has_extracted_html::before { content: "Extracted HTML"; }
+    body.app-slm.change-list #result_list .field-target::before { content: "Target"; }
+    body.app-slm.change-list #result_list .field-offsets::before { content: "Offsets"; }
+    body.app-slm.change-list #result_list .field-updated_at::before { content: "Updated"; }
+    body.app-slm.change-list #result_list .field-created_at::before { content: "Created"; }
+    body.app-slm.change-list #result_list td:not(.action-checkbox):not(.field-subject_identity):not(.field-module_identity):not(.field-material_identity):not(.field-query)::before { color: var(--body-quiet-color); font-size: .77rem; font-weight: 650; }
+    body.app-slm.change-list #changelist .changelist-form-container { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-items: start; height: auto; min-height: 0; }
+    body.app-slm.change-list #changelist .changelist-form-container > div { grid-column: 1; grid-row: 1; min-width: 0; }
+    body.app-slm.change-list #changelist .changelist-form-container > #changelist-filter { grid-column: 1; grid-row: 2; box-sizing: border-box; width: calc(100% - 24px); max-width: calc(100% - 24px); margin: 14px 12px; flex: none; height: auto; max-height: none; min-height: 0; overflow: hidden; }
+    body.app-slm.change-list #changelist-filter ul { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; padding: 0 14px 13px; }
+    body.app-slm.change-list #changelist-filter li,
+    body.app-slm.change-list #changelist-filter li.selected { margin: 0; padding: 0; border: 0; }
+    body.app-slm.change-list #changelist-filter li a { padding: 5px 9px; border: 1px solid var(--edually-border); border-radius: 8px; background: var(--edually-card); text-decoration: none; }
+    body.app-slm.change-list #changelist-filter li.selected a { border-color: var(--primary); background: var(--selected-row); color: var(--link-selected-fg); font-weight: 700; }
+    body.app-slm.change-form #content-main .form-row { padding: 12px; }
+    body.app-slm.change-form #content-main .form-row input:not([type="checkbox"]),
+    body.app-slm.change-form #content-main .form-row select,
+    body.app-slm.change-form #content-main .form-row textarea { max-width: 100%; }
+}
+
+/* Phase 2F: Login Security */
+body.app-axes.change-list .edually-security-overview { margin: 0 0 18px; }
+body.app-axes.change-list .edually-security-intro h2 { margin: 0 0 6px; font-size: 1.05rem; color: var(--body-loud-color); }
+body.app-axes.change-list .edually-security-intro p { margin: 0 0 14px; color: var(--body-quiet-color); line-height: 1.55; }
+body.app-axes.change-list .edually-security-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+body.app-axes.change-list .edually-security-stat { min-width: 0; box-sizing: border-box; padding: 16px 18px; border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); }
+body.app-axes.change-list .edually-security-stat span { display: block; color: var(--body-quiet-color); font-size: .79rem; margin-bottom: 7px; }
+body.app-axes.change-list .edually-security-stat strong { display: block; font-size: 1.5rem; color: var(--body-loud-color); font-variant-numeric: tabular-nums; }
+body.app-axes.change-list .edually-security-guidance,
+body.app-axes.change-form .edually-security-form-note { box-sizing: border-box; border: 1px solid var(--edually-border); border-left: 4px solid var(--primary); border-radius: 10px; background: var(--edually-card); color: var(--body-quiet-color); line-height: 1.55; padding: 13px 16px; }
+body.app-axes.change-list .edually-security-guidance { margin: 14px 0 0; }
+body.app-axes.change-form .edually-security-form-note { margin: 0 0 18px; }
+body.app-axes.change-form .edually-security-form-note strong { color: var(--body-loud-color); }
+body.app-axes.change-form .edually-security-form-note p { margin: 5px 0 0; }
+body.app-axes.change-list #content-main #changelist { box-sizing: border-box; padding: 14px; }
+body.app-axes.change-list .edually-security-primary { display: block; font-weight: 700; overflow-wrap: anywhere; }
+body.app-axes .edually-security-badge { display: inline-block; border-radius: 999px; padding: 4px 9px; font-size: .77rem; font-weight: 700; white-space: nowrap; }
+body.app-axes .edually-security-badge--positive { background: #dff5e9; color: #11633e; }
+body.app-axes .edually-security-badge--muted { background: #e9edf4; color: #475467; }
+body.app-axes .edually-security-badge--warning { background: #fff0d9; color: #945300; }
+body.app-axes .edually-security-badge--danger { background: #fce0e4; color: #98293c; }
+html[data-theme="dark"] body.app-axes .edually-security-badge--positive { background: #163e30; color: #9ce8c1; }
+html[data-theme="dark"] body.app-axes .edually-security-badge--muted { background: #293445; color: #d0dae6; }
+html[data-theme="dark"] body.app-axes .edually-security-badge--warning { background: #48351a; color: #ffd38d; }
+html[data-theme="dark"] body.app-axes .edually-security-badge--danger { background: #50242e; color: #ffabb9; }
+body.app-axes.change-form #content-main .form-row { padding: 13px 18px; }
+body.app-axes.change-form #content-main fieldset.module .description { padding: 10px 18px; }
+body.app-axes.change-form #content-main .form-row input,
+body.app-axes.change-form #content-main .form-row textarea { box-sizing: border-box; max-width: 100%; }
+@media (max-width: 1100px) {
+    body.app-axes.change-list .edually-security-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+    body.app-axes.change-list #content-main,
+    body.app-axes.change-list #changelist,
+    body.app-axes.change-list #changelist .changelist-form-container,
+    body.app-axes.change-list #changelist .changelist-form-container > div,
+    body.app-axes.change-list #changelist-form,
+    body.app-axes.change-list #changelist .results { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+    body.app-axes.change-list .edually-security-stats { gap: 8px; }
+    body.app-axes.change-list .edually-security-stat { padding: 12px; }
+    body.app-axes.change-list .edually-security-stat strong { font-size: 1.3rem; }
+    body.app-axes.change-list #content-main #changelist { padding: 0; }
+    body.app-axes.change-list #changelist .results { overflow: visible; }
+    body.app-axes.change-list #changelist .results table#result_list { display: block; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; }
+    body.app-axes.change-list #result_list thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    body.app-axes.change-list #result_list tbody { display: grid; gap: 12px; width: 100%; }
+    body.app-axes.change-list #result_list tbody tr { display: flex; flex-direction: column; gap: 2px; box-sizing: border-box; min-width: 0; padding: 12px 14px; border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); }
+    body.app-axes.change-list #result_list tbody tr > :is(th, td) { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; width: 100%; min-width: 0; padding: 6px 0; border: 0; background: transparent; box-sizing: border-box; text-align: left; overflow-wrap: anywhere; white-space: normal; }
+    body.app-axes.change-list #result_list tbody tr > .field-client_identity { display: block; order: -2; padding-bottom: 10px; border-bottom: 1px solid var(--edually-border); }
+    body.app-axes.change-list #result_list tbody tr > .action-checkbox { order: -1; justify-content: flex-start; min-height: 30px; }
+    body.app-axes.change-list #result_list tbody tr > .action-checkbox::before { content: "Select record"; font-size: .8rem; font-weight: 650; color: var(--body-quiet-color); margin-right: 8px; }
+    body.app-axes.change-list #result_list .field-attempt_time::before { content: "Time"; }
+    body.app-axes.change-list #result_list .field-ip_address::before { content: "IP address"; }
+    body.app-axes.change-list #result_list .field-failures_since_start::before { content: "Failures"; }
+    body.app-axes.change-list #result_list .field-attempt_state::before { content: "Threshold"; }
+    body.app-axes.change-list #result_list .field-expires_on::before { content: "Expires"; }
+    body.app-axes.change-list #result_list .field-path_info::before { content: "Path"; }
+    body.app-axes.change-list #result_list .field-logout_state::before { content: "Logout"; }
+    body.app-axes.change-list #result_list .field-logout_time::before { content: "Logout time"; }
+    body.app-axes.change-list #result_list .field-lockout_state::before { content: "Lockout"; }
+    body.app-axes.change-list #result_list :is(td, th):not(.field-client_identity):not(.action-checkbox)::before { color: var(--body-quiet-color); font-size: .77rem; font-weight: 650; }
+    body.app-axes.change-list #changelist .changelist-form-container { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-items: start; height: auto; min-height: 0; }
+    body.app-axes.change-list #changelist .changelist-form-container > div { grid-column: 1; grid-row: 1; min-width: 0; }
+    body.app-axes.change-list #changelist .changelist-form-container > #changelist-filter { grid-column: 1; grid-row: 2; box-sizing: border-box; width: calc(100% - 24px); max-width: calc(100% - 24px); margin: 14px 12px; flex: none; height: auto; max-height: none; min-height: 0; overflow: hidden; }
+    body.app-axes.change-list #changelist-filter ul { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; padding: 0 14px 13px; }
+    body.app-axes.change-list #changelist-filter li,
+    body.app-axes.change-list #changelist-filter li.selected { margin: 0; padding: 0; border: 0; }
+    body.app-axes.change-list #changelist-filter li a { padding: 5px 9px; border: 1px solid var(--edually-border); border-radius: 8px; background: var(--edually-card); text-decoration: none; }
+    body.app-axes.change-list #changelist-filter li.selected a { border-color: var(--primary); background: var(--selected-row); color: var(--link-selected-fg); font-weight: 700; }
+    body.app-axes.change-form #content-main .form-row { padding: 12px; }
+}

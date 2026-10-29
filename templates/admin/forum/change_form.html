@@ -1,0 +1,14 @@
+{% extends "admin/change_form.html" %}
+
+{% block form_top %}
+{{ block.super }}
+<div class="edually-forum-form-note" role="note">
+  {% if add %}
+  <strong>Creating a {{ opts.verbose_name }} record</strong>
+  <p>Complete the fields below. Changes will be saved using Django Admin's normal validation.</p>
+  {% else %}
+  <strong>Editing a {{ opts.verbose_name }} record</strong>
+  <p>Review the details carefully before saving. For posts and replies, use soft-delete instead of permanent deletion when moderation history must be preserved.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% load i18n %}
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}"></button>
+<nav class="sticky" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
+  <input type="search" id="nav-filter"
+         placeholder="{% translate 'Search management pages…' %}"
+         aria-label="{% translate 'Filter navigation items' %}">
+
+  {% for app in available_apps %}
+  <div class="app-{{ app.app_label }} module{% if app.app_url in request.path|urlencode %} current-app{% endif %}">
+    <table>
+      <caption>
+        <a href="{{ app.app_url }}" class="section">
+          {% if app.app_label == 'account' %}People &amp; Accounts
+          {% elif app.app_label == 'auth' %}Roles &amp; Permissions
+          {% elif app.app_label == 'axes' %}Login Security
+          {% elif app.app_label == 'forum' %}Forum Management
+          {% elif app.app_label == 'slm' %}Learning Content
+          {% else %}{{ app.name }}{% endif %}
+        </a>
+      </caption>
+      <thead class="visually-hidden">
+        <tr>
+          <th scope="col">{% translate 'Model name' %}</th>
+          <th scope="col">{% translate 'Management link' %}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for model in app.models %}
+        <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
+          <th scope="row" id="{{ app.app_label }}-{{ model.object_name|lower }}">
+            {% if model.admin_url %}
+              <a href="{{ model.admin_url }}"{% if model.admin_url in request.path|urlencode %} aria-current="page"{% endif %}>{{ model.name }}</a>
+            {% else %}
+              {{ model.name }}
+            {% endif %}
+          </th>
+          <td class="visually-hidden">{% translate 'Manage' %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% empty %}
+    <p>{% translate 'No management pages are available.' %}</p>
+  {% endfor %}
+</nav>

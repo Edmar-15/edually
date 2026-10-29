@@ -1,0 +1,18 @@
+{% extends "admin/change_form.html" %}
+
+{% block form_top %}
+{{ block.super }}
+<div class="edually-slm-form-note" role="note">
+  {% if add %}<strong>Creating a {{ opts.verbose_name }} record</strong>
+  <p>Check the linked account and content details before saving.</p>
+  {% else %}<strong>Editing a {{ opts.verbose_name }} record</strong>
+  <p>Changes to this record may affect learning content displayed to users.</p>{% endif %}
+  {% if opts.model_name == 'module' or opts.model_name == 'personalmaterial' %}
+  <p>The extracted HTML field is editable source content. Editing it does not update the original uploaded file. Review student-facing content after saving.</p>
+  {% elif opts.model_name == 'subject' %}
+  <p>Modules can also be edited using the subject's inline module section. Archiving a subject does not delete its modules.</p>
+  {% elif opts.model_name == 'highlightanswer' or opts.model_name == 'highlightannotation' %}
+  <p>These highlights reference a module or personal material and belong to an individual user. Check the linked source and owner before editing.</p>
+  {% endif %}
+</div>
+{% endblock %}
