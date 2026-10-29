@@ -1,0 +1,259 @@
+/* EduAlly Administration — visual layer only. Django Admin handles all behavior. */
+html[data-theme="light"],
+:root {
+    --primary: #0e9aa7;
+    --secondary: #0b7b80;
+    --primary-fg: #fff;
+    --body-fg: #233144;
+    --body-bg: #f6f7fa;
+    --body-quiet-color: #667085;
+    --body-medium-color: #475467;
+    --body-loud-color: #142438;
+    --header-bg: #ffffff;
+    --header-color: #233144;
+    --header-branding-color: #0e9aa7;
+    --header-link-color: #344054;
+    --breadcrumbs-bg: #eff8f9;
+    --breadcrumbs-fg: #475467;
+    --breadcrumbs-link-fg: #0b7b80;
+    --link-fg: #087b85;
+    --link-hover-color: #075e66;
+    --link-selected-fg: #087b85;
+    --hairline-color: #e8edf3;
+    --border-color: #d7e0e8;
+    --darkened-bg: #f1f5f9;
+    --selected-bg: #e1f4f5;
+    --selected-row: #e6f7f7;
+    --button-bg: #0b7b80;
+    --button-hover-bg: #09686e;
+    --default-button-bg: #0e9aa7;
+    --default-button-hover-bg: #0b7b80;
+    --object-tools-bg: #42566c;
+    --object-tools-hover-bg: #34465c;
+    --edually-card: #fff;
+    --edually-border: #e5eaf0;
+    --edually-shadow: 0 10px 26px rgba(16, 42, 67, .045);
+    --font-family-primary: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color-scheme: light;
+}
+
+html[data-theme="dark"] {
+    --primary: #0e9aa7;
+    --secondary: #0e9aa7;
+    --primary-fg: #fff;
+    --body-fg: #e5eefb;
+    --body-bg: #0b1220;
+    --body-quiet-color: #97a4ba;
+    --body-medium-color: #bcc9d9;
+    --body-loud-color: #f1f5fa;
+    --header-bg: #111827;
+    --header-color: #e5eefb;
+    --header-branding-color: #65d8df;
+    --header-link-color: #c8d5e5;
+    --breadcrumbs-bg: #121e30;
+    --breadcrumbs-fg: #aab9cd;
+    --breadcrumbs-link-fg: #7cdee3;
+    --link-fg: #7cdee3;
+    --link-hover-color: #b5f2f5;
+    --link-selected-fg: #7cdee3;
+    --hairline-color: #243349;
+    --border-color: #35435a;
+    --darkened-bg: #172235;
+    --selected-bg: #173743;
+    --selected-row: #193944;
+    --button-bg: #0b7b80;
+    --button-hover-bg: #09686e;
+    --default-button-bg: #0e9aa7;
+    --default-button-hover-bg: #0b7b80;
+    --object-tools-bg: #33475d;
+    --object-tools-hover-bg: #476079;
+    --edually-card: #111827;
+    --edually-border: #263347;
+    --edually-shadow: 0 12px 30px rgba(0, 0, 0, .17);
+    --error-fg: #ff9b9b;
+    --message-info-bg: #143446;
+    --message-success-bg: #164532;
+    --message-warning-bg: #593d16;
+    --message-error-bg: #58282c;
+    color-scheme: dark;
+}
+
+body { font-family: var(--font-family-primary); }
+#container { min-height: 100vh; }
+
+/* Header: same clean surface, typography and brand as other EduAlly pages. */
+#header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--edually-border);
+    padding: 16px 26px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+    color: var(--header-color);
+    box-shadow: 0 3px 12px rgba(12, 23, 41, .025);
+}
+#branding { display: flex; align-items: center; gap: 16px; }
+#site-name { margin: 0; font-size: 1.3rem; line-height: 1.15; }
+#site-name a { display: inline-flex; flex-direction: column; gap: 2px; }
+#site-name a:link, #site-name a:visited { color: var(--header-branding-color); }
+.edually-admin-wordmark { font-size: 1.25rem; font-weight: 800; letter-spacing: -.045em; }
+.edually-admin-brand-subtitle { font-size: .69rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--body-quiet-color); }
+#user-tools { margin: 0 0 0 auto; display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px 16px; font-size: .82rem; font-weight: 500; line-height: 1.6; text-transform: none; letter-spacing: normal; white-space: normal; color: var(--header-color); }
+#user-tools a:link, #user-tools a:visited, #header a:link, #header a:visited { color: var(--header-link-color); }
+#site-name a:link, #site-name a:visited { color: var(--header-branding-color); }
+#user-tools strong { color: var(--header-color); }
+#logout-form { display: inline-flex; }
+#logout-form button, .edually-admin-theme-toggle { font: inherit; border-radius: 9px; cursor: pointer; min-height: 35px; padding: 6px 11px; }
+#logout-form button { border: 1px solid var(--edually-border); background: var(--darkened-bg); color: var(--body-fg); }
+#logout-form button:hover, #logout-form button:focus-visible { background: var(--selected-bg); }
+.edually-admin-theme-toggle { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--edually-border); background: transparent; color: var(--body-fg); font-size: .81rem; font-weight: 600; }
+.edually-admin-theme-toggle:hover, .edually-admin-theme-toggle:focus-visible { background: var(--darkened-bg); }
+.edually-admin-theme-glyph { font-size: 1.15rem; line-height: 1; }
+#header button:focus-visible, #nav-sidebar a:focus-visible, .edually-admin-home a:focus-visible { outline: 2px solid #0e9aa7; outline-offset: 3px; }
+
+nav[aria-label="Breadcrumbs"] { background: var(--breadcrumbs-bg); border-bottom: 1px solid var(--edually-border); }
+.breadcrumbs { padding: 11px 24px; background: transparent; color: var(--breadcrumbs-fg); }
+.breadcrumbs a { color: var(--breadcrumbs-link-fg); }
+
+/* Preserve Django's built-in sidebar, search, permission filtering and toggle. */
+#nav-sidebar { background: var(--edually-card); border-right: 1px solid var(--edually-border); }
+.toggle-nav-sidebar { border-right-color: var(--edually-border); color: var(--link-fg); background: var(--edually-card); }
+#nav-filter { display: block; width: calc(100% - 28px); margin: 20px 14px 12px; border-radius: 10px; padding: 9px 11px; border: 1px solid var(--border-color); background: var(--body-bg); color: var(--body-fg); }
+#nav-filter:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+#nav-sidebar .module { border: 0; background: transparent; margin: 4px 8px 12px; }
+#nav-sidebar .module table { border: 0; background: transparent; }
+#nav-sidebar .module caption { text-align: left; padding: 12px 10px 5px; border: 0; background: transparent; font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; }
+#nav-sidebar .module caption a:link, #nav-sidebar .module caption a:visited, #nav-sidebar .current-app .section:link, #nav-sidebar .current-app .section:visited { color: var(--body-quiet-color); font-weight: 700; }
+#nav-sidebar .module tr { background: transparent; border: 0; }
+#nav-sidebar .module th { padding: 0; font-size: .82rem; font-weight: 500; border: 0; background: transparent; }
+#nav-sidebar .module th a { display: block; margin: 2px 5px; padding: 9px 12px; border-radius: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+#nav-sidebar .module th a:link, #nav-sidebar .module th a:visited { color: var(--body-medium-color); }
+#nav-sidebar .module th a:hover, #nav-sidebar .module th a:focus { background: var(--darkened-bg); color: var(--link-fg); text-decoration: none; }
+#nav-sidebar .current-model { background: transparent; }
+#nav-sidebar .current-model th a:link, #nav-sidebar .current-model th a:visited { background: var(--selected-row); color: var(--link-selected-fg); font-weight: 700; }
+#nav-sidebar .module td { display: none; }
+
+/* Main admin pages: cards, rounded fields and a readable working width. */
+#content { padding: 28px 32px 36px; }
+#content h1 { font-size: 1.45rem; font-weight: 750; letter-spacing: -.02em; color: var(--body-loud-color); }
+#content .module, #content fieldset.module { border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); overflow: hidden; }
+#content .module h2, #content .module caption { background: var(--darkened-bg); color: var(--body-fg); }
+#content .module h2 { border-radius: 0; }
+#content input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+#content select, #content textarea { background-color: var(--edually-card); color: var(--body-fg); border: 1px solid var(--border-color); border-radius: 8px; }
+#content input:focus-visible, #content select:focus-visible, #content textarea:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+#content .button, #content input[type="submit"], #content .submit-row input { border-radius: 8px; }
+#content .submit-row { border: 1px solid var(--edually-border); background: var(--edually-card); border-radius: 12px; }
+#content .object-tools a { border-radius: 8px; }
+#content table { max-width: 100%; }
+#content .results, #content .inline-group { overflow-x: auto; }
+#changelist-filter { border: 1px solid var(--edually-border); border-radius: 12px; background: var(--edually-card); overflow: hidden; }
+#changelist-filter h2 { background: var(--darkened-bg); color: var(--body-fg); }
+#changelist .results table { background: var(--edually-card); }
+#changelist .results table thead th { background: var(--darkened-bg); }
+#changelist .results table tr:hover { background: var(--selected-row); }
+
+/* Accessible, permission-aware overview: no new views or database queries. */
+.edually-admin-home { max-width: 1220px; margin: 0 auto; }
+.edually-admin-intro { padding: 5px 0 25px; }
+.edually-admin-eyebrow { display: block; color: var(--link-fg); text-transform: uppercase; font-size: .73rem; font-weight: 800; letter-spacing: .1em; margin-bottom: 7px; }
+.edually-admin-intro h1 { margin: 0 0 10px; font-size: clamp(1.6rem, 2.5vw, 2rem) !important; font-weight: 750; }
+.edually-admin-intro p { max-width: 700px; color: var(--body-quiet-color); font-size: .94rem; line-height: 1.65; }
+.edually-admin-section-heading { margin: 4px 0 15px; }
+.edually-admin-section-heading h2 { font-size: 1.07rem; margin: 0 0 5px; color: var(--body-loud-color); }
+.edually-admin-section-heading p { color: var(--body-quiet-color); font-size: .83rem; }
+.edually-admin-app-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.edually-admin-app-card { background: var(--edually-card); border: 1px solid var(--edually-border); border-radius: 15px; box-shadow: var(--edually-shadow); padding: 21px; min-width: 0; }
+.edually-admin-app-card header { background: transparent; padding: 0 0 15px; border-bottom: 1px solid var(--edually-border); }
+.edually-admin-app-card h3 { font-size: 1rem; font-weight: 750; color: var(--body-loud-color); margin: 0 0 7px; }
+.edually-admin-app-card header p { color: var(--body-quiet-color); font-size: .8rem; line-height: 1.5; margin: 0; }
+.edually-admin-model-links { display: grid; gap: 3px; margin-top: 9px; }
+.edually-admin-model-link { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 10px 9px; border-radius: 9px; font-size: .84rem; }
+.edually-admin-model-link:link, .edually-admin-model-link:visited { color: var(--body-fg); text-decoration: none; }
+.edually-admin-model-link:hover, .edually-admin-model-link:focus-visible { background: var(--darkened-bg); text-decoration: none; }
+.edually-admin-model-action { flex-shrink: 0; color: var(--link-fg); font-weight: 650; font-size: .77rem; }
+.edually-admin-model-action span { font-size: 1.2rem; vertical-align: -1px; margin-left: 3px; }
+.edually-admin-model-link-disabled { color: var(--body-quiet-color); }
+.edually-admin-recent { margin-top: 27px; }
+.edually-admin-activity-list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--edually-border); border-radius: 14px; background: var(--edually-card); overflow: hidden; }
+.edually-admin-activity-list li { display: flex; align-items: center; gap: 15px; padding: 13px 18px; border-bottom: 1px solid var(--edually-border); list-style: none; min-width: 0; }
+.edually-admin-activity-list li:last-child { border-bottom: 0; }
+.edually-admin-activity-kind { min-width: 65px; color: var(--body-quiet-color); font-size: .75rem; font-weight: 750; }
+.edually-admin-activity-object { flex: 1; overflow-wrap: anywhere; font-size: .84rem; }
+.edually-admin-activity-date { flex-shrink: 0; font-size: .74rem; color: var(--body-quiet-color); }
+.edually-admin-empty { color: var(--body-quiet-color); }
+
+@media (max-width: 1150px) {
+    .edually-admin-app-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 767px) {
+    #header { padding: 14px 18px; flex-direction: column; align-items: stretch; gap: 12px; }
+    #branding { justify-content: space-between; }
+    #site-name { margin: 0; }
+    #user-tools { margin: 0; justify-content: flex-start; gap: 6px 12px; }
+    #content { padding: 21px 16px 30px; }
+    .breadcrumbs { padding: 10px 16px; }
+    .edually-admin-app-card { padding: 16px; }
+    .edually-admin-activity-list li { flex-wrap: wrap; gap: 6px 12px; }
+    .edually-admin-activity-object { flex-basis: calc(100% - 88px); }
+    .edually-admin-activity-date { padding-left: 77px; }
+    /* Django deliberately hides its wide sidebar on mobile; the dashboard links remain available. */
+}
+@media (prefers-reduced-motion: reduce) {
+    .edually-admin-home a { transition: none; }
+}
+
+/* Phase 1b: full-width admin dashboard and responsive management cards. */
+/* Django's default .dashboard #content width is 600px. Override only our home. */
+body.edually-admin-dashboard #content {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+body.edually-admin-dashboard .edually-admin-home {
+    width: 100%;
+    max-width: 1260px;
+    margin-inline: auto;
+}
+
+/* Automatically create 1, 2 or 3 columns based on actual available width. */
+body.edually-admin-dashboard .edually-admin-app-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    align-items: stretch;
+}
+
+body.edually-admin-dashboard .edually-admin-app-card {
+    box-sizing: border-box;
+    height: auto;
+}
+
+body.edually-admin-dashboard .edually-admin-recent,
+body.edually-admin-dashboard .edually-admin-activity-list {
+    width: 100%;
+}
+
+/* Give the admin menu readable category headings. All model links are retained. */
+#nav-sidebar .module caption {
+    padding-block: 12px 6px;
+    letter-spacing: .055em;
+}
+
+@media (max-width: 767px) {
+    body.edually-admin-dashboard #content { width: 100%; }
+    body.edually-admin-dashboard .edually-admin-app-grid { grid-template-columns: 1fr; }
+}
+
+
+/* Phase 1c: unobtrusive, accessible dashboard management links. */
+body.edually-admin-dashboard #content a.edually-admin-model-link,
+body.edually-admin-dashboard #content a.edually-admin-model-link:visited {
+    text-decoration: none;
+}
+body.edually-admin-dashboard #content a.edually-admin-model-link:hover,
+body.edually-admin-dashboard #content a.edually-admin-model-link:focus-visible {
+    background: var(--darkened-bg);
+    text-decoration: none;
+}
