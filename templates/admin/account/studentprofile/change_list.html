@@ -1,13 +1,26 @@
 {% extends "admin/change_list.html" %}
 
+{% block content %}
+<section class="edually-profile-overview" aria-label="Student profile overview">
+  <div class="edually-profile-intro">
+    <h2>Student profiles</h2>
+    <p>Find student records, check assigned year levels, and open a profile to update its details.</p>
+  </div>
+  {% if edually_profile_summary %}
+  <div class="edually-profile-summary" role="list" aria-label="Student profile counts">
+    <div class="edually-profile-stat" role="listitem"><span>Total profiles</span><strong>{{ edually_profile_summary.total }}</strong></div>
+    <div class="edually-profile-stat" role="listitem"><span>Student IDs entered</span><strong>{{ edually_profile_summary.id_assigned }}</strong></div>
+    <div class="edually-profile-stat" role="listitem"><span>Year level assigned</span><strong>{{ edually_profile_summary.year_assigned }}</strong></div>
+    <div class="edually-profile-stat" role="listitem"><span>Year level pending</span><strong>{{ edually_profile_summary.year_pending }}</strong></div>
+  </div>
+  {% endif %}
+</section>
+{{ block.super }}
+{% endblock %}
+
 {% block object-tools-items %}
     {% if request.user.is_superuser %}
-        <li>
-            <a href="{% url 'admin:account_studentprofile_reset_year_levels' %}">
-                Reset Year Levels
-            </a>
-        </li>
+        <li><a class="edually-profile-reset-danger" href="{% url 'admin:account_studentprofile_reset_year_levels' %}">Reset Year Levels</a></li>
     {% endif %}
-
     {{ block.super }}
 {% endblock %}

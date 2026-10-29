@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+
+{% block form_top %}
+{{ block.super }}
+<div class="edually-profile-form-note" role="note">
+  {% if add %}
+    <strong>Creating a {{ opts.verbose_name }} record</strong>
+    <p>Link an existing account and enter the role-specific details below. This does not create a login account.</p>
+  {% else %}
+    <strong>Editing a {{ opts.verbose_name }} record</strong>
+    <p>Changes here update the profile, not the user's email, password, or permissions.</p>
+  {% endif %}
+  {% if opts.model_name == 'studentprofile' %}
+    <p>Once a year level is assigned, it cannot be changed individually. Superusers can use Reset Year Levels from the list page to clear selections.</p>
+  {% endif %}
+</div>
+{% endblock %}

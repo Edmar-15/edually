@@ -277,13 +277,141 @@ class SuperuserOnlyGroupAdmin(BaseGroupAdmin):
 admin.site.unregister(Group)
 admin.site.register(Group, SuperuserOnlyGroupAdmin)
 
+# Phase 2B refinement: an explicit filter for students with no assigned year.
+class StudentYearLevelFilter(admin.SimpleListFilter):
+    title = "Year Level"
+    parameter_name = "year_level"
+
+    def lookups(self, request, model_admin):
+        return [
+            *StudentProfile.YEAR_CHOICES,
+            ("__pending__", "Not assigned"),
+        ]
+
+    def queryset(self, request, queryset):
+        selected = self.value()
+        if selected == "__pending__":
+            return queryset.filter(year_level="")
+        if selected in {value for value, _ in StudentProfile.YEAR_CHOICES}:
+            return queryset.filter(year_level=selected)
+        return queryset
+
+
+# Phase 2B: student and teacher profile admin
+class ProfileAdminGuard:
+    """Keep profile administration from bypassing UserAdmin privilege checks."""
+
+    def _is_privileged_profile(self, request, obj):
+        return (
+            obj is not None
+            and not request.user.is_superuser
+            and (obj.user.is_staff or obj.user.is_superuser)
+        )
+
+    def has_view_permission(self, request, obj=None):
+        return not self._is_privileged_profile(request, obj) and super().has_view_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return not self._is_privileged_profile(request, obj) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return not self._is_privileged_profile(request, obj) and super().has_delete_permission(request, obj)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request).select_related("user")
+        if not request.user.is_superuser:
+            queryset = queryset.filter(user__is_staff=False, user__is_superuser=False)
+        return queryset
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # A forged user ID must not link a regular profile to a privileged account.
+        if db_field.name == "user" and not request.user.is_superuser:
+            kwargs["queryset"] = User.objects.filter(is_staff=False, is_superuser=False)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def delete_queryset(self, request, queryset):
+        # Django's built-in bulk-delete action does not check each object.
+        if not request.user.is_superuser and queryset.filter(
+            Q(user__is_staff=True) | Q(user__is_superuser=True)
+        ).exists():
+            raise PermissionDenied("Only superusers may delete privileged profiles.")
+        return super().delete_queryset(request, queryset)
+
+    @admin.display(description="Account", ordering="user__email")
+    def profile_identity(self, obj):
+        name = " ".join(part for part in (obj.user.first_name, obj.user.last_name) if part).strip()
+        subline = name or ("@" + obj.user.username if obj.user.username else "Name not provided")
+        return format_html(
+            '<span class="edually-profile-primary">{}</span>'
+            '<span class="edually-profile-secondary">{}</span>',
+            obj.user.email, subline,
+        )
+
+    @admin.display(description="Account status", ordering="user__is_active")
+    def user_status(self, obj):
+        return format_html(
+            '<span class="edually-profile-badge edually-profile-badge--{}">{}</span>',
+            "positive" if obj.user.is_active else "muted",
+            "Active" if obj.user.is_active else "Inactive",
+        )
+
+
 @admin.register(StudentProfile)
-class StudentProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "student_id", "program", "year_level")
-    search_fields = ("user__email", "student_id", "program")
-
+class StudentProfileAdmin(ProfileAdminGuard, admin.ModelAdmin):
+    list_display = (
+        "profile_identity", "student_id_display", "program_display",
+        "year_level_display", "user_status",
+    )
+    list_display_links = ("profile_identity",)
+    search_fields = (
+        "user__email", "user__username", "user__first_name", "user__last_name",
+        "student_id", "program",
+    )
+    search_help_text = "Search by student name, email, username, student ID, or program."
+    list_filter = (StudentYearLevelFilter, "user__is_active")
+    ordering = ("user__email",)
+    list_per_page = 25
     change_list_template = "admin/account/studentprofile/change_list.html"
+    change_form_template = "admin/account/profile_change_form.html"
+    fieldsets = (
+        ("Linked account", {"fields": ("user",), "description": "Choose the account this student profile belongs to."}),
+        ("Student details", {"fields": ("student_id", "program", "year_level")}),
+    )
 
+    @admin.display(description="Student ID", ordering="student_id")
+    def student_id_display(self, obj):
+        return obj.student_id or "Not set"
+
+    @admin.display(description="Program / Course", ordering="program")
+    def program_display(self, obj):
+        return obj.program or "Not set"
+
+    @admin.display(description="Year level", ordering="year_level")
+    def year_level_display(self, obj):
+        return format_html(
+            '<span class="edually-profile-badge edually-profile-badge--{}">{}</span>',
+            "positive" if obj.year_level else "pending",
+            obj.year_level or "Not assigned",
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = super().get_readonly_fields(request, obj)
+        # StudentProfile.clean() already forbids changing an assigned year.
+        # Make that constraint obvious in the form instead of showing a selector.
+        return (*readonly, "year_level") if obj is not None and obj.year_level else readonly
+
+    def changelist_view(self, request, extra_context=None):
+        if request.method == "GET" and self.has_view_or_change_permission(request):
+            counts = self.get_queryset(request).aggregate(
+                total=Count("pk"),
+                id_assigned=Count("pk", filter=~Q(student_id="")),
+                year_assigned=Count("pk", filter=~Q(year_level="")),
+                year_pending=Count("pk", filter=Q(year_level="")),
+            )
+            extra_context = {**(extra_context or {}), "edually_profile_summary": counts}
+        return super().changelist_view(request, extra_context=extra_context)
+
+    # Preserve existing custom route and superuser-only reset behavior.
     def get_urls(self):
         custom_urls = [
             path(
@@ -330,10 +458,42 @@ class StudentProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(TeacherProfile)
-class TeacherProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "employee_id")
-    search_fields = ("user__email", "employee_id")
+class TeacherProfileAdmin(ProfileAdminGuard, admin.ModelAdmin):
+    list_display = ("profile_identity", "employee_id_display", "department_display", "user_status")
+    list_display_links = ("profile_identity",)
+    search_fields = (
+        "user__email", "user__username", "user__first_name", "user__last_name",
+        "employee_id", "department",
+    )
+    search_help_text = "Search by teacher name, email, username, employee ID, or department."
+    list_filter = ("user__is_active", "department")
+    ordering = ("user__email",)
+    list_per_page = 25
+    change_list_template = "admin/account/teacherprofile/change_list.html"
+    change_form_template = "admin/account/profile_change_form.html"
+    fieldsets = (
+        ("Linked account", {"fields": ("user",), "description": "Choose the account this teacher profile belongs to."}),
+        ("Teacher details", {"fields": ("employee_id", "department")}),
+    )
 
+    @admin.display(description="Employee ID", ordering="employee_id")
+    def employee_id_display(self, obj):
+        return obj.employee_id or "Not set"
+
+    @admin.display(description="Department", ordering="department")
+    def department_display(self, obj):
+        return obj.department or "Not set"
+
+    def changelist_view(self, request, extra_context=None):
+        if request.method == "GET" and self.has_view_or_change_permission(request):
+            counts = self.get_queryset(request).aggregate(
+                total=Count("pk"),
+                id_assigned=Count("pk", filter=~Q(employee_id="")),
+                department_assigned=Count("pk", filter=~Q(department="")),
+                active=Count("pk", filter=Q(user__is_active=True)),
+            )
+            extra_context = {**(extra_context or {}), "edually_profile_summary": counts}
+        return super().changelist_view(request, extra_context=extra_context)
 
 @admin.register(UserConsent)
 class UserConsentAdmin(admin.ModelAdmin):
