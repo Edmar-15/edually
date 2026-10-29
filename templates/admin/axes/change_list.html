@@ -1,0 +1,26 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+{% if edually_security_overview %}
+<section class="edually-security-overview" aria-label="Login security overview">
+  <div class="edually-security-intro">
+    <h2>{{ edually_security_overview.title }}</h2>
+    <p>{{ edually_security_overview.description }}</p>
+  </div>
+  <div class="edually-security-stats" role="list" aria-label="Security record counts">
+  {% for stat in edually_security_overview.stats %}
+    <div class="edually-security-stat" role="listitem"><span>{{ stat.label }}</span><strong>{{ stat.value }}</strong></div>
+  {% endfor %}
+  </div>
+  <p class="edually-security-guidance">
+    These are recorded security events, not live session status. An attempt at the failure limit may
+    already have expired. Deleting an Access Attempt can reset its associated lockout; review
+    the selected records carefully before using Django Admin's delete action.
+  </p>
+  {% if opts.model_name == 'accessfailurelog' %}
+    <p class="edually-security-guidance">Individual failure logging is optional in django-axes. This page can be empty even when failed attempt counters exist.</p>
+  {% endif %}
+</section>
+{% endif %}
+{{ block.super }}
+{% endblock %}

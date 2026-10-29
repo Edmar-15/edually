@@ -604,30 +604,159 @@ class UserConsentAdmin(admin.ModelAdmin):
     ordering = ("-accepted_at",)
     
     
-from django.contrib import admin
-from axes.admin import AccessAttemptAdmin
-from axes.models import AccessAttempt, AccessAttemptExpiration
+# Phase 2F: Login Security admin
+# Keep django-axes' own admin, lockout handlers, actions, and permission checks.
+# Only enhance its record presentation and avoid one expiry query per row.
+from axes.conf import settings as axes_settings
+from axes.admin import AccessAttemptAdmin, AccessLogAdmin, AccessFailureLogAdmin
+from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 
-# 1. Unregister django-axes default admin layout
-admin.site.unregister(AccessAttempt)
 
-# 2. Subclass with corrected model attribute logic
-@admin.register(AccessAttempt)
-class CustomAccessAttemptAdmin(AccessAttemptAdmin):
-    
-    def __init__(self, model, admin_site):
-        super().__init__(model, admin_site)
-        # Drop the raw unformatted object string column out of your list layout
-        cleaned_list = [f for f in self.list_display if f != 'access_attempt_expiration']
-        self.list_display = tuple(cleaned_list + ['get_expiration_time'])
+class LoginSecurityOverview:
+    """Read-only statistics; never change authentication or records."""
 
-    @admin.display(description='Access Attempt Expiration')
-    def get_expiration_time(self, obj):
-        # Match using the exact foreign key field name: access_attempt_id
-        expiration_record = AccessAttemptExpiration.objects.filter(access_attempt_id=obj.id).first()
-        
-        # Pull the correct timestamp column name: expires_at
-        if expiration_record and expiration_record.expires_at:
-            return expiration_record.expires_at.strftime("%b. %d, %Y, %I:%M %p")
-            
-        return "-"
+    change_list_template = "admin/axes/change_list.html"
+    change_form_template = "admin/axes/change_form.html"
+    security_title = "Login security"
+    security_description = "Review authentication security records."
+
+    def security_summary(self, request):
+        qs = self.get_queryset(request)
+        total = qs.count()
+        if self.model is AccessAttempt:
+            limit = axes_settings.AXES_FAILURE_LIMIT
+            if isinstance(limit, int) and limit > 0:
+                over = qs.filter(failures_since_start__gte=limit).count()
+                return (
+                    ("Tracked attempts", total),
+                    ("At failure limit", over),
+                    ("Below failure limit", total - over),
+                    ("Distinct usernames", qs.exclude(username__isnull=True).exclude(username="").values("username").distinct().count()),
+                )
+            return (("Tracked attempts", total),)
+        if self.model is AccessLog:
+            ended = qs.filter(logout_time__isnull=False).count()
+            return (
+                ("Access log entries", total),
+                ("Logout recorded", ended),
+                ("No logout recorded", total - ended),
+                ("Distinct usernames", qs.exclude(username__isnull=True).exclude(username="").values("username").distinct().count()),
+            )
+        locked = qs.filter(locked_out=True).count()
+        return (
+            ("Failure log entries", total),
+            ("Lockout flagged", locked),
+            ("Not flagged", total - locked),
+            ("Distinct usernames", qs.exclude(username__isnull=True).exclude(username="").values("username").distinct().count()),
+        )
+
+    def changelist_view(self, request, extra_context=None):
+        if request.method == "GET" and self.has_view_or_change_permission(request):
+            extra_context = {
+                **(extra_context or {}),
+                "edually_security_overview": {
+                    "title": self.security_title,
+                    "description": self.security_description,
+                    "stats": [
+                        {"label": label, "value": value}
+                        for label, value in self.security_summary(request)
+                    ],
+                },
+            }
+        return super().changelist_view(request, extra_context=extra_context)
+
+    @staticmethod
+    def security_badge(label, tone):
+        return format_html(
+            '<span class="edually-security-badge edually-security-badge--{}">{}</span>',
+            tone, label,
+        )
+
+    @admin.display(description="Username", ordering="username")
+    def client_identity(self, obj):
+        return format_html(
+            '<span class="edually-security-primary">{}</span>',
+            obj.username or "Not recorded",
+        )
+
+
+class EduAllyAccessAttemptAdmin(LoginSecurityOverview, AccessAttemptAdmin):
+    security_title = "Failed login attempts"
+    security_description = "Review Axes failure counters, tracked clients, and expiry times."
+    list_display = (
+        "attempt_time", "client_identity", "ip_address", "failures_since_start",
+        "attempt_state", "expires_on", "path_info",
+    )
+    list_display_links = ("client_identity",)
+    search_help_text = "Search username, IP address, user agent, or request path."
+    ordering = ("-attempt_time",)
+    list_per_page = 25
+
+    # Parent admin retains its original date filters, lockout filter, cleanup
+    # action, readonly fields, and permission hooks.
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("expiration")
+
+    @admin.display(description="Failure status")
+    def attempt_state(self, obj):
+        limit = axes_settings.AXES_FAILURE_LIMIT
+        if not isinstance(limit, int) or limit <= 0:
+            return self.security_badge("Check settings", "muted")
+        if obj.failures_since_start >= limit:
+            # Reaching the limit does not prove a lockout is still active.
+            return self.security_badge("At failure limit", "danger")
+        return self.security_badge("Below limit", "warning")
+
+    @admin.display(description="Attempt expires")
+    def expires_on(self, obj):
+        expiry = getattr(obj, "expiration", None)
+        return expiry.expires_at if expiry else "Not set"
+
+
+class EduAllyAccessLogAdmin(LoginSecurityOverview, AccessLogAdmin):
+    security_title = "Access history"
+    security_description = "Review recorded sign-ins and logout timestamps."
+    list_display = (
+        "attempt_time", "client_identity", "ip_address", "logout_state", "logout_time", "path_info",
+    )
+    list_display_links = ("client_identity",)
+    search_help_text = "Search username, IP address, user agent, or request path."
+    ordering = ("-attempt_time",)
+    list_per_page = 25
+
+    @admin.display(description="Logout status")
+    def logout_state(self, obj):
+        # A missing logout record does not prove the session is still active.
+        return self.security_badge(
+            "Logout recorded" if obj.logout_time else "No logout recorded",
+            "positive" if obj.logout_time else "muted",
+        )
+
+
+class EduAllyAccessFailureLogAdmin(LoginSecurityOverview, AccessFailureLogAdmin):
+    security_title = "Individual failure logs"
+    security_description = "Review individual recorded authentication failures and lockout events."
+    list_display = ("attempt_time", "client_identity", "ip_address", "lockout_state", "path_info")
+    list_display_links = ("client_identity",)
+    search_help_text = "Search username, IP address, user agent, or request path."
+    ordering = ("-attempt_time",)
+    list_per_page = 25
+
+    @admin.display(description="Lockout flag", boolean=False)
+    def lockout_state(self, obj):
+        return self.security_badge(
+            "Lockout flagged" if obj.locked_out else "Not flagged",
+            "danger" if obj.locked_out else "muted",
+        )
+
+
+# Honor django-axes' AXES_ENABLE_ADMIN setting. Never expose disabled models.
+if axes_settings.AXES_ENABLE_ADMIN:
+    for security_model, replacement in (
+        (AccessAttempt, EduAllyAccessAttemptAdmin),
+        (AccessLog, EduAllyAccessLogAdmin),
+        (AccessFailureLog, EduAllyAccessFailureLogAdmin),
+    ):
+        if security_model in admin.site._registry:
+            admin.site.unregister(security_model)
+        admin.site.register(security_model, replacement)
