@@ -33,7 +33,7 @@
                     <p>
                     {% if app.app_label == 'account' %}Users, student and teacher profiles, and consent
                     {% elif app.app_label == 'slm' %}Subjects, modules, materials, and highlights
-                    {% elif app.app_label == 'forum' %}Categories, posts, replies, and votes
+                    {% elif app.app_label == 'forum' %}Categories, discussions, replies, reports, and votes
                     {% elif app.app_label == 'auth' %}Groups and access rights
                     {% elif app.app_label == 'axes' %}Review sign-in attempts and access records
                     {% else %}Manage {{ app.name|lower }} records{% endif %}
