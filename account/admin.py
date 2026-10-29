@@ -11,6 +11,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.db.models import Count, Q
 from django.utils.html import format_html
+from .constants import GROUP_STUDENT, GROUP_TEACHER, GROUP_ADMIN
 from .forms import UserCreationForm, UserChangeForm
 from .models import (
     User,
@@ -257,7 +258,59 @@ class UserAdmin(BaseUserAdmin):
 # Role/group permissions affect the whole site, not just the Users form.
 # Restrict Group administration too; otherwise staff granted auth.change_group
 # could elevate their own permissions indirectly through a group they belong to.
+# Phase 2C: clear, superuser-only roles and group permissions
+class GroupPermissionAssignmentFilter(admin.SimpleListFilter):
+    title = "Assigned permissions"
+    parameter_name = "permission_status"
+
+    def lookups(self, request, model_admin):
+        return (("assigned", "With permissions"), ("none", "Without permissions"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "assigned":
+            return queryset.filter(permissions__isnull=False).distinct()
+        if self.value() == "none":
+            return queryset.filter(permissions__isnull=True)
+        return queryset
+
+
 class SuperuserOnlyGroupAdmin(BaseGroupAdmin):
+    """Keep Django's group/permission behavior, while making roles easier to audit."""
+
+    change_list_template = "admin/auth/group/change_list.html"
+    change_form_template = "admin/auth/group/change_form.html"
+    list_display = ("group_identity", "member_count", "permission_count", "permission_state")
+    list_display_links = ("group_identity",)
+    list_filter = (GroupPermissionAssignmentFilter,)
+    search_fields = ("name",)
+    search_help_text = "Search groups by name."
+    ordering = ("name",)
+    list_per_page = 25
+    # Retain GroupAdmin's built-in filter_horizontal = ("permissions",).
+    fieldsets = (
+        ("Group details", {
+            "fields": ("name",),
+            "description": "Use a descriptive name so administrators can recognize the role. "
+            "The built-in Student, Teacher, and Admin names are locked because EduAlly uses them for role checks.",
+        }),
+        ("Access permissions", {
+            "fields": ("permissions",),
+            "description": (
+                "Permissions assigned here apply to every member of this group. "
+                "Search the available permissions, select the ones needed, then save. "
+                "Only superusers can modify this list."
+            ),
+        }),
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        # EduAlly's account routing checks these exact group names. Prevent
+        # accidental renaming without restricting permission editing.
+        if obj is not None and obj.name in {GROUP_STUDENT, GROUP_TEACHER, GROUP_ADMIN}:
+            return (*fields, "name")
+        return fields
+
     def has_module_permission(self, request):
         return request.user.is_superuser and super().has_module_permission(request)
 
@@ -270,8 +323,56 @@ class SuperuserOnlyGroupAdmin(BaseGroupAdmin):
     def has_change_permission(self, request, obj=None):
         return request.user.is_superuser and super().has_change_permission(request, obj)
 
+    # Protect built-in EduAlly role groups from deletion.
     def has_delete_permission(self, request, obj=None):
+        if obj is not None and obj.name in {GROUP_STUDENT, GROUP_TEACHER, GROUP_ADMIN}:
+            return False
         return request.user.is_superuser and super().has_delete_permission(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        # Bulk delete bypasses per-object has_delete_permission checks.
+        if queryset.filter(name__in=(GROUP_STUDENT, GROUP_TEACHER, GROUP_ADMIN)).exists():
+            raise PermissionDenied('Built-in EduAlly role groups cannot be deleted.')
+        return super().delete_queryset(request, queryset)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            _edually_members=Count("user", distinct=True),
+            _edually_permissions=Count("permissions", distinct=True),
+        )
+
+    @admin.display(description="Group / role", ordering="name")
+    def group_identity(self, obj):
+        return format_html('<span class="edually-group-primary">{}</span>', obj.name)
+
+    @admin.display(description="Members", ordering="_edually_members")
+    def member_count(self, obj):
+        return obj._edually_members
+
+    @admin.display(description="Permissions", ordering="_edually_permissions")
+    def permission_count(self, obj):
+        return obj._edually_permissions
+
+    @admin.display(description="Permission status")
+    def permission_state(self, obj):
+        enabled = bool(obj._edually_permissions)
+        return format_html(
+            '<span class="edually-group-badge edually-group-badge--{}">{}</span>',
+            "assigned" if enabled else "empty",
+            "Permissions assigned" if enabled else "No group permissions",
+        )
+
+    def changelist_view(self, request, extra_context=None):
+        if request.method == "GET" and self.has_view_or_change_permission(request):
+            # Distinct protects counts against join multiplication from M2M rows.
+            summary = self.model.objects.aggregate(
+                total=Count("pk", distinct=True),
+                with_members=Count("pk", filter=Q(user__isnull=False), distinct=True),
+                with_permissions=Count("pk", filter=Q(permissions__isnull=False), distinct=True),
+            )
+            summary["without_permissions"] = summary["total"] - summary["with_permissions"]
+            extra_context = {**(extra_context or {}), "edually_group_summary": summary}
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 admin.site.unregister(Group)
