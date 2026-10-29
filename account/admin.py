@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.models import Group
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
@@ -114,6 +116,69 @@ class UserAdmin(BaseUserAdmin):
         ),
     )
 
+    # Phase 2A security: privilege changes are superuser-only.
+    # Admin staff with account permissions may still manage *regular* users.
+    # Guard the target as well as form fields: password reset and delete routes
+    # also use these ModelAdmin permission hooks.
+    def _protected_account(self, request, obj):
+        return (
+            obj is not None
+            and not request.user.is_superuser
+            and (obj.is_staff or obj.is_superuser)
+        )
+
+    def has_view_permission(self, request, obj=None):
+        if self._protected_account(request, obj):
+            return False
+        return super().has_view_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        if self._protected_account(request, obj):
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if self._protected_account(request, obj):
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            return fieldsets
+
+        # Django builds its ModelForm from these fieldsets; a forged POST
+        # containing any removed field cannot assign staff, superuser, groups,
+        # or individual permissions. This also removes is_staff on Add User.
+        privileged = {"is_staff", "is_superuser", "groups", "user_permissions"}
+        safe_fieldsets = []
+        for title, options in fieldsets:
+            fields = tuple(field for field in options["fields"] if field not in privileged)
+            if not fields:
+                continue
+            safe_options = {**options, "fields": fields}
+            if title == "Account access":
+                safe_options["description"] = (
+                    "You may activate or deactivate standard accounts. "
+                    "Only superusers can grant staff access or advanced permissions."
+                )
+            elif title == "Create a user account":
+                safe_options["description"] = (
+                    "Create a standard account. Only a superuser can later "
+                    "grant staff access, groups, or elevated permissions."
+                )
+            safe_fieldsets.append((title, safe_options))
+        return tuple(safe_fieldsets)
+
+    def delete_queryset(self, request, queryset):
+        # The built-in bulk delete action does not check permission per row.
+        # Prevent a mixed selection from deleting even one privileged account.
+        if not request.user.is_superuser and queryset.filter(
+            Q(is_staff=True) | Q(is_superuser=True)
+        ).exists():
+            raise PermissionDenied("Only superusers may delete privileged accounts.")
+        return super().delete_queryset(request, queryset)
+
     def get_queryset(self, request):
         # Avoid one group lookup per account in the list's Role column.
         return super().get_queryset(request).prefetch_related("groups")
@@ -187,6 +252,30 @@ class UserAdmin(BaseUserAdmin):
         return super().changelist_view(request, extra_context=extra_context)
     # Phase 2A: EduAlly user management
 
+
+
+# Role/group permissions affect the whole site, not just the Users form.
+# Restrict Group administration too; otherwise staff granted auth.change_group
+# could elevate their own permissions indirectly through a group they belong to.
+class SuperuserOnlyGroupAdmin(BaseGroupAdmin):
+    def has_module_permission(self, request):
+        return request.user.is_superuser and super().has_module_permission(request)
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser and super().has_view_permission(request, obj)
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser and super().has_delete_permission(request, obj)
+
+
+admin.site.unregister(Group)
+admin.site.register(Group, SuperuserOnlyGroupAdmin)
 
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
